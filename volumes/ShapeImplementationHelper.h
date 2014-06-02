@@ -156,7 +156,7 @@ public:
         localPoint,
         result
       );
-      for (unsigned j = 0; j < VcInt::Size; ++j) {
+      for (unsigned j = 0; j < VcPrecision::Size; ++j) {
         output[j+i] = (result[j] == EInside::kInside) ? true : false;
       }
     }
