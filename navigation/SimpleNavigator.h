@@ -42,6 +42,10 @@ public:
                 NavigationState & /* state (volume path) to be returned */,
                 bool /*top*/) const;
 
+  VECGEOM_CUDA_HEADER_BOTH
+   VECGEOM_INLINE
+   SimpleNavigator(){}
+
    /**
     * function to locate a global point in the geometry hierarchy
     * input:  A local point in the referenceframe of the current deepest volume in the path,

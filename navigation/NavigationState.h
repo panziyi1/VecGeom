@@ -61,6 +61,7 @@ public:
 #endif
 
    VECGEOM_INLINE
+   VECGEOM_CUDA_HEADER_BOTH
    ~NavigationState( );
 
 
@@ -207,7 +208,7 @@ NavigationState::InitInternalStorage()
    path_ = new VPlacedVolume const *[maxlevel_];
 }
 
-
+  VECGEOM_CUDA_HEADER_BOTH
 NavigationState::~NavigationState()
 {
    delete[] path_;

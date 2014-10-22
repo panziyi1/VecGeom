@@ -80,6 +80,8 @@ public:
   VECGEOM_INLINE
   bool operator==(Transformation3D const &rhs) const;
 
+  VECGEOM_CUDA_HEADER_BOTH
+  VECGEOM_INLINE
   virtual ~Transformation3D() {}
 
   // Accessors
