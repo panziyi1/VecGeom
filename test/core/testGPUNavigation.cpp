@@ -14,8 +14,13 @@
 #include "management/GeoManager.h"
 #include "base/Global.h"
 
-using namespace vecgeom;
+#ifdef VECGEOM_CUDA
+#include "base/Stopwatch.h"
+#include "backend/cuda/Backend.h"
+#include "management/CudaManager.h"
+#endif
 
+using namespace vecgeom_cuda;
 
 VPlacedVolume* SetupBoxGeometry() {
   UnplacedBox *worldUnplaced = new UnplacedBox(10, 10, 10);
@@ -123,10 +128,18 @@ void testVectorNavigator( VPlacedVolume* world ){
                " Problem with safety " );
    }
 
+#ifdef VECGEOM_CUDA
+   RunNavigationCuda(world, np,
+                     fPointPool->x(),     fPointPool->y(),     fPointPool->z(),
+                     fDirectionPool->x(), fDirectionPool->y(), fDirectionPool->z(),
+                     distancesCuda, safetiesCuda);
+#endif
+
     std::cout << "Navigation test passed\n";
    _mm_free(steps);
    _mm_free(intworkspace);
    _mm_free(pSteps);
+   _mm_free(safeties);
 }
 
 
