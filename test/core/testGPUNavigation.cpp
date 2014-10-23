@@ -14,12 +14,6 @@
 #include "management/GeoManager.h"
 #include "base/Global.h"
 
-#ifdef VECGEOM_CUDA
-#include "base/Stopwatch.h"
-#include "backend/cuda/Backend.h"
-#include "management/CudaManager.h"
-#endif
-
 using namespace vecgeom_cuda;
 
 VPlacedVolume* SetupBoxGeometry() {
