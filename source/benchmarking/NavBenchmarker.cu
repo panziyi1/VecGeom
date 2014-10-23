@@ -22,6 +22,7 @@ void NavKernelTest(
     VPlacedVolume const *const volume,
     const SOA3D<Precision> positions,
     const SOA3D<Precision> directions,
+    Precision const * pSteps,
     const int n,
     Precision *const steps) {
 
@@ -30,7 +31,7 @@ NavigationState old(5), newstate(5);
 SimpleNavigator nav;
 nav.LocatePoint(volume,positions[tid],old,true);
 double step;
-nav.FindNextBoundaryAndStep(positions[tid],directions[tid], old, newstate, kInfinity, step);
+nav.FindNextBoundaryAndStep(positions[tid],directions[tid], old, newstate, pSteps[tid], step);
 steps[tid]=step;            
 //distance[tid] = volume->SafetyToOut(positions[tid]);
 
@@ -41,20 +42,11 @@ steps[tid]=step;
 namespace vecgeom
 {
 
-  template <typename Type>
-  Type* AllocateAligned(unsigned n) {
-    return (Type*) _mm_malloc(n*sizeof(Type), kAlignmentBoundary);
-  }
-
-  template <typename Type>
-  void FreeAligned(Type *const pmemory) {
-    if (pmemory) _mm_free(pmemory);
-  }
-
   void RunNavigationCuda( VPlacedVolume const* volume, unsigned npoints,
                           Precision *const posX, Precision *const posY, Precision *const posZ,
                           Precision *const dirX, Precision *const dirY, Precision *const dirZ,
-                          Precision *const distances, Precision *const safeties) {
+                          Precision const *const pSteps,
+                          Precision *const steps ) {
 
 #ifdef VECGEOM_CUDA
    // transfer geometry to GPU
@@ -93,6 +85,8 @@ namespace vecgeom
 
    // allocate space for kernel output
    Precision *stepsGpu = AllocateOnGpu<Precision>(sizeof(Precision)*npoints);
+   Precision *pStepsGpu = AllocateOnGpu<Precision>(sizeof(Precision)*npoints);
+   CopyToGpu(pSteps, pStepsGpu, npoints*sizeof(Precision) );
 
    vecgeom_cuda::LaunchParameters launch =
      vecgeom_cuda::LaunchParameters(npoints);
@@ -101,14 +95,15 @@ namespace vecgeom
    vecgeom_cuda::Stopwatch timer;
    timer.Start();
    // for (unsigned r = 0; r < fRepetitions; ++r) {
+//  CudaVolume volumeGpu = reinterpret_cast<CudaVolume>(
+   //   CudaManager::Instance().LookupPlaced(volume->Specialized()));
+
    vecgeom_cuda::NavKernelTest<<< launch.grid_size, launch.block_size>>>(
-     *volume, positionGpu, directionGpu, npoints, stepsGpu );
+     CudaManager::Instance().world_gpu(), positionGpu, directionGpu, pStepsGpu, npoints, stepsGpu );
    // }
    Precision elapsedCuda = timer.Stop();
 
-   Precision *const stepsCpu = AllocateAligned<Precision>();
-   Precision * steps = (Precision *) _mm_malloc(sizeof(Precision)*np,32);
-   CopyFromGpu(stepsGpu, stepsCpu, npoints*sizeof(Precision));
+   CopyFromGpu(stepsGpu, steps, npoints*sizeof(Precision));
 
    FreeFromGpu(stepsGpu);
    FreeFromGpu(posXGpu);

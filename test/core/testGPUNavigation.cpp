@@ -1,4 +1,4 @@
-/*
+ /*
  * testVectorSafety.cpp
  *
  *  Created on: Jun 25, 2014
@@ -7,14 +7,16 @@
 
 #include "volumes/utilities/VolumeUtilities.h"
 #include "volumes/Box.h"
+#include "volumes/PlacedVolume.h"
 #include "base/Transformation3D.h"
 #include "base/SOA3D.h"
 #include "navigation/NavigationState.h"
 #include "navigation/SimpleNavigator.h"
 #include "management/GeoManager.h"
 #include "base/Global.h"
+#include "navigationgpu.h"
 
-using namespace vecgeom_cuda;
+using namespace vecgeom;
 
 VPlacedVolume* SetupBoxGeometry() {
   UnplacedBox *worldUnplaced = new UnplacedBox(10, 10, 10);
@@ -70,9 +72,12 @@ void testVectorSafety( VPlacedVolume* world ){
    _mm_free(safeties);
 }
 
+
+
+
 // function to test vector navigator
 void testVectorNavigator( VPlacedVolume* world ){
-   int np=100000;
+   int np=100;
    SOA3D<Precision> points(np);
    SOA3D<Precision> dirs(np);
    SOA3D<Precision> workspace1(np);
@@ -80,6 +85,7 @@ void testVectorNavigator( VPlacedVolume* world ){
 
    Precision * steps = (Precision *) _mm_malloc(sizeof(Precision)*np,32);
    Precision * pSteps = (Precision *) _mm_malloc(sizeof(Precision)*np,32);
+   Precision * GPUSteps = (Precision *) _mm_malloc(sizeof(Precision)*np,32);
    Precision * safeties = (Precision *) _mm_malloc(sizeof(Precision)*np,32);
 
    int * intworkspace = (int *) _mm_malloc(sizeof(int)*np,32);
@@ -124,10 +130,17 @@ void testVectorNavigator( VPlacedVolume* world ){
 
 #ifdef VECGEOM_CUDA
    RunNavigationCuda(world, np,
-                     fPointPool->x(),     fPointPool->y(),     fPointPool->z(),
-                     fDirectionPool->x(), fDirectionPool->y(), fDirectionPool->z(),
-                     distancesCuda, safetiesCuda);
+                     points.x(),  points.y(), points.z(),
+                     dirs.x(), dirs.y(), dirs.z(), pSteps, GPUSteps );
 #endif
+   for (int i=0;i<np;++i)
+   {
+     std::cerr << "i " << i << " steps " << steps[i] << " CUDA steps " << GPUSteps[i] << "\n";
+
+     //  vecgeom::Assert( steps[i] == GPUSteps[i], " Problem in CUDA Navigator " );
+   }
+
+
 
     std::cout << "Navigation test passed\n";
    _mm_free(steps);
