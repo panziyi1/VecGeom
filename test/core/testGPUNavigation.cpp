@@ -14,6 +14,8 @@
 #include "navigation/SimpleNavigator.h"
 #include "management/GeoManager.h"
 #include "base/Global.h"
+#include "test/benchmark/ArgParser.h"
+
 #include "navigationgpu.h"
 
 using namespace vecgeom;
@@ -74,10 +76,8 @@ void testVectorSafety( VPlacedVolume* world ){
 
 
 
-
 // function to test vector navigator
-void testVectorNavigator( VPlacedVolume* world ){
-   int np=100;
+void testVectorNavigator( VPlacedVolume* world, int np ){
    SOA3D<Precision> points(np);
    SOA3D<Precision> dirs(np);
    SOA3D<Precision> workspace1(np);
@@ -133,16 +133,19 @@ void testVectorNavigator( VPlacedVolume* world ){
                      points.x(),  points.y(), points.z(),
                      dirs.x(), dirs.y(), dirs.z(), pSteps, GPUSteps );
 #endif
+   unsigned mismatches=0;
    for (int i=0;i<np;++i)
    {
-     std::cerr << "i " << i << " steps " << steps[i] << " CUDA steps " << GPUSteps[i] << "\n";
-
+     if( abs(steps[i]-GPUSteps[i]) > kTolerance ) {
+       ++mismatches;
+       std::cerr << "i " << i << " steps " << steps[i] << " CUDA steps " << GPUSteps[i]
+                 << " - diff="<< (steps[i]-GPUSteps[i]) <<"\n";
      //  vecgeom::Assert( steps[i] == GPUSteps[i], " Problem in CUDA Navigator " );
+     }
    }
 
-
-
-    std::cout << "Navigation test passed\n";
+   if(mismatches>0) std::cout << "Navigation test failed with "<< mismatches <<" mismatches\n";
+   else std::cout<<"Navigation test passed.\n";
    _mm_free(steps);
    _mm_free(intworkspace);
    _mm_free(pSteps);
@@ -150,9 +153,10 @@ void testVectorNavigator( VPlacedVolume* world ){
 }
 
 
-int main()
+int main(int argc, char* argv[])
 {
-    VPlacedVolume *w;
-    testVectorSafety(w=SetupBoxGeometry());
-    testVectorNavigator(w);
+  OPTION_INT(npoints, 100);
+  VPlacedVolume *w;
+  testVectorSafety(w=SetupBoxGeometry());
+  testVectorNavigator(w, npoints);
 }
