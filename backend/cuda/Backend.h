@@ -36,8 +36,13 @@ static const unsigned kThreadsPerBlock = 256;
 VECGEOM_CUDA_HEADER_DEVICE
 VECGEOM_INLINE
 int ThreadIndex() {
-  return blockDim.x * blockIdx.x
-         + threadIdx.x;
+  return blockDim.x * blockIdx.x + threadIdx.x;
+}
+
+VECGEOM_CUDA_HEADER_DEVICE
+VECGEOM_INLINE
+int ThreadOffset() {
+  return blockDim.x * gridDim.x;
 }
 
 /**
@@ -50,6 +55,7 @@ struct LaunchParameters {
   LaunchParameters(const unsigned threads) {
     // Blocks always one dimensional
     block_size.x = kThreadsPerBlock;
+    if(threads<kThreadsPerBlock) block_size.x = threads;
     block_size.y = 1;
     block_size.z = 1;
     // Grid becomes two dimensional at large sizes
