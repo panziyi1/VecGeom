@@ -23,14 +23,16 @@ void NavKernelTest(VPlacedVolume const *const volume,
                    Precision const * pSteps,  const int n,  Precision *const steps) {
 
   unsigned tid = ThreadIndex(); 
-  NavigationState old(5), newstate(5);
-  SimpleNavigator nav;
-  double step;
+  // NavigationState old(5), newstate(5);
+  // SimpleNavigator nav;
+  // double step;
 
   while (tid < n) {
-    nav.LocatePoint(volume,positions[tid],old,true);
-    nav.FindNextBoundaryAndStep(positions[tid],directions[tid], old, newstate, pSteps[tid], step);
-    steps[tid] = step;
+    // nav.LocatePoint(volume,positions[tid],old,true);
+    // nav.FindNextBoundaryAndStep(positions[tid],directions[tid], old, newstate, pSteps[tid], step);
+    // steps[tid] = step;
+    //steps[tid] = (Precision)tid;
+    steps[tid] = tid;
     tid += ThreadOffset();
   }
 }
@@ -50,6 +52,7 @@ namespace vecgeom
    typedef vecgeom_cuda::VPlacedVolume const* CudaVolume;
    typedef vecgeom_cuda::SOA3D<Precision> CudaSOA3D;
 
+//   CudaManager::Instance().set_verbose(3);
    CudaManager::Instance().LoadGeometry(volume);
    CudaManager::Instance().Synchronize();
 
@@ -81,16 +84,22 @@ namespace vecgeom
 
    // launch kernel in GPU
    vecgeom_cuda::Stopwatch timer;
-   timer.Start();
    printf("GPU configuration:  <<<%i,%i>>>\n", launch.grid_size.x, launch.block_size.x);
 
+   vecgeom_cuda::NavKernelTest<<< 1, 192>>>(
+     CudaManager::Instance().world_gpu(),
+     positionGpu, directionGpu,
+     pStepsGpu, 192, stepsGpu
+     );
+   cudaDeviceSynchronize();
+
+   timer.Start();
    vecgeom_cuda::NavKernelTest<<< launch.grid_size, launch.block_size>>>(
        CudaManager::Instance().world_gpu(),
-       positionGpu, directionGpu,
-       pStepsGpu, npoints, stepsGpu
+       positionGpu, directionGpu, pStepsGpu, npoints, stepsGpu
      );
 
-   cudaDeviceSynchronize();
+//   cudaDeviceSynchronize();
    Precision elapsedCuda = timer.Stop();
 
    CopyFromGpu(stepsGpu, steps, npoints*sizeof(Precision));
@@ -104,7 +113,7 @@ namespace vecgeom
    FreeFromGpu(dirZGpu);
 
    // compare steps from navigator with the ones above
-   std::cout<<"GPU navigation time: "<< elapsedCuda <<"\n";
+   std::cout<<"GPU navigation time: "<< 1000.*elapsedCuda <<" ms\n";
 #endif  // VECGEOM_CUDA
   }
 

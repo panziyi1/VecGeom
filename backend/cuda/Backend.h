@@ -29,7 +29,8 @@ typedef kCuda::int_v       CudaInt;
 typedef kCuda::precision_v CudaPrecision;
 typedef kCuda::bool_v      CudaBool;
 
-static const unsigned kThreadsPerBlock = 256;
+//static const unsigned kThreadsPerBlock = 256;
+static const unsigned kThreadsPerBlock = 192;
 
 // Auxiliary GPU functions
 
