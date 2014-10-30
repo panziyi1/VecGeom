@@ -72,9 +72,9 @@ vecgeom_cuda::VPlacedVolume const* CudaManager::Synchronize() {
     (*i)->CopyToGpu(LookupUnplaced(*i));
 
   }
-  if (verbose_ > 2) std::cout << " OK\n";
+  if (verbose_ > 2) std::cerr << " OK\n";
 
-  if (verbose_ > 2) std::cout << "Copying placed volumes...";
+  if (verbose_ > 2) std::cerr << "Copying placed volumes...";
   for (std::set<VPlacedVolume const*>::const_iterator i =
        placed_volumes_.begin(); i != placed_volumes_.end(); ++i) {
 
@@ -85,18 +85,18 @@ vecgeom_cuda::VPlacedVolume const* CudaManager::Synchronize() {
     );
 
   }
-  if (verbose_ > 2) std::cout << " OK\n";
+  if (verbose_ > 2) std::cerr << " OK\n";
 
-  if (verbose_ > 2) std::cout << "Copying transformations_...";
+  if (verbose_ > 2) std::cerr << "Copying transformations_...";
   for (std::set<Transformation3D const*>::const_iterator i =
        transformations_.begin(); i != transformations_.end(); ++i) {
 
     (*i)->CopyToGpu(LookupTransformation(*i));
 
   }
-  if (verbose_ > 2) std::cout << " OK\n";
+  if (verbose_ > 2) std::cerr << " OK\n";
 
-  if (verbose_ > 2) std::cout << "Copying daughter arrays...";
+  if (verbose_ > 2) std::cerr << "Copying daughter arrays...";
   for (std::set<Vector<Daughter> *>::const_iterator i =
        daughters_.begin(); i != daughters_.end(); ++i) {
 
@@ -116,7 +116,7 @@ vecgeom_cuda::VPlacedVolume const* CudaManager::Synchronize() {
     (*i)->CopyToGpu(LookupDaughterArray(*i), LookupDaughters(*i));
 
   }
-  if (verbose_ > 1) std::cout << " OK\n";
+  if (verbose_ > 1) std::cerr << " OK\n";
 
   synchronized = true;
 
@@ -124,7 +124,7 @@ vecgeom_cuda::VPlacedVolume const* CudaManager::Synchronize() {
     LookupPlaced(world_)
   );
 
-  if (verbose_ > 0) std::cout << "Geometry synchronized to GPU.\n";
+  if (verbose_ > 0) std::cerr << "Geometry synchronized to GPU.\n";
 
   return world_gpu_;
 
@@ -159,7 +159,7 @@ void CudaManager::CleanGpu() {
 
   if (memory_map.size() == 0 && world_gpu_ == NULL) return;
 
-  if (verbose_ > 1) std::cout << "Cleaning GPU...";
+  if (verbose_ > 1) std::cerr << "Cleaning GPU...";
 
   for (auto i = allocated_memory_.begin(), i_end = allocated_memory_.end();
        i != i_end; ++i) {
@@ -171,16 +171,16 @@ void CudaManager::CleanGpu() {
   world_gpu_ = NULL;
   synchronized = false;
 
-  if (verbose_ > 1) std::cout << " OK\n";
+  if (verbose_ > 1) std::cerr << " OK\n";
 
 }
 
 void CudaManager::AllocateGeometry() {
 
-  if (verbose_ > 1) std::cout << "Allocating geometry on GPU...";
+  if (verbose_ > 1) std::cerr << "Allocating geometry on GPU...";
 
   {
-    if (verbose_ > 2) std::cout << "Allocating logical volumes...";
+    if (verbose_ > 2) std::cerr << "Allocating logical volumes...";
 
     LogicalVolume *gpu_array =
         AllocateOnGpu<LogicalVolume>(
@@ -195,11 +195,11 @@ void CudaManager::AllocateGeometry() {
 
     }
 
-    if (verbose_ > 2) std::cout << " OK\n";
+    if (verbose_ > 2) std::cerr << " OK\n";
   }
 
   {
-    if (verbose_ > 2) std::cout << "Allocating unplaced volumes...";
+    if (verbose_ > 2) std::cerr << "Allocating unplaced volumes...";
 
     for (std::set<VUnplacedVolume const*>::const_iterator i =
          unplaced_volumes_.begin(); i != unplaced_volumes_.end(); ++i) {
@@ -211,11 +211,11 @@ void CudaManager::AllocateGeometry() {
 
     }
 
-    if (verbose_ > 2) std::cout << " OK\n";
+    if (verbose_ > 2) std::cerr << " OK\n";
   }
 
   {
-    if (verbose_ > 2) std::cout << "Allocating placed volumes...";
+    if (verbose_ > 2) std::cerr << "Allocating placed volumes...";
 
     for (std::set<VPlacedVolume const*>::const_iterator i =
          placed_volumes_.begin(); i != placed_volumes_.end(); ++i) {
@@ -227,11 +227,11 @@ void CudaManager::AllocateGeometry() {
 
     }
 
-    if (verbose_ > 2) std::cout << " OK\n";
+    if (verbose_ > 2) std::cerr << " OK\n";
   }
 
   {
-    if (verbose_ > 2) std::cout << "Allocating transformations...";
+    if (verbose_ > 2) std::cerr << "Allocating transformations...";
 
     for (std::set<Transformation3D const*>::const_iterator i =
          transformations_.begin(); i != transformations_.end(); ++i) {
@@ -242,11 +242,11 @@ void CudaManager::AllocateGeometry() {
       memory_map[ToCpuAddress(*i)] = ToGpuAddress(gpu_address);
     }
 
-    if (verbose_ > 2) std::cout << " OK\n";
+    if (verbose_ > 2) std::cerr << " OK\n";
   }
 
   {
-    if (verbose_ > 2) std::cout << "Allocating daughter lists...";
+    if (verbose_ > 2) std::cerr << "Allocating daughter lists...";
 
     Vector<Daughter> *gpu_array =
         AllocateOnGpu<Vector<Daughter> >(
@@ -268,10 +268,10 @@ void CudaManager::AllocateGeometry() {
 
     }
 
-    if (verbose_ > 2) std::cout << " OK\n";
+    if (verbose_ > 2) std::cerr << " OK\n";
   }
 
-  if (verbose_ == 2) std::cout << " OK\n";
+  if (verbose_ == 2) std::cerr << " OK\n";
 
 }
 
