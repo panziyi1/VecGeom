@@ -10,6 +10,7 @@
 #include "volumes/PlacedVolume.h"
 #include "base/Transformation3D.h"
 #include "base/SOA3D.h"
+#include "management/RootGeoManager.h"
 #include "navigation/NavigationState.h"
 #include "navigation/SimpleNavigator.h"
 #include "management/GeoManager.h"
@@ -18,11 +19,13 @@
 #include "base/Stopwatch.h"
 
 #include "navigationgpu.h"
+#include "TGeoNavigator.h"
+#include "TGeoManager.h"
 
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-using namespace vecgeom;
+using namespace VECGEOM_NAMESPACE;
 
 VPlacedVolume* SetupBoxGeometry() {
   UnplacedBox *worldUnplaced = new UnplacedBox(10, 10, 10);
@@ -126,6 +129,9 @@ void testVectorNavigator( VPlacedVolume* world, int np ){
    Precision elapsedCPU = timer.Stop();
    printf("CPU elapsed time: %f ms\n", 1000.*elapsedCPU);
 
+   std::cout<<" testGPUNav: gGeoManager = "<< ::gGeoManager << std::endl;
+   TGeoNavigator * rootnav = ::gGeoManager->GetCurrentNavigator();
+
    // verify against serial interface
    for (int i=0;i<np;++i) {
      Precision s;
@@ -141,7 +147,38 @@ void testVectorNavigator( VPlacedVolume* world, int np ){
      //                " Problem in VectorNavigation (boundary) (in SimpleNavigator)" );
      // vecgeom::Assert( safeties[i] == nav.GetSafety( points[i], *states[i] ),
      //         " Problem with safety " );
+   // }
+
+//=== ROOT Navigation
+
+   // for (int i=0;i<np;++i) {
+     Vector3D<Precision> const& pos = points[i];
+     Vector3D<Precision> const& dir = dirs[i];
+     rootnav->ResetState();
+
+     //TGeoNode * node = 
+     rootnav->FindNode( pos.x(), pos.y(), pos.z() );
+
+     rootnav->SetCurrentPoint( pos.x(), pos.y(), pos.z() );
+     rootnav->SetCurrentDirection( dir.x(), dir.y(), dir.z() );
+//     path->UpdateNavigator( rootnav );
+     rootnav->FindNextBoundaryAndStep( 1E30 );
+
+     if( cmp.Top() != NULL ) {
+       if( rootnav->GetCurrentNode()
+           != RootGeoManager::Instance().tgeonode( cmp.Top() ) ) {
+             std::cerr << "ERROR ON ITERATION " << i << "\n";
+             std::cerr <<" pos = " << pos << "\n";
+             std::cerr <<" dir = " << dir << "\n";
+             std::cerr << "ROOT GOES HERE: " << rootnav->GetCurrentNode()->GetName() << "\n";
+             std::cerr << " with step: "<< rootnav->GetStep() << "\n";
+             std::cerr << "VECGEOM GOES HERE: " << RootGeoManager::Instance().GetName( cmp.Top() ) << "\n";
+             nav.InspectEnvironmentForPointAndDirection( pos, dir, *states[i] );
+        }
+      }
    }
+
+//=== Comparing with 
 
 #ifdef VECGEOM_CUDA
    printf("Start GPU\n");
@@ -173,6 +210,9 @@ int main(int argc, char* argv[])
   OPTION_INT(npoints, 100);
   VPlacedVolume *w;
   testVectorSafety(w=SetupBoxGeometry());
+
+  // create ROOT geometry
+  RootGeoManager::Instance().Convert(w);
 
   // GPU part
   int nDevice;
