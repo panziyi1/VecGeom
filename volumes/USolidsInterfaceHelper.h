@@ -4,16 +4,15 @@
 #ifndef VECGEOM_VOLUMES_USOLIDSINTERFACEHELPER_H_
 #define VECGEOM_VOLUMES_USOLIDSINTERFACEHELPER_H_
 
-#undef NDEBUG
 
 #include "base/Global.h"
 
-#undef NDEBUG
 
 #ifndef VECGEOM_USOLIDS
 
 namespace VECGEOM_NAMESPACE {
   struct USolidsInterfaceHelper {
+    VECGEOM_CUDA_HEADER_BOTH
     virtual ~USolidsInterfaceHelper() {}
   };
 }
@@ -26,6 +25,11 @@ namespace VECGEOM_NAMESPACE {
 #include "VUSolid.hh"
 
 #include <string>
+
+#ifdef NDEBUG
+#undef NDEBUG
+#include <cassert>
+#endif
 
 namespace VECGEOM_NAMESPACE {
 
@@ -46,6 +50,7 @@ public:
     Vector3D<Precision> const &direction,
     Precision stepMax = kInfinity) const =0;
 
+  VECGEOM_CUDA_HEADER_BOTH
   virtual ~USolidsInterfaceHelper() {}
 
   VECGEOM_CUDA_HEADER_BOTH

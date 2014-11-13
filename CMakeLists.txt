@@ -298,7 +298,6 @@ if (ROOT)
 
   include_directories(AFTER SYSTEM ${ROOT_INCLUDE_DIR})
   link_directories(${ROOT_LIBRARY_DIR})
-  link_directories(${ROOT_LIBRARY_DIR}/root) # For natively installed ROOT
   set(VECGEOM_LIBRARIES_EXTERNAL ${VECGEOM_LIBRARIES_EXTERNAL}
       Cint Core MathCore RIO Thread Geom Gui Net Hist Graf Graf3d Gpad Tree
       Rint Postscript Matrix Physics m dl)
@@ -353,6 +352,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 set(SRC_CPP_RELATIVE
   source/AOS3D.cpp
   source/LogicalVolume.cpp
+  source/PlacedCone.cpp
   source/PlacedBox.cpp
   source/PlacedTube.cpp
   source/PlacedTrd.cpp
@@ -363,6 +363,7 @@ set(SRC_CPP_RELATIVE
   source/SOA3D.cpp
   source/SpecializedBox.cpp
   source/Transformation3D.cpp
+  source/UnplacedCone.cpp
   source/UnplacedBox.cpp
   source/UnplacedTube.cpp
   source/UnplacedTrd.cpp
@@ -479,18 +480,28 @@ set(TEST_EXECUTABLES_ROOT
   ${CMAKE_SOURCE_DIR}/test/root/root_geometry.cpp
   ${CMAKE_SOURCE_DIR}/test/root/complex_test1.cpp
   ${CMAKE_SOURCE_DIR}/test/root/ImportFromRootFileTest.cpp
+  ${CMAKE_SOURCE_DIR}/test/root/TestExportToROOT.cpp
   # ${CMAKE_SOURCE_DIR}/test/root/ParaboloidTest.cpp
   ${CMAKE_SOURCE_DIR}/test/root/trd_validation.cpp
 )
 set(TEST_EXECUTABLES_VISUALIZATION
+  ${CMAKE_SOURCE_DIR}/test/visualization/VisualizeTrap.cpp
   ${CMAKE_SOURCE_DIR}/test/visualization/VisualizeTube.cpp
   ${CMAKE_SOURCE_DIR}/test/visualization/DebugTube.cpp
 )
 set(TEST_EXECUTABLES_USOLIDS
   ${CMAKE_SOURCE_DIR}/test/usolids/CompatibilityTest.cpp
   ${CMAKE_SOURCE_DIR}/test/unit_tests/TestBox.cpp
+  ${CMAKE_SOURCE_DIR}/test/unit_tests/TestCons.cpp
+  ${CMAKE_SOURCE_DIR}/test/unit_tests/TestTube.cpp
+  ${CMAKE_SOURCE_DIR}/test/unit_tests/TestTrd.cpp
+  ${CMAKE_SOURCE_DIR}/test/unit_tests/TestTrap.cpp
+  ${CMAKE_SOURCE_DIR}/test/unit_tests/TestPolycone.cpp
+  ${CMAKE_SOURCE_DIR}/test/unit_tests/TestPolyhedra.cpp
+  ${CMAKE_SOURCE_DIR}/test/unit_tests/TestTet.cpp
   #${CMAKE_SOURCE_DIR}/test/unit_tests/TestOrb.cpp
   #${CMAKE_SOURCE_DIR}/test/unit_tests/TestSphere.cpp
+  ${CMAKE_SOURCE_DIR}/test/unit_tests/TestBoxlikeTrapezoid.cpp
   ${CMAKE_SOURCE_DIR}/test/unit_tests/usolidTest.cpp
 )
 set(TEST_EXECUTABLES_BENCHMARK
@@ -505,6 +516,7 @@ set(TEST_EXECUTABLES_BENCHMARK
   ${CMAKE_SOURCE_DIR}/test/benchmark/OrbBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/SphereBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/TrdBenchmark.cpp
+  ${CMAKE_SOURCE_DIR}/test/benchmark/ConeBenchmark.cpp
 )
 set(TEST_EXECUTABLES_CUDA
   # Files go here
@@ -512,6 +524,8 @@ set(TEST_EXECUTABLES_CUDA
 set(TEST_EXECUTABLES_SHAPETESTER
   ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testBox.cpp
   ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testOrb.cpp
+  ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testCone.cpp
+  ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testTrapezoid.cpp
   # ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testParaboloid.cpp
 )
 set(TEST_EXECUTABLES

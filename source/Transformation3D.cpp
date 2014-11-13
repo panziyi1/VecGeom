@@ -1,6 +1,5 @@
 /// \file Transformation3D.cpp
 /// \author Johannes de Fine Licht (johannes.definelicht@cern.ch)
-
 #include "base/Transformation3D.h"
 
 #include "backend/Backend.h"
@@ -8,6 +7,11 @@
 #include "backend/cuda/Interface.h"
 #endif
 #include "base/SpecializedTransformation3D.h"
+
+
+#ifdef VECGEOM_ROOT
+#include "TGeoMatrix.h"
+#endif
 
 #include <sstream>
 #include <stdio.h>
@@ -17,7 +21,8 @@ namespace VECGEOM_NAMESPACE {
 const Transformation3D Transformation3D::kIdentity =
     SpecializedTransformation3D<translation::kIdentity, rotation::kIdentity>();
 
-Transformation3D::Transformation3D() {
+Transformation3D::Transformation3D() :
+   fIdentity(false), fHasRotation(true), fHasTranslation(true) {
   SetTranslation(0, 0, 0);
   SetRotation(1, 0, 0, 0, 1, 0, 0, 0, 1);
   SetProperties();
@@ -25,7 +30,8 @@ Transformation3D::Transformation3D() {
 
 Transformation3D::Transformation3D(const Precision tx,
                                    const Precision ty,
-                                   const Precision tz) {
+                                   const Precision tz) :
+   fIdentity(false), fHasRotation(true), fHasTranslation(true) {
   SetTranslation(tx, ty, tz);
   SetRotation(1, 0, 0, 0, 1, 0, 0, 0, 1);
   SetProperties();
@@ -34,7 +40,8 @@ Transformation3D::Transformation3D(const Precision tx,
 Transformation3D::Transformation3D(
     const Precision tx, const Precision ty,
     const Precision tz, const Precision phi,
-    const Precision theta, const Precision psi) {
+    const Precision theta, const Precision psi) :
+fIdentity(false), fHasRotation(true), fHasTranslation(true) {
   SetTranslation(tx, ty, tz);
   SetRotation(phi, theta, psi);
   SetProperties();
@@ -44,7 +51,8 @@ Transformation3D::Transformation3D(
     const Precision tx, const Precision ty, const Precision tz,
     const Precision r0, const Precision r1, const Precision r2,
     const Precision r3, const Precision r4, const Precision r5,
-    const Precision r6, const Precision r7, const Precision r8) {
+    const Precision r6, const Precision r7, const Precision r8) :
+fIdentity(false), fHasRotation(true), fHasTranslation(true){
   SetTranslation(tx, ty, tz);
   SetRotation(r0, r1, r2, r3, r4, r5, r6, r7, r8);
   SetProperties();
@@ -155,6 +163,34 @@ VECGEOM_CUDA_HEADER_BOTH
 TranslationCode Transformation3D::GenerateTranslationCode() const {
   return (fHasTranslation) ? translation::kGeneric : translation::kIdentity;
 }
+
+
+#ifdef VECGEOM_ROOT
+// function to convert this transformation to a TGeo transformation
+// mainly used for the benchmark comparisons with ROOT
+TGeoMatrix * Transformation3D::ConvertToTGeoMatrix() const
+{
+  if( fIdentity ){
+      return new TGeoIdentity();
+  }
+  if( fHasTranslation && ! fHasRotation ) {
+      return new TGeoTranslation(fTranslation[0], fTranslation[1], fTranslation[2]);
+  }
+  if( fHasRotation && ! fHasTranslation ) {
+      TGeoRotation * tmp = new TGeoRotation();
+      tmp->SetMatrix( Rotation() );
+      return tmp;
+  }
+  if( fHasTranslation && fHasRotation )
+  {
+      TGeoRotation * tmp = new TGeoRotation();
+      tmp->SetMatrix( Rotation() );
+      return  new TGeoCombiTrans(fTranslation[0], fTranslation[1],
+                     fTranslation[2], tmp);
+  }
+  return 0;
+}
+#endif
 
 std::ostream& operator<<(std::ostream& os,
                          Transformation3D const &transformation) {

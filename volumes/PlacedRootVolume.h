@@ -14,9 +14,15 @@ class TGeoShape;
 
 namespace vecgeom {
 
+template <typename T> class AOS3D;
+template <typename T> class SOA3D;
+
 class PlacedRootVolume : public VPlacedVolume {
 
 private:
+
+   PlacedRootVolume(const PlacedRootVolume&); // Not implemented
+   PlacedRootVolume& operator=(const PlacedRootVolume&); // Not implemented
 
   TGeoShape const *fRootShape;
 
