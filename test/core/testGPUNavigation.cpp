@@ -38,8 +38,8 @@ VPlacedVolume* SetupBoxGeometry() {
   Transformation3D *placement6 = new Transformation3D(-2,  2, -2, 45,  0, 45);
   Transformation3D *placement7 = new Transformation3D( 2, -2, -2,  0, 45, 45);
   Transformation3D *placement8 = new Transformation3D(-2, -2, -2, 45, 45, 45);
-  LogicalVolume *world = new LogicalVolume(worldUnplaced);
-  LogicalVolume *box = new LogicalVolume(boxUnplaced);
+  LogicalVolume *world = new LogicalVolume("world",worldUnplaced);
+  LogicalVolume *box = new LogicalVolume("box",boxUnplaced);
   world->PlaceDaughter(box, placement1);
   world->PlaceDaughter(box, placement2);
   world->PlaceDaughter(box, placement3);
@@ -49,7 +49,7 @@ VPlacedVolume* SetupBoxGeometry() {
   world->PlaceDaughter(box, placement7);
   world->PlaceDaughter(box, placement8);
   VPlacedVolume  * w = world->Place();
-  GeoManager::Instance().set_world(w);
+  GeoManager::Instance().SetWorld(w);
   GeoManager::Instance().CloseGeometry();
   return w;
 }
@@ -164,18 +164,21 @@ void testVectorNavigator( VPlacedVolume* world, int np ){
 //     path->UpdateNavigator( rootnav );
      rootnav->FindNextBoundaryAndStep( 1E30 );
 
-     if( cmp.Top() != NULL ) {
-       if( rootnav->GetCurrentNode()
-           != RootGeoManager::Instance().tgeonode( cmp.Top() ) ) {
-             std::cerr << "ERROR ON ITERATION " << i << "\n";
-             std::cerr <<" pos = " << pos << "\n";
+     // if( cmp.Top() != NULL ) {
+       // if( rootnav->GetCurrentNode()
+       //     != RootGeoManager::Instance().tgeonode( cmp.Top() ) ) {
+             std::cerr << "ERROR ON ITERATION " << i;
+             std::cerr <<" pos = " << pos;
              std::cerr <<" dir = " << dir << "\n";
-             std::cerr << "ROOT GOES HERE: " << rootnav->GetCurrentNode()->GetName() << "\n";
+             std::cerr << "ROOT GOES HERE: " << rootnav->GetCurrentNode()->GetName();
              std::cerr << " with step: "<< rootnav->GetStep() << "\n";
-             std::cerr << "VECGEOM GOES HERE: " << RootGeoManager::Instance().GetName( cmp.Top() ) << "\n";
-             nav.InspectEnvironmentForPointAndDirection( pos, dir, *states[i] );
-        }
-      }
+             if(cmp.Top()==NULL) std::cerr<<"VECGEOM GOES TO <NULL> !!!\n";
+             else {
+               std::cerr << "VECGEOM GOES TO <" << RootGeoManager::Instance().GetName( cmp.Top() ) << ">\n";
+               nav.InspectEnvironmentForPointAndDirection( pos, dir, *states[i] );
+             }
+        // }
+      // }
    }
 
 //=== Comparing with 
@@ -208,11 +211,15 @@ void testVectorNavigator( VPlacedVolume* world, int np ){
 int main(int argc, char* argv[])
 {
   OPTION_INT(npoints, 100);
-  VPlacedVolume *w;
-  testVectorSafety(w=SetupBoxGeometry());
+  VPlacedVolume *world = SetupBoxGeometry();
 
-  // create ROOT geometry
-  RootGeoManager::Instance().Convert(w);
+  testVectorSafety(world);
+
+  // exporting to ROOT file
+  RootGeoManager::Instance().ExportToROOTGeometry( world, "geom1.root" );
+
+  assert( ::gGeoManager->GetNNodes() == ntotalnodes1 );
+  assert( ::gGeoManager->GetListOfVolumes()->GetEntries() == mlv1 );
 
   // GPU part
   int nDevice;
@@ -226,5 +233,5 @@ int main(int argc, char* argv[])
     return 0;
   }
 
-  testVectorNavigator(w, npoints);
+  testVectorNavigator(world, npoints);
 }
