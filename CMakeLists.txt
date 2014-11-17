@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 2.8.8)
 project(Vecgeom)
 
@@ -469,7 +470,8 @@ endif()
 
 # Define executables
 
-set(TEST_EXECUTABLES_CORE
+set(TEST_EXECUTABLES_CORE 
+#  ${CMAKE_SOURCE_DIR}/test/core/TestNavigationState.cpp
   ${CMAKE_SOURCE_DIR}/test/core/ContainerTest.cpp
   ${CMAKE_SOURCE_DIR}/test/core/create_geometry.cpp
   ${CMAKE_SOURCE_DIR}/test/core/testVectorSafety.cpp
