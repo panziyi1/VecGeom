@@ -84,8 +84,8 @@ VPlacedVolume const* LogicalVolume::PlaceDaughter(
     char const *const label,
     LogicalVolume const *const volume,
     Transformation3D const *const transformation) {
-    std::cerr << label << std::endl;
     VPlacedVolume const *const placed = volume->Place(label, transformation);
+    std::cerr << label <<" LogVol@"<< this <<" and placed@"<< placed << std::endl;
     daughters_->push_back(placed);
     return placed;
 }

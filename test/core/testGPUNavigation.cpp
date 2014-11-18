@@ -21,37 +21,70 @@
 #include "navigationgpu.h"
 #include "TGeoNavigator.h"
 #include "TGeoManager.h"
+#include "utilities/Visualizer.h"
 
 #include <cuda.h>
 #include <cuda_runtime.h>
 
 using namespace VECGEOM_NAMESPACE;
 
+// Prepare VecGeom vs. root mapping for comparison purposes
+static std::map<VPlacedVolume const*, TGeoNode const*> vg2rootMap;
+
+
 VPlacedVolume* SetupBoxGeometry() {
   UnplacedBox *worldUnplaced = new UnplacedBox(10, 10, 10);
-  UnplacedBox *boxUnplaced = new UnplacedBox(0.5, 0.5, 0.5);
-  Transformation3D *placement1 = new Transformation3D( 2,  2,  2,  0,  0,  0);
-  Transformation3D *placement2 = new Transformation3D(-2,  2,  2, 45,  0,  0);
-  Transformation3D *placement3 = new Transformation3D( 2, -2,  2,  0, 45,  0);
-  Transformation3D *placement4 = new Transformation3D( 2,  2, -2,  0,  0, 45);
-  Transformation3D *placement5 = new Transformation3D(-2, -2,  2, 45, 45,  0);
-  Transformation3D *placement6 = new Transformation3D(-2,  2, -2, 45,  0, 45);
-  Transformation3D *placement7 = new Transformation3D( 2, -2, -2,  0, 45, 45);
-  Transformation3D *placement8 = new Transformation3D(-2, -2, -2, 45, 45, 45);
+  UnplacedBox *boxUnplaced = new UnplacedBox(3, 3, 3);
+  Transformation3D *placement1 = new Transformation3D( 5,  5,  5,  0,  0,  0);
+  Transformation3D *placement2 = new Transformation3D(-5,  5,  5, 45,  0,  0);
+  Transformation3D *placement3 = new Transformation3D( 5, -5,  5,  0, 45,  0);
+  Transformation3D *placement4 = new Transformation3D( 5,  5, -5,  0,  0, 45);
+  Transformation3D *placement5 = new Transformation3D(-5, -5,  5, 45, 45,  0);
+  Transformation3D *placement6 = new Transformation3D(-5,  5, -5, 45,  0, 45);
+  Transformation3D *placement7 = new Transformation3D( 5, -5, -5,  0, 45, 45);
+  Transformation3D *placement8 = new Transformation3D(-5, -5, -5, 45, 45, 45);
   LogicalVolume *world = new LogicalVolume("world",worldUnplaced);
   LogicalVolume *box = new LogicalVolume("box",boxUnplaced);
-  world->PlaceDaughter(box, placement1);
-  world->PlaceDaughter(box, placement2);
-  world->PlaceDaughter(box, placement3);
-  world->PlaceDaughter(box, placement4);
-  world->PlaceDaughter(box, placement5);
-  world->PlaceDaughter(box, placement6);
-  world->PlaceDaughter(box, placement7);
-  world->PlaceDaughter(box, placement8);
+  world->PlaceDaughter("box0",box, placement1);
+  world->PlaceDaughter("box1",box, placement2);
+  world->PlaceDaughter("box2",box, placement3);
+  world->PlaceDaughter("box3",box, placement4);
+  world->PlaceDaughter("box4",box, placement5);
+  world->PlaceDaughter("box5",box, placement6);
+  world->PlaceDaughter("box6",box, placement7);
+  world->PlaceDaughter("box7",box, placement8);
   VPlacedVolume  * w = world->Place();
   GeoManager::Instance().SetWorld(w);
   GeoManager::Instance().CloseGeometry();
+
+  // Visualizer visualizer;
+  // visualizer.AddVolume(*w);
+
+  // Vector<Daughter> const* daughters = w->logical_volume()->daughtersp();
+  // for(int i=0; i<daughters->size(); ++i) {
+  //   VPlacedVolume const* daughter = (*daughters)[i];
+  //   visualizer.AddVolume(*daughter, *(daughter->transformation()));
+  // }
+
+  // visualizer.Show();
+
   return w;
+}
+
+void RecursiveBuildMap(VPlacedVolume const* mother, std::map<VPlacedVolume const*, TGeoNode const*>& aMap) {
+
+  // insert mother entry
+  const TGeoNode* node = RootGeoManager::Instance().tgeonode(mother);
+  std::cout<<"RecursiveMapping: adding to map: "<< mother <<" <"<< mother->GetLabel() <<">"
+           <<" and "<< node <<" <name="<< node->GetName()<<">"<< std::endl;
+  aMap.insert( std::pair<VPlacedVolume const*, TGeoNode const*>(mother, RootGeoManager::Instance().tgeonode(mother)) );
+
+  // recursive call for each daughter
+  Vector<Daughter> const* daughters = mother->logical_volume()->daughtersp();
+  for(int i=0; i<daughters->size(); ++i) {
+    VPlacedVolume const* daughter = (*daughters)[i];
+    RecursiveBuildMap(daughter, aMap);
+  }
 }
 
 // function to test safety
@@ -64,9 +97,10 @@ void testVectorSafety( VPlacedVolume* world ){
    // now setup all the navigation states
    NavigationState ** states = new NavigationState*[1024];
    vecgeom::SimpleNavigator nav;
+
    for (int i=0;i<1024;++i){
-       states[i]=new NavigationState( GeoManager::Instance().getMaxDepth() );
-       nav.LocatePoint( world, points[i], *states[i], true);
+     states[i] = NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
+     nav.LocatePoint( world, points[i], *states[i], true);
    }
 
     // calculate safeties with vector interface
@@ -110,7 +144,7 @@ void testVectorNavigator( VPlacedVolume* world, int np ){
    for (int i=0;i<np;++i){
      // pSteps[i] = kInfinity;
      pSteps[i] = (i%2)? 1 : kInfinity;
-     states[i] = new NavigationState( GeoManager::Instance().getMaxDepth() );
+     states[i] = NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
    //    newstates[i] = new NavigationState( GeoManager::Instance().getMaxDepth() );
    }
 
@@ -134,16 +168,20 @@ void testVectorNavigator( VPlacedVolume* world, int np ){
 
    // verify against serial interface
    for (int i=0;i<np;++i) {
-     Precision s;
-     NavigationState cmp( GeoManager::Instance().getMaxDepth() );
-     cmp.Clear();
-     nav.FindNextBoundaryAndStep( points[i], dirs[i], *states[i],
-               cmp, pSteps[i], s );
-     // vecgeom::Assert( steps[i] == s ,
+     Precision serialStep;
+     NavigationState* cmp = NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
+     cmp->Clear();
+     printf("\n\n=====> New point: ");
+     nav.FindNextBoundaryAndStep( points[i], dirs[i], *(states[i]),
+               *cmp, pSteps[i], serialStep );
+     cmp->Print();
+     if(cmp->Top()) printf("Using RootGeoManager to name VecGeom state: %s\n",
+                           RootGeoManager::Instance().tgeonode( cmp->Top() )->GetName() );
+     // vecgeom::Assert( steps[i] == serialStep ,
      //         " Problem in VectorNavigation (steps) (in SimpleNavigator)" );
-     // vecgeom::Assert( cmp.Top() == newstates[i]->Top() ,
+     // vecgeom::Assert( cmp->Top() == newstates[i]->Top() ,
      //                " Problem in VectorNavigation (states) (in SimpleNavigator)" );
-     // vecgeom::Assert( cmp.IsOnBoundary() == newstates[i]->IsOnBoundary(),
+     // vecgeom::Assert( cmp->IsOnBoundary() == newstates[i]->IsOnBoundary(),
      //                " Problem in VectorNavigation (boundary) (in SimpleNavigator)" );
      // vecgeom::Assert( safeties[i] == nav.GetSafety( points[i], *states[i] ),
      //         " Problem with safety " );
@@ -156,29 +194,42 @@ void testVectorNavigator( VPlacedVolume* world, int np ){
      Vector3D<Precision> const& dir = dirs[i];
      rootnav->ResetState();
 
-     //TGeoNode * node = 
+     //TGeoNode * node =
      rootnav->FindNode( pos.x(), pos.y(), pos.z() );
 
      rootnav->SetCurrentPoint( pos.x(), pos.y(), pos.z() );
      rootnav->SetCurrentDirection( dir.x(), dir.y(), dir.z() );
 //     path->UpdateNavigator( rootnav );
-     rootnav->FindNextBoundaryAndStep( 1E30 );
+     rootnav->FindNextBoundaryAndStep( pSteps[i] );
 
-     // if( cmp.Top() != NULL ) {
-       // if( rootnav->GetCurrentNode()
-       //     != RootGeoManager::Instance().tgeonode( cmp.Top() ) ) {
-             std::cerr << "ERROR ON ITERATION " << i;
+     static bool first = true;
+     if(first) {
+       RecursiveBuildMap( world, vg2rootMap);
+       std::cout<<" map size="<< vg2rootMap.size() << std::endl;
+       first=false;
+     }
+
+     //if( cmp->Top() != NULL ) {
+     if( rootnav->GetCurrentNode()->GetName()
+         != (cmp->Top() ? cmp->Top()->GetLabel() : "NULL") ) {
+         std::cerr << "ERROR ON ITERATION " << i <<":"
+                   <<" ROOT node="<< rootnav->GetCurrentNode()->GetName()
+                   <<" VecGeom node="<< (cmp->Top() ? cmp->Top()->GetLabel() : "NULL")
+                   << std::endl;
+         std::cerr<< rootnav->GetCurrentNode() <<' '<< RootGeoManager::Instance().tgeonode(cmp->Top()) << std::endl;
+
+         std::cerr << "\n=======> Summary: ITERATION " << i;
              std::cerr <<" pos = " << pos;
              std::cerr <<" dir = " << dir << "\n";
              std::cerr << "ROOT GOES HERE: " << rootnav->GetCurrentNode()->GetName();
              std::cerr << " with step: "<< rootnav->GetStep() << "\n";
-             if(cmp.Top()==NULL) std::cerr<<"VECGEOM GOES TO <NULL> !!!\n";
+             if(cmp->Top()==NULL) std::cerr<<"VECGEOM GOES TO <NULL> with step: "<< serialStep <<"\n";
              else {
-               std::cerr << "VECGEOM GOES TO <" << RootGeoManager::Instance().GetName( cmp.Top() ) << ">\n";
+               std::cerr << "VECGEOM GOES TO <" << cmp->Top()->GetLabel() << "> with step: "<< serialStep <<"\n";
                nav.InspectEnvironmentForPointAndDirection( pos, dir, *states[i] );
              }
-        // }
-      // }
+//       }
+     }
    }
 
 //=== Comparing with 
@@ -218,8 +269,8 @@ int main(int argc, char* argv[])
   // exporting to ROOT file
   RootGeoManager::Instance().ExportToROOTGeometry( world, "geom1.root" );
 
-  assert( ::gGeoManager->GetNNodes() == ntotalnodes1 );
-  assert( ::gGeoManager->GetListOfVolumes()->GetEntries() == mlv1 );
+  std::cout<<"ROOT: NNodes="<< ::gGeoManager->GetNNodes()
+           <<" NVolumes="<< ::gGeoManager->GetListOfVolumes()->GetEntries() << "\n";
 
   // GPU part
   int nDevice;
