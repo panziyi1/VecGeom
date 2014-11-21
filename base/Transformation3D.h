@@ -85,6 +85,7 @@ public:
   bool operator==(Transformation3D const &rhs) const;
 
   VECGEOM_CUDA_HEADER_BOTH
+
   VECGEOM_INLINE
   virtual ~Transformation3D() {}
 
@@ -291,7 +292,7 @@ public:
   void CopyFrom( Transformation3D const & rhs )
   {
     // not sure this compiles under CUDA
-    std::memcpy((void*)this, (void*)&rhs, sizeof(*this));
+    std::memcpy((void*)this, (const void*)&rhs, sizeof(*this));
   }
 
   // Utility and CUDA

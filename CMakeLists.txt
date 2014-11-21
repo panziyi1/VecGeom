@@ -168,7 +168,7 @@ if (Cilk)
   set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_CILK")
 endif()
 if (CUDA)
-  set(CUDA_ARCH 20 CACHE STRING "CUDA device architecture.")
+  set(CUDA_ARCH 50 CACHE STRING "CUDA device architecture.")
   set(CUDA_ARCH "-arch=sm_${CUDA_ARCH}")
   set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_CUDA")
   if (NOT CUDA_SPECIALIZATION)
@@ -176,6 +176,7 @@ if (CUDA)
         "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_CUDA_NO_SPECIALIZATION")
   endif()
   set(VECGEOM_NVCC_COMPILATION_FLAGS ${VECGEOM_NVCC_COMPILATION_FLAGS}
+      -std=c++11
       -O2 --use_fast_math -Xcudafe "--diag_suppress=code_is_unreachable"
       -Xcudafe "--diag_suppress=initialization_not_reachable")
   if (CMAKE_BUILD_TYPE MATCHES Debug)
@@ -300,8 +301,7 @@ if (ROOT)
   include_directories(AFTER SYSTEM ${ROOT_INCLUDE_DIR})
   link_directories(${ROOT_LIBRARY_DIR})
   set(VECGEOM_LIBRARIES_EXTERNAL ${VECGEOM_LIBRARIES_EXTERNAL}
-      Cint Core MathCore RIO Thread Geom Gui Net Hist Graf Graf3d Gpad Tree
-      Rint Postscript Matrix Physics m dl)
+      ${ROOT_LIBRARIES} Geom)
   set(SRC_EXTERNAL ${SRC_EXTERNAL}
       source/PlacedRootVolume.cpp
       source/RootGeoManager.cpp
@@ -346,6 +346,11 @@ if (Geant4)
 
 endif()
 
+
+# until VecCore is separated from VecGeom (then it become something
+# ${VecCore_DIR}/include
+include_directories(${CMAKE_SOURCE_DIR}/VecCore/inc )
+
 ################################################################################
 
 include_directories(${CMAKE_SOURCE_DIR})
@@ -356,6 +361,7 @@ set(SRC_CPP_RELATIVE
   source/PlacedCone.cpp
   source/PlacedBox.cpp
   source/PlacedTube.cpp
+  source/PlacedTorus.cpp
   source/PlacedTrd.cpp
   source/PlacedParallelepiped.cpp
   source/PlacedParaboloid.cpp
@@ -367,6 +373,7 @@ set(SRC_CPP_RELATIVE
   source/UnplacedCone.cpp
   source/UnplacedBox.cpp
   source/UnplacedTube.cpp
+  source/UnplacedTorus.cpp
   source/UnplacedTrd.cpp
   source/UnplacedParaboloid.cpp
   source/UnplacedParallelepiped.cpp
@@ -476,7 +483,8 @@ set(TEST_EXECUTABLES_CORE
   ${CMAKE_SOURCE_DIR}/test/core/create_geometry.cpp
   ${CMAKE_SOURCE_DIR}/test/core/testVectorSafety.cpp
   ${CMAKE_SOURCE_DIR}/test/core/Transformation3DTest.cpp
-  ${CMAKE_SOURCE_DIR}/test/core/testGPUNavigation.cpp
+  ${CMAKE_SOURCE_DIR}/test/core/PhiWedgeTest.cpp
+  ${CMAKE_SOURCE_DIR}/test/core/BitSetTest.cpp
 )
 set(TEST_EXECUTABLES_ROOT
   ${CMAKE_SOURCE_DIR}/test/root/root_geometry.cpp
@@ -490,6 +498,7 @@ set(TEST_EXECUTABLES_VISUALIZATION
   ${CMAKE_SOURCE_DIR}/test/visualization/VisualizeTrap.cpp
   ${CMAKE_SOURCE_DIR}/test/visualization/VisualizeTube.cpp
   ${CMAKE_SOURCE_DIR}/test/visualization/DebugTube.cpp
+#  ${CMAKE_SOURCE_DIR}/test/visualization/DebugTorus.cpp
 )
 set(TEST_EXECUTABLES_USOLIDS
   ${CMAKE_SOURCE_DIR}/test/usolids/CompatibilityTest.cpp
@@ -513,12 +522,14 @@ set(TEST_EXECUTABLES_BENCHMARK
   ${CMAKE_SOURCE_DIR}/test/benchmark/MultiBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/ParallelepipedBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/TubeBenchmark.cpp
+  ${CMAKE_SOURCE_DIR}/test/benchmark/TorusBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/TrapezoidBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/TrapezoidBenchmarkScript.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/OrbBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/SphereBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/TrdBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/ConeBenchmark.cpp
+  ${CMAKE_SOURCE_DIR}/test/benchmark/testGPUNavigation.cpp
 )
 set(TEST_EXECUTABLES_CUDA
   # Files go here
@@ -640,3 +651,7 @@ install(TARGETS vecgeom DESTINATION ${INSTALL_LIB_DIR})
 if (CUDA)
   install(TARGETS vecgeomcuda DESTINATION ${INSTALL_LIB_DIR})
 endif()
+
+
+# Not yet a proper project.
+add_subdirectory (VecCore)
