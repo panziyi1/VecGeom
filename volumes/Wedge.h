@@ -145,6 +145,7 @@ class Wedge{
         typename Backend::inside_v  inside=EInside::kSurface;
         MaskedAssign(completelyoutside, EInside::kOutside, &inside);
         MaskedAssign(completelyinside, EInside::kInside, &inside);
+        return inside;
     }
 
     template<typename Backend>
