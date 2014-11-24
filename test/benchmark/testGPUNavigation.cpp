@@ -15,7 +15,7 @@
 #include "navigation/SimpleNavigator.h"
 #include "management/GeoManager.h"
 #include "base/Global.h"
-#include "test/benchmark/ArgParser.h"
+#include "ArgParser.h"
 #include "base/Stopwatch.h"
 
 #include "navigationgpu.h"
@@ -116,7 +116,7 @@ void testVectorSafety( VPlacedVolume const* world ){
 
 
 // function to test vector navigator
-void testVectorNavigator( VPlacedVolume const* world, int np ){
+void testVectorNavigator( VPlacedVolume const* world, int np, int nreps) {
    SOA3D<Precision> points(np);
    SOA3D<Precision> dirs(np);
    SOA3D<Precision> workspace1(np);
@@ -137,30 +137,68 @@ void testVectorNavigator( VPlacedVolume const* world, int np ){
 
    // now setup all the navigation states
    NavigationState ** states = new NavigationState*[np];
-   //NavigationState ** newstates = new NavigationState*[np];
+   NavigationState ** vgVectorStates = new NavigationState*[np];
 
-   for (int i=0;i<np;++i){
-     // pSteps[i] = kInfinity;
-     pSteps[i] = kInfinity;
-     //pSteps[i] = (i%2)? 1 : kInfinity;
-     states[i] = NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
-   //    newstates[i] = new NavigationState( GeoManager::Instance().getMaxDepth() );
-   }
-
+   // one loop at a time, for better data locality
+   for (int i=0;i<np;++i) pSteps[i] = kInfinity;
+   std::cout<<"testVecNav: creating states[]...\n"<< std::endl;
    for (int i=0;i<np;++i) {
-     nav.LocatePoint( world, points[i], *states[i], true);
+     states[i] = NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
+//     std::cout<<"testVecNavig: states["<<i<<"] @ "<< states[i] <<": "; states[i]->Print();
    }
+   for (int i=0;i<np;++i) vgVectorStates[i] = NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
 
+   //========= timing 1
+   std::cout<<"testVecNav: done creating states.  Locating points...\n"<< std::endl;
    timer.Start();
-   for(int i=0; i<np; ++i) {
-     steps[i] = (Precision)i;
+   for(int n=0; n<nreps; ++n) {
+     for (int i=0;i<np;++i) {
+       // std::cout<<" timing 1: state["<<i<<"]="; states[i]->Print();
+       states[i]->Clear();
+       nav.LocatePoint( world, points[i], *states[i], true);
+       steps[i] = (Precision)i;
+     }
    }
+   Precision elapsedCPU = timer.Stop();
+   printf("CPU elapsed time (locating and setting steps) %f ms\n", 1000.*elapsedCPU);
+
+   for (int i=0;i<np;++i) states[i]->Clear();
+
+   //========= timing 2
+   std::cout<<"testVecNav: Locating points again...\n"<< std::endl;
+   timer.Start();
+   for(int n=0; n<nreps; ++n) {
+     for (int i=0;i<np;++i) {
+       // std::cout<<" timing 2: state["<<i<<"]="; states[i]->Print();
+       states[i]->Clear();
+       nav.LocatePoint( world, points[i], *states[i], true);
+     }
+   }
+   elapsedCPU = timer.Stop();
+   printf("CPU elapsed time (only locating points) %f ms\n", 1000.*elapsedCPU);
+
+   //========= timing 3
+   timer.Start();
+   for(int n=0; n<nreps; ++n) {
+     for(int i=0; i<np; ++i) {
+       steps[i] = (Precision)i;
+       states[i]->Print();
+     }
+   }
+   elapsedCPU = timer.Stop();
+   printf("CPU elapsed time (only setting steps) %f ms\n", 1000.*elapsedCPU);
+
+   //========== timing 4
+   timer.Start();
 
    // calculate steps with vector interface
-   // nav.FindNextBoundaryAndStep( points, dirs, workspace1, workspace2,
-   //         states, newstates, pSteps, safeties, steps, intworkspace );
-   Precision elapsedCPU = timer.Stop();
-   printf("CPU elapsed time: %f ms\n", 1000.*elapsedCPU);
+   for(int n=0; n<nreps; ++n) {
+     nav.FindNextBoundaryAndStep( points, dirs, workspace1, workspace2,
+                                  states, vgVectorStates, pSteps, safeties, steps, intworkspace );
+   }
+   elapsedCPU = timer.Stop();
+   printf("CPU elapsed time (vectorized navigation): %f ms\n", 1000.*elapsedCPU);
+   //===========================================
 
    std::cout<<" testGPUNav: gGeoManager = "<< ::gGeoManager << std::endl;
    TGeoNavigator * rootnav = ::gGeoManager->GetCurrentNavigator();
@@ -171,17 +209,14 @@ void testVectorNavigator( VPlacedVolume const* world, int np ){
      Precision serialStep;
 
      cmp->Clear();
-     printf("\n\n=====> New point: ");
      nav.FindNextBoundaryAndStep( points[i], dirs[i], *(states[i]),
                *cmp, pSteps[i], serialStep );
-     cmp->Print();
-     if(cmp->Top()) printf("Using RootGeoManager to name VecGeom state: %s\n",
-                           RootGeoManager::Instance().tgeonode( cmp->Top() )->GetName() );
+
      // vecgeom::Assert( steps[i] == serialStep ,
      //         " Problem in VectorNavigation (steps) (in SimpleNavigator)" );
-     // vecgeom::Assert( cmp->Top() == newstates[i]->Top() ,
+     // vecgeom::Assert( cmp->Top() == vgVectorStates[i]->Top() ,
      //                " Problem in VectorNavigation (states) (in SimpleNavigator)" );
-     // vecgeom::Assert( cmp->IsOnBoundary() == newstates[i]->IsOnBoundary(),
+     // vecgeom::Assert( cmp->IsOnBoundary() == vgVectorStates[i]->IsOnBoundary(),
      //                " Problem in VectorNavigation (boundary) (in SimpleNavigator)" );
      // vecgeom::Assert( safeties[i] == nav.GetSafety( points[i], *states[i] ),
      //         " Problem with safety " );
@@ -201,6 +236,10 @@ void testVectorNavigator( VPlacedVolume const* world, int np ){
      rootnav->SetCurrentDirection( dir.x(), dir.y(), dir.z() );
 //     path->UpdateNavigator( rootnav );
      rootnav->FindNextBoundaryAndStep( pSteps[i] );
+
+     std::cout<<"testGPUNav: rootNode="<< rootnav->GetCurrentNode()->GetName() << std::endl;
+     if(cmp->Top()) std::cout<<"            vecGnode="<< RootGeoManager::Instance().tgeonode(cmp->Top())->GetName() << std::endl;
+     else           std::cout<<"            vecGnode=NULL"<< std::endl;
 
      if( cmp->Top() == NULL ) {
         if (! rootnav->IsOutside() )
@@ -258,27 +297,29 @@ return;
 
 int main(int argc, char* argv[])
 {
-  OPTION_INT(npoints, 100);
+  OPTION_INT(npoints, 5);
+  OPTION_INT(nreps, 10);
+
+
+
   VPlacedVolume *world = SetupBoxGeometry();
 
   testVectorSafety(world);
 
-  // exporting to ROOT file
+  // Exporting to ROOT file
   RootGeoManager::Instance().ExportToROOTGeometry( world, "geom1.root" );
-
-//  std::cout<<"ROOT: NNodes="<< ::gGeoManager->GetNNodes()
-  //         <<" NVolumes="<< ::gGeoManager->GetListOfVolumes()->GetEntries() << "\n";
-
-
   RootGeoManager::Instance().Clear();
 
-  // now try to read back in
-  RootGeoManager::Instance().set_verbose(1);
+  printf("testGPUNav: spot 1\n");
+
+  // Now try to read back in.  This is needed to make comparisons to VecGeom easily,
+  // since it builds VecGeom geometry based on the ROOT geometry and its TGeoNodes.
+  // RootGeoManager::Instance().set_verbose(1);
   RootGeoManager::Instance().LoadRootGeometry("geom1.root");
+  printf("testGPUNav: spot 2\n");
 
-
-  // GPU part
-  /*
+/*
+// GPU part
   int nDevice;
   cudaGetDeviceCount(&nDevice);
 
@@ -290,6 +331,9 @@ int main(int argc, char* argv[])
     return 0;
   }
 */
-    std::cerr << "NAVIGATING\n";
-  testVectorNavigator(GeoManager::Instance().GetWorld(), npoints);
+
+  std::cerr << "\n\n =============== testing vector navigation...\n";
+  testVectorNavigator(GeoManager::Instance().GetWorld(), npoints, nreps);
+
+  printf("testGPUNav: spot 3 - returned from testVectorNavigator!!\n");
 }
