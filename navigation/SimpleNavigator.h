@@ -262,9 +262,6 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
                                           Precision                 & step
                                         ) const
 {
-  printf("global: point=(%f; %f; %f) and globaldir=(%f; %f; %f)\n",
-         globalpoint.x(), globalpoint.y(), globalpoint.z(),
-         globaldir.x(), globaldir.y(), globaldir.z());
    // this information might have been cached in previous navigators??
    Transformation3D const & m = const_cast<NavigationState &> ( currentstate ).TopMatrix();
    Vector3D<Precision> localpoint=m.Transform(globalpoint);
@@ -275,20 +272,11 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
 
    step = currentvolume->DistanceToOut( localpoint, localdir, pstep );
 
-   printf("local: point=(%f; %f; %f) and localdir=(%f; %f; %f), distToOut=%f\n",
-          localpoint.x(), localpoint.y(), localpoint.z(),
-          localdir.x(), localdir.y(), localdir.z(), step );
-
-   Vector3D<Precision> exit = localpoint + step*localdir;
-   printf("Will leave current volume at exit=(%f; %f; %f)\n",
-          exit.x(), exit.y(), exit.z());
-
    // NOTE: IF STEP IS NEGATIVE HERE, SOMETHING IS TERRIBLY WRONG. WE CAN TRY TO HANDLE THE SITUATION
    // IN TRYING TO PROPOSE THE RIGHT LOCATION IN NEWSTATE AND RETURN
    // I WOULD MUCH FAVOUR IF THIS WAS DONE OUTSIDE OF THIS FUNCTION BY THE USER
    if( step < 0. )
    {
-     printf("***** Something is terribly wrong!, step=%f\n", step);
        newstate = currentstate;
        RelocatePointFromPath( localpoint, newstate );
        return;
@@ -303,13 +291,8 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
       //    previous distance becomes step estimate, distance to daughter returned in workspace
       Precision ddistance = daughter->DistanceToIn( localpoint, localdir, step );
 
-      printf("VecGeom looping over daughters: change=%s,", (ddistance<step?"true":"false"));
       nexthitvolume = (ddistance < step) ? d : nexthitvolume;
       step      = (ddistance < step) ? ddistance  : step;
-#ifndef __NVCC__
-      printf(" d=%d, name=%s, distToIn=%f, phyStep=%f, step=%f\n",
-             d, daughter->GetLabel().c_str(), ddistance, pstep, step);
-#endif
    }
 
    // now we have the candidates
@@ -321,11 +304,9 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
    {
        // don't need to do anything
        step = pstep;
-       printf("Step>phyStep --> setting newstate.boundary(false) and returning...\n\n");
        newstate.SetBoundaryState( false );
        return;
    }
-   printf("setp<=phyStep --> setting newstate.boundary(true)\n");
    newstate.SetBoundaryState( true );
 
    // TODO: this is tedious, please provide operators in Vector3D!!
@@ -333,9 +314,6 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
    Vector3D<Precision> newpointafterboundary = localdir;
    newpointafterboundary*=(step + 1e-9);
    newpointafterboundary+=localpoint;
-   printf("newpointafterboundary = (%f; %f; %f)\n",
-          newpointafterboundary.x(), newpointafterboundary.y(), newpointafterboundary.z());
-
 
    if( nexthitvolume != -1 ) // not hitting mother
    {
@@ -345,15 +323,9 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
 
       // this should be inlined here
       LocatePoint( nextvol, trans->Transform(newpointafterboundary), newstate, false );
-
-#ifndef __NVCC__
-      printf("spot 7: nexthitvolume!=1 (not hitting mother), nextvol=%s\n", nextvol->GetLabel().c_str());
-#endif
    }
    else
    {
-     printf("hitting daughter...  relocating point: newpointafterboundary=(%f; %f; %f) and newstate=?\n",
-            newpointafterboundary.x(), newpointafterboundary.y(), newpointafterboundary.z());
       // continue directly further up
       //LocateLocalPointFromPath_Relative_Iterative( newpointafterboundary, newpointafterboundaryinnewframe, outpath, globalm );
       RelocatePointFromPath( newpointafterboundary, newstate );

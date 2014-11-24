@@ -407,7 +407,7 @@ bool UnplacedTrapezoid::Normal(Vector3D<Precision> const& point, Vector3D<Precis
     else                 sumnorm -= Vec3D(0.,0.,1.);
   }
   if (noSurfaces == 0) {
-#ifdef UDEBUG
+#ifdef DEBUG
     UUtils::Exception("UnplacedTrapezoid::SurfaceNormal(point)", "GeomSolids1002",
                       Warning, 1, "Point is not on surface.");
 #endif
