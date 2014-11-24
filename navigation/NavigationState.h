@@ -395,10 +395,14 @@ NavigationState::GlobalToLocal(Vector3D<Precision> const & globalpoint)
 VECGEOM_INLINE
 void NavigationState::Print() const
 {
-   std::cerr << "maxlevel " << fMaxlevel << std::endl;
-   std::cerr << "currentlevel " << fCurrentLevel << std::endl;
-   std::cerr << "onboundary " << fOnBoundary << std::endl;
-   std::cerr << "deepest volume " << Top() << std::endl;
+   std::cerr << "NavState: Level(cur/max)=" << fCurrentLevel <<'/'<< fMaxlevel
+             <<" onBoundary="<< fOnBoundary
+             <<" topVol="<< Top() <<" this="<< this
+             << std::endl;
+   // std::cerr << "maxlevel " << fMaxlevel << std::endl;
+   // std::cerr << "currentlevel " << fCurrentLevel << std::endl;
+   // std::cerr << "onboundary " << fOnBoundary << std::endl;
+   // std::cerr << "deepest volume " << Top() << std::endl;
 }
 
 
