@@ -3,9 +3,6 @@
 //
 // 2014-11-26 G.Lima - created, by adapting Johannes' Benchmarker for navigation
 
-#ifndef VECGEOM_BENCHMARKING_NAVIGATIONBENCHMARKER_H_
-#define VECGEOM_BENCHMARKING_NAVIGATIONBENCHMARKER_H_
-
 #include "benchmarking/NavigationBenchmarker.h"
 
 #include "base/SOA3D.h"
@@ -143,6 +140,7 @@ double benchmarkVectorNavigation( VPlacedVolume const* world, int nPoints, int n
 
 //==================================
 
+#ifdef VECGEOM_ROOT
 double benchmarkROOTNavigation( VPlacedVolume const* world, int nPoints, int nReps,
                                 SOA3D<Precision> const& points,
                                 SOA3D<Precision> const& dirs ) {
@@ -175,6 +173,7 @@ double benchmarkROOTNavigation( VPlacedVolume const* world, int nPoints, int nRe
 
   return timer.Stop();
 }
+#endif
 
 //==================================
 // function to test safety
@@ -230,14 +229,17 @@ void runNavigationBenchmarks( VPlacedVolume const* world, int np, int nreps) {
   cputime = benchmarkVectorNavigation(world,np,nreps,points, dirs);
   printf("CPU elapsed time (vectorized navigation) %f ms\n", 1000.*cputime);
 
+#ifdef VECGEOM_ROOT
   cputime = benchmarkROOTNavigation(world,np,nreps,points, dirs);
   printf("CPU elapsed time (ROOT navigation) %f ms\n", 1000.*cputime);
+#endif
 
   return;
 }
 
 //=======================================
 
+#ifdef VECGEOM_ROOT
 bool validateNavigationStepAgainstRoot( Vector3D<Precision> const& pos, Vector3D<Precision> const& dir,
                                         NavigationState const& testState, Precision maxStep, Precision testStep)
 {
@@ -273,6 +275,7 @@ bool validateNavigationStepAgainstRoot( Vector3D<Precision> const& pos, Vector3D
 
   return result;
 }
+#endif // VECGEOM_ROOT
 
 //=======================================
 
@@ -309,6 +312,8 @@ bool validateVecGeomNavigation( VPlacedVolume const* top, int npoints) {
     nav.LocatePoint( top, pos, *origStates[i], true);
     nav.FindNextBoundaryAndStep( pos, dir, *origStates[i], *vgSerialStates[i], maxSteps[i], refSteps[i]);
 
+#ifdef VECGEOM_ROOT
+    // validate serial interface agains ROOT, if available
     bool ok = validateNavigationStepAgainstRoot(pos, dir, *vgSerialStates[i], maxSteps[i], refSteps[i]);
     result &= ok;
     if( !ok ) {
@@ -326,6 +331,7 @@ bool validateVecGeomNavigation( VPlacedVolume const* top, int npoints) {
         // nav.InspectEnvironmentForPointAndDirection( pos, dir, *origState );
       }
     }
+#endif // VECGEOM_ROOT
   }
 
   std::cout<<"VecGeom navigation - serial interface: #errors = "<< errorCount <<" / "<< np << std::endl;
@@ -371,40 +377,39 @@ bool validateVecGeomNavigation( VPlacedVolume const* top, int npoints) {
 
   std::cout<<"VecGeom navigation - vector interface: #errors = "<< errorCount <<" / "<< np << std::endl;
 
-#ifdef VECGEOM_CUDA
+#ifdef VECGEOM_NVCC
   Precision * gpuSteps = (Precision *) _mm_malloc(sizeof(Precision)*np,32);
   printf("Start GPU navigation...\n");
-  RunNavigationCuda(GeoManager::Instance().GetWorld(), np,
+  runNavigationCuda(GeoManager::Instance().GetWorld(), np,
                     points.x(),  points.y(), points.z(),
                     dirs.x(), dirs.y(), dirs.z(), maxSteps, gpuSteps );
 
-  //=== Comparing with ROOT
-
+  //=== Comparing results from GPU with serialized navigation
   errorCount = 0;
   for(int i=0; i<np; ++i) {
     bool mismatch = false;
     if( Abs( gpuSteps[i] - refSteps[i] ) > kTolerance )                         mismatch = true;
-    if( vgSerialStates[i]->Top() != vgVectorStates[i]->Top() )                  mismatch = true;
-    if( vgSerialStates[i]->IsOnBoundary() != vgVectorStates[i]->IsOnBoundary()) mismatch = true;
-    if( safeties[i] != nav.GetSafety( points[i], *origStates[i] ))              mismatch = true;
+    // if( vgSerialStates[i]->Top() != vgVectorStates[i]->Top() )                  mismatch = true;
+    // if( vgSerialStates[i]->IsOnBoundary() != vgVectorStates[i]->IsOnBoundary()) mismatch = true;
+    // if( safeties[i] != nav.GetSafety( points[i], *origStates[i] ))              mismatch = true;
     if(mismatch) {
       ++errorCount;
-      std::cout<<"Vector navigation problems: iteration "<< i
+      std::cout<<"GPU navigation problems: iteration "<< i
                <<" steps: "<< refSteps[i] <<" / "<< gpuSteps
-               <<" navStates: "<< vgSerialStates[i]->Top()->GetLabel()
-               << (vgSerialStates[i]->IsOnBoundary() ? "*" : "")
-               <<" / "<< vgVectorStates[i]->Top()->GetLabel()
-               << (vgVectorStates[i]->IsOnBoundary() ? "*" : "")
+               // <<" navStates: "<< vgSerialStates[i]->Top()->GetLabel()
+               // << (vgSerialStates[i]->IsOnBoundary() ? "*" : "")
+               // <<" / "<< vgVectorStates[i]->Top()->GetLabel()
+               // << (vgVectorStates[i]->IsOnBoundary() ? "*" : "")
                << std::endl;
     }
   }
 
   std::cout<<"VecGeom navigation on the GPUs: #errors = "<< errorCount <<" / "<< np << std::endl;
+#endif // VECGEOM_NVCC
 
   // if(mismatches>0) std::cout << "Navigation test failed with "<< mismatches <<" mismatches\n";
   // else std::cout<<"Navigation test passed.\n";
 
-#endif
 
   //=== cleanup
   for(int i=0; i<np; ++i) NavigationState::ReleaseInstance( origStates[i] );
@@ -418,12 +423,10 @@ bool validateVecGeomNavigation( VPlacedVolume const* top, int npoints) {
   _mm_free(refSteps);
   _mm_free(vecSteps);
   _mm_free(safeties);
-#ifdef VECGEOM_CUDA
+#ifdef VECGEOM_NVCC
   _mm_free(gpuSteps);
 #endif
   return result;
 }
 
 } // End namespace vecgeom
-
-#endif // VECGEOM_BENCHMARKING_NAVIGATIONBENCHMARKER_H_

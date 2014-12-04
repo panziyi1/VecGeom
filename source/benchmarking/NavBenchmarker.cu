@@ -41,7 +41,7 @@ void NavKernelTest(VPlacedVolume const *const volume,
 
 namespace vecgeom
 {
-  void RunNavigationCuda( VPlacedVolume const* volume, unsigned npoints,
+  void runNavigationCuda( VPlacedVolume const* volume, unsigned npoints,
                           Precision *const posX, Precision *const posY, Precision *const posZ,
                           Precision *const dirX, Precision *const dirY, Precision *const dirZ,
                           Precision const *const pSteps,

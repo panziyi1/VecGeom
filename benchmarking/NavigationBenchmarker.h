@@ -36,13 +36,6 @@ namespace vecgeom {
     SOA3D<Precision> const& dirs
     );
 
-  double benchmarkROOTNavigation(
-    VPlacedVolume const* world,
-    int nPoints,
-    int nReps,
-    SOA3D<Precision> const& points,
-    SOA3D<Precision> const& dirs );
-
   void testVectorSafety( VPlacedVolume const* top );
 
   void runNavigationBenchmarks( VPlacedVolume const* top, int np, int nreps);
@@ -56,6 +49,22 @@ namespace vecgeom {
     );
 
   bool validateVecGeomNavigation( VPlacedVolume const* top, int npoints);
+
+#ifdef VECGEOM_ROOT
+  double benchmarkROOTNavigation(
+    VPlacedVolume const* world,
+    int nPoints,
+    int nReps,
+    SOA3D<Precision> const& points,
+    SOA3D<Precision> const& dirs );
+#endif
+
+#ifdef VECGEOM_NVCC
+ void runNavigationCuda( VPlacedVolume const* volume, unsigned npoints,
+                         Precision *const posX, Precision *const posY, Precision *const posZ,
+                         Precision *const dirX, Precision *const dirY, Precision *const dirZ,
+                         Precision const *const pSteps,      Precision *const steps );
+#endif
 
 } // End namespace vecgeom
 
