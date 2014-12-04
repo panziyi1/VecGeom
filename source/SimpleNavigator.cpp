@@ -77,7 +77,7 @@ void SimpleNavigator::InspectEnvironmentForPointAndDirection
       m->MasterToLocal(lp, llp);
       m->MasterToLocalVect(ld, lld);
       TGeoNode const * daughter=currentRootNode->GetDaughter(d);
-      Precision ddistance = daughter->GetVolume()->GetShape()->DistFromOutside(llp,llp,3,1E30,0);
+      Precision ddistance = daughter->GetVolume()->GetShape()->DistFromOutside(llp,lld,3,1E30,0);
 
       std::cout << "DistanceToDaughter ROOT : " << daughter->GetName() << " " << ddistance << "\n";
    }
