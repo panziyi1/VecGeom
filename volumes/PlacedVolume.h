@@ -117,7 +117,8 @@ public:
         //std::cerr << *label_ << std::endl;
         //label_->assign(label);}
     //else{
-       label_=new std::string(label);
+    if(label_) delete label_;
+    label_ = new std::string(label);
     //}
   }
 

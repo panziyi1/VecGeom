@@ -34,7 +34,7 @@ LogicalVolume::LogicalVolume(char const *const label,
   }
 
 LogicalVolume::LogicalVolume(LogicalVolume const & other)
-  : unplaced_volume_(), id_(0), label_(),
+  : unplaced_volume_(), id_(0), label_(NULL),
     user_extension_(NULL), daughters_()
 {
   printf("COPY CONSTRUCTOR FOR LogicalVolumes NOT IMPLEMENTED");
