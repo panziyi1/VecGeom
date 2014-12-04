@@ -8,14 +8,12 @@
 
 #include "benchmarking/NavigationBenchmarker.h"
 
-// #include "base/Global.h"
 #include "base/SOA3D.h"
 #include "base/Stopwatch.h"
 
 #include "volumes/PlacedVolume.h"
 #include "navigation/NavigationState.h"
 #include "navigation/SimpleNavigator.h"
-//#include "management/RootGeoManager.h"
 
 #ifdef VECGEOM_ROOT
 #include "TGeoNavigator.h"
@@ -77,10 +75,13 @@ double benchmarkSerialNavigation( VPlacedVolume const* world, int nPoints, int n
   }
   Precision elapsed = timer.Stop();
 
+  // cleanup
   for( int i=0; i<nPoints; ++i) {
     NavigationState::ReleaseInstance( curStates[i] );
     NavigationState::ReleaseInstance( newStates[i] );
   }
+  delete[] curStates;
+  delete[] newStates;
 
   return elapsed;
 }
@@ -127,6 +128,8 @@ double benchmarkVectorNavigation( VPlacedVolume const* world, int nPoints, int n
     NavigationState::ReleaseInstance( curStates[i] );
     NavigationState::ReleaseInstance( newStates[i] );
   }
+  delete[] curStates;
+  delete[] newStates;
 
   _mm_free(intworkspace);
   _mm_free(maxSteps);
@@ -162,6 +165,11 @@ double benchmarkROOTNavigation( VPlacedVolume const* world, int nPoints, int nRe
       rootnav->FindNextBoundaryAndStep( maxSteps[i] );
     }
   }
+
+  // cleanup
+  delete[] rootNodes;
+  _mm_free(maxSteps);
+
   return timer.Stop();
 }
 
