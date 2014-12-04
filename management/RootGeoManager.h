@@ -8,14 +8,19 @@
 
 #include "base/TypeMap.h"
 
-class TGeoNode;
-class TGeoVolume;
+//class TGeoNode;
+//class TGeoVolume;
 #include "TGeoNode.h"
-class TGeoMatrix;
+//class TGeoMatrix;
 
 namespace VECGEOM_NAMESPACE {
 
+// forward declarations
+class LogicalVolume;
+class VPlacedVolume;
+class VUnplacedVolume;
 class UnplacedBox;
+class Transformation3D;
 
 /// \brief Manager to handle interaction with ROOT geometry.
 /// \details Allows integration with ROOT geometries for compatability reasons.
