@@ -30,6 +30,8 @@ option(CTEST "Enable CTest when building." ON)
 
 option(PLANESHELL "Enable the use of PlaneShell class for the trapezoid." ON)
 
+option(DISTANCE_DEBUG "Enable comparision of calculcated distances againt ROOT/Geant4 behind the scenes" OFF)
+
 set(VECGEOM_VECTOR "" CACHE STRING
     "Vector instruction set to use (sse/avx/...).")
 
@@ -168,7 +170,7 @@ if (Cilk)
   set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_CILK")
 endif()
 if (CUDA)
-  set(CUDA_ARCH 50 CACHE STRING "CUDA device architecture.")
+  set(CUDA_ARCH 20 CACHE STRING "CUDA device architecture.")
   set(CUDA_ARCH "-arch=sm_${CUDA_ARCH}")
   set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_CUDA")
   if (NOT CUDA_SPECIALIZATION)
@@ -235,6 +237,11 @@ endif()
 if (Geant4)
   set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_GEANT4")
 endif()
+if (DISTANCE_DEBUG)
+  set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_DISTANCE_DEBUG")
+endif()
+
+
 
 # Pass flags to compilers
 if (GNU)
@@ -288,9 +295,9 @@ if (CUDA)
 
   set(CUDA_SEPARABLE_COMPILATION ON)
 
-  set(SRC_EXTERNAL ${SRC_EXTERNAL} source/CudaManager.cpp)
+  set(SRC_EXTERNAL ${SRC_EXTERNAL} source/CudaManager.cpp source/backend/cuda/Interface.cpp)
   set(SRC_CUDA ${SRC_CUDA}
-      source/CudaManager.cu source/backend/cuda/Interface.cu)
+      source/CudaManager.cu)
 
 endif()
 
@@ -388,6 +395,9 @@ set(SRC_CPP_RELATIVE
 
   source/UnplacedSphere.cpp
   source/PlacedSphere.cpp
+
+  source/UnplacedBooleanVolume.cpp
+  source/PlacedBooleanVolume.cpp
 )
 foreach(SRC ${SRC_CPP_RELATIVE})
   set(SRC_CPP ${SRC_CPP} ${CMAKE_SOURCE_DIR}/${SRC})
@@ -484,6 +494,8 @@ set(TEST_EXECUTABLES_CORE
   ${CMAKE_SOURCE_DIR}/test/core/create_geometry.cpp
   ${CMAKE_SOURCE_DIR}/test/core/testVectorSafety.cpp
   ${CMAKE_SOURCE_DIR}/test/core/Transformation3DTest.cpp
+#  ${CMAKE_SOURCE_DIR}/test/core/boolminustest.cpp
+#  ${CMAKE_SOURCE_DIR}/test/core/boolminustest2.cpp
   ${CMAKE_SOURCE_DIR}/test/core/PhiWedgeTest.cpp
   ${CMAKE_SOURCE_DIR}/test/core/BitSetTest.cpp
 )
@@ -523,6 +535,13 @@ set(TEST_EXECUTABLES_BENCHMARK
   ${CMAKE_SOURCE_DIR}/test/benchmark/MultiBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/ParallelepipedBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/TubeBenchmark.cpp
+ # ${CMAKE_SOURCE_DIR}/test/benchmark/BoxMinusHollowTubeBenchmark.cpp
+ # ${CMAKE_SOURCE_DIR}/test/benchmark/BoxMinusTubeSegBenchmark.cpp
+  ${CMAKE_SOURCE_DIR}/test/benchmark/BoxMinusHollowTubeBenchmark_virtual.cpp
+  ${CMAKE_SOURCE_DIR}/test/benchmark/BoxUnionHollowTubeBenchmark_virtual.cpp
+  ${CMAKE_SOURCE_DIR}/test/benchmark/BoxIntersectHollowTubeBenchmark_virtual.cpp
+  ${CMAKE_SOURCE_DIR}/test/benchmark/BoxUnionBoxBenchmark_virtual.cpp
+  ${CMAKE_SOURCE_DIR}/test/benchmark/3LevelSubtractionBenchmark_virtual.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/TorusBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/TrapezoidBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/TrapezoidBenchmarkScript.cpp
