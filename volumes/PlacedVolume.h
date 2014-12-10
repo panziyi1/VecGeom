@@ -18,8 +18,8 @@ class G4VSolid;
 
 namespace vecgeom {
 
-VECGEOM_DEVICE_FORWARD_DECLARE( class VPlacedVolume; );
-VECGEOM_DEVICE_DECLARE_CONV( VPlacedVolume );
+VECGEOM_DEVICE_FORWARD_DECLARE( class VPlacedVolume; )
+VECGEOM_DEVICE_DECLARE_CONV( VPlacedVolume )
 #ifndef VECGEOM_NVCC
 template <> struct kCudaType<const cxx::VPlacedVolume*> { using type_t = const cuda::VPlacedVolume*; };
 #endif
@@ -327,7 +327,9 @@ public:
          const int id) const; \
     }
 
-#define VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT( PlacedVol, trans )    \
+#ifdef VECGEOM_CUDA_VOLUME_SPECIALIZATION
+
+#define VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT( PlacedVol, trans )   \
    VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL( PlacedVol<trans, rotation::kGeneric> ) \
    VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL( PlacedVol<trans, rotation::kDiagonal> ) \
    VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL( PlacedVol<trans, rotation::kIdentity> ) \
@@ -350,6 +352,16 @@ public:
    VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT(PlacedVol, translation::kGeneric) \
    VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT(PlacedVol, translation::kIdentity)
 
+#else
+
+#define VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT( PlacedVol, trans )   \
+   VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL( PlacedVol<trans, rotation::kGeneric> )
+
+#define VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC( PlacedVol ) \
+   VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT(PlacedVol, translation::kGeneric)
+
+#endif
+
 #define VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL_3( PlacedVol, Extra, Type )   \
    namespace cxx { \
       template size_t DevicePtr<cuda::PlacedVol, Extra, cuda::Type>::SizeOf(); \
@@ -359,6 +371,8 @@ public:
          DevicePtr<cuda::PlacedBox> const boundingBox, \
          const int id) const; \
     }
+
+#ifdef VECGEOM_CUDA_VOLUME_SPECIALIZATION
 
 #define VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT_3( PlacedVol, trans, Type ) \
    VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL_3( PlacedVol<trans, rotation::kGeneric, Type> ) \
@@ -383,6 +397,15 @@ public:
    VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT_3(PlacedVol, translation::kGeneric, Type) \
    VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT_3(PlacedVol, translation::kIdentity, Type)
 
+#else
+
+#define VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT_3( PlacedVol, trans, Type ) \
+   VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL_3( PlacedVol<trans, rotation::kGeneric, Type> ) 
+#define VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_3( PlacedVol, Type )       \
+   VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT_3(PlacedVol, translation::kGeneric, Type)
+
+#endif
+
 #define VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL_BOOLEAN( PlacedVol, trans, rot ) \
    namespace cxx { \
       template size_t DevicePtr<cuda::PlacedVol, trans, rot>::SizeOf(); \
@@ -392,6 +415,8 @@ public:
          DevicePtr<cuda::PlacedBox> const boundingBox, \
          const int id) const; \
     }
+
+#ifdef VECGEOM_CUDA_VOLUME_SPECIALIZATION
 
 #define VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT_BOOLEAN( PlacedVol, Op, trans) \
    VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL_BOOLEAN( PlacedVol<Op, trans, rotation::kGeneric> ) \
@@ -415,6 +440,17 @@ public:
 #define VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_BOOLEAN( PlacedVol, Op )       \
    VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT_BOOLEAN(PlacedVol, Op, translation::kGeneric) \
    VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT_BOOLEAN(PlacedVol, Op, translation::kIdentity)
+
+#else
+
+#define VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT_BOOLEAN( PlacedVol, Op, trans) \
+   VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL_BOOLEAN( PlacedVol<Op, trans, rotation::kGeneric> )
+
+#define VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_BOOLEAN( PlacedVol, Op )       \
+   VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT_BOOLEAN(PlacedVol, Op, translation::kGeneric)
+
+#endif
+
 
 #endif
 

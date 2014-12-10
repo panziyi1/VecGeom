@@ -53,6 +53,7 @@ namespace VecCore {
    template <typename Cont, typename V> class VariableSizeObjectInterface {
    public:
       VariableSizeObjectInterface() = default;
+      virtual ~VariableSizeObjectInterface() = default;
 
       // The static maker to be used to create an instance of the variable size object.
 
@@ -128,7 +129,7 @@ namespace VecCore {
       {
          // Releases the space allocated for the object
          obj->~Cont();
-         if (obj->fSelfAlloc) delete [] (char*)obj;
+         if (obj->GetVariableData().fSelfAlloc) delete [] (char*)obj;
       }
 
       // Equivalent of sizeof function
