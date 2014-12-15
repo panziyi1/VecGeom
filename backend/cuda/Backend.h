@@ -11,7 +11,11 @@
 
 #include <cassert>
 
-namespace vecgeom_cuda {
+namespace vecgeom {
+#ifdef VECGEOM_NVCC
+inline
+#endif
+namespace cuda {
 
 struct kCuda {
   typedef int       int_v;
@@ -61,6 +65,7 @@ float Pow(float const &x, int arg) {
 }
 
 // Auxiliary GPU functions
+#ifdef VECGEOM_NVCC
 
 VECGEOM_CUDA_HEADER_DEVICE
 VECGEOM_INLINE
@@ -73,6 +78,8 @@ VECGEOM_INLINE
 int ThreadOffset() {
   return blockDim.x * gridDim.x;
 }
+
+#endif
 
 /**
  * Initialize with the number of threads required to construct the necessary
@@ -101,6 +108,6 @@ struct LaunchParameters {
   }
 };
 
-} // End global namespace
+} } // End global namespace
 
 #endif // VECGEOM_BACKEND_CUDABACKEND_H_
