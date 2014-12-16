@@ -46,9 +46,9 @@ VPlacedVolume * VPlacedVolume::operator=( VPlacedVolume const & other )
 #endif
 
 VPlacedVolume::~VPlacedVolume() {
-//#ifndef VECGEOM_NVCC
+#ifndef VECGEOM_NVCC
   if(label_) delete label_;
-//#endif
+#endif
 }
 
 VECGEOM_CUDA_HEADER_BOTH

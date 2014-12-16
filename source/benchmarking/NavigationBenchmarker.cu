@@ -17,28 +17,34 @@ namespace vecgeom {
 inline namespace cuda {
 
 __global__
-void NavKernelTest(VPlacedVolume const *const volume,
+void NavigationKernel(VPlacedVolume const *const volume,
                    const SOA3D<Precision> positions, const SOA3D<Precision> directions,
                    Precision const * pSteps,  const int n,  Precision *const steps) {
 
-  unsigned tid = ThreadIndex(); 
-  // NavigationState old(5), newstate(5);
-  // SimpleNavigator nav;
-  // double step;
+  using NavigationState = vecgeom::cuda::NavigationState;
 
+  // ??? What's the right way to create empty navigation states on the GPU?
+  // NavigationState* inState = NavigationState::MakeInstance( CudaManager::Instance().getMaxDepth() );
+  // NavigationState* outState = NavigationState::MakeInstance( CudaManager::Instance().getMaxDepth() );
+
+  SimpleNavigator nav;
+  double step;
+
+  unsigned tid = ThreadIndex();
   while (tid < n) {
-    // nav.LocatePoint(volume,positions[tid],old,true);
-    // nav.FindNextBoundaryAndStep(positions[tid],directions[tid], old, newstate, pSteps[tid], step);
+    steps[tid] = (Precision)tid;
+
+    // ??? Once navigation states are available, uncomment following lines for navigation on the GPU
+    // nav.LocatePoint(volume, positions[tid], *inState, true);
+    // nav.FindNextBoundaryAndStep(positions[tid], directions[tid], *inState, *outState, pSteps[tid], step);
     // steps[tid] = step;
-    //steps[tid] = (Precision)tid;
-    steps[tid] = tid;
     tid += ThreadOffset();
   }
 }
 
 } // end of namespace cuda
 
-// input argument is pointer to a cxx::VPlacedVolume
+// Should this function be moved to NavigationBenchmarker.cpp?
 Precision runNavigationCuda( const cxx::VPlacedVolume *const volume, unsigned npoints,
                              Precision const *const posX, Precision const *const posY, Precision const  *const posZ,
                              Precision const *const dirX, Precision const *const dirY, Precision const *const dirZ,
@@ -79,22 +85,24 @@ Precision runNavigationCuda( const cxx::VPlacedVolume *const volume, unsigned np
    // launch kernel in GPU
    vecgeom::cuda::LaunchParameters launch(npoints);
    vecgeom::cuda::Stopwatch timer;
-   printf("GPU configuration:  <<<%i,%i>>>\n", launch.grid_size.x, launch.block_size.x);
 
-   vecgeom::cuda::NavKernelTest<<< 1, 192>>>(
+   printf("GPU configuration (pre-launch):  <<<%i,%i>>>\n", launch.grid_size.x, launch.block_size.x);
+
+   vecgeom::cuda::NavigationKernel<<< 1, 32>>>(
      CudaManager::Instance().world_gpu(),
      positionGpu, directionGpu,
-     maxStepsGpu, 192, propStepsGpu
+     maxStepsGpu, 32, propStepsGpu
      );
    cudaDeviceSynchronize();
 
+   printf("GPU configuration:  <<<%i,%i>>>\n", launch.grid_size.x, launch.block_size.x);
+
    timer.Start();
-   vecgeom::cuda::NavKernelTest<<< launch.grid_size, launch.block_size>>>(
+   vecgeom::cuda::NavigationKernel<<< launch.grid_size, launch.block_size>>>(
        CudaManager::Instance().world_gpu(),
        positionGpu, directionGpu, maxStepsGpu, npoints, propStepsGpu
      );
-
-//   cudaDeviceSynchronize();
+   cudaDeviceSynchronize();
    Precision elapsedCuda = timer.Stop();
 
    cxx::CopyFromGpu(propStepsGpu, propSteps, npoints*sizeof(Precision));

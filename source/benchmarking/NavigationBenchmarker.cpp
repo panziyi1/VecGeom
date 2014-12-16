@@ -401,6 +401,7 @@ bool validateVecGeomNavigation( VPlacedVolume_t top, int npoints) {
   printf("Loading geometry into GPU...\n");
   CudaManager::Instance().set_verbose(3);
   CudaManager::Instance().LoadGeometry(GeoManager::Instance().GetWorld());
+  CudaManager::Instance().Synchronize();
 
   printf("Start GPU navigation...\n");
   runNavigationCuda(GeoManager::Instance().GetWorld(), np,
@@ -418,7 +419,7 @@ bool validateVecGeomNavigation( VPlacedVolume_t top, int npoints) {
     if(mismatch) {
       ++errorCount;
       std::cout<<"GPU navigation problems: iteration "<< i
-               <<" steps: "<< refSteps[i] <<" / "<< gpuSteps
+               <<" steps: "<< refSteps[i] <<" / "<< gpuSteps[i]
                // <<" navStates: "<< vgSerialStates[i]->Top()->GetLabel()
                // << (vgSerialStates[i]->IsOnBoundary() ? "*" : "")
                // <<" / "<< vgVectorStates[i]->Top()->GetLabel()
