@@ -88,7 +88,8 @@ int main(int argc, char* argv[])
 
   std::cout<<"\n*** Validating VecGeom navigation..."<< std::endl;
   bool ok = validateVecGeomNavigation(GeoManager::Instance().GetWorld(), 1024);
-  if(ok) std::cout<<"validation passed."<< std::endl;
+  if(ok) std::cout<<"VecGeom validation passed."<< std::endl;
+  else   std::cout<<"VecGeom validation failed."<< std::endl;
 
   std::cout<<"\n*** Running navigation benchmarks with npoints="<<npoints<<" and nreps="<< nreps <<".\n";
   runNavigationBenchmarks(GeoManager::Instance().GetWorld(), npoints, nreps);

@@ -28,7 +28,7 @@ void NavigationKernel(VPlacedVolume const *const volume,
   // NavigationState* outState = NavigationState::MakeInstance( CudaManager::Instance().getMaxDepth() );
 
   SimpleNavigator nav;
-  double step;
+  // double step;
 
   unsigned tid = ThreadIndex();
   while (tid < n) {
@@ -86,8 +86,7 @@ Precision runNavigationCuda( const cxx::VPlacedVolume *const volume, unsigned np
    vecgeom::cuda::LaunchParameters launch(npoints);
    vecgeom::cuda::Stopwatch timer;
 
-   printf("GPU configuration (pre-launch):  <<<%i,%i>>>\n", launch.grid_size.x, launch.block_size.x);
-
+   printf("GPU warm-up:  <<<1,32>>>\n");
    vecgeom::cuda::NavigationKernel<<< 1, 32>>>(
      CudaManager::Instance().world_gpu(),
      positionGpu, directionGpu,
