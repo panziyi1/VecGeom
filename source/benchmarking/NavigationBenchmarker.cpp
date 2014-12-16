@@ -18,12 +18,29 @@
 #include "TGeoManager.h"
 #endif
 
+#ifdef VECGEOM_CUDA_INTERFACE
+#include "backend/cuda/Backend.h"
+#include "management/CudaManager.h"
+#endif
+
 namespace vecgeom {
+
+// #ifdef VECGEOM_CUDA_INTERFACE
+// void GetVolumePointers( std::list<DevicePtr<cuda::VPlacedVolume>> &volumesGpu ) {
+//   using cxx::CudaManager;
+//   CudaManager::Instance().LoadGeometry(CudaManager::Instance().world());
+//   CudaManager::Instance().Synchronize();
+//   for (std::list<VolumePointers>::const_iterator v = fVolumes.begin();
+//        v != fVolumes.end(); ++v) {
+//     volumesGpu.push_back(CudaManager::Instance().LookupPlaced(v->Specialized()));
+//   }
+// }
+// #endif
 
 //==================================
 
-double benchmarkLocatePoint( VPlacedVolume const* world, int nPoints, int nReps,
-                             SOA3D<Precision> const& points) {
+Precision benchmarkLocatePoint( VPlacedVolume_t top, int nPoints, int nReps,
+                                SOA3D<Precision> const& points) {
 
   NavigationState * state = NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
   vecgeom::SimpleNavigator nav;
@@ -33,20 +50,20 @@ double benchmarkLocatePoint( VPlacedVolume const* world, int nPoints, int nReps,
   for(int n=0; n<nReps; ++n) {
     for( int i=0; i<nPoints; ++i ) {
       state->Clear();
-      nav.LocatePoint( world, points[i], *state, true);
+      nav.LocatePoint( top, points[i], *state, true);
     }
   }
   Precision elapsed = timer.Stop();
 
   NavigationState::ReleaseInstance( state );
-  return elapsed;
+  return (Precision)elapsed;
 }
 
 //==================================
 
-double benchmarkSerialNavigation( VPlacedVolume const* world, int nPoints, int nReps,
-                                  SOA3D<Precision> const& points,
-                                  SOA3D<Precision> const& dirs ) {
+Precision benchmarkSerialNavigation( VPlacedVolume_t top, int nPoints, int nReps,
+                                     SOA3D<Precision> const& points,
+                                     SOA3D<Precision> const& dirs ) {
 
   NavigationState ** curStates = new NavigationState*[nPoints];
   for( int i=0; i<nPoints; ++i) curStates[i] = NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
@@ -58,7 +75,7 @@ double benchmarkSerialNavigation( VPlacedVolume const* world, int nPoints, int n
 
   for( int i=0; i<nPoints; ++i ) {
     curStates[i]->Clear();
-    nav.LocatePoint( world, points[i], *curStates[i], true);
+    nav.LocatePoint( top, points[i], *curStates[i], true);
   }
 
   Precision maxStep = kInfinity, step=0.0;
@@ -80,14 +97,14 @@ double benchmarkSerialNavigation( VPlacedVolume const* world, int nPoints, int n
   delete[] curStates;
   delete[] newStates;
 
-  return elapsed;
+  return (Precision)elapsed;
 }
 
 //==================================
 
-double benchmarkVectorNavigation( VPlacedVolume const* world, int nPoints, int nReps,
-                                  SOA3D<Precision> const& points,
-                                  SOA3D<Precision> const& dirs ) {
+Precision benchmarkVectorNavigation( VPlacedVolume_t top, int nPoints, int nReps,
+                                     SOA3D<Precision> const& points,
+                                     SOA3D<Precision> const& dirs ) {
 
   NavigationState ** curStates = new NavigationState*[nPoints];
   for( int i=0; i<nPoints; ++i) curStates[i] = NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
@@ -111,7 +128,7 @@ double benchmarkVectorNavigation( VPlacedVolume const* world, int nPoints, int n
 
   for( int i=0; i<nPoints; ++i ) {
     curStates[i]->Clear();
-    nav.LocatePoint( world, points[i], *curStates[i], true);
+    nav.LocatePoint( top, points[i], *curStates[i], true);
   }
 
   Stopwatch timer;
@@ -135,15 +152,15 @@ double benchmarkVectorNavigation( VPlacedVolume const* world, int nPoints, int n
   _mm_free(vecSteps);
   _mm_free(safeties);
 
-  return elapsed;
+  return (Precision)elapsed;
 }
 
 //==================================
 
 #ifdef VECGEOM_ROOT
-double benchmarkROOTNavigation( VPlacedVolume const* world, int nPoints, int nReps,
-                                SOA3D<Precision> const& points,
-                                SOA3D<Precision> const& dirs ) {
+Precision benchmarkROOTNavigation( VPlacedVolume_t top, int nPoints, int nReps,
+                                   SOA3D<Precision> const& points,
+                                   SOA3D<Precision> const& dirs ) {
 
   TGeoNavigator * rootnav = ::gGeoManager->GetCurrentNavigator();
   TGeoNode ** rootNodes = new TGeoNode*[nPoints];
@@ -171,17 +188,17 @@ double benchmarkROOTNavigation( VPlacedVolume const* world, int nPoints, int nRe
   delete[] rootNodes;
   _mm_free(maxSteps);
 
-  return timer.Stop();
+  return (Precision)timer.Stop();
 }
 #endif
 
 //==================================
 // function to test safety
-void testVectorSafety( VPlacedVolume const* world ){
+void testVectorSafety( VPlacedVolume_t top ){
    SOA3D<Precision> points(1024);
    SOA3D<Precision> workspace(1024);
    Precision * safeties = (Precision *) _mm_malloc(sizeof(Precision)*1024,32);
-   vecgeom::volumeUtilities::FillUncontainedPoints( *world, points );
+   vecgeom::volumeUtilities::FillUncontainedPoints( *top, points );
 
    // now setup all the navigation states
    NavigationState ** states = new NavigationState*[1024];
@@ -190,7 +207,7 @@ void testVectorSafety( VPlacedVolume const* world ){
 
    for (int i=0;i<1024;++i){
      states[i] = NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
-     nav.LocatePoint( world, points[i], *states[i], true);
+     nav.LocatePoint( top, points[i], *states[i], true);
    }
 
    // calculate safeties with vector interface
@@ -210,27 +227,27 @@ void testVectorSafety( VPlacedVolume const* world ){
 
 //=======================================
 /// Function to run navigation benchmarks
-void runNavigationBenchmarks( VPlacedVolume const* world, int np, int nreps) {
+void runNavigationBenchmarks( VPlacedVolume_t top, int np, int nreps) {
 
   SOA3D<Precision> points(np);
   SOA3D<Precision> dirs(np);
 
-  vecgeom::volumeUtilities::FillUncontainedPoints( *world, points );
+  vecgeom::volumeUtilities::FillUncontainedPoints( *top, points );
   vecgeom::volumeUtilities::FillRandomDirections( dirs );
 
   Precision cputime;
 
-  cputime = benchmarkLocatePoint(world,np,nreps,points);
+  cputime = benchmarkLocatePoint(top,np,nreps,points);
   printf("CPU elapsed time (locating and setting steps) %f ms\n", 1000.*cputime);
 
-  cputime = benchmarkSerialNavigation(world,np,nreps,points, dirs);
+  cputime = benchmarkSerialNavigation(top,np,nreps,points, dirs);
   printf("CPU elapsed time (serialized navigation) %f ms\n", 1000.*cputime);
 
-  cputime = benchmarkVectorNavigation(world,np,nreps,points, dirs);
+  cputime = benchmarkVectorNavigation(top,np,nreps,points, dirs);
   printf("CPU elapsed time (vectorized navigation) %f ms\n", 1000.*cputime);
 
 #ifdef VECGEOM_ROOT
-  cputime = benchmarkROOTNavigation(world,np,nreps,points, dirs);
+  cputime = benchmarkROOTNavigation(top,np,nreps,points, dirs);
   printf("CPU elapsed time (ROOT navigation) %f ms\n", 1000.*cputime);
 #endif
 
@@ -279,7 +296,7 @@ bool validateNavigationStepAgainstRoot( Vector3D<Precision> const& pos, Vector3D
 
 //=======================================
 
-bool validateVecGeomNavigation( VPlacedVolume const* top, int npoints) {
+bool validateVecGeomNavigation( VPlacedVolume_t top, int npoints) {
 
   bool result = true;
   int errorCount = 0;
@@ -377,8 +394,14 @@ bool validateVecGeomNavigation( VPlacedVolume const* top, int npoints) {
 
   std::cout<<"VecGeom navigation - vector interface: #errors = "<< errorCount <<" / "<< np << std::endl;
 
-#ifdef VECGEOM_NVCC
+#ifdef VECGEOM_CUDA
   Precision * gpuSteps = (Precision *) _mm_malloc(sizeof(Precision)*np,32);
+
+  // load GPU geometry
+  printf("Loading geometry into GPU...\n");
+  CudaManager::Instance().set_verbose(3);
+  CudaManager::Instance().LoadGeometry(GeoManager::Instance().GetWorld());
+
   printf("Start GPU navigation...\n");
   runNavigationCuda(GeoManager::Instance().GetWorld(), np,
                     points.x(),  points.y(), points.z(),
@@ -405,7 +428,7 @@ bool validateVecGeomNavigation( VPlacedVolume const* top, int npoints) {
   }
 
   std::cout<<"VecGeom navigation on the GPUs: #errors = "<< errorCount <<" / "<< np << std::endl;
-#endif // VECGEOM_NVCC
+#endif // VECGEOM_CUDA
 
   // if(mismatches>0) std::cout << "Navigation test failed with "<< mismatches <<" mismatches\n";
   // else std::cout<<"Navigation test passed.\n";

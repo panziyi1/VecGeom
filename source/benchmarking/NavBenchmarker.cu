@@ -5,17 +5,16 @@
 #include "base/SOA3D.h"
 #include "navigation/SimpleNavigator.h"
 #include "navigation/NavigationState.h"
-#include "management/CudaManager.h"
-#include "backend/cuda/Backend.h"
 
 #ifdef VECGEOM_CUDA
 #include "base/Stopwatch.h"
 #include "backend/cuda/Backend.h"
 #include "management/CudaManager.h"
+#include "backend/cuda/Interface.h"
 #endif
 
-namespace vecgeom_cuda
-{
+namespace vecgeom {
+inline namespace cuda {
 
 __global__
 void NavKernelTest(VPlacedVolume const *const volume,
@@ -37,84 +36,80 @@ void NavKernelTest(VPlacedVolume const *const volume,
   }
 }
 
-} // end of namespace vecgeom_cuda
+} // end of namespace cuda
 
-namespace vecgeom
-{
-  void runNavigationCuda( VPlacedVolume const* volume, unsigned npoints,
-                          Precision *const posX, Precision *const posY, Precision *const posZ,
-                          Precision *const dirX, Precision *const dirY, Precision *const dirZ,
-                          Precision const *const pSteps,
-                          Precision *const steps ) {
+// input argument in pointer to a cxx::VPlacedVolume
+Precision runNavigationCuda( const VPlacedVolume *const volume, unsigned npoints,
+                             Precision *const posX, Precision *const posY, Precision *const posZ,
+                             Precision *const dirX, Precision *const dirY, Precision *const dirZ,
+                             Precision const *const maxSteps,
+                             Precision *const propSteps ) {
 
-#ifdef VECGEOM_CUDA
    // transfer geometry to GPU
-   typedef vecgeom_cuda::VPlacedVolume const* CudaVolume;
-   typedef vecgeom_cuda::SOA3D<Precision> CudaSOA3D;
+   using CudaVolume = cuda::VPlacedVolume const*;
+   using CudaSOA3D  = cuda::SOA3D<Precision>;
+   using cxx::CudaManager;
 
-//   CudaManager::Instance().set_verbose(3);
-   CudaManager::Instance().LoadGeometry(volume);
-   CudaManager::Instance().Synchronize();
+   // build a list of GPU volume pointers - needed?
 
    // copy points to the GPU
-   Precision *posXGpu = AllocateOnGpu<Precision>(sizeof(Precision)*npoints);
-   Precision *posYGpu = AllocateOnGpu<Precision>(sizeof(Precision)*npoints);
-   Precision *posZGpu = AllocateOnGpu<Precision>(sizeof(Precision)*npoints);
-   CopyToGpu(posX, posXGpu, npoints*sizeof(Precision));
-   CopyToGpu(posY, posYGpu, npoints*sizeof(Precision));
-   CopyToGpu(posZ, posZGpu, npoints*sizeof(Precision));
+   cxx::DevicePtr<Precision> posXGpu; posXGpu.Allocate(npoints);
+   cxx::DevicePtr<Precision> posYGpu; posYGpu.Allocate(npoints);
+   cxx::DevicePtr<Precision> posZGpu; posZGpu.Allocate(npoints);
+   posXGpu.ToDevice(posX, npoints);
+   posYGpu.ToDevice(posY, npoints);
+   posZGpu.ToDevice(posZ, npoints);
    CudaSOA3D positionGpu = CudaSOA3D(posXGpu, posYGpu, posZGpu, npoints);
 
    // copy directions to the GPU
-   Precision *dirXGpu = AllocateOnGpu<Precision>(sizeof(Precision)*npoints);
-   Precision *dirYGpu = AllocateOnGpu<Precision>(sizeof(Precision)*npoints);
-   Precision *dirZGpu = AllocateOnGpu<Precision>(sizeof(Precision)*npoints);
-   CopyToGpu(dirX, dirXGpu, npoints*sizeof(Precision));
-   CopyToGpu(dirY, dirYGpu, npoints*sizeof(Precision));
-   CopyToGpu(dirZ, dirZGpu, npoints*sizeof(Precision));
+   cxx::DevicePtr<Precision> dirXGpu; dirXGpu.Allocate(npoints);
+   cxx::DevicePtr<Precision> dirYGpu; dirYGpu.Allocate(npoints);
+   cxx::DevicePtr<Precision> dirZGpu; dirZGpu.Allocate(npoints);
+   dirXGpu.ToDevice(dirX, npoints);
+   dirYGpu.ToDevice(dirY, npoints);
+   dirZGpu.ToDevice(dirZ, npoints);
    CudaSOA3D directionGpu = CudaSOA3D(dirXGpu, dirYGpu, dirZGpu, npoints);
 
-   // allocate space for kernel output
-   Precision *stepsGpu = AllocateOnGpu<Precision>(sizeof(Precision)*npoints);
-   Precision *pStepsGpu = AllocateOnGpu<Precision>(sizeof(Precision)*npoints);
-   CopyToGpu(pSteps, pStepsGpu, npoints*sizeof(Precision) );
+   cxx::DevicePtr<Precision> maxStepsGpu;  maxStepsGpu.Allocate(npoints);
+   maxStepsGpu.ToDevice(maxSteps, npoints);
 
-   vecgeom_cuda::LaunchParameters launch =
-     vecgeom_cuda::LaunchParameters(npoints);
+   // allocate space for kernel output
+   Precision* propStepsGpu = cxx::AllocateOnGpu<Precision>(npoints*sizeof(Precision));
 
    // launch kernel in GPU
-   vecgeom_cuda::Stopwatch timer;
+   vecgeom::cuda::LaunchParameters launch(npoints);
+   vecgeom::cuda::Stopwatch timer;
    printf("GPU configuration:  <<<%i,%i>>>\n", launch.grid_size.x, launch.block_size.x);
 
-   vecgeom_cuda::NavKernelTest<<< 1, 192>>>(
+   vecgeom::cuda::NavKernelTest<<< 1, 192>>>(
      CudaManager::Instance().world_gpu(),
      positionGpu, directionGpu,
-     pStepsGpu, 192, stepsGpu
+     maxStepsGpu, 192, propStepsGpu
      );
    cudaDeviceSynchronize();
 
    timer.Start();
-   vecgeom_cuda::NavKernelTest<<< launch.grid_size, launch.block_size>>>(
+   vecgeom::cuda::NavKernelTest<<< launch.grid_size, launch.block_size>>>(
        CudaManager::Instance().world_gpu(),
-       positionGpu, directionGpu, pStepsGpu, npoints, stepsGpu
+       positionGpu, directionGpu, maxStepsGpu, npoints, propStepsGpu
      );
 
 //   cudaDeviceSynchronize();
    Precision elapsedCuda = timer.Stop();
 
-   CopyFromGpu(stepsGpu, steps, npoints*sizeof(Precision));
+   cxx::CopyFromGpu(propStepsGpu, propSteps, npoints*sizeof(Precision));
 
-   FreeFromGpu(stepsGpu);
-   FreeFromGpu(posXGpu);
-   FreeFromGpu(posYGpu);
-   FreeFromGpu(posZGpu);
-   FreeFromGpu(dirXGpu);
-   FreeFromGpu(dirYGpu);
-   FreeFromGpu(dirZGpu);
+   cxx::FreeFromGpu(propStepsGpu);
+   posXGpu.Deallocate();
+   posYGpu.Deallocate();
+   posZGpu.Deallocate();
+   dirXGpu.Deallocate();
+   dirYGpu.Deallocate();
+   dirZGpu.Deallocate();
 
    // compare steps from navigator with the ones above
    std::cout<<"GPU navigation time: "<< 1000.*elapsedCuda <<" ms\n";
-#endif  // VECGEOM_CUDA
-  }
-
+   return elapsedCuda;
 }
+
+} // global namespace
