@@ -69,10 +69,10 @@ namespace vecgeom {
 #endif
 
 #ifdef VECGEOM_CUDA
- void runNavigationCuda( VPlacedVolume const* volume, unsigned npoints,
-                         Precision *const posX, Precision *const posY, Precision *const posZ,
-                         Precision *const dirX, Precision *const dirY, Precision *const dirZ,
-                         Precision const *const pSteps,      Precision *const steps );
+Precision runNavigationCuda( VPlacedVolume const* volume, unsigned npoints,
+                             Precision const *const posX, Precision const *const posY, Precision const *const posZ,
+                             Precision const *const dirX, Precision const *const dirY, Precision const *const dirZ,
+                             Precision const *const pSteps,      Precision *const steps );
 #endif
 
 } // End namespace vecgeom

@@ -38,10 +38,10 @@ void NavKernelTest(VPlacedVolume const *const volume,
 
 } // end of namespace cuda
 
-// input argument in pointer to a cxx::VPlacedVolume
-Precision runNavigationCuda( const VPlacedVolume *const volume, unsigned npoints,
-                             Precision *const posX, Precision *const posY, Precision *const posZ,
-                             Precision *const dirX, Precision *const dirY, Precision *const dirZ,
+// input argument is pointer to a cxx::VPlacedVolume
+Precision runNavigationCuda( const cxx::VPlacedVolume *const volume, unsigned npoints,
+                             Precision const *const posX, Precision const *const posY, Precision const  *const posZ,
+                             Precision const *const dirX, Precision const *const dirY, Precision const *const dirZ,
                              Precision const *const maxSteps,
                              Precision *const propSteps ) {
 
