@@ -23,6 +23,7 @@
     // Compiling device code
     #define VECGEOM_NVCC_DEVICE
   #endif
+  #define HAVECUDANAMESPACE
   #define VECGEOM_IMPL_NAMESPACE cuda
   #define VECGEOM_NAMESPACE ::vecgeom
   #define VECGEOM_CUDA_HEADER_HOST __host__
@@ -47,6 +48,7 @@
   #undef VECGEOM_BENCHMARK
 #else
   // Not compiling with NVCC
+#define HAVENORMALNAMESPACE
   #define VECGEOM_IMPL_NAMESPACE cxx
   #define VECGEOM_NAMESPACE ::vecgeom
   #define VECGEOM_CUDA_HEADER_HOST

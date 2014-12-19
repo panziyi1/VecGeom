@@ -9,6 +9,10 @@
 #include "VariableSizeObj.h"
 #include "base/Transformation3D.h"
 #include "volumes/PlacedVolume.h"
+#ifdef VECGEOM_CUDA
+#include "management/CudaManager.h"
+#endif
+#include "base/Global.h"
 
 #ifdef VECGEOM_ROOT
 #include "management/RootGeoManager.h"
@@ -100,6 +104,15 @@ private:
 
 
 public:
+    // replaces the volume pointers from CPU volumes in fPath
+     // to the equivalent pointers on the GPU
+     // uses the CudaManager to do so
+    void ConvertToGPUPointers();
+
+    // replaces the pointers from GPU volumes in fPath
+    // to the equivalent pointers on the CPU
+    // uses the CudaManager to do so
+    void ConvertToCPUPointers();
 
   // Enumerate the part of the private interface, we want to expose.
   using Base_t::MakeCopy;
@@ -275,9 +288,10 @@ public:
    }
 #endif
 
+
    //void GetGlobalMatrixFromPath( Transformation3D *const m ) const;
    //Transformation3D const * GetGlobalMatrixFromPath() const;
-};
+}; // end of class
 
 NavigationState & NavigationState::operator=( NavigationState const & rhs )
 {
@@ -352,6 +366,7 @@ NavigationState::Top() const
 {
    return (fCurrentLevel > 0 )? fPath[fCurrentLevel-1] : 0;
 }
+
 
 VECGEOM_INLINE
 VECGEOM_CUDA_HEADER_BOTH
@@ -445,6 +460,28 @@ int NavigationState::Distance( NavigationState const & other ) const
    return (GetCurrentLevel()-lastcommonlevel) + ( other.GetCurrentLevel() - lastcommonlevel ) - 2;
 }
 
+inline
+void NavigationState::ConvertToGPUPointers()
+   {
+       #ifdef HAVENORMALNAMESPACE
+#ifdef VECGEOM_CUDA
+     for(int i=0;i<fCurrentLevel;++i){
+	 fPath[i] = (vecgeom::cxx::VPlacedVolume*) vecgeom::CudaManager::Instance().LookupPlaced( fPath[i] ).GetPtr();
+     }
+#endif
+#endif
+}
+
+inline
+void NavigationState::ConvertToCPUPointers()
+{
+       #ifdef HAVENORMALNAMESPACE
+#ifdef VECGEOM_CUDA
+       for(int i=0;i<fCurrentLevel;++i)
+         fPath[i]=vecgeom::CudaManager::Instance().LookupPlacedCPUPtr( (void*) fPath[i] );
+#endif
+#endif
+}
 
 } } // End global namespace
 
@@ -455,6 +492,7 @@ int NavigationState::Distance( NavigationState const & other ) const
 #undef GCC_DIAG_POP_NEEDED
 
 #endif
+
 
 
 #endif // VECGEOM_NAVIGATION_NAVIGATIONSTATE_H_

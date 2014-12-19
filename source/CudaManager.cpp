@@ -18,7 +18,7 @@
 namespace vecgeom {
 inline namespace cxx {
 
-CudaManager::CudaManager() : world_gpu_() {
+  CudaManager::CudaManager() : world_gpu_(), fGPUtoCPUmapForPlacedVolumes() {
   synchronized = true;
   world_ = NULL;
   verbose_ = 0;
@@ -53,7 +53,7 @@ vecgeom::DevicePtr<const vecgeom::cuda::VPlacedVolume> CudaManager::Synchronize(
   // Create new objects with pointers adjusted to point to GPU memory, then
   // copy them to the allocated memory locations on the GPU.
 
-  if (verbose_ > 1) std::cerr << "Copying geometry to GPU...";
+  if (verbose_ > 1) std::cerr << "Copying geometry to GPU..." << std::endl;
 
   if (verbose_ > 2) std::cerr << "\nCopying logical volumes...";
   timer.Start();
@@ -159,7 +159,6 @@ void CudaManager::LoadGeometry(VPlacedVolume const *const volume) {
   daughters_.clear();
 
   world_ = volume;
-
   ScanGeometry(volume);
 
   // Already set by CleanGpu(), but keep it here for good measure
@@ -194,7 +193,8 @@ void CudaManager::CleanGpu() {
 
 template <typename Coll>
 bool CudaManager::AllocateCollectionOnCoproc(const char *verbose_title,
-                                             const Coll &data
+                                             const Coll &data,
+					     bool isforplacedvol
                                              )
 {
    // NOTE: Code need to be enhanced to propage the error correctly.
@@ -212,6 +212,8 @@ bool CudaManager::AllocateCollectionOnCoproc(const char *verbose_title,
 
    for (auto i : data) {
       memory_map[ToCpuAddress(i)] = gpu_address;
+      if(isforplacedvol)
+	  fGPUtoCPUmapForPlacedVolumes[ gpu_address ] = i;
       gpu_address += i->DeviceSizeOf();
    }
 
@@ -234,6 +236,9 @@ void CudaManager::AllocateGeometry() {
     for (std::set<LogicalVolume const*>::const_iterator i =
          logical_volumes_.begin(); i != logical_volumes_.end(); ++i) {
       memory_map[ToCpuAddress(*i)] = DevicePtr<char>(gpu_array);
+
+
+
       ++gpu_array;
     }
 
@@ -242,7 +247,7 @@ void CudaManager::AllocateGeometry() {
 
   AllocateCollectionOnCoproc("unplaced volumes", unplaced_volumes_);
 
-  AllocateCollectionOnCoproc("placed volumes", placed_volumes_);
+  AllocateCollectionOnCoproc("placed volumes", placed_volumes_, true);
 
   AllocateCollectionOnCoproc("transformations", transformations_);
 

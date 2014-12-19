@@ -469,6 +469,14 @@ set(SRC_CPP ${SRC_CPP} ${SRC_EXTERNAL}
   source/ShapeDebugger.cpp
 )
 
+# some CUDA kernel code in "userspace"
+if (CUDA)
+    set(SRC_USER_CUDA_CPP
+        userexamples/src/TestNavigationStatePool.cu
+    )
+endif()
+
+
 # Compile cpp-files for C++11
 
 set_source_files_properties(${SRC_CPP} PROPERTIES COMPILE_FLAGS -std=c++11)
@@ -490,6 +498,7 @@ set_source_files_properties(
   PROPERTIES COMPILE_FLAGS -std=c++11
 )
 
+# build the CUDA version of the library
 if (CUDA)
   cuda_add_library(
     vecgeomcuda
@@ -502,12 +511,22 @@ if (CUDA)
   set(VECGEOM_LIBRARIES ${VECGEOM_LIBRARIES} vecgeomcuda)
 endif()
 
+
+# build the CUDA user-code library
+if (CUDA)
+  cuda_add_library(
+    cudauserlib
+    ${SRC_USER_CUDA_CPP}
+    OPTIONS ${CUDA_ARCH}
+  )
+  target_link_libraries(cudauserlib ${VECGEOM_LIBRARIES} ${VECGEOM_LIBRARIES_EXTERNAL})
+  set(USERKERNELLIB cudauserlib)
+endif()
 ################################################################################
 
 # Define executables
 
-set(TEST_EXECUTABLES_CORE
-#  ${CMAKE_SOURCE_DIR}/test/core/TestNavigationState.cpp
+set(TEST_EXECUTABLES_CORE 
   ${CMAKE_SOURCE_DIR}/test/core/ContainerTest.cpp
   ${CMAKE_SOURCE_DIR}/test/core/create_geometry.cpp
   ${CMAKE_SOURCE_DIR}/test/core/testVectorSafety.cpp
@@ -521,7 +540,10 @@ set(TEST_EXECUTABLES_CORE
   ${CMAKE_SOURCE_DIR}/test/core/BitSetTest.cpp
   ${CMAKE_SOURCE_DIR}/test/unit_tests/TestVecGeomPolycone.cpp
 )
+
+
 set(TEST_EXECUTABLES_ROOT
+  ${CMAKE_SOURCE_DIR}/test/core/TestNavigationStatePool.cpp
   ${CMAKE_SOURCE_DIR}/test/root/root_geometry.cpp
   ${CMAKE_SOURCE_DIR}/test/root/complex_test1.cpp
   ${CMAKE_SOURCE_DIR}/test/root/ImportFromRootFileTest.cpp
@@ -529,7 +551,11 @@ set(TEST_EXECUTABLES_ROOT
   ${CMAKE_SOURCE_DIR}/test/root/TestExportToROOT.cpp
   # ${CMAKE_SOURCE_DIR}/test/root/ParaboloidTest.cpp
   ${CMAKE_SOURCE_DIR}/test/root/trd_validation.cpp
+
+  # higher level benchmarks
+  ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/LocatePointsBenchmark.cpp
 )
+
 set(TEST_EXECUTABLES_VISUALIZATION
   ${CMAKE_SOURCE_DIR}/test/visualization/VisualizeTrap.cpp
   ${CMAKE_SOURCE_DIR}/test/visualization/VisualizeTube.cpp
@@ -616,7 +642,8 @@ macro(build_executables EXECUTABLES)
     get_filename_component(TARGET_NAME ${EXECUTABLE} NAME_WE)
     add_executable(${TARGET_NAME} ${EXECUTABLE})
     target_link_libraries(${TARGET_NAME} ${VECGEOM_LIBRARIES}
-                          ${VECGEOM_LIBRARIES_EXTERNAL})
+                          ${VECGEOM_LIBRARIES_EXTERNAL}
+                          ${USERKERNELLIB})
     set(VECGEOM_EXECUTABLES ${VECGEOM_EXECUTABLES} ${TARGET_NAME})
   endforeach()
 endmacro()
