@@ -69,7 +69,7 @@ namespace vecgeom {
 #endif
 
 #ifdef VECGEOM_CUDA
-Precision runNavigationCuda( VPlacedVolume const* volume, unsigned npoints,
+Precision runNavigationCuda( void* gpu_ptr, void* gpu_out_ptr, int maxDepth, VPlacedVolume const* volume, unsigned npoints,
                              Precision const *const posX, Precision const *const posY, Precision const *const posZ,
                              Precision const *const dirX, Precision const *const dirY, Precision const *const dirZ,
                              Precision const *const pSteps,      Precision *const steps );

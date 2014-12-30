@@ -5,6 +5,7 @@
 #include "base/SOA3D.h"
 #include "navigation/SimpleNavigator.h"
 #include "navigation/NavigationState.h"
+#include "navigation/NavStatePool.h"
 
 #ifdef VECGEOM_CUDA
 #include "base/Stopwatch.h"
@@ -17,27 +18,45 @@ namespace vecgeom {
 inline namespace cuda {
 
 __global__
-void NavigationKernel(VPlacedVolume const *const volume,
-                   const SOA3D<Precision> positions, const SOA3D<Precision> directions,
-                   Precision const * pSteps,  const int n,  Precision *const steps) {
+void NavigationKernel(void* gpu_ptr /* a pointer to buffer of current navigation states */,
+                      void* gpu_out_ptr /* a pointer to buffer for next states */,
+                      int depth, VPlacedVolume const *const volume,
+                      const SOA3D<Precision> positions, const SOA3D<Precision> directions,
+                      Precision const * pSteps,  const int n,  Precision *const steps) {
 
-  using NavigationState = vecgeom::cuda::NavigationState;
-
-  // ??? What's the right way to create empty navigation states on the GPU?
-  // NavigationState* inState = NavigationState::MakeInstance( CudaManager::Instance().getMaxDepth() );
-  // NavigationState* outState = NavigationState::MakeInstance( CudaManager::Instance().getMaxDepth() );
-
+  using vecgeom::cuda::NavigationState;
+  using vecgeom::cuda::NavStatePool;
   SimpleNavigator nav;
-  // double step;
+  double step;
 
   unsigned tid = ThreadIndex();
-  while (tid < n) {
-    steps[tid] = (Precision)tid;
+  // while (tid < n) {
+  while (tid < 3) {
 
-    // ??? Once navigation states are available, uncomment following lines for navigation on the GPU
-    // nav.LocatePoint(volume, positions[tid], *inState, true);
-    // nav.FindNextBoundaryAndStep(positions[tid], directions[tid], *inState, *outState, pSteps[tid], step);
-    // steps[tid] = step;
+    printf("GPU: gpu_ptr=%p, gpu_out_ptr=%p\n", gpu_ptr, gpu_out_ptr, &positions);
+
+    // get the navigationstate for this thread/lane
+    // NavigationState * state = reinterpret_cast<NavigationState*>( gpu_ptr + NavigationState::SizeOf(depth)*tid );
+    NavStatePool *inStates  = reinterpret_cast<NavStatePool*>(gpu_ptr);
+    NavStatePool *outStates = reinterpret_cast<NavStatePool*>(gpu_out_ptr);
+
+    printf("GPU: tid=%i, position: (%8.3f; %8.3f; %8.3f); inStates=%p; outStates=%p\n",
+           tid, positions[tid].x(), positions[tid].y(), positions[tid].z(), inStates, outStates);
+
+    NavigationState *inState  = (*inStates)[tid];
+    printf("GPU: inStates=%p, inState=%p\n", inStates, inState );
+
+    NavigationState *outState = (*outStates)[tid];
+    printf("GPU: outStates=%p, outState=%p\n", outStates, outState );
+
+    // do the actual navigation on the GPU
+//    nav.LocatePoint(volume, positions[tid], *inState, true);
+    nav.FindNextBoundaryAndStep(positions[tid], directions[tid], *inState, *outState, pSteps[tid], step);
+    printf("GPU: NavigState: step[%i] = %f, state=%p\n", tid, steps[tid], outState);  // print one per warp, for debugging
+
+    steps[tid] = step;
+
+    // repeat
     tid += ThreadOffset();
   }
 }
@@ -45,11 +64,13 @@ void NavigationKernel(VPlacedVolume const *const volume,
 } // end of namespace cuda
 
 // Should this function be moved to NavigationBenchmarker.cpp?
-Precision runNavigationCuda( const cxx::VPlacedVolume *const volume, unsigned npoints,
-                             Precision const *const posX, Precision const *const posY, Precision const  *const posZ,
-                             Precision const *const dirX, Precision const *const dirY, Precision const *const dirZ,
-                             Precision const *const maxSteps,
-                             Precision *const propSteps ) {
+  Precision runNavigationCuda(
+    void *gpu_ptr, void *gpu_out_ptr, int depth,
+    const cxx::VPlacedVolume *const volume, unsigned npoints,
+    Precision const *const posX, Precision const *const posY, Precision const *const posZ,
+    Precision const *const dirX, Precision const *const dirY, Precision const *const dirZ,
+    Precision const *const maxSteps, Precision *const propSteps )
+  {
 
    // transfer geometry to GPU
    using CudaVolume = cuda::VPlacedVolume const*;
@@ -86,21 +107,18 @@ Precision runNavigationCuda( const cxx::VPlacedVolume *const volume, unsigned np
    vecgeom::cuda::LaunchParameters launch(npoints);
    vecgeom::cuda::Stopwatch timer;
 
-   printf("GPU warm-up:  <<<1,32>>>\n");
-   vecgeom::cuda::NavigationKernel<<< 1, 32>>>(
-     CudaManager::Instance().world_gpu(),
-     positionGpu, directionGpu,
-     maxStepsGpu, 32, propStepsGpu
-     );
-   cudaDeviceSynchronize();
+   // printf("GPU warm-up:  <<<1,32>>>\n");
+   // vecgeom::cuda::NavigationKernel<<< 1, 32>>>(
+   //   gpu_ptr, gpu_out_ptr, depth, CudaManager::Instance().world_gpu(),
+   //   positionGpu, directionGpu, maxStepsGpu, 32, propStepsGpu );
+   // cudaDeviceSynchronize();
 
    printf("GPU configuration:  <<<%i,%i>>>\n", launch.grid_size.x, launch.block_size.x);
 
    timer.Start();
    vecgeom::cuda::NavigationKernel<<< launch.grid_size, launch.block_size>>>(
-       CudaManager::Instance().world_gpu(),
-       positionGpu, directionGpu, maxStepsGpu, npoints, propStepsGpu
-     );
+     gpu_ptr, gpu_out_ptr, depth, CudaManager::Instance().world_gpu(),
+     positionGpu, directionGpu, maxStepsGpu, npoints, propStepsGpu );
    cudaDeviceSynchronize();
    Precision elapsedCuda = timer.Stop();
 

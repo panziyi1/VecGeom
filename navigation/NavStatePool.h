@@ -61,10 +61,12 @@ public:
 #endif
 #endif
 
+    VECGEOM_CUDA_HEADER_BOTH
     NavigationState * operator[]( int i ){
         return reinterpret_cast<NavigationState*> ( fBuffer + NavigationState::SizeOf(fDepth)*i );
     }
 
+    VECGEOM_CUDA_HEADER_BOTH
     NavigationState const* operator[]( int i ) const{
         return reinterpret_cast<NavigationState const *> ( fBuffer + NavigationState::SizeOf(fDepth)*i );
     }

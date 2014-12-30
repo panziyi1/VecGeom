@@ -1,5 +1,6 @@
-#include "navigation/NavigationState.h"
 #include "base/Global.h"
+#include "navigation/NavigationState.h"
+#include "navigation/NavStatePool.h"
 #include "management/CudaManager.h"
 #include "navigation/SimpleNavigator.h"
 #include "backend/cuda/Backend.h"
@@ -13,12 +14,17 @@ void ProcessNavStates( void* gpu_ptr /* a pointer to buffer of navigation states
   if( i >= n ) return;
 
   if(i==0){
-	printf("SIZEOF NAVSTATE ON THE GPU %d\n", sizeof(vecgeom::cuda::NavigationState));
+    printf("*** Size of NavigationState on the GPU: %d bytes\n", sizeof(vecgeom::cuda::NavigationState));
   }
 
   // get the navigationstate for this thread/lane
-  vecgeom::cuda::NavigationState * state = reinterpret_cast<vecgeom::cuda::NavigationState*>( gpu_ptr +
-        vecgeom::cuda::NavigationState::SizeOf(depth)*i ); 
+  using vecgeom::cuda::NavigationState;
+  using vecgeom::cuda::NavStatePool;
+  NavStatePool &states  = *reinterpret_cast<NavStatePool*>(gpu_ptr);
+  NavigationState *state  = states[i];
+
+  // vecgeom::cuda::NavigationState * state = reinterpret_cast<vecgeom::cuda::NavigationState*>( gpu_ptr +
+  //       vecgeom::cuda::NavigationState::SizeOf(depth)*i );
 
   // actually do something to the states; here just popping off the top volume
   state->Pop();

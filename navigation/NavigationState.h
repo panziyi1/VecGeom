@@ -232,6 +232,7 @@ public:
    void Clear();
 
    VECGEOM_INLINE
+   VECGEOM_CUDA_HEADER_BOTH
    void Print() const;
 
    VECGEOM_INLINE
@@ -300,7 +301,7 @@ NavigationState & NavigationState::operator=( NavigationState const & rhs )
       fOnBoundary = rhs.fOnBoundary;
       // what about the matrix????
 
-      // Use memcpy.  Potential trucation if this is smaller than rhs.
+      // Use memcpy.  Potential truncation if this is smaller than rhs.
       fPath = rhs.fPath;
    }
    return *this;
@@ -403,16 +404,19 @@ NavigationState::GlobalToLocal(Vector3D<Precision> const & globalpoint)
 }
 
 VECGEOM_INLINE
+VECGEOM_CUDA_HEADER_BOTH
 void NavigationState::Print() const
 {
-   std::cerr << "NavState: Level(cur/max)=" << fCurrentLevel <<'/'<< GetMaxLevel()
-             <<" onBoundary="<< fOnBoundary
-             <<" topVol="<< Top() <<" this="<< this
-             << std::endl;
-   // std::cerr << "maxlevel " << fMaxlevel << std::endl;
-   // std::cerr << "currentlevel " << fCurrentLevel << std::endl;
-   // std::cerr << "onboundary " << fOnBoundary << std::endl;
-   // std::cerr << "deepest volume " << Top() << std::endl;
+   printf("NavState: Level(cur/max)=%i/%i,  onBoundary=%s, topVol=%p, this=%p\n",
+          fCurrentLevel, GetMaxLevel(), (fOnBoundary?"true":"false"), Top(), this );
+   // std::cerr << "NavState: Level(cur/max)=" << fCurrentLevel <<'/'<< GetMaxLevel()
+   //           <<" onBoundary="<< fOnBoundary
+   //           <<" topVol="<< Top() <<" this="<< this
+   //           << std::endl;
+   // // std::cerr << "maxlevel " << fMaxlevel << std::endl;
+   // // std::cerr << "currentlevel " << fCurrentLevel << std::endl;
+   // // std::cerr << "onboundary " << fOnBoundary << std::endl;
+   // // std::cerr << "deepest volume " << Top() << std::endl;
 }
 
 

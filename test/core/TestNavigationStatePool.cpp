@@ -53,7 +53,7 @@ int main()
   std::cerr << "#################" << std::endl;
   
   // fill states
-  for(int i=0;i<testpoints.size();++i){
+  for(unsigned int i=0;i<testpoints.size();++i){
    //     std::cerr << testpoints[i] << "\n";
       nav.LocatePoint(GeoManager::Instance().GetWorld(), testpoints[i], *pool[i], true);
   }
