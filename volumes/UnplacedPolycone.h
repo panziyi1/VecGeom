@@ -33,7 +33,7 @@ struct PolyconeSection
     UnplacedCone * solid;
     double shift;
     bool tubular;
-    bool convex; // TURE if all points in section are concave in regards to whole polycone, will be determined
+    bool convex; // TRUE if all points in section are concave in regards to whole polycone, will be determined
 };
 
 

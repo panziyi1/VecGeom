@@ -151,10 +151,12 @@ void UnplacedPolycone::Init(double phiStart,
         int zi = fZs.size() - 1;
         double shift = fZs[zi - 1] + 0.5 * (fZs[zi] - fZs[zi - 1]);
 
-        PolyconeSection section;
-        section.shift = shift;
-//        section.tubular = tubular;
-        section.solid = solid;
+        PolyconeSection section = {
+          solid, // .solid
+          shift, // .shift
+          false, // .tubular
+          false  // .convex
+        };
         if( false /*tubular*/)
         {
           if (rMax < RMaxextent) { section.convex = false;}
