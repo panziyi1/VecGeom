@@ -229,8 +229,14 @@ VPlacedVolume* UnplacedPolyhedron::SpecializedVolume(
 #endif
     VPlacedVolume *const placement) const {
 
-  // UnplacedPolyhedron const *unplaced =
-  //     static_cast<UnplacedPolyhedron const *>(volume->unplaced_volume());
+  UnplacedPolyhedron const *unplaced =
+      static_cast<UnplacedPolyhedron const *>(volume->unplaced_volume());
+
+  EInnerRadii innerRadii = unplaced->HasInnerRadii() ? EInnerRadii::kTrue
+                                                     : EInnerRadii::kFalse;
+  EPhiCutout phiCutout = unplaced->HasPhiCutout() ? (unplaced->HasLargePhiCutout() ? EPhiCutout::kLarge
+                                                                                   : EPhiCutout::kTrue)
+                                                  : EPhiCutout::kFalse;
 
 #ifndef VECGEOM_NVCC
   #define POLYHEDRON_CREATE_SPECIALIZATION(INNER, PHI) \
