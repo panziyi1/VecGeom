@@ -12,7 +12,7 @@ option(VC_ACCELERATION "Internal vectorization using Vc." ON)
 
 option(CUDA "Enable compilation for CUDA." OFF)
 
-option(CUDA_VOLUME_SPECIALIZATION "Use specialized volumes for CUDA." ON)
+option(CUDA_VOLUME_SPECIALIZATION "Use specialized volumes for CUDA." OFF)
 
 option(ROOT "Include ROOT." OFF)
 
@@ -22,7 +22,7 @@ option(GEANT4 "Include Geant4." OFF)
 
 option(BENCHMARK "Enable performance comparisons." OFF)
 
-option(NO_SPECIALIZATION "Disable specialization of volumes." OFF)
+option(NO_SPECIALIZATION "Disable specialization of volumes." ON)
 
 option(COVERAGE_TESTING "Enable coverage testing flags." OFF)
 
@@ -30,7 +30,7 @@ option(CTEST "Enable CTest when building." ON)
 
 option(PLANESHELL "Enable the use of PlaneShell class for the trapezoid." ON)
 
-option(DISTANCE_DEBUG "Enable comparision of calculcated distances againt ROOT/Geant4 behind the scenes" OFF)
+option(DISTANCE_DEBUG "Enable comparison of calculcated distances againt ROOT/Geant4 behind the scenes" OFF)
 
 set(VECGEOM_VECTOR "" CACHE STRING
     "Vector instruction set to use (sse/avx/...).")
@@ -128,25 +128,26 @@ set(VECGEOM_NVCC_COMPILATION_FLAGS)
 set(VECGEOM_COMPILATION_FLAGS
     "${VECGEOM_COMPILATION_FLAGS} -Wall -fPIC")
 if (CMAKE_BUILD_TYPE MATCHES Debug)
-  #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weffc++ -ggdb")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb")
-  #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -ggdb")
-  if (APPLE OR UNIX) 
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weffc++ -ggdb")
+  if (APPLE OR UNIX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O1")
   else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
   endif()
+  set(VECGEOM_NVCC_COMPILATION_FLAGS
+    "${VECGEOM_NVCC_COMPILATION_FLAGS} -g -G"
+    )
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 endif()
 
 # Compiler specific optimization flags
 if (NOT CMAKE_BUILD_TYPE MATCHES Debug)
-set(VECGEOM_COMPILATION_FLAGS_GNU
+  set(VECGEOM_COMPILATION_FLAGS_GNU
     "${VECGEOM_COMPILATION_FLAGS_GNU} -finline-limit=10000000")
-set(VECGEOM_COMPILATION_FLAGS_GNU
+  set(VECGEOM_COMPILATION_FLAGS_GNU
     "${VECGEOM_COMPILATION_FLAGS_GNU} -ffast-math -ftree-vectorize")
-set(VECGEOM_COMPILATION_FLAGS_CLANG
+  set(VECGEOM_COMPILATION_FLAGS_CLANG
     "${VECGEOM_COMPILATION_FLAGS_CLANG} -ffast-math -ftree-vectorize")
 endif()
 set(VECGEOM_COMPILATION_FLAGS_INTEL
@@ -175,17 +176,24 @@ if (CUDA)
   set(CUDA_ARCH 20 CACHE STRING "CUDA device architecture.")
   set(CUDA_ARCH "-arch=sm_${CUDA_ARCH}")
   set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_CUDA")
+  set(VECGEOM_NVCC_COMPILATION_FLAGS "${VECGEOM_NVCC_COMPILATION_FLAGS} -DVECGEOM_CUDA")
   if (CUDA_VOLUME_SPECIALIZATION)
     set(VECGEOM_COMPILATION_FLAGS
         "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_CUDA_VOLUME_SPECIALIZATION")
+    set(VECGEOM_NVCC_COMPILATION_FLAGS
+        "${VECGEOM_NVCC_COMPILATION_FLAGS} -DVECGEOM_CUDA_VOLUME_SPECIALIZATION")
   else()
     set(VECGEOM_COMPILATION_FLAGS
         "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_CUDA_NO_VOLUME_SPECIALIZATION")
+    set(VECGEOM_NVCC_COMPILATION_FLAGS
+        "${VECGEOM_NVCC_COMPILATION_FLAGS} -DVECGEOM_CUDA_NO_VOLUME_SPECIALIZATION")
   endif()
   set(VECGEOM_NVCC_COMPILATION_FLAGS ${VECGEOM_NVCC_COMPILATION_FLAGS}
       -std=c++11
       -Xcudafe "--diag_suppress=code_is_unreachable"
       -Xcudafe "--diag_suppress=initialization_not_reachable")
+
+  set(VECGEOM_NVCC_COMPILATION_FLAGS ${VECGEOM_NVCC_COMPILATION_FLAGS})
   set(VECGEOM_NVCC_CONFIGS
         DEBUG -g -G
         RELEASE  -O2 --use_fast_math
@@ -264,9 +272,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${VECGEOM_COMPILATION_FLAGS}")
 set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -O2")
 
 message(STATUS "Compiling with C++ flags: ${CMAKE_CXX_FLAGS}")
-if (CUDA)
-  message(STATUS "Compiling with NVCC flags: ${CUDA_NVCC_FLAGS}")
-endif()
 
 ################################################################################
 
@@ -306,10 +311,11 @@ if (CUDA)
       source/CudaManager.cu)
 
   set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${VECGEOM_NVCC_COMPILATION_FLAGS})
+  message(STATUS "Compiling with NVCC flags: ${CUDA_NVCC_FLAGS}")
 endif()
 
 if (ROOT)
-  
+
   find_package(ROOT REQUIRED)
 
   include_directories(AFTER SYSTEM ${ROOT_INCLUDE_DIR})
@@ -345,7 +351,7 @@ if (USolids)
   elseif (USOLIDS_DIR)
     link_directories(${USOLIDS_DIR}/lib)
   endif()
-  
+
   set(VECGEOM_LIBRARIES ${VECGEOM_LIBRARIES} usolids)
 
 endif()
@@ -379,8 +385,12 @@ set(SRC_CPP_RELATIVE
   source/PlacedTrd.cpp
   source/PlacedParallelepiped.cpp
   source/PlacedParaboloid.cpp
+  source/PlacedPolyhedron.cpp
   source/PlacedTrapezoid.cpp
   source/PlacedVolume.cpp
+  source/Planes.cpp
+  source/Quadrilaterals.cpp
+  source/Rectangles.cpp
   source/SOA3D.cpp
   source/Transformation3D.cpp
   source/UnplacedCone.cpp
@@ -390,6 +400,7 @@ set(SRC_CPP_RELATIVE
   source/UnplacedTrd.cpp
   source/UnplacedParaboloid.cpp
   source/UnplacedParallelepiped.cpp
+  source/UnplacedPolyhedron.cpp
   source/UnplacedTrapezoid.cpp
   source/UnplacedVolume.cpp
   source/Vector.cpp
@@ -404,6 +415,9 @@ set(SRC_CPP_RELATIVE
 
   source/UnplacedBooleanVolume.cpp
   source/PlacedBooleanVolume.cpp
+
+  source/UnplacedPolycone.cpp
+  source/PlacedPolycone.cpp
 )
 foreach(SRC ${SRC_CPP_RELATIVE})
   set(SRC_CPP ${SRC_CPP} ${CMAKE_SOURCE_DIR}/${SRC})
@@ -450,13 +464,21 @@ if (BENCHMARK)
   )
   set(SRC_CUDA ${SRC_CUDA}
     source/benchmarking/Benchmarker.cu
-    source/benchmarking/NavBenchmarker.cu
+    source/benchmarking/NavigationBenchmarker.cu
   )
 endif()
 set(SRC_CPP ${SRC_CPP} ${SRC_EXTERNAL}
   source/GeoManager.cpp
   source/ShapeDebugger.cpp
 )
+
+# some CUDA kernel code in "userspace"
+if (CUDA)
+    set(SRC_USER_CUDA_CPP
+        userexamples/src/TestNavigationStatePool.cu
+    )
+endif()
+
 
 # Compile cpp-files for C++11
 
@@ -479,6 +501,7 @@ set_source_files_properties(
   PROPERTIES COMPILE_FLAGS -std=c++11
 )
 
+# build the CUDA version of the library
 if (CUDA)
   cuda_add_library(
     vecgeomcuda
@@ -491,34 +514,56 @@ if (CUDA)
   set(VECGEOM_LIBRARIES ${VECGEOM_LIBRARIES} vecgeomcuda)
 endif()
 
+
+# build the CUDA user-code library
+if (CUDA)
+  cuda_add_library(
+    cudauserlib
+    ${SRC_USER_CUDA_CPP}
+    OPTIONS ${CUDA_ARCH}
+  )
+  target_link_libraries(cudauserlib ${VECGEOM_LIBRARIES} ${VECGEOM_LIBRARIES_EXTERNAL})
+  set(USERKERNELLIB cudauserlib)
+endif()
 ################################################################################
 
 # Define executables
 
 set(TEST_EXECUTABLES_CORE 
-#  ${CMAKE_SOURCE_DIR}/test/core/TestNavigationState.cpp
   ${CMAKE_SOURCE_DIR}/test/core/ContainerTest.cpp
   ${CMAKE_SOURCE_DIR}/test/core/create_geometry.cpp
   ${CMAKE_SOURCE_DIR}/test/core/testVectorSafety.cpp
+  ${CMAKE_SOURCE_DIR}/test/core/PlanesTest.cpp
+  ${CMAKE_SOURCE_DIR}/test/core/QuadrilateralTest.cpp
+#  ${CMAKE_SOURCE_DIR}/test/core/SOATest.cpp
   ${CMAKE_SOURCE_DIR}/test/core/Transformation3DTest.cpp
 #  ${CMAKE_SOURCE_DIR}/test/core/boolminustest.cpp
 #  ${CMAKE_SOURCE_DIR}/test/core/boolminustest2.cpp
   ${CMAKE_SOURCE_DIR}/test/core/PhiWedgeTest.cpp
   ${CMAKE_SOURCE_DIR}/test/core/BitSetTest.cpp
+  ${CMAKE_SOURCE_DIR}/test/unit_tests/TestVecGeomPolycone.cpp
 )
+
+
 set(TEST_EXECUTABLES_ROOT
+  ${CMAKE_SOURCE_DIR}/test/core/TestNavigationStatePool.cpp
   ${CMAKE_SOURCE_DIR}/test/root/root_geometry.cpp
   ${CMAKE_SOURCE_DIR}/test/root/complex_test1.cpp
   ${CMAKE_SOURCE_DIR}/test/root/ImportFromRootFileTest.cpp
+  ${CMAKE_SOURCE_DIR}/test/root/ImportTGeoPgon.cpp
   ${CMAKE_SOURCE_DIR}/test/root/TestExportToROOT.cpp
   # ${CMAKE_SOURCE_DIR}/test/root/ParaboloidTest.cpp
   ${CMAKE_SOURCE_DIR}/test/root/trd_validation.cpp
+
+  # higher level benchmarks
+  ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/LocatePointsBenchmark.cpp
 )
+
 set(TEST_EXECUTABLES_VISUALIZATION
   ${CMAKE_SOURCE_DIR}/test/visualization/VisualizeTrap.cpp
   ${CMAKE_SOURCE_DIR}/test/visualization/VisualizeTube.cpp
   ${CMAKE_SOURCE_DIR}/test/visualization/DebugTube.cpp
-#  ${CMAKE_SOURCE_DIR}/test/visualization/DebugTorus.cpp
+  ${CMAKE_SOURCE_DIR}/test/visualization/DebugPolyhedron.cpp
 )
 set(TEST_EXECUTABLES_USOLIDS
   ${CMAKE_SOURCE_DIR}/test/usolids/CompatibilityTest.cpp
@@ -534,6 +579,7 @@ set(TEST_EXECUTABLES_USOLIDS
   #${CMAKE_SOURCE_DIR}/test/unit_tests/TestSphere.cpp
   ${CMAKE_SOURCE_DIR}/test/unit_tests/TestBoxlikeTrapezoid.cpp
   ${CMAKE_SOURCE_DIR}/test/unit_tests/usolidTest.cpp
+    
 )
 set(TEST_EXECUTABLES_BENCHMARK
   ${CMAKE_SOURCE_DIR}/test/benchmark/BoxBenchmark.cpp
@@ -541,6 +587,7 @@ set(TEST_EXECUTABLES_BENCHMARK
   ${CMAKE_SOURCE_DIR}/test/benchmark/ParaboloidScriptBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/MultiBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/ParallelepipedBenchmark.cpp
+  ${CMAKE_SOURCE_DIR}/test/benchmark/PolyhedronBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/TubeBenchmark.cpp
  # ${CMAKE_SOURCE_DIR}/test/benchmark/BoxMinusHollowTubeBenchmark.cpp
  # ${CMAKE_SOURCE_DIR}/test/benchmark/BoxMinusTubeSegBenchmark.cpp
@@ -557,6 +604,7 @@ set(TEST_EXECUTABLES_BENCHMARK
   ${CMAKE_SOURCE_DIR}/test/benchmark/TrdBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/ConeBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/NavigationBenchmark.cpp
+  ${CMAKE_SOURCE_DIR}/test/benchmark/PolyconeBenchmark.cpp
 )
 set(TEST_EXECUTABLES_CUDA
   # Files go here
@@ -567,6 +615,7 @@ set(TEST_EXECUTABLES_SHAPETESTER
   ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testCone.cpp
   ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testTrapezoid.cpp
   # ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testParaboloid.cpp
+  ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testPolycone.cpp 
 )
 set(TEST_EXECUTABLES
   ${TEST_EXECUTABLES_CORE}
@@ -596,7 +645,8 @@ macro(build_executables EXECUTABLES)
     get_filename_component(TARGET_NAME ${EXECUTABLE} NAME_WE)
     add_executable(${TARGET_NAME} ${EXECUTABLE})
     target_link_libraries(${TARGET_NAME} ${VECGEOM_LIBRARIES}
-                          ${VECGEOM_LIBRARIES_EXTERNAL})
+                          ${VECGEOM_LIBRARIES_EXTERNAL}
+                          ${USERKERNELLIB})
     set(VECGEOM_EXECUTABLES ${VECGEOM_EXECUTABLES} ${TARGET_NAME})
   endforeach()
 endmacro()
@@ -664,7 +714,7 @@ if (USolids)
 endif()
 configure_file(VecgeomConfig.cmake.in
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/VecgeomConfig.cmake" @ONLY)
- 
+
 # Install the VecgeomConfig.cmake
 install(FILES
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/VecgeomConfig.cmake"

@@ -270,6 +270,9 @@ void FillUncontainedPoints(LogicalVolume const &volume,
   delete placed;
 }
 
+
+// generates random points contained in a volume
+// fills a container structure (SOA3D or AOS3D)
 template <typename TrackContainer>
 VECGEOM_INLINE
 void FillRandomPoints(VPlacedVolume const &volume,
@@ -284,6 +287,35 @@ void FillRandomPoints(VPlacedVolume const &volume,
     } while (!volume.Contains(point));
     points.set(i, point);
   }
+}
+
+
+// generates random points in a box described by
+// lower and upper corner
+// fills a container structure ( SOA3D or AOS3D )
+template <typename TrackContainer>
+VECGEOM_INLINE
+void FillRandomPoints(Vector3D<Precision> const & lowercorner,
+                      Vector3D<Precision> const & uppercorner,
+                      TrackContainer &points) {
+  const int size = points.capacity();
+  points.resize(points.capacity());
+  Vector3D<Precision> dim = (uppercorner - lowercorner)/2.;
+  Vector3D<Precision> offset = (uppercorner + lowercorner)/2.;
+  for (int i = 0; i < size; ++i) {
+      points.set(i, SamplePoint(dim) + offset);
+  }
+}
+
+// generates random points in a box at the origin described by
+// half lengths: dim
+// fills a container structure ( SOA3D or AOS3D )
+template <typename TrackContainer>
+VECGEOM_INLINE
+void FillRandomPoints(Vector3D<Precision> const & dim,
+                      TrackContainer &points) {
+  FillRandomPoints( Vector3D<Precision>( -dim.x(), -dim.y(), -dim.z()),
+          Vector3D<Precision>(dim.x(),dim.y(),dim.z()), points);
 }
 
 

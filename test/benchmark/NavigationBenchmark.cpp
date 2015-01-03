@@ -8,16 +8,15 @@
 #include "benchmarking/NavigationBenchmarker.h"
 #include "ArgParser.h"
 
+#ifdef VECGEOM_ROOT
 #include "management/RootGeoManager.h"
-#include "management/GeoManager.h"
-
-#include "volumes/Box.h"
 #include "utilities/Visualizer.h"
+#endif
+
+#include "management/GeoManager.h"
+#include "volumes/Box.h"
 
 using namespace VECGEOM_NAMESPACE;
-
-// Prepare VecGeom vs. root mapping for comparison purposes
-static std::map<VPlacedVolume const*, TGeoNode const*> vg2rootMap;
 
 VPlacedVolume* SetupBoxGeometry() {
   UnplacedBox *worldUnplaced = new UnplacedBox(10, 10, 10);
@@ -52,10 +51,13 @@ int main(int argc, char* argv[])
 {
   OPTION_INT(npoints, 10);
   OPTION_INT(nreps, 3);
+#ifdef VECGEOM_ROOT
   OPTION_BOOL(vis, false);
+#endif
 
   VPlacedVolume *world = SetupBoxGeometry();
 
+#ifdef VECGEOM_ROOT
   if(vis) {  // note that visualization block returns, excluding the rest of benchmark
     Visualizer visualizer;
     visualizer.AddVolume(*world);
@@ -69,9 +71,11 @@ int main(int argc, char* argv[])
     visualizer.Show();
     return 0;
   }
+#endif
 
   testVectorSafety(world);
 
+#ifdef VECGEOM_ROOT
   // Exporting to ROOT file
   RootGeoManager::Instance().ExportToROOTGeometry( world, "geom1.root" );
   RootGeoManager::Instance().Clear();
@@ -80,10 +84,12 @@ int main(int argc, char* argv[])
   // since it builds VecGeom geometry based on the ROOT geometry and its TGeoNodes.
   RootGeoManager::Instance().set_verbose(0);
   RootGeoManager::Instance().LoadRootGeometry("geom1.root");
+#endif
 
-  std::cout<<"\n*** Validating serial interface against ROOT navigation..."<< std::endl;
+  std::cout<<"\n*** Validating VecGeom navigation..."<< std::endl;
   bool ok = validateVecGeomNavigation(GeoManager::Instance().GetWorld(), 1024);
-  if(ok) std::cout<<"validation passed."<< std::endl;
+  if(ok) std::cout<<"VecGeom validation passed."<< std::endl;
+  else   std::cout<<"VecGeom validation failed."<< std::endl;
 
   std::cout<<"\n*** Running navigation benchmarks with npoints="<<npoints<<" and nreps="<< nreps <<".\n";
   runNavigationBenchmarks(GeoManager::Instance().GetWorld(), npoints, nreps);

@@ -18,7 +18,7 @@
 namespace vecgeom {
 inline namespace cxx {
 
-CudaManager::CudaManager() : world_gpu_() {
+  CudaManager::CudaManager() : world_gpu_(), fGPUtoCPUmapForPlacedVolumes() {
   synchronized = true;
   world_ = NULL;
   verbose_ = 0;
@@ -37,7 +37,8 @@ vecgeom::cuda::VPlacedVolume const* CudaManager::world_gpu() const {
 }
 
 vecgeom::DevicePtr<const vecgeom::cuda::VPlacedVolume> CudaManager::Synchronize() {
-
+  Stopwatch timer, overalltimer;
+  overalltimer.Start();
   if (verbose_ > 0) std::cerr << "Starting synchronization to GPU.\n";
 
   // Will return null if no geometry is loaded
@@ -52,9 +53,10 @@ vecgeom::DevicePtr<const vecgeom::cuda::VPlacedVolume> CudaManager::Synchronize(
   // Create new objects with pointers adjusted to point to GPU memory, then
   // copy them to the allocated memory locations on the GPU.
 
-  if (verbose_ > 1) std::cerr << "Copying geometry to GPU...";
+  if (verbose_ > 1) std::cerr << "Copying geometry to GPU..." << std::endl;
 
   if (verbose_ > 2) std::cerr << "\nCopying logical volumes...";
+  timer.Start();
   for (std::set<LogicalVolume const*>::const_iterator i =
        logical_volumes_.begin(); i != logical_volumes_.end(); ++i) {
 
@@ -65,18 +67,22 @@ vecgeom::DevicePtr<const vecgeom::cuda::VPlacedVolume> CudaManager::Synchronize(
     );
 
   }
-  if (verbose_ > 2) std::cerr << " OK\n";
+  timer.Stop();
+  if (verbose_ > 2) std::cerr << " OK; TIME NEEDED " << timer.Elapsed() << "s \n";
 
   if (verbose_ > 2) std::cerr << "Copying unplaced volumes...";
+  timer.Start();
   for (std::set<VUnplacedVolume const*>::const_iterator i =
        unplaced_volumes_.begin(); i != unplaced_volumes_.end(); ++i) {
 
     (*i)->CopyToGpu(LookupUnplaced(*i));
 
   }
-  if (verbose_ > 2) std::cerr << " OK\n";
+  timer.Stop();
+  if (verbose_ > 2) std::cout << " OK; TIME NEEDED " << timer.Elapsed() << "s \n";
 
-  if (verbose_ > 2) std::cerr << "Copying placed volumes...";
+  if (verbose_ > 2) std::cout << "Copying placed volumes...";
+  timer.Start();
   for (std::set<VPlacedVolume const*>::const_iterator i =
        placed_volumes_.begin(); i != placed_volumes_.end(); ++i) {
 
@@ -87,18 +93,22 @@ vecgeom::DevicePtr<const vecgeom::cuda::VPlacedVolume> CudaManager::Synchronize(
     );
 
   }
-  if (verbose_ > 2) std::cerr << " OK\n";
+  timer.Stop();
+  if (verbose_ > 2) std::cout << " OK; TIME NEEDED " << timer.Elapsed() << "s \n";
 
-  if (verbose_ > 2) std::cerr << "Copying transformations_...";
+  if (verbose_ > 2) std::cout << "Copying transformations_...";
+  timer.Start();
   for (std::set<Transformation3D const*>::const_iterator i =
        transformations_.begin(); i != transformations_.end(); ++i) {
 
      (*i)->CopyToGpu(LookupTransformation(*i));
 
   }
-  if (verbose_ > 2) std::cerr << " OK\n";
+  timer.Stop();
+  if (verbose_ > 2) std::cout << " OK; TIME NEEDED " << timer.Elapsed() << "s \n";
 
   if (verbose_ > 2) std::cout << "Copying daughter arrays...";
+  timer.Start();
   std::vector<CudaDaughter_t> daughter_array;
   for (std::set<Vector<Daughter_t> *>::const_iterator i =
        daughters_.begin(); i != daughters_.end(); ++i) {
@@ -122,13 +132,15 @@ vecgeom::DevicePtr<const vecgeom::cuda::VPlacedVolume> CudaManager::Synchronize(
     (*i)->CopyToGpu(LookupDaughterArray(*i), LookupDaughters(*i));
 
   }
-  if (verbose_ > 1) std::cerr << " OK\n";
+  timer.Stop();
+  if (verbose_ > 1) std::cout << " OK; TIME NEEDED " << timer.Elapsed() << "s \n";
 
   synchronized = true;
 
   world_gpu_ = LookupPlaced(world_);
 
-  if (verbose_ > 0) std::cerr << "Geometry synchronized to GPU.\n";
+  overalltimer.Stop();
+  if (verbose_ > 0) std::cout << "Geometry synchronized to GPU in " << overalltimer.Elapsed() << " s.\n";
 
   return world_gpu_;
 
@@ -147,7 +159,6 @@ void CudaManager::LoadGeometry(VPlacedVolume const *const volume) {
   daughters_.clear();
 
   world_ = volume;
-
   ScanGeometry(volume);
 
   // Already set by CleanGpu(), but keep it here for good measure
@@ -180,6 +191,37 @@ void CudaManager::CleanGpu() {
 
 }
 
+template <typename Coll>
+bool CudaManager::AllocateCollectionOnCoproc(const char *verbose_title,
+                                             const Coll &data,
+					     bool isforplacedvol
+                                             )
+{
+   // NOTE: Code need to be enhanced to propage the error correctly.
+
+   if (verbose_ > 2) std::cout << "Allocating " << verbose_title << "...";
+
+   size_t totalSize = 0;
+   for (auto i : data) {
+      totalSize += i->DeviceSizeOf();
+   }
+
+   GpuAddress gpu_address;
+   gpu_address.Allocate(totalSize);
+   allocated_memory_.push_back(gpu_address);
+
+   for (auto i : data) {
+      memory_map[ToCpuAddress(i)] = gpu_address;
+      if(isforplacedvol)
+	  fGPUtoCPUmapForPlacedVolumes[ gpu_address ] = i;
+      gpu_address += i->DeviceSizeOf();
+   }
+
+   if (verbose_ > 2) std::cout << " OK\n";
+
+   return true;
+}
+
 void CudaManager::AllocateGeometry() {
 
   if (verbose_ > 1) std::cerr << "Allocating geometry on GPU...";
@@ -194,58 +236,20 @@ void CudaManager::AllocateGeometry() {
     for (std::set<LogicalVolume const*>::const_iterator i =
          logical_volumes_.begin(); i != logical_volumes_.end(); ++i) {
       memory_map[ToCpuAddress(*i)] = DevicePtr<char>(gpu_array);
+
+
+
       ++gpu_array;
     }
 
     if (verbose_ > 2) std::cerr << " OK\n";
   }
 
-  {
-    if (verbose_ > 2) std::cerr << "Allocating unplaced volumes...";
+  AllocateCollectionOnCoproc("unplaced volumes", unplaced_volumes_);
 
-    for (std::set<VUnplacedVolume const*>::const_iterator i =
-         unplaced_volumes_.begin(); i != unplaced_volumes_.end(); ++i) {
+  AllocateCollectionOnCoproc("placed volumes", placed_volumes_, true);
 
-      GpuAddress gpu_address;
-      gpu_address.Allocate((*i)->DeviceSizeOf());
-      allocated_memory_.push_back(gpu_address);
-      memory_map[ToCpuAddress(*i)] = gpu_address;
-
-    }
-
-    if (verbose_ > 2) std::cerr << " OK\n";
-  }
-
-  {
-    if (verbose_ > 2) std::cerr << "Allocating placed volumes...";
-
-    for (std::set<VPlacedVolume const*>::const_iterator i =
-         placed_volumes_.begin(); i != placed_volumes_.end(); ++i) {
-
-      GpuAddress gpu_address;
-      gpu_address.Allocate((*i)->DeviceSizeOf());
-      allocated_memory_.push_back(gpu_address);
-      memory_map[ToCpuAddress(*i)] = gpu_address;
-
-    }
-
-    if (verbose_ > 2) std::cerr << " OK\n";
-  }
-
-  {
-    if (verbose_ > 2) std::cerr << "Allocating transformations...";
-
-    for (std::set<Transformation3D const*>::const_iterator i =
-         transformations_.begin(); i != transformations_.end(); ++i) {
-
-      GpuAddress gpu_address;
-      gpu_address.Allocate((*i)->DeviceSizeOf());
-      allocated_memory_.push_back(gpu_address);
-      memory_map[ToCpuAddress(*i)] = gpu_address;
-    }
-
-    if (verbose_ > 2) std::cerr << " OK\n";
-  }
+  AllocateCollectionOnCoproc("transformations", transformations_);
 
   {
     if (verbose_ > 2) std::cerr << "Allocating daughter lists...";
@@ -303,7 +307,6 @@ void CudaManager::ScanGeometry(VPlacedVolume const *const volume) {
   }
 
   if( dynamic_cast<PlacedBooleanVolume const*>(volume) ){
-    fprintf(stderr,"found a PlacedBooleanVolume");
     PlacedBooleanVolume const* v =  dynamic_cast<PlacedBooleanVolume const*>(volume);
     ScanGeometry(v->GetUnplacedVolume()->fLeftVolume);
     ScanGeometry(v->GetUnplacedVolume()->fRightVolume);

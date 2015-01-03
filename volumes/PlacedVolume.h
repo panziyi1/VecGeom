@@ -5,14 +5,9 @@
 #define VECGEOM_VOLUMES_PLACEDVOLUME_H_
 
 #include "base/Global.h"
-
-#include "base/Transformation3D.h"
 #include "volumes/LogicalVolume.h"
 #include "volumes/USolidsInterfaceHelper.h"
-
-#include <list>
 #include <string>
-#include <iostream>
 
 class G4VSolid;
 
@@ -359,6 +354,29 @@ public:
 #define VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC( PlacedVol ) \
    VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT(PlacedVol, translation::kGeneric) \
    VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT(PlacedVol, translation::kIdentity)
+
+#endif // VECGEOM_NO_SPECIALIZATION
+
+#ifdef VECGEOM_NO_SPECIALIZATION
+
+#define VECGEOM_DEVICE_INST_PLACED_POLYHEDRON_ALL_CUTOUT( PlacedVol, radii )   \
+   VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL( PlacedVol<radii, Polyhedron::EPhiCutout::kGeneric> )
+
+#define VECGEOM_DEVICE_INST_PLACED_POLYHEDRON_ALLSPEC( PlacedVol ) \
+   VECGEOM_DEVICE_INST_PLACED_POLYHEDRON_ALL_CUTOUT(PlacedVol, Polyhedron::EInnerRadii::kGeneric)
+
+#else // VECGEOM_NO_SPECIALIZATION
+
+#define VECGEOM_DEVICE_INST_PLACED_POLYHEDRON_ALL_CUTOUT( PlacedVol, radii )   \
+   VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL( PlacedVol<radii, Polyhedron::EPhiCutout::kGeneric> ) \
+   VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL( PlacedVol<radii, Polyhedron::EPhiCutout::kFalse> ) \
+   VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL( PlacedVol<radii, Polyhedron::EPhiCutout::kTrue> ) \
+   VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL( PlacedVol<radii, Polyhedron::EPhiCutout::kLarge> ) \
+
+#define VECGEOM_DEVICE_INST_PLACED_POLYHEDRON_ALLSPEC( PlacedVol ) \
+   VECGEOM_DEVICE_INST_PLACED_POLYHEDRON_ALL_CUTOUT(PlacedVol, Polyhedron::EInnerRadii::kGeneric) \
+   VECGEOM_DEVICE_INST_PLACED_POLYHEDRON_ALL_CUTOUT(PlacedVol, Polyhedron::EInnerRadii::kFalse) \
+   VECGEOM_DEVICE_INST_PLACED_POLYHEDRON_ALL_CUTOUT(PlacedVol, Polyhedron::EInnerRadii::kTrue)
 
 #endif // VECGEOM_NO_SPECIALIZATION
 

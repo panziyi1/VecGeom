@@ -60,6 +60,7 @@ private:
   typedef void const* CpuAddress;
   typedef DevicePtr<char> GpuAddress;
   typedef std::map<const CpuAddress, GpuAddress> MemoryMap;
+  typedef std::map<GpuAddress, CpuAddress> PlacedVolumeMemoryMap;
   typedef std::map<GpuAddress, GpuAddress> GpuMemoryMap;
 
   VPlacedVolume const *world_;
@@ -75,6 +76,12 @@ private:
    */
   MemoryMap memory_map;
   GpuMemoryMap gpu_memory_map;
+  /**
+   * inverse memory_map for fast GPU pointer to CPU conversion
+   *
+   */
+  PlacedVolumeMemoryMap fGPUtoCPUmapForPlacedVolumes;
+
   std::list<GpuAddress> allocated_memory_;
 
 public:
@@ -142,6 +149,7 @@ public:
   DevicePtr<cuda::LogicalVolume> LookupLogical(LogicalVolume const *const host_ptr);
 
   DevicePtr<cuda::VPlacedVolume> LookupPlaced(VPlacedVolume const *const host_ptr);
+  VPlacedVolume const* LookupPlacedCPUPtr( void * address );
 
   DevicePtr<cuda::Transformation3D> LookupTransformation(
       Transformation3D const *const host_ptr);
@@ -174,9 +182,16 @@ private:
    * the memory table.
    */
   template <typename Type>
-  CpuAddress ToCpuAddress(Type const *const ptr) const {
+  static CpuAddress ToCpuAddress(Type const *const ptr) {
     return static_cast<CpuAddress>(ptr);
   }
+
+  /**
+   * Helper routine allocate GPU memory for a collection of object
+   */
+  template <typename Coll>
+  bool AllocateCollectionOnCoproc(const char *verbose_title,
+                                  const Coll &data, bool isplaced=false);
 
   // template <typename TrackContainer>
   // void LocatePointsTemplate(TrackContainer const &container, const int n,
@@ -191,6 +206,14 @@ private:
 // void CudaManagerLocatePoints(VPlacedVolume const *const world,
 //                              AOS3D<Precision> const *const points,
 //                              const int n, const int depth, int *const output);
+
+inline
+VPlacedVolume const* CudaManager::LookupPlacedCPUPtr(void * address)
+{
+    const VPlacedVolume * cpu_ptr = (const VPlacedVolume *) fGPUtoCPUmapForPlacedVolumes[GpuAddress(address)];
+    assert(cpu_ptr != NULL);
+    return  cpu_ptr;
+}
 
 } } // End global namespace
 

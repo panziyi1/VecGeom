@@ -6,21 +6,30 @@
 #ifndef VECGEOM_BENCHMARKING_NAVIGATIONBENCHMARKER_H_
 #define VECGEOM_BENCHMARKING_NAVIGATIONBENCHMARKER_H_
 
+#include "base/Global.h"
 #include "base/SOA3D.h"
+#include "volumes/PlacedVolume.h"
+#include "navigation/NavigationState.h"
 
 namespace vecgeom {
 
-  class NavigationState;
-  class VPlacedVolume;
+  // VECGEOM_HOST_FORWARD_DECLARE( class VPlacedVolume; );
+  // VECGEOM_HOST_FORWARD_DECLARE( class NavigationState; );
 
-  double benchmarkLocatePoint(
+  using VPlacedVolume_t = VECGEOM_IMPL_NAMESPACE::VPlacedVolume const*;
+
+#ifdef VECGEOM_CUDA_INTERFACE
+  void GetVolumePointers( std::list<DevicePtr<cuda::VPlacedVolume>> &volumesGpu );
+#endif
+
+  Precision benchmarkLocatePoint(
     VPlacedVolume const* top,
     int nPoints,
     int nReps,
     SOA3D<Precision> const& points
     );
 
-  double benchmarkSerialNavigation(
+  Precision benchmarkSerialNavigation(
     VPlacedVolume const* top,
     int nPoints,
     int nReps,
@@ -28,20 +37,13 @@ namespace vecgeom {
     SOA3D<Precision> const& dirs
     );
 
-  double benchmarkVectorNavigation(
-    VPlacedVolume const* world,
+  Precision benchmarkVectorNavigation(
+    VPlacedVolume const* top,
     int nPoints,
     int nReps,
     SOA3D<Precision> const& points,
     SOA3D<Precision> const& dirs
     );
-
-  double benchmarkROOTNavigation(
-    VPlacedVolume const* world,
-    int nPoints,
-    int nReps,
-    SOA3D<Precision> const& points,
-    SOA3D<Precision> const& dirs );
 
   void testVectorSafety( VPlacedVolume const* top );
 
@@ -56,6 +58,22 @@ namespace vecgeom {
     );
 
   bool validateVecGeomNavigation( VPlacedVolume const* top, int npoints);
+
+#ifdef VECGEOM_ROOT
+  Precision benchmarkROOTNavigation(
+    VPlacedVolume const* top,
+    int nPoints,
+    int nReps,
+    SOA3D<Precision> const& points,
+    SOA3D<Precision> const& dirs );
+#endif
+
+#ifdef VECGEOM_CUDA
+Precision runNavigationCuda( void* gpu_ptr, void* gpu_out_ptr, int maxDepth, VPlacedVolume const* volume, unsigned npoints,
+                             Precision const *const posX, Precision const *const posY, Precision const *const posZ,
+                             Precision const *const dirX, Precision const *const dirY, Precision const *const dirZ,
+                             Precision const *const pSteps,      Precision *const steps );
+#endif
 
 } // End namespace vecgeom
 

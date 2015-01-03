@@ -45,10 +45,12 @@ VPlacedVolume * VPlacedVolume::operator=( VPlacedVolume const & other )
 }
 #endif
 
+VECGEOM_CUDA_HEADER_BOTH
 VPlacedVolume::~VPlacedVolume() {
-//#ifndef VECGEOM_NVCC
-  if(label_) delete label_;
-//#endif
+
+#ifndef VECGEOM_NVCC_DEVICE
+  delete label_;
+#endif
 }
 
 VECGEOM_CUDA_HEADER_BOTH
@@ -96,6 +98,7 @@ namespace cxx {
 
 template size_t DevicePtr<cuda::VPlacedVolume const*>::SizeOf();
 template size_t DevicePtr<char>::SizeOf();
+template size_t DevicePtr<Precision>::SizeOf();
 // template void DevicePtr<cuda::PlacedBox>::Construct(
 //    DevicePtr<cuda::LogicalVolume> const logical_volume,
 //    DevicePtr<cuda::Transformation3D> const transform,
