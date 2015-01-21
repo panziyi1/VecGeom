@@ -388,6 +388,8 @@ std::ostream& operator<<(std::ostream& os, Vector3D<T> const &vec) {
 
 #ifdef VECGEOM_VC_ACCELERATION
 
+#pragma message "using Vc accelerated Vector3D"
+
 /// This is a template specialization of class Vector3D<double> or
 /// Vector3D<float> that can provide internal vectorization of common vector
 /// operations.
@@ -665,14 +667,14 @@ public:
   #define VECTOR3D_ACCELERATED_INPLACE_BINARY_OP(OPERATOR) \
   VECGEOM_CUDA_HEADER_BOTH \
   VecType& operator OPERATOR(const VecType &other) { \
-    for (int i = 0; i < 1 + 3/Vc::Vector<Precision>::Size; ++i) { \
+    for (unsigned i = 0; i < 1 + 3/Vc::Vector<Precision>::Size; ++i) { \
       this->mem.vector(i) OPERATOR other.mem.vector(i); \
     } \
     return *this; \
   } \
   VECGEOM_CUDA_HEADER_BOTH \
   VecType& operator OPERATOR(const Precision &scalar) { \
-    for (int i = 0; i < 1 + 3/Vc::Vector<Precision>::Size; ++i) { \
+    for (unsigned i = 0; i < 1 + 3/Vc::Vector<Precision>::Size; ++i) { \
       this->mem.vector(i) OPERATOR scalar; \
     } \
     return *this; \
@@ -690,8 +692,10 @@ public:
   }
 
 };
-
+#else
+#pragma message "using normal Vector3D.h"
 #endif // VECGEOM_VC_ACCELERATION
+
 
 #define VECTOR3D_BINARY_OP(OPERATOR, INPLACE) \
 template <typename Type, typename OtherType> \
