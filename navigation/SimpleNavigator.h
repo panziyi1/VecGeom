@@ -271,7 +271,7 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
    VPlacedVolume const * currentvolume = currentstate.Top();
    int nexthitvolume = -1; // means mother
 
-   step = currentvolume->DistanceToOut( localpoint, localdir, pstep );
+   if(currentvolume) step = currentvolume->DistanceToOut( localpoint, localdir, pstep );
 
    // NOTE: IF STEP IS NEGATIVE HERE, SOMETHING IS TERRIBLY WRONG. WE CAN TRY TO HANDLE THE SITUATION
    // IN TRYING TO PROPOSE THE RIGHT LOCATION IN NEWSTATE AND RETURN
@@ -298,7 +298,7 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
 
    // now we have the candidates
    // try
-   newstate=currentstate;
+   newstate = currentstate;
 
    // is geometry further away than physics step?
    if(step > pstep)
@@ -309,6 +309,7 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
        return;
    }
    newstate.SetBoundaryState( true );
+
 
    // TODO: this is tedious, please provide operators in Vector3D!!
    // WE SHOULD HAVE A FUNCTION "TRANSPORT" FOR AN OPERATION LIKE THIS
@@ -324,12 +325,14 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
 
       // this should be inlined here
       LocatePoint( nextvol, trans->Transform(newpointafterboundary), newstate, false );
+      // newstate.Print();
    }
    else
    {
       // continue directly further up
       //LocateLocalPointFromPath_Relative_Iterative( newpointafterboundary, newpointafterboundaryinnewframe, outpath, globalm );
       RelocatePointFromPath( newpointafterboundary, newstate );
+      // newstate.Print();
    }
 }
 
@@ -496,6 +499,7 @@ void SimpleNavigator::FindNextBoundaryAndStep(
         // continue directly further up
         RelocatePointFromPath( newpointafterboundary, *newstates[i] );
      }
+
    } // end loop for relocation
 }
 

@@ -11,7 +11,6 @@
 
 #include "volumes/PlacedVolume.h"
 #include "navigation/NavStatePool.h"
-//#include "navigation/NavigationState.h"
 #include "navigation/SimpleNavigator.h"
 
 #ifdef VECGEOM_ROOT
@@ -297,9 +296,9 @@ bool validateNavigationStepAgainstRoot(
               <<" step="<< rootnav->GetStep()
               <<" <==> VecGeom node="<< (testState.Top() ? testState.Top()->GetLabel() : "NULL")
               <<" step="<< testStep
-              << std::endl;
+              <<"\n";
 
-    std::cerr<< rootnav->GetCurrentNode() <<' '<< RootGeoManager::Instance().tgeonode(testState.Top()) << std::endl;
+    std::cerr<< rootnav->GetCurrentNode() <<' '<< RootGeoManager::Instance().tgeonode(testState.Top()) << "\n";
   }
 
   return result;
@@ -320,17 +319,13 @@ bool validateVecGeomNavigation( VPlacedVolume_t top, int npoints) {
   vecgeom::volumeUtilities::FillRandomDirections( dirs );
 
   // now setup all the navigation states - one loop at a time for better data locality
-  std::cout<<"--- Creating origStates\n"<< std::endl;
+  std::cout<<"--- Creating origStates\n"<< "\n";
   NavStatePool origStates(npoints, GeoManager::Instance().getMaxDepth() );
-  std::cout<<"--- Creating vgSerialStates\n"<< std::endl;
-  NavStatePool vgSerialStates(npoints, GeoManager::Instance().getMaxDepth() );
-  // std::cout<<"--- Printing origStates\n"<< std::endl;
-  // origStates.Print();
 
-  // NavigationState ** origStates = new NavigationState*[np];
-  // NavigationState ** vgSerialStates = new NavigationState*[np];
-  // for (int i=0;i<np;++i) origStates[i] = NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
-  // for (int i=0;i<np;++i) vgSerialStates[i] = NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
+  std::cout<<"--- Creating vgSerialStates\n"<< "\n";
+  NavStatePool vgSerialStates(npoints, GeoManager::Instance().getMaxDepth() );
+  // std::cout<<"--- Printing origStates\n"<< "\n";
+  // origStates.Print();
 
   vecgeom::SimpleNavigator nav;
   Precision * maxSteps = (Precision *) _mm_malloc(sizeof(Precision)*np,32);
@@ -367,11 +362,11 @@ bool validateVecGeomNavigation( VPlacedVolume_t top, int npoints) {
     }
 #endif // VECGEOM_ROOT
   }
+  std::cout<<"VecGeom navigation - serial interface: #mismatches = "<< errorCount <<" / "<< np <<"\n";
 
-  std::cout<<"VecGeom navigation - serial interface: #errors = "<< errorCount <<" / "<< np << std::endl;
   //=== Vector interface
 
-  std::cout<<"--- Creating vgVectorStates\n"<< std::endl;
+  std::cout<<"--- Creating vgVectorStates\n"<< "\n";
   //NavigationState ** vgVectorStates = new NavigationState*[np];
   //for (int i=0;i<np;++i) vgVectorStates[i] = NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
   NavStatePool vgVectorStates(npoints, GeoManager::Instance().getMaxDepth() );
@@ -408,11 +403,11 @@ bool validateVecGeomNavigation( VPlacedVolume_t top, int npoints) {
                << (vgSerialStates[i]->IsOnBoundary() ? "*" : "")
                <<" / "<< (void2 ? vgVectorStates[i]->Top()->GetLabel() : "NULL")
                << (vgVectorStates[i]->IsOnBoundary() ? "*" : "")
-               << std::endl;
+               << "\n";
     }
   }
 
-  std::cout<<"VecGeom navigation - vector interface: #errors = "<< errorCount <<" / "<< np << std::endl;
+  std::cout<<"VecGeom navigation - vector interface: #mismatches = "<< errorCount <<" / "<< np << "\n";
 
 #ifdef VECGEOM_CUDA
   Precision * gpuSteps = (Precision *) _mm_malloc( np*sizeof(Precision), 32);
@@ -425,7 +420,8 @@ bool validateVecGeomNavigation( VPlacedVolume_t top, int npoints) {
 
   origStates.CopyToGpu();
   gpuStates.CopyToGpu();
-  printf("Start GPU navigation...\n");
+
+  printf("Start validating GPU navigation...\n");
   runNavigationCuda(origStates.GetGPUPointer(), gpuStates.GetGPUPointer(),
                     GeoManager::Instance().getMaxDepth(),
                     GeoManager::Instance().GetWorld(),
@@ -445,17 +441,18 @@ bool validateVecGeomNavigation( VPlacedVolume_t top, int npoints) {
     if(mismatch) {
       result = false;
       ++errorCount;
-      std::cout<<"GPU navigation problems: iteration "<< i
+      std::cout<<"GPU navigation problems: track["<< i <<"]=("
+               << points[i].x() <<"; "<< points[i].y() <<"; "<< points[i].z() <<") "
                <<" steps: "<< refSteps[i] <<" / "<< gpuSteps[i]
                // <<" navStates: "<< vgSerialStates[i]->Top()->GetLabel()
                // << (vgSerialStates[i]->IsOnBoundary() ? "*" : "")
                // <<" / "<< vgVectorStates[i]->Top()->GetLabel()
                // << (vgVectorStates[i]->IsOnBoundary() ? "*" : "")
-               << std::endl;
+               << "\n";
     }
   }
 
-  std::cout<<"VecGeom navigation on the GPUs: #errors = "<< errorCount <<" / "<< np << std::endl;
+  std::cout<<"VecGeom navigation on the GPUs: #mismatches = "<< errorCount <<" / "<< np << "\n";
 #endif // VECGEOM_CUDA
 
   // if(mismatches>0) std::cout << "Navigation test failed with "<< mismatches <<" mismatches\n";

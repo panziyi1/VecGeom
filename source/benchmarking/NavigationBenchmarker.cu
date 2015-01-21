@@ -30,30 +30,15 @@ void NavigationKernel(void* gpu_ptr /* a pointer to buffer of current navigation
   double step;
 
   unsigned tid = ThreadIndex();
-  // while (tid < n) {
-  while (tid < 3) {
+  while (tid < n) {
 
-    printf("GPU: gpu_ptr=%p, gpu_out_ptr=%p\n", gpu_ptr, gpu_out_ptr, &positions);
+    //.. get the navigationstate for this thread/lane
+    NavigationState *inState  = reinterpret_cast<NavigationState*>(gpu_ptr + tid*NavigationState::SizeOf(depth));
+    NavigationState *outState = reinterpret_cast<NavigationState*>(gpu_out_ptr + tid*NavigationState::SizeOf(depth));
 
-    // get the navigationstate for this thread/lane
-    // NavigationState * state = reinterpret_cast<NavigationState*>( gpu_ptr + NavigationState::SizeOf(depth)*tid );
-    NavStatePool *inStates  = reinterpret_cast<NavStatePool*>(gpu_ptr);
-    NavStatePool *outStates = reinterpret_cast<NavStatePool*>(gpu_out_ptr);
-
-    printf("GPU: tid=%i, position: (%8.3f; %8.3f; %8.3f); inStates=%p; outStates=%p\n",
-           tid, positions[tid].x(), positions[tid].y(), positions[tid].z(), inStates, outStates);
-
-    NavigationState *inState  = (*inStates)[tid];
-    printf("GPU: inStates=%p, inState=%p\n", inStates, inState );
-
-    NavigationState *outState = (*outStates)[tid];
-    printf("GPU: outStates=%p, outState=%p\n", outStates, outState );
-
-    // do the actual navigation on the GPU
-//    nav.LocatePoint(volume, positions[tid], *inState, true);
+    //.. do the actual navigation on the GPU
+    // nav.LocatePoint(volume, positions[tid], *inState, true);
     nav.FindNextBoundaryAndStep(positions[tid], directions[tid], *inState, *outState, pSteps[tid], step);
-    printf("GPU: NavigState: step[%i] = %f, state=%p\n", tid, steps[tid], outState);  // print one per warp, for debugging
-
     steps[tid] = step;
 
     // repeat
@@ -123,6 +108,9 @@ void NavigationKernel(void* gpu_ptr /* a pointer to buffer of current navigation
    Precision elapsedCuda = timer.Stop();
 
    cxx::CopyFromGpu(propStepsGpu, propSteps, npoints*sizeof(Precision));
+   for(size_t i=0; i<10; ++i) {
+     std::cout<<"NavBenchmarker.cu: propSteps["<< i <<"] = "<< propSteps[i] << std::endl;
+   }
 
    cxx::FreeFromGpu(propStepsGpu);
    posXGpu.Deallocate();

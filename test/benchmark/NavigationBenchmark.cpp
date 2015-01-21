@@ -49,7 +49,7 @@ VPlacedVolume* SetupBoxGeometry() {
 
 int main(int argc, char* argv[])
 {
-  OPTION_INT(npoints, 10);
+  OPTION_INT(npoints, 10000);
   OPTION_INT(nreps, 3);
 #ifdef VECGEOM_ROOT
   OPTION_BOOL(vis, false);
@@ -87,28 +87,16 @@ int main(int argc, char* argv[])
 #endif
 
   std::cout<<"\n*** Validating VecGeom navigation..."<< std::endl;
-  bool ok = validateVecGeomNavigation(GeoManager::Instance().GetWorld(), 1024);
+  bool ok = validateVecGeomNavigation(GeoManager::Instance().GetWorld(), npoints);
   if(ok) std::cout<<"VecGeom validation passed."<< std::endl;
   else   std::cout<<"VecGeom validation failed."<< std::endl;
 
-  std::cout<<"\n*** Running navigation benchmarks with npoints="<<npoints<<" and nreps="<< nreps <<".\n";
-  runNavigationBenchmarks(GeoManager::Instance().GetWorld(), npoints, nreps);
-
-  npoints*=10;
-  std::cout<<"\n*** Running navigation benchmarks with npoints="<<npoints<<" and nreps="<< nreps <<".\n";
-  runNavigationBenchmarks(GeoManager::Instance().GetWorld(), npoints, nreps);
-
-  npoints*=10;
-  std::cout<<"\n*** Running navigation benchmarks with npoints="<<npoints<<" and nreps="<< nreps <<".\n";
-  runNavigationBenchmarks(GeoManager::Instance().GetWorld(), npoints, nreps);
-
-  npoints*=10;
-  std::cout<<"\n*** Running navigation benchmarks with npoints="<<npoints<<" and nreps="<< nreps <<".\n";
-  runNavigationBenchmarks(GeoManager::Instance().GetWorld(), npoints, nreps);
-
-  npoints*=10;
-  std::cout<<"\n*** Running navigation benchmarks with npoints="<<npoints<<" and nreps="<< nreps <<".\n";
-  runNavigationBenchmarks(GeoManager::Instance().GetWorld(), npoints, nreps);
+  // on FNAL GPUs, loop execution takes ~70sec for npoints=10M
+  while(npoints<=1000000) {
+    std::cout<<"\n*** Running navigation benchmarks with npoints="<<npoints<<" and nreps="<< nreps <<".\n";
+    runNavigationBenchmarks(GeoManager::Instance().GetWorld(), npoints, nreps);
+    npoints*=10;
+  }
 
 /*
 // GPU part
