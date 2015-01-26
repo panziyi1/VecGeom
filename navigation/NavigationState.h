@@ -431,8 +431,8 @@ void NavigationState::Print() const
    // printf("bool: fOnBoundary=%i %p (%l bytes)\n", fOnBoundary, static_cast<void*>(fOnBoundary), sizeof(bool));
    // printf("Transf3D: matrix (%l bytes)\n", sizeof(Transformation3D) );
    // printf("VariableSizeObj: fPath=%p (%l bytes)\n", fPath, sizeof(fPath));
-   printf("NavState: Level(cur/max)=%i/%i,  onBoundary=%s, topVol=%p, this=%p\n",
-          fCurrentLevel, GetMaxLevel(), (fOnBoundary?"true":"false"), Top(), this );
+   printf("NavState: Level(cur/max)=%i/%i,  onBoundary=%s, topVol=<%s>, this=%p\n",
+          fCurrentLevel, GetMaxLevel(), (fOnBoundary?"true":"false"), (Top()? Top()->GetLabel().c_str():"NULL"), this );
    // std::cerr << "NavState: Level(cur/max)=" << fCurrentLevel <<'/'<< GetMaxLevel()
    //           <<" onBoundary="<< fOnBoundary
    //           <<" topVol="<< Top() <<" this="<< this
