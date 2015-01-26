@@ -145,12 +145,20 @@ void FillBiasedDirections(VPlacedVolume const &volume,
       if (IsHittingVolume(points[i], dirs[i], **j)) {
         n_hits++;
         hit[i] = true;
+        break;
       }
     }
   }
 
   // Remove hits until threshold
-  while (static_cast<Precision>(n_hits)/static_cast<Precision>(size) >= bias) {
+  printf("FillBiasedDirs: nhits/size = %i/%i and requested bias=%f\n", n_hits, size, bias);
+  int itries = 0;
+  while (static_cast<Precision>(n_hits)/static_cast<Precision>(size) > bias) {
+    itries++;
+    if(itries%1000000 == 0) {
+      printf("%s line %i: Warning: %i tries to reduce bias... volume=%s. Please check.\n", __FILE__, __LINE__, itries, volume.GetLabel().c_str());
+    }
+
     h = static_cast<int>(
         static_cast<Precision>(size) * RNG::Instance().uniform()
     );
@@ -161,6 +169,7 @@ void FillBiasedDirections(VPlacedVolume const &volume,
         if (!IsHittingVolume(points[h], dirs[h], **i)) {
           n_hits--;
           hit[h] = false;
+          itries = 0;
           break;
         }
       }
@@ -169,17 +178,25 @@ void FillBiasedDirections(VPlacedVolume const &volume,
 
 
   // Add hits until threshold
+  itries = 0;
   while (static_cast<Precision>(n_hits)/static_cast<Precision>(size) < bias) {
     h = static_cast<int>(
         static_cast<Precision>(size) * RNG::Instance().uniform()
     );
     while (!hit[h]) {
+      ++itries;
+      if (itries%1000000==0) {
+        printf("%s line %i: Warning: %i tries to increase bias... volume=%s.  Please check.\n",
+               __FILE__, __LINE__, itries, volume.GetLabel().c_str());
+      }
+
       dirs.set(h, SampleDirection());
       for (Vector<Daughter>::const_iterator i = volume.daughters().cbegin(),
            iEnd = volume.daughters().cend(); i != iEnd; ++i) {
         if (IsHittingVolume(points[h], dirs[h], **i)) {
           n_hits++;
           hit[h] = true;
+          itries = 0;
           break;
         }
       }
@@ -217,10 +234,25 @@ void FillUncontainedPoints(VPlacedVolume const &volume,
   const int size = points.capacity();
   points.resize(points.capacity());
   const Vector3D<Precision> dim = volume.bounding_box()->dimensions();
+  int itries = 0;
   for (int i = 0; i < size; ++i) {
     bool contained;
+    Vector3D<Precision> point;
+    itries = 0;
     do {
-      points.set(i, SamplePoint(dim));
+      // ensure that point is contained in mother volume
+      do {
+        ++itries;
+        if(itries%1000000 == 0) {
+          printf("%s line %i: Warning: %i tries to find uncontained points... volume=%s.  Please check.\n",
+                 __FILE__, __LINE__, itries, volume.GetLabel().c_str());
+        }
+
+        point = SamplePoint(lower,upper);
+        std::cout<<"VolUtilities: volume="<< volume.GetLabel() <<" sampled point:"<< point <<"\n";
+      } while (!volume.Contains(point));
+      points.set(i, point);
+
       contained = false;
       for (Vector<Daughter>::const_iterator j = volume.daughters().cbegin(),
           jEnd = volume.daughters().cend(); j != jEnd; ++j) {
@@ -254,6 +286,7 @@ void FillContainedPoints(VPlacedVolume const &volume,
   std::vector<bool> insideVector(size, false);
   for (int i = 0; i < size; ++i) {
     points.set(i, SamplePoint(dim));
+    // measure bias, which is the fraction of points contained in daughters
     for (Vector<Daughter>::const_iterator v = volume.daughters().cbegin(),
          v_end = volume.daughters().cend(); v != v_end; ++v) {
       bool inside = (placed) ? (*v)->Contains(points[i])
@@ -264,12 +297,20 @@ void FillContainedPoints(VPlacedVolume const &volume,
       }
     }
   }
+
+  // remove contained points to reduce bias as needed
   int i = 0;
+  int itries = 0;
   while (static_cast<double>(insideCount)/static_cast<double>(size) > bias) {
     while (!insideVector[i]) ++i;
     bool contained = false;
     do {
       points.set(i, SamplePoint(dim));
+      ++itries;
+      if(itries%1000000==0) {
+        printf("%s line %i: Warning: %i tries to reduce bias... volume=%s.  Please check.\n", __FILE__, __LINE__, itries, volume.GetLabel().c_str());
+      }
+
       for (Vector<Daughter>::const_iterator v = volume.daughters().cbegin(),
            v_end = volume.daughters().end(); v != v_end; ++v) {
         bool inside = (placed) ? (*v)->Contains(points[i])
@@ -281,15 +322,23 @@ void FillContainedPoints(VPlacedVolume const &volume,
       }
     } while (contained);
     insideVector[i] = false;
+    itries = 0;
     --insideCount;
     ++i;
   }
+
+  // add contained points to increase bias as needed
   i = 0;
+  itries = 0;
   while (static_cast<double>(insideCount)/static_cast<double>(size) < bias) {
     while (insideVector[i]) ++i;
     bool contained = false;
     do {
       const Vector3D<Precision> sample = SamplePoint(dim);
+      ++itries;
+      if(itries%1000000==0) {
+        printf("%s line %i: Warning: %i tries to increase bias... volume=%s.  Please check.\n", __FILE__, __LINE__, itries, volume.GetLabel().c_str());
+      }
       for (Vector<Daughter>::const_iterator v = volume.daughters().cbegin(),
            v_end = volume.daughters().cend(); v != v_end; ++v) {
         bool inside = (placed) ? (*v)->Contains(sample)
@@ -302,6 +351,7 @@ void FillContainedPoints(VPlacedVolume const &volume,
       }
     } while (!contained);
     insideVector[i] = true;
+    itries = 0;
     ++insideCount;
     ++i;
   }
@@ -340,10 +390,16 @@ void FillRandomPoints(VPlacedVolume const &volume,
   const int size = points.capacity();
   points.resize(points.capacity());
   const Vector3D<Precision> dim = volume.bounding_box()->dimensions();
+
+  int itries =0;
   for (int i = 0; i < size; ++i) {
     Vector3D<Precision> point;
     do {
       point = SamplePoint(dim);
+      ++itries;
+      if(itries%1000000==0) {
+        printf("%s line %i: Warning: %i tries to find contained points... volume=%s.  Please check.\n", __FILE__, __LINE__, itries, volume.GetLabel().c_str());
+      }
     } while (!volume.Contains(point));
     points.set(i, point);
   }
@@ -408,7 +464,7 @@ void FillGlobalPointsAndDirectionsForLogicalVolume(
         TrackContainer  & globalpoints,
         TrackContainer  & directions,
         Precision fraction,
-        int np ){
+        int np ) {
 
     // we need to generate a list of all the paths ( or placements ) which reference
     // the logical volume as their deepest node
@@ -421,12 +477,13 @@ void FillGlobalPointsAndDirectionsForLogicalVolume(
         VPlacedVolume const * pvol = allpaths.front()->Top();
 
         // generate points which are in lvol but not in its daughters
-        FillUncontainedPoints( *pvol, localpoints ); 
+        FillUncontainedPoints( *pvol, localpoints );
 
         // now have the points in the local reference frame of the logical volume
         FillBiasedDirections( *lvol, localpoints, fraction, directions );
 
         // transform points to global frame
+        globalpoints.resize(globalpoints.capacity());
         int placedcount=0;
         while( placedcount < np )
         {
@@ -445,8 +502,8 @@ void FillGlobalPointsAndDirectionsForLogicalVolume(
         }
     }
     else{
-        // an error message
-
+      // an error message
+      printf("VolumeUtilities: FillGlobalPointsAndDirectionsForLogicalVolume()... ERROR condition detected.\n");
     }
 }
 
