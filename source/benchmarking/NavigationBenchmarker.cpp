@@ -307,23 +307,17 @@ bool validateNavigationStepAgainstRoot(
 
 //=======================================
 
-bool validateVecGeomNavigation( VPlacedVolume_t top, int npoints) {
+bool validateVecGeomNavigation( int np, SOA3D<Precision> const& points, SOA3D<Precision> const& dirs) {
 
   bool result = true;
   int errorCount = 0;
-  int np = Min( npoints, 4096 );  // no more than 4096 points used for validation
-
-  SOA3D<Precision> points(np);
-  SOA3D<Precision> dirs(np);
-  vecgeom::volumeUtilities::FillUncontainedPoints( *top, points );
-  vecgeom::volumeUtilities::FillRandomDirections( dirs );
 
   // now setup all the navigation states - one loop at a time for better data locality
   std::cout<<"--- Creating origStates\n"<< "\n";
-  NavStatePool origStates(npoints, GeoManager::Instance().getMaxDepth() );
+  NavStatePool origStates(np, GeoManager::Instance().getMaxDepth() );
 
   std::cout<<"--- Creating vgSerialStates\n"<< "\n";
-  NavStatePool vgSerialStates(npoints, GeoManager::Instance().getMaxDepth() );
+  NavStatePool vgSerialStates(np, GeoManager::Instance().getMaxDepth() );
   // std::cout<<"--- Printing origStates\n"<< "\n";
   // origStates.Print();
 
@@ -339,7 +333,8 @@ bool validateVecGeomNavigation( VPlacedVolume_t top, int npoints) {
     Vector3D<Precision> const& pos = points[i];
     Vector3D<Precision> const& dir = dirs[i];
 
-    nav.LocatePoint( top, pos, *origStates[i], true);
+    nav.LocatePoint( GeoManager::Instance().GetWorld(), pos, *origStates[i], true);
+    // std::cout<<" LocatingPoint: "<< pos <<": "; origStates[i]->Print();
     nav.FindNextBoundaryAndStep( pos, dir, *origStates[i], *vgSerialStates[i], maxSteps[i], refSteps[i]);
 
 #ifdef VECGEOM_ROOT
@@ -369,7 +364,7 @@ bool validateVecGeomNavigation( VPlacedVolume_t top, int npoints) {
   std::cout<<"--- Creating vgVectorStates\n"<< "\n";
   //NavigationState ** vgVectorStates = new NavigationState*[np];
   //for (int i=0;i<np;++i) vgVectorStates[i] = NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
-  NavStatePool vgVectorStates(npoints, GeoManager::Instance().getMaxDepth() );
+  NavStatePool vgVectorStates(np, GeoManager::Instance().getMaxDepth() );
 
   SOA3D<Precision> workspace1(np);
   SOA3D<Precision> workspace2(np);
@@ -395,14 +390,15 @@ bool validateVecGeomNavigation( VPlacedVolume_t top, int npoints) {
     if( vgSerialStates[i]->IsOnBoundary() != vgVectorStates[i]->IsOnBoundary()) mismatch = true;
     if( safeties[i] != nav.GetSafety( points[i], *origStates[i] ))   mismatch = true;
     if(mismatch) {
+      result = false;
       ++errorCount;
       std::cout<<"Vector navigation problems: track["<< i <<"]=("
                << points[i].x() <<"; "<< points[i].y() <<"; "<< points[i].z() <<") "
-               <<" steps: "<< refSteps[i] <<" / "<< vecSteps
+               <<" steps: "<< refSteps[i] <<" / "<< vecSteps[i]
                <<" navStates: "<< ( void1 ? vgSerialStates[i]->Top()->GetLabel() : "NULL")
-               << (vgSerialStates[i]->IsOnBoundary() ? "*" : "")
+               << (vgSerialStates[i]->IsOnBoundary() ? "" : "-notOnBoundary")
                <<" / "<< (void2 ? vgVectorStates[i]->Top()->GetLabel() : "NULL")
-               << (vgVectorStates[i]->IsOnBoundary() ? "*" : "")
+               << (vgVectorStates[i]->IsOnBoundary() ? "" : "-notOnBoundary")
                << "\n";
     }
   }

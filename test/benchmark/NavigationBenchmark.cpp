@@ -87,9 +87,15 @@ int main(int argc, char* argv[])
 #endif
 
   std::cout<<"\n*** Validating VecGeom navigation..."<< std::endl;
-  bool ok = validateVecGeomNavigation(GeoManager::Instance().GetWorld(), npoints);
-  if(ok) std::cout<<"VecGeom validation passed."<< std::endl;
-  else   std::cout<<"VecGeom validation failed."<< std::endl;
+  bool ok = validateVecGeomNavigation(np, points, dirs);
+
+  // Must be validated before being benchmarked
+  if(!ok) {
+    std::cout<<"VecGeom validation failed."<< std::endl;
+    return 1;
+  }
+
+  std::cout<<"VecGeom validation passed."<< std::endl;
 
   // on FNAL GPUs, loop execution takes ~70sec for npoints=10M
   while(npoints<=1000000) {

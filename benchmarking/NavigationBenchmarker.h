@@ -57,7 +57,7 @@ namespace vecgeom {
     Precision testStep
     );
 
-  bool validateVecGeomNavigation( VPlacedVolume const* top, int npoints);
+  bool validateVecGeomNavigation( int npts, SOA3D<Precision> const& points, SOA3D<Precision> const& dirs);
 
 #ifdef VECGEOM_ROOT
   Precision benchmarkROOTNavigation(
