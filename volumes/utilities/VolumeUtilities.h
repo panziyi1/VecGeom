@@ -28,6 +28,15 @@ namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 namespace volumeUtilities {
 
+/**
+ * @brief Is the trajectory through a point along a direction hitting a volume?
+ * @details If ROOT is available and VECGEOM_BENCHMARK is set, use
+ *    ROOT to calculate it, otherwise use VecGeom utilities.
+ * @param point is the starting point
+ * @param dir is the direction of the trajectory
+ * @param volume is the shape under test
+ * @return true/false whether the trajectory hits the volume
+ */
 VECGEOM_INLINE
 bool IsHittingVolume(Vector3D<Precision> const &point,
                      Vector3D<Precision> const &dir,
@@ -46,6 +55,13 @@ for(int i=0;i<3;i++){
 #endif
 }
 
+/**
+ * @brief Returns a random point, based on a sampling rectangular volume.
+ * @details Mostly used for benchmarks and navigation tests
+ * @param size is a Vector3D containing the rectangular dimensions of the sampling volume
+ * @param scale an optional scale factor (default is 1)
+ * @return a random output point
+ */
 VECGEOM_INLINE
 Vector3D<Precision> SamplePoint(Vector3D<Precision> const &size,
                                 const Precision scale = 1) {
@@ -58,6 +74,11 @@ Vector3D<Precision> SamplePoint(Vector3D<Precision> const &size,
 }
 
 VECGEOM_INLINE
+/**
+ *  @brief Returns a random, normalized direction vector.
+ *  @details Mostly used for benchmarks, when a direction is needed.
+ *  @return a random, normalized direction vector
+ */
 Vector3D<Precision> SampleDirection() {
 
   Vector3D<Precision> dir(
@@ -74,6 +95,10 @@ Vector3D<Precision> SampleDirection() {
 }
 
 
+/**
+ *  @brief Fills a container with random normalized directions.
+ *  @param dirs is the output container, provided by the caller
+ */
 template<typename TrackContainer>
 VECGEOM_INLINE
 void FillRandomDirections(TrackContainer &dirs) {
@@ -83,6 +108,20 @@ void FillRandomDirections(TrackContainer &dirs) {
   }
 }
 
+/**
+ * @brief Fills a container with biased normalized directions.
+ * @details Directions are randomly assigned first, and then the
+ *    fraction of hits is measured and compared to suggested bias.
+ *    Then some directions will be modified as needed, to force the
+ *    sample as a whole to have the suggested hit bias (@see bias).
+ * @param volume provided must have daughter volumes.  Those daughters
+ *    are used to determine the hit bias (@see bias).
+ * @param points provided, and not modified.
+ * @param bias is a real number in the range [0,1], which suggests the
+ *    fraction of points hitting any of the daughter volumes.
+ * @param dirs is the output directions container, provided by the
+ *    caller.
+ */
 template<typename TrackContainer>
 VECGEOM_INLINE
 void FillBiasedDirections(VPlacedVolume const &volume,
@@ -148,6 +187,10 @@ void FillBiasedDirections(VPlacedVolume const &volume,
   }
 }
 
+/**
+ * @brief Same as previous function, but now taking a LogicalVolume as input.
+ * @detail Delegates the filling to the other function (@see FillBiasedDirections).
+ */
 template<typename TrackContainer>
 VECGEOM_INLINE
 void FillBiasedDirections(LogicalVolume const &volume,
@@ -160,9 +203,13 @@ void FillBiasedDirections(LogicalVolume const &volume,
   delete placed;
 }
 
-// fills the volume with 3D points which are not contained in daughters
-// of volume
-// TODO: seems to be missing a check that the generated points are actually within volume
+/**
+ * @brief Fills the volume with 3D points which are _not_ contained in
+ *    any daughters of the input mother volume.
+ * @details Requires a proper bounding box from the input volume.
+ * @param volume is the input mother volume containing all output points.
+ * @param points is the output container, provided by the caller.
+ */
 template<typename TrackContainer>
 VECGEOM_INLINE
 void FillUncontainedPoints(VPlacedVolume const &volume,
@@ -187,6 +234,13 @@ void FillUncontainedPoints(VPlacedVolume const &volume,
 }
 
 // what is the bias??
+/**
+ * @brief Fills the volume with 3D points which are to be contained in
+ *    any daughters of the input mother volume.
+ * @details Requires a proper bounding box from the input volume.
+ * @param volume is the input mother volume containing all output points.
+ * @param points is the output container, provided by the caller.
+ */
 template<typename TrackContainer>
 VECGEOM_INLINE
 void FillContainedPoints(VPlacedVolume const &volume,
@@ -271,8 +325,14 @@ void FillUncontainedPoints(LogicalVolume const &volume,
 }
 
 
-// generates random points contained in a volume
-// fills a container structure (SOA3D or AOS3D)
+/**
+ * @brief Fill a container structure (SOA3D or AOS3D) with random
+ *    points contained in a volume.
+ * @details Input volume must have a valid bounding box, which is used
+ *    for sampling.
+ * @param volume containing all points
+ * @param points is the output container, provided by the caller.
+ */
 template <typename TrackContainer>
 VECGEOM_INLINE
 void FillRandomPoints(VPlacedVolume const &volume,
@@ -290,9 +350,12 @@ void FillRandomPoints(VPlacedVolume const &volume,
 }
 
 
-// generates random points in a box described by
-// lower and upper corner
-// fills a container structure ( SOA3D or AOS3D )
+/**
+ * @brief Fills a container structure (SOA3D or AOS3D) with random
+ *    points contained inside a box defined by the two input corners.
+ * @param lowercorner, uppercorner define the sampling box
+ * @param points is the output container, provided by the caller.
+ */
 template <typename TrackContainer>
 VECGEOM_INLINE
 void FillRandomPoints(Vector3D<Precision> const & lowercorner,
@@ -307,9 +370,12 @@ void FillRandomPoints(Vector3D<Precision> const & lowercorner,
   }
 }
 
-// generates random points in a box at the origin described by
-// half lengths: dim
-// fills a container structure ( SOA3D or AOS3D )
+/**
+ * @brief Fills a (SOA3D or AOS3D) container with random points inside
+ *    a box at the origin
+ * @param dim is a Vector3D with w,y,z half-lengths defining the sampling box
+ * @param points is the output container, provided by the caller.
+ */
 template <typename TrackContainer>
 VECGEOM_INLINE
 void FillRandomPoints(Vector3D<Precision> const & dim,
@@ -318,19 +384,22 @@ void FillRandomPoints(Vector3D<Precision> const & dim,
           Vector3D<Precision>(dim.x(),dim.y(),dim.z()), points);
 }
 
-
-// a function to generate points and directions in the global reference frame
-// under the constraint that the positions have to be within a given logical volume
-// ( and not within daughters of that logical volume )
-//
-// the function also returns the generated points in local reference frame of the logical volume
-//
-// fraction: is the fraction with which the directions should hit a daughtervolume
-// np: number of particles
-//
-// TrackContainer can either be a SOA3D or AOS3D
-#include <iostream>
-
+/**
+ * @brief Generates _uncontained_ global points and directions based
+ *   on a logical volume.
+ *
+ * @details Points and direction coordinates are based on the global
+ *   reference frame.  The positions have to be within a given logical
+ *   volume, and not within any daughters of that logical volume.
+ *
+ * The function also returns the generated points in local reference
+ *   frame of the logical volume.
+ *
+ * @param fraction: is the fraction with which the directions should
+ *   hit a daughtervolume
+ * @param np: number of particles
+ *
+ */
 template <typename TrackContainer>
 inline
 void FillGlobalPointsAndDirectionsForLogicalVolume(
@@ -414,8 +483,6 @@ void FillGlobalPointsAndDirectionsForLogicalVolume(
     if( vol != NULL )
     FillGlobalPointsAndDirectionsForLogicalVolume( vol, localpoints, globalpoints, directions, fraction, np );
 }
-
-
 
 
 } // end namespace volumeUtilities
