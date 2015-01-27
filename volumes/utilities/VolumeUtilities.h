@@ -73,12 +73,12 @@ Vector3D<Precision> SamplePoint(Vector3D<Precision> const &size,
   return ret;
 }
 
-VECGEOM_INLINE
 /**
  *  @brief Returns a random, normalized direction vector.
  *  @details Mostly used for benchmarks, when a direction is needed.
  *  @return a random, normalized direction vector
  */
+VECGEOM_INLINE
 Vector3D<Precision> SampleDirection() {
 
   Vector3D<Precision> dir(
@@ -233,7 +233,12 @@ void FillUncontainedPoints(VPlacedVolume const &volume,
                            TrackContainer &points) {
   const int size = points.capacity();
   points.resize(points.capacity());
-  const Vector3D<Precision> dim = volume.bounding_box()->dimensions();
+
+  Vector3D<Precision> lower, upper, dim, offset;
+  volume.Extent(lower,upper);
+  offset = 0.5*(upper+lower);
+  dim = 0.5*(upper-lower);
+
   int itries = 0;
   for (int i = 0; i < size; ++i) {
     bool contained;
@@ -248,8 +253,7 @@ void FillUncontainedPoints(VPlacedVolume const &volume,
                  __FILE__, __LINE__, itries, volume.GetLabel().c_str());
         }
 
-        point = SamplePoint(lower,upper);
-        std::cout<<"VolUtilities: volume="<< volume.GetLabel() <<" sampled point:"<< point <<"\n";
+        point = offset + SamplePoint(dim);
       } while (!volume.Contains(point));
       points.set(i, point);
 
@@ -265,7 +269,16 @@ void FillUncontainedPoints(VPlacedVolume const &volume,
   }
 }
 
-// what is the bias??
+template<typename TrackContainer>
+VECGEOM_INLINE
+void FillUncontainedPoints(LogicalVolume const &volume,
+                           TrackContainer &points) {
+  VPlacedVolume const *const placed = volume.Place();
+  FillUncontainedPoints(*placed, points);
+  delete placed;
+}
+
+
 /**
  * @brief Fills the volume with 3D points which are to be contained in
  *    any daughters of the input mother volume.
@@ -279,13 +292,20 @@ void FillContainedPoints(VPlacedVolume const &volume,
                          const double bias,
                          TrackContainer &points,
                          const bool placed = true) {
+
   const int size = points.capacity();
   points.resize(points.capacity());
-  const Vector3D<Precision> dim = volume.bounding_box()->dimensions();
+
+  // use the bounding box to generate points
+  Vector3D<Precision> lower,upper,offset,dim;
+  volume.Extent(lower,upper);
+  offset = 0.5*(upper+lower);
+  dim = 0.5*(upper-lower);
+
   int insideCount = 0;
   std::vector<bool> insideVector(size, false);
   for (int i = 0; i < size; ++i) {
-    points.set(i, SamplePoint(dim));
+    points.set(i, offset + SamplePoint(dim));
     // measure bias, which is the fraction of points contained in daughters
     for (Vector<Daughter>::const_iterator v = volume.daughters().cbegin(),
          v_end = volume.daughters().cend(); v != v_end; ++v) {
@@ -305,12 +325,12 @@ void FillContainedPoints(VPlacedVolume const &volume,
     while (!insideVector[i]) ++i;
     bool contained = false;
     do {
-      points.set(i, SamplePoint(dim));
       ++itries;
       if(itries%1000000==0) {
         printf("%s line %i: Warning: %i tries to reduce bias... volume=%s.  Please check.\n", __FILE__, __LINE__, itries, volume.GetLabel().c_str());
       }
 
+      points.set(i, offset + SamplePoint(dim));
       for (Vector<Daughter>::const_iterator v = volume.daughters().cbegin(),
            v_end = volume.daughters().end(); v != v_end; ++v) {
         bool inside = (placed) ? (*v)->Contains(points[i])
@@ -334,11 +354,11 @@ void FillContainedPoints(VPlacedVolume const &volume,
     while (insideVector[i]) ++i;
     bool contained = false;
     do {
-      const Vector3D<Precision> sample = SamplePoint(dim);
       ++itries;
       if(itries%1000000==0) {
         printf("%s line %i: Warning: %i tries to increase bias... volume=%s.  Please check.\n", __FILE__, __LINE__, itries, volume.GetLabel().c_str());
       }
+      const Vector3D<Precision> sample = offset + SamplePoint(dim);
       for (Vector<Daughter>::const_iterator v = volume.daughters().cbegin(),
            v_end = volume.daughters().cend(); v != v_end; ++v) {
         bool inside = (placed) ? (*v)->Contains(sample)
@@ -365,15 +385,6 @@ void FillContainedPoints(VPlacedVolume const &volume,
   FillContainedPoints<TrackContainer>(volume, 1, points, placed);
 }
 
-template<typename TrackContainer>
-VECGEOM_INLINE
-void FillUncontainedPoints(LogicalVolume const &volume,
-                           TrackContainer &points) {
-  VPlacedVolume const *const placed = volume.Place();
-  FillUncontainedPoints(*placed, points);
-  delete placed;
-}
-
 
 /**
  * @brief Fill a container structure (SOA3D or AOS3D) with random
@@ -389,17 +400,21 @@ void FillRandomPoints(VPlacedVolume const &volume,
                       TrackContainer &points) {
   const int size = points.capacity();
   points.resize(points.capacity());
-  const Vector3D<Precision> dim = volume.bounding_box()->dimensions();
 
   int itries =0;
+  //const Vector3D<Precision> dim = volume.bounding_box()->dimensions();
+  Vector3D<Precision> lower,upper,offset,dim;
+  volume.Extent(lower,upper);
+  offset = 0.5*(upper+lower);
+  dim = 0.5*(upper-lower);
   for (int i = 0; i < size; ++i) {
     Vector3D<Precision> point;
     do {
-      point = SamplePoint(dim);
       ++itries;
       if(itries%1000000==0) {
         printf("%s line %i: Warning: %i tries to find contained points... volume=%s.  Please check.\n", __FILE__, __LINE__, itries, volume.GetLabel().c_str());
       }
+      point = offset + SamplePoint(dim);
     } while (!volume.Contains(point));
     points.set(i, point);
   }
@@ -422,7 +437,7 @@ void FillRandomPoints(Vector3D<Precision> const & lowercorner,
   Vector3D<Precision> dim = (uppercorner - lowercorner)/2.;
   Vector3D<Precision> offset = (uppercorner + lowercorner)/2.;
   for (int i = 0; i < size; ++i) {
-      points.set(i, SamplePoint(dim) + offset);
+      points.set(i, offset + SamplePoint(dim));
   }
 }
 
