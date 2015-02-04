@@ -355,7 +355,7 @@ int FindZSegmentKernel<kScalar>(
     Precision const *end,
     Precision const &pointZ) {
   // TODO: vectorize this and move the brute-force algorithm to the CUDA
-  //       implemetation. Inspiration can be found at:
+  //       implementation. Inspiration can be found at:
   //       http://schani.wordpress.com/2010/04/30/linear-vs-binary-search/
   int index = -1;
   while (begin < end && pointZ > *begin) {
@@ -697,6 +697,7 @@ bool PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarContainsKernel(
 
   // Find correct segment by checking Z-bounds
   int zIndex = FindZSegment<kScalar>(polyhedron, localPoint[2]);
+  if( ! (zIndex >= 0) ) return false;
 
   ZSegment const &segment = polyhedron.GetZSegment(zIndex);
 
@@ -709,14 +710,17 @@ bool PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarContainsKernel(
   }
 
   // Check that the point is not in the phi cutout wedge
-  if (TreatPhi<phiCutoutT>(polyhedron.HasPhiCutout())) {
-    return !InPhiCutoutWedge<kScalar>(segment, polyhedron.HasLargePhiCutout(),
-                                      localPoint);
-  }
+  // NOTE: This check is already part of the bounding tube check
+  // this code should be removed
+  //if (TreatPhi<phiCutoutT>(polyhedron.HasPhiCutout())) {
+  //  return !InPhiCutoutWedge<kScalar>(segment, polyhedron.HasLargePhiCutout(),
+                                     //localPoint);
+  //}
 
   return true;
 }
 
+// TODO: check this code -- maybe unify with previous function
 template <Polyhedron::EInnerRadii innerRadiiT,
           Polyhedron::EPhiCutout phiCutoutT>
 VECGEOM_CUDA_HEADER_BOTH
@@ -785,6 +789,7 @@ PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarDistanceToInKernel(
   const Vector3D<Precision> localDirection =
       transformation.TransformDirection(direction);
 
+
   {
     // Check if the point is within the bounding tube
     bool inBounds;
@@ -807,7 +812,10 @@ PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarDistanceToInKernel(
           DistanceToIn<kScalar>(
               unplaced.GetBoundingTube(), transformation, boundsPoint,
               localDirection, stepMax, tubeDistance);
-      if (tubeDistance == kInfinity) return kInfinity;
+      if (tubeDistance == kInfinity)
+          {
+            return kInfinity;
+          }
     }
   }
 

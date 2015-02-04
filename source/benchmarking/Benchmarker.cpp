@@ -31,6 +31,7 @@
 #include <cassert>
 #include <random>
 #include <sstream>
+#include <utility>
 
 namespace vecgeom {
 
@@ -114,7 +115,9 @@ int Benchmarker::CompareDistances(
 #ifdef VECGEOM_CUDA
     Precision const *const cuda,
 #endif
-    char const *const method) const {
+    char const *const method) {
+
+   fProblematicRays.clear();
 
   int mismatches=0;
   static char const *const outputLabels =
@@ -188,6 +191,12 @@ int Benchmarker::CompareDistances(
       if (fVerbosity > 2) mismatchOutput << " / " << cuda[i];
 #endif
       mismatches += mismatch;
+
+      if( mismatch )
+      {
+          fProblematicRays.push_back( std::pair<Vector3D<Precision>,Vector3D<Precision> >(Vector3D<Precision>(points->x(i), points->y(i), points->z(i)),
+                  Vector3D<Precision>( directions->x(i), directions->y(i), directions->z(i) ) ) );
+      }
 
       if ((mismatch && fVerbosity > 2) || fVerbosity > 4) {
         printf("Point (%f, %f, %f)", points->x(i), points->y(i),
@@ -346,6 +355,7 @@ int Benchmarker::RunBenchmark() {
 
 int Benchmarker::RunInsideBenchmark() {
   int mismatches = 0;
+  int insidemismatches = 0;
 
   assert(fWorld);
 
@@ -471,7 +481,6 @@ int Benchmarker::RunInsideBenchmark() {
     printf("Comparing Inside results:\n");
     if (fVerbosity > 2) printf("%s\n", outputLabelsInside.str().c_str());
 
-    mismatches = 0;
     for (unsigned i = 0; i < fPointCount; ++i) {
       bool mismatch = false;
       std::stringstream mismatchOutput;
@@ -501,7 +510,7 @@ int Benchmarker::RunInsideBenchmark() {
       if (insideSpecialized[i] != insideCuda[i]) mismatch = true;
       if (fVerbosity > 2) mismatchOutput << " / " << insideCuda[i];
 #endif
-      mismatches += mismatch;
+      insidemismatches += mismatch;
       if ((mismatch && fVerbosity > 2) || fVerbosity > 4) {
         printf("Point (%f, %f, %f): ", *(fPointPool->x()+i),
                *(fPointPool->y()+i), fPointPool->z(i));
@@ -515,7 +524,7 @@ int Benchmarker::RunInsideBenchmark() {
     if (fVerbosity > 2 && mismatches > 100) {
       printf("%s\n", outputLabelsInside.str().c_str());
     }
-    printf("%i / %i mismatches detected.\n", mismatches, fPointCount);
+    printf("%i / %i mismatches detected.\n", insidemismatches, fPointCount);
 
   }
 
@@ -539,7 +548,7 @@ int Benchmarker::RunInsideBenchmark() {
   FreeAligned(containsCuda);
   FreeAligned(insideCuda);
 #endif
-  return mismatches;
+  return mismatches + insidemismatches;
 }
 
 int Benchmarker::CompareMetaInformation() const {
@@ -699,8 +708,10 @@ int Benchmarker::RunToInBenchmark() {
   FreeAligned(distancesCuda);
 #endif
 
-  errorcode += CompareSafeties(
-    fPointPool,
+  // for the moment; do not consider safety for errorcodes
+  //errorcode += CompareSafeties(
+  CompareSafeties(
+  fPointPool,
     NULL,
     safetiesSpecialized,
     safetiesVectorized,
@@ -859,8 +870,9 @@ int Benchmarker::RunToOutBenchmark() {
   FreeAligned(distancesCuda);
 #endif
 
-  errorcode += CompareSafeties(
-    fPointPool,
+  //errorcode += CompareSafeties(
+  CompareSafeties(
+  fPointPool,
     NULL,
     safetiesSpecialized,
     safetiesVectorized,

@@ -19,8 +19,8 @@ UnplacedPolyhedron::UnplacedPolyhedron(
     const int sideCount,
     const int zPlaneCount,
     Precision zPlanes[],
-    Precision rMin[],
-    Precision rMax[])
+    Precision const rMin[],
+    Precision const rMax[])
     : UnplacedPolyhedron(0, 360, sideCount, zPlaneCount, zPlanes, rMin, rMax) {}
 
 VECGEOM_CUDA_HEADER_BOTH
@@ -30,14 +30,14 @@ UnplacedPolyhedron::UnplacedPolyhedron(
     const int sideCount,
     const int zPlaneCount,
     Precision zPlanes[],
-    Precision rMin[],
-    Precision rMax[])
+    Precision const rMin[],
+    Precision const rMax[])
     : fSideCount(sideCount), fHasInnerRadii(false),
       fHasPhiCutout(phiDelta < 360), fHasLargePhiCutout(phiDelta < 180),
       fPhiStart(phiStart),fPhiDelta(phiDelta),
       fZSegments(zPlaneCount-1), fZPlanes(zPlaneCount), fRMin(zPlaneCount),
       fRMax(zPlaneCount), fPhiSections(sideCount+1),
-      fBoundingTube(0, 1, 1, 0, 360) {
+      fBoundingTube(0, 1, 1, 0, kTwoPi) {
 
   typedef Vector3D<Precision> Vec_t;
 
@@ -92,8 +92,8 @@ UnplacedPolyhedron::UnplacedPolyhedron(
   for (int i = 0; i < zPlaneCount; ++i) {
     // Use distance to side for minimizing inner radius of bounding tube
     if (rMin[i] < innerRadius) innerRadius = rMin[i];
-    rMin[i] /= cosHalfDeltaPhi;
-    rMax[i] /= cosHalfDeltaPhi;
+    //rMin[i] /= cosHalfDeltaPhi;
+    //rMax[i] /= cosHalfDeltaPhi;
     Assert(rMin[i] >= 0 && rMax[i] > 0, "Invalid radius provided to "
            "polyhedron constructor.");
     // Use distance to corner for minimizing outer radius of bounding tube
@@ -102,7 +102,7 @@ UnplacedPolyhedron::UnplacedPolyhedron(
   // Create bounding tube with biggest outer radius and smallest inner radius
   Precision boundingTubeZ = zPlanes[zPlaneCount-1] - zPlanes[0] + 2.*kTolerance;
   Precision boundsPhiStart = !fHasPhiCutout ? 0 : phiStart;
-  Precision boundsPhiDelta = !fHasPhiCutout ? 360 : phiDelta;
+  Precision boundsPhiDelta = !fHasPhiCutout ? kTwoPi : phiDelta;
   fBoundingTube = UnplacedTube(innerRadius - kTolerance,
                                outerRadius + kTolerance, 0.5*boundingTubeZ,
                                boundsPhiStart, boundsPhiDelta);
@@ -122,9 +122,9 @@ UnplacedPolyhedron::UnplacedPolyhedron(
     for (int j = 0, jMax = sideCount+fHasPhiCutout; j < jMax; ++j) {
       int index = VertixIndex(i, j);
       outerVertices[index] =
-          Vec_t::FromCylindrical(rMax[i], vertixPhi[j], zPlanes[i]).FixZeroes();
+          Vec_t::FromCylindrical(rMax[i]/cosHalfDeltaPhi, vertixPhi[j], zPlanes[i]).FixZeroes();
       innerVertices[index] =
-          Vec_t::FromCylindrical(rMin[i], vertixPhi[j], zPlanes[i]).FixZeroes();
+          Vec_t::FromCylindrical(rMin[i]/cosHalfDeltaPhi, vertixPhi[j], zPlanes[i]).FixZeroes();
     }
     // Non phi cutout case
     if (!fHasPhiCutout) {
@@ -216,7 +216,7 @@ Precision UnplacedPolyhedron::GetPhiEnd() const {
 
 VECGEOM_CUDA_HEADER_BOTH
 Precision UnplacedPolyhedron::GetPhiDelta() const {
-  return GetPhiEnd() - GetPhiStart();
+    return fPhiDelta;
 }
 
 VECGEOM_CUDA_HEADER_DEVICE
