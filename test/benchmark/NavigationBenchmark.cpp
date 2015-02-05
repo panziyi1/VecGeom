@@ -66,12 +66,37 @@ int main(int argc, char* argv[])
 {
   OPTION_INT(npoints, 10000);
   OPTION_INT(nreps, 3);
+  OPTION_STRING(geometry, "navBench.root");
+  OPTION_STRING(testVolume, "world");
+  OPTION_DOUBLE(fraction, 0.8f);
 #ifdef VECGEOM_ROOT
   OPTION_BOOL(vis, false);
 #endif
 
-  VPlacedVolume *world = SetupGeometry();
+  // default values used above are always printed.  If help true, stop now, so user will know which options
+  // are available, and what the default values are.
+  OPTION_BOOL(help, false);
+  if(help) return 0;
 
+  const VPlacedVolume *world = NULL;
+  if(geometry.compare("navBench.root")==0) {
+    world = SetupGeometry();
+
+#ifdef VECGEOM_ROOT
+    // Exporting to ROOT file
+    RootGeoManager::Instance().ExportToROOTGeometry( world, "navBench.root" );
+    RootGeoManager::Instance().Clear();
+#endif
+  }
+
+  // Now try to read back in.  This is needed to make comparisons to VecGeom easily,
+  // since it builds VecGeom geometry based on the ROOT geometry and its TGeoNodes.
+#ifdef VECGEOM_ROOT
+  RootGeoManager::Instance().set_verbose(0);
+  RootGeoManager::Instance().LoadRootGeometry(geometry.c_str());
+#endif
+
+  // Visualization
 #ifdef VECGEOM_ROOT
   if(vis) {  // note that visualization block returns, excluding the rest of benchmark
     Visualizer visualizer;
@@ -88,37 +113,17 @@ int main(int argc, char* argv[])
   }
 #endif
 
-  testVectorSafety(world);
-
-#ifdef VECGEOM_ROOT
-  // Exporting to ROOT file
-  RootGeoManager::Instance().ExportToROOTGeometry( world, "navBench.root" );
-  RootGeoManager::Instance().Clear();
-
-  // Now try to read back in.  This is needed to make comparisons to VecGeom easily,
-  // since it builds VecGeom geometry based on the ROOT geometry and its TGeoNodes.
-  RootGeoManager::Instance().set_verbose(0);
-  RootGeoManager::Instance().LoadRootGeometry("navBench.root");
-#endif
+  //testVectorSafety(world);
 
   std::cout<<"\n*** Validating VecGeom navigation..."<< std::endl;
-  Precision fraction = 0.7;
 
+  const VPlacedVolume* startVolume = GeoManager::Instance().GetWorld();
+  if( testVolume.compare("world")!=0 ) {
+    startVolume = GeoManager::Instance().FindPlacedVolume(testVolume.c_str());
+  }
 
-  //*** These are for Ex03.root
-  //fraction=0.8;  const VPlacedVolume* startVolume = GeoManager::Instance().GetWorld();  // OK
-  //fraction=0.0;  const VPlacedVolume* startVolume = GeoManager::Instance().FindPlacedVolume("Lead_1");  // ok with a fraction = 0.0
-  //fraction=0.0;  const VPlacedVolume* startVolume = GeoManager::Instance().FindPlacedVolume("Calorimeter_13"); // can't find uncontained points
-  //fraction=0.0;  const VPlacedVolume* startVolume = GeoManager::Instance().FindPlacedVolume("Layer_5");   // can't find uncontained points
-  //fraction=0.0; const VPlacedVolume* startVolume = GeoManager::Instance().FindPlacedVolume("liquidArgon_2"); // can't find uncontained points
-
-  //*** Here for navBench.root
-  //fraction=0.8;  const VPlacedVolume* startVolume = GeoManager::Instance().GetWorld();  // OK
-  fraction=0.8; const VPlacedVolume* startVolume = GeoManager::Instance().FindPlacedVolume("trap_0"); // OK
-  //fraction=0.5; const VPlacedVolume* startVolume = GeoManager::Instance().FindPlacedVolume("box_0");  // OK
-  //fraction=0.0; const VPlacedVolume* startVolume = GeoManager::Instance().FindPlacedVolume("orb_0");  // OK
-
-  printf("startVolume = %s\n", startVolume->GetLabel().c_str());
+  std::cout<<"NavigationBenchmark: testVolume=<"<< testVolume
+           <<">, startVolume="<< (startVolume ? startVolume->GetLabel() : NULL) <<"\n";
 
   int np = Min( npoints, 1000 );  // no more than 1000 points used for validation
   SOA3D<Precision> points(np);
@@ -126,8 +131,6 @@ int main(int argc, char* argv[])
   SOA3D<Precision> locpts(np);
 
   vecgeom::volumeUtilities::FillGlobalPointsAndDirectionsForLogicalVolume( startVolume->logical_volume(), locpts, points, dirs, fraction, np);
-  //vecgeom::volumeUtilities::FillRandomPoints( *startVolume, points );
-  //vecgeom::volumeUtilities::FillRandomDirections( dirs );
 
   bool ok = validateVecGeomNavigation(np, points, dirs);
 
@@ -140,7 +143,7 @@ int main(int argc, char* argv[])
   std::cout<<"VecGeom validation passed."<< std::endl;
 
   // on mic.fnal.gov CPUs, loop execution takes ~70sec for npoints=10M
-  while(npoints<=10000000) {
+  while(npoints<=100000) {
     std::cout<<"\n*** Running navigation benchmarks with npoints="<<npoints<<" and nreps="<< nreps <<".\n";
     runNavigationBenchmarks(startVolume, npoints, nreps);
     npoints*=10;
