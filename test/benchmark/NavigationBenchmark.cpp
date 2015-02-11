@@ -123,7 +123,8 @@ int main(int argc, char* argv[])
   }
 
   std::cout<<"NavigationBenchmark: testVolume=<"<< testVolume
-           <<">, startVolume="<< (startVolume ? startVolume->GetLabel() : NULL) <<"\n";
+           <<">, startVolume="<< (startVolume ? startVolume->GetLabel() : NULL)
+           <<" - "<< *startVolume <<"\n";
 
   int np = Min( npoints, 1000 );  // no more than 1000 points used for validation
   SOA3D<Precision> points(np);
