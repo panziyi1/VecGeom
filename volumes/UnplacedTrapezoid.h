@@ -192,10 +192,11 @@ public:
   VECGEOM_CUDA_HEADER_BOTH
   Precision Capacity() const { return Volume();}
 
+#ifdef VECGEOM_USOLIDS
+
   VECGEOM_CUDA_HEADER_BOTH
   Precision SurfaceArea () const;
 
-#ifdef VECGEOM_USOLIDS
   VECGEOM_CUDA_HEADER_BOTH
   bool Normal(Vector3D<Precision> const & point, Vector3D<Precision> & normal ) const;
 
@@ -211,7 +212,7 @@ public:
 #endif
 
   VECGEOM_CUDA_HEADER_BOTH
-  std::string GetEntityType() const { return "Trapezoid\n";}
+  std::string GetEntityType() const { return "Trapezoid";}
 
   VECGEOM_CUDA_HEADER_BOTH
   void GetParameterList() const {;}

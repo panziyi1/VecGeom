@@ -465,7 +465,6 @@ void UnplacedTrapezoid::Extent(Vec3D& aMin, Vec3D& aMax) const {
   extB = ext45<ext67 ? ext45 : ext67;
   aMin.y() = (extA < extB) ? extA : extB;
 }
-#endif
 
 VECGEOM_CUDA_HEADER_BOTH
 Precision UnplacedTrapezoid::SurfaceArea() const {
@@ -502,7 +501,6 @@ Precision UnplacedTrapezoid::SurfaceArea() const {
   return surfArea;
 }
 
-#ifdef VECGEOM_USOLIDS
 Vec3D UnplacedTrapezoid::GetPointOnSurface() const {
 
   TrapCorners_t pt;
