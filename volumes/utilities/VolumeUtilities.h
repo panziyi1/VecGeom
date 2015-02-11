@@ -186,8 +186,9 @@ void FillBiasedDirections(VPlacedVolume const &volume,
     while (!hit[h]) {
       ++itries;
       if (itries%1000000==0) {
-        printf("%s line %i: Warning: %i tries to increase bias... volume=%s.  Please check.\n",
-               __FILE__, __LINE__, itries, volume.GetLabel().c_str());
+        printf("%s line %i: Warning: %i tries to increase bias... volume=%s, current bias=%i/%i=%f.  Please check.\n",
+               __FILE__, __LINE__, itries, volume.GetLabel().c_str(), n_hits, size,
+               static_cast<Precision>(n_hits)/static_cast<Precision>(size));
       }
 
       dirs.set(h, SampleDirection());
@@ -234,10 +235,15 @@ void FillUncontainedPoints(VPlacedVolume const &volume,
   const int size = points.capacity();
   points.resize(points.capacity());
 
-  Vector3D<Precision> lower, upper, dim, offset;
+#ifdef VECGEOM_USOLIDS
+  Vector3D<Precision> lower, upper, offset;
   volume.Extent(lower,upper);
   offset = 0.5*(upper+lower);
-  dim = 0.5*(upper-lower);
+  const Vector3D<Precision> dim = 0.5*(upper-lower);
+#else
+  Vector3D<Precision> offset(0,0,0);
+  const Vector3D<Precision> dim = volume.bounding_box()->dimensions();
+#endif
 
   int itries = 0;
   for (int i = 0; i < size; ++i) {
@@ -296,11 +302,16 @@ void FillContainedPoints(VPlacedVolume const &volume,
   const int size = points.capacity();
   points.resize(points.capacity());
 
-  // use the bounding box to generate points
-  Vector3D<Precision> lower,upper,offset,dim;
+#ifdef VECGEOM_USOLIDS
+  Vector3D<Precision> lower,upper,offset;
   volume.Extent(lower,upper);
   offset = 0.5*(upper+lower);
-  dim = 0.5*(upper-lower);
+  const Vector3D<Precision> dim = 0.5*(upper-lower);
+#else
+  // use the bounding box to generate points
+  const Vector3D<Precision> dim = volume.bounding_box()->dimensions();
+  Vector3D<Precision> offset(0,0,0);
+#endif
 
   int insideCount = 0;
   std::vector<bool> insideVector(size, false);
@@ -402,11 +413,17 @@ void FillRandomPoints(VPlacedVolume const &volume,
   points.resize(points.capacity());
 
   int itries =0;
-  //const Vector3D<Precision> dim = volume.bounding_box()->dimensions();
-  Vector3D<Precision> lower,upper,offset,dim;
+
+#ifdef VECGEOM_USOLIDS
+  Vector3D<Precision> lower,upper,offset;
   volume.Extent(lower,upper);
   offset = 0.5*(upper+lower);
-  dim = 0.5*(upper-lower);
+  const Vector3D<Precision> dim = 0.5*(upper-lower);
+#else
+  const Vector3D<Precision> dim = volume.bounding_box()->dimensions();
+  Vector3D<Precision> offset(0,0,0);
+#endif
+
   for (int i = 0; i < size; ++i) {
     Vector3D<Precision> point;
     do {
