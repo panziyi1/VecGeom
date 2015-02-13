@@ -463,7 +463,7 @@ PolyhedronImplementation<innerRadiiT, phiCutoutT>::DistanceToInZSegment(
                  segment.phi.DistanceToIn<Backend, false>(point, direction),
                  &distance);
   }
-  done = distance < kInfinity;
+  done |= distance < kInfinity;
   if (IsFull(done)) return distance;
 
   // Finally treat inner shell
@@ -538,6 +538,7 @@ PolyhedronImplementation<innerRadiiT,
   ZSegment const &segment = polyhedron.GetZSegment(segmentIndex);
 
   if (TreatPhi<phiCutoutT>(polyhedron.HasPhiCutout()) &&
+      segment.phi.size() == 2 &&
       InPhiCutoutWedge<kScalar>(segment, polyhedron.HasLargePhiCutout(),
                                 point)) {
     // If the point is within the phi cutout wedge, the two phi cutout sides are
@@ -546,17 +547,22 @@ PolyhedronImplementation<innerRadiiT,
                segment.phi.ScalarDistanceSquared(1, point));
   }
 
+  if(phiIndex < 0) return kInfinity;
+
   // Otherwise check the outer shell
-  Precision safetySquared =
-      segment.outer.ScalarDistanceSquared(phiIndex, point);
+  // TODO: we need to check segment.outer.size() > 0
+  Precision safetySquaredOuter = kInfinity;
+  if( segment.outer.size() > 0 )
+    safetySquaredOuter = segment.outer.ScalarDistanceSquared(phiIndex, point);
 
   // And finally the inner
+  Precision safetySquaredInner = kInfinity;
   if (TreatInner<innerRadiiT>(segment.hasInnerRadius)) {
-    safetySquared = Min(safetySquared,
-        segment.inner.ScalarDistanceSquared(phiIndex, point));
+      if( segment.inner.size() > 0 )
+    safetySquaredInner = segment.inner.ScalarDistanceSquared(phiIndex, point);
   }
 
-  return safetySquared;
+  return Min(safetySquaredInner, safetySquaredOuter);
 }
 
 template <Polyhedron::EInnerRadii innerRadiiT,
@@ -573,20 +579,51 @@ void PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarDistanceToEndcaps(
 
   ZSegment const *segment;
   Precision zPlane;
+
+
   // Determine whether to use first segment/first endcap or last segment/second
   // endcap
-  if (Flip<pointInsideT>::FlipLogical(goingRight) &&
-      point[2] < Flip<pointInsideT>::FlipSign(polyhedron.GetZPlane(0))) {
-    segment = &polyhedron.GetZSegment(0);
-    zPlane = polyhedron.GetZPlane(0);
-  } else if (Flip<!pointInsideT>::FlipLogical(goingRight) &&
-             point[2] > Flip<pointInsideT>::FlipSign(
-                 polyhedron.GetZPlane(polyhedron.GetZSegmentCount()))) {
-    segment = &polyhedron.GetZSegment(polyhedron.GetZSegmentCount()-1);
-    zPlane = polyhedron.GetZPlane(polyhedron.GetZSegmentCount());
-  } else {
-    return;
+  // NOTE: might make this more elegant
+  if( pointInsideT ) // inside version
+  {
+      if( direction[2] < 0){
+           segment = &polyhedron.GetZSegment(0);
+           zPlane = polyhedron.GetZPlane(0);
+      }
+      else {
+          segment = &polyhedron.GetZSegment(polyhedron.GetZSegmentCount()-1);
+          zPlane = polyhedron.GetZPlane(polyhedron.GetZSegmentCount());
+      }
   }
+  else // outside version
+  {
+      if( direction[2] < 0){
+          segment = &polyhedron.GetZSegment(polyhedron.GetZSegmentCount()-1);
+          zPlane = polyhedron.GetZPlane(polyhedron.GetZSegmentCount());
+      }
+      else{
+          segment = &polyhedron.GetZSegment(0);
+          zPlane = polyhedron.GetZPlane(0);
+      }
+  }
+
+  // original formulation had a bug:
+//  if (Flip<pointInsideT>::FlipLogical(goingRight) &&
+//      point[2] > Flip<!pointInsideT>::FlipSign(polyhedron.GetZPlane(0))) {
+//
+//      segment = &polyhedron.GetZSegment(0);
+//      zPlane = polyhedron.GetZPlane(0);
+//
+//  }
+//  else if (Flip<!pointInsideT>::FlipLogical(goingRight) &&
+//             point[2] > Flip<pointInsideT>::FlipSign(
+//                 polyhedron.GetZPlane(polyhedron.GetZSegmentCount()))) {
+//
+//      segment = &polyhedron.GetZSegment(polyhedron.GetZSegmentCount()-1);
+//      zPlane = polyhedron.GetZPlane(polyhedron.GetZSegmentCount());
+//  } else {
+//    return;
+//  }
 
   Precision distanceTest = (zPlane - point[2]) / direction[2];
   // If the distance is not better there's no reason to check for validity

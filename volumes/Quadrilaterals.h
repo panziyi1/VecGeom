@@ -86,6 +86,18 @@ public:
   VECGEOM_INLINE
   Corners_t const& GetCorners() const;
 
+  VECGEOM_CUDA_HEADER_BOTH
+  VECGEOM_INLINE
+  bool RayHitsQuadrilateral( int index, Vector3D<Precision> const & intersection ) const {
+      bool valid = true;
+      for (int j = 0; j < 4; ++j) {
+        valid &= intersection.Dot(fSideVectors[j].GetNormal(index)) +
+                 fSideVectors[j].GetDistances()[index] >= 0;
+        if (IsEmpty(valid)) break;
+      }
+     return valid;
+  }
+
   /// \param corner0 First corner in counterclockwise order.
   /// \param corner1 Second corner in counterclockwise order.
   /// \param corner2 Third corner in counterclockwise order.
@@ -311,6 +323,7 @@ typename Backend::precision_v Quadrilaterals::DistanceToIn(
   AcceleratedDistanceToIn<Backend>::template VectorLoop<behindPlanesT>(
       i, n, fPlanes, fSideVectors, point, direction, bestDistance);
 
+  // TODO: IN CASE QUADRILATERALS ARE PERPENDICULAR TO Z WE COULD SAVE MANY DIVISIONS
   for (; i < n; ++i) {
     Vector3D<Precision> normal = fPlanes.GetNormal(i);
     Float_t distance = point.Dot(normal) + fPlanes.GetDistance(i);
@@ -346,6 +359,7 @@ void AcceleratedDistanceToOut(
     int &i,
     const int n,
     Planes const &planes,
+    Planes const (&sideVectors)[4],
     const Precision zMin,
     const Precision zMax,
     Vector3D<typename Backend::precision_v> const &point,
@@ -362,6 +376,7 @@ void AcceleratedDistanceToOut<kScalar>(
     int &i,
     const int n,
     Planes const &planes,
+    Planes const (&sideVectors)[4],
     const Precision zMin,
     const Precision zMax,
     Vector3D<Precision> const &point,
@@ -387,8 +402,28 @@ void AcceleratedDistanceToOut<kScalar>(
     distanceTest /= -directionProjection;
     valid &= distanceTest < distance;
     if (IsEmpty(valid)) continue;
-    VcPrecision zProjection = distanceTest*direction[2] + point[2];
-    valid &= zProjection >= zMin && zProjection < zMax;
+
+    if(zMin==zMax) { // need a careful treatment in case of degenerate Z planes
+        // in this case need proper hit detection
+        Vector3D<VcPrecision> intersection =
+                  Vector3D<VcPrecision>(direction)*distanceTest + point;
+        for (int j = 0; j < 4; ++j) {
+            Vector3D<VcPrecision> sideVector(
+                VcPrecision(sideVectors[j].GetNormals().x()+i),
+                VcPrecision(sideVectors[j].GetNormals().y()+i),
+                VcPrecision(sideVectors[j].GetNormals().z()+i));
+           VcPrecision dSide(&sideVectors[j].GetDistances()[i]);
+           valid &= sideVector.Dot(intersection) + dSide >= 0;
+          // Where is your god now
+           if (IsEmpty(valid)) goto distanceToOutVcContinueOuter;
+        }
+    }
+    else
+    {
+        VcPrecision zProjection = distanceTest*direction[2] + point[2];
+        valid &= zProjection >= zMin && zProjection < zMax;
+    }
+distanceToOutVcContinueOuter:
     if (IsEmpty(valid)) continue;
     distanceTest(!valid) = kInfinity;
     distance = distanceTest.min();
@@ -423,7 +458,7 @@ typename Backend::precision_v Quadrilaterals::DistanceToOut(
   int i = 0;
   const int n = size();
   AcceleratedDistanceToOut<Backend>(
-      i, n, fPlanes, zMin, zMax, point, direction, bestDistance);
+      i, n, fPlanes, fSideVectors, zMin, zMax, point, direction, bestDistance);
 
   for (; i < n; ++i) {
     Vector3D<Precision> normal = fPlanes.GetNormal(i);
@@ -439,8 +474,22 @@ typename Backend::precision_v Quadrilaterals::DistanceToOut(
     distanceTest /= -directionProjection;
     valid &= distanceTest < bestDistance;
     if (IsEmpty(valid)) continue;
-    Float_t zProjection = point[2] + distanceTest*direction[2];
-    valid &= zProjection >= zMin && zProjection < zMax;
+
+
+    // this is a tricky test when zMin == zMax ( degenerate planes )
+    if( zMin == zMax ){
+        // in this case need proper hit detection
+        //valid &= zProjection >= zMin-1E-10 && zProjection <= zMax+1E-10;
+        Vector3D<Float_t> intersection = point + distanceTest*direction;
+
+        valid = RayHitsQuadrilateral( i, intersection );
+
+    }
+    else
+    {
+        Float_t zProjection = point[2] + distanceTest*direction[2];
+        valid &= zProjection >= zMin && zProjection < zMax;
+    }
     if (IsEmpty(valid)) continue;
     MaskedAssign(valid, distanceTest, &bestDistance);
   }
@@ -466,6 +515,7 @@ Precision Quadrilaterals::ScalarDistanceSquared(
   // The algorithm has three stages, trying first to return the shortest
   // distance to the plane, then to the closest line segment, then to the
   // closest corner.
+  assert( i < size() );
 
   Vector3D<Precision> planeNormal = fPlanes.GetNormal(i);
   Precision distance = point.Dot(planeNormal) + fPlanes.GetDistance(i);

@@ -6,10 +6,11 @@
 
 #include <cassert>
 #include <cmath>
-#include <float.h>
+#include <cfloat>
 #include <limits>
-#include <stdio.h>
 #include <memory>
+#include <cstdio>
+#include <cstdlib>
 
 #define VECGEOM
 
@@ -150,7 +151,7 @@ struct kCudaType<cxx::BoxImplementation<Arguments...>  >
       #define VECGEOM_ALIGNED __attribute__((aligned(64)))
     #endif
   #else
-#pragma message "forced inlining disabled"
+//#pragma message "forced inlining disabled"
   // Clang or forced inlining is disabled ( by falling back to compiler decision )
     #define VECGEOM_INLINE inline
     #ifndef VECGEOM_NVCC
@@ -302,7 +303,7 @@ VECGEOM_GLOBAL vecgeom::Inside_t kOutside = 2;
 // }
 // rotation::kGeneric
 // translation::kGeneric
- 
+
 typedef int RotationCode;
 typedef int TranslationCode;
 namespace rotation {
@@ -332,7 +333,7 @@ void Assert(const bool condition) {
 }
 
 namespace details {
-   template <typename DataType, typename Target> struct UseIfSameType { 
+   template <typename DataType, typename Target> struct UseIfSameType {
       VECGEOM_CUDA_HEADER_BOTH
       static Target const *Get(DataType*) { return nullptr; }
    };
