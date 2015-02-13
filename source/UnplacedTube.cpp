@@ -84,20 +84,12 @@ VPlacedVolume* UnplacedTube::SpecializedVolume(
 #ifdef VECGEOM_USOLIDS
   VECGEOM_CUDA_HEADER_BOTH
   Precision UnplacedTube::SurfaceArea () const {
-    if (fSurfaceArea == 0.) {
-      fSurfaceArea = fDPhi * (fRMin + fRMax) * (2 * fDz + fRMax - fRMin);
-      if (!fPhiFullTube) {
-        fSurfaceArea = fSurfaceArea + 4 * fDz * (fRMax - fRMin);
-      }
+    Precision area = fDphi * (fRmin + fRmax) * (2 * fZ + fRmax - fRmin);
+    if (fDphi<kTwoPi) {
+      area += 4 * fZ * (fRmax - fRmin);
     }
-    return fSurfaceArea;
+    return area;
   }
-
-  VECGEOM_CUDA_HEADER_BOTH
-  bool UnplacedTube::Normal(Vector3D<Precision> const & point, Vector3D<Precision> & normal ) const;
-
-  VECGEOM_CUDA_HEADER_BOTH
-  Vector3D<Precision>  UnplacedTube::GetPointOnSurface() const;
 #endif
 
 #ifdef VECGEOM_CUDA_INTERFACE

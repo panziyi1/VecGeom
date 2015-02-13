@@ -179,16 +179,10 @@ fPhiWedge(other.fDphi,other.fSphi)
   Precision SurfaceArea () const;
 
   VECGEOM_CUDA_HEADER_BOTH
-  bool Normal(Vector3D<Precision> const & point, Vector3D<Precision> & normal ) const;
-
-  VECGEOM_CUDA_HEADER_BOTH
   void Extent(Vector3D<Precision>& aMin, Vector3D<Precision>& aMax) const {
-    aMin = Vector3D<Precision>(-fRMax, -fRMax, -fDz);
-    aMax = Vector3D<Precision>(fRMax, fRMax, fDz);
+    aMin = Vector3D<Precision>(-fRmax, -fRmax, -fZ);
+    aMax = Vector3D<Precision>(fRmax, fRmax, fZ);
   }
-
-  VECGEOM_CUDA_HEADER_BOTH
-  Vector3D<Precision>  GetPointOnSurface() const;
 #endif
 
   virtual int memory_size() const { return sizeof(*this); }
@@ -230,7 +224,3 @@ private:
 } } // end global namespace
 
 #endif // VECGEOM_VOLUMES_UNPLACEDTUBE_H_
-
-
-
-
