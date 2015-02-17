@@ -69,6 +69,7 @@ public:
     return 0.;
   }
 
+#ifdef VECGEOM_USOLIDS
   VECGEOM_CUDA_HEADER_BOTH
   VECGEOM_INLINE
   Precision SurfaceArea() const {
@@ -76,18 +77,15 @@ public:
     return 0.;
   }
 
-
   VECGEOM_CUDA_HEADER_BOTH
-  void Extent( Vector3D<Precision> &, Vector3D<Precision> &) const {
-     // TBDONE
-  };
-
+  void Extent(Vector3D<Precision>& aMin, Vector3D<Precision>& aMax) const;
 
   VECGEOM_CUDA_HEADER_BOTH
   Vector3D<Precision> GetPointOnSurface() const {
     // TBDONE
       return Vector3D<Precision>() ;
   }
+#endif
 
 
   VECGEOM_CUDA_HEADER_BOTH
