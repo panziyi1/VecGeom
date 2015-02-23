@@ -597,7 +597,6 @@ set(TEST_EXECUTABLES_BENCHMARK
   ${CMAKE_SOURCE_DIR}/test/benchmark/BoxBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/ParaboloidBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/ParaboloidScriptBenchmark.cpp
-  ${CMAKE_SOURCE_DIR}/test/benchmark/MultiBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/ParallelepipedBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/PolyhedronBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/TubeBenchmark.cpp
@@ -625,10 +624,12 @@ set(TEST_EXECUTABLES_SHAPETESTER
   ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testBox.cpp
   ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testOrb.cpp
   ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testCone.cpp
+  ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testTube.cpp
+  ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testTrd.cpp
   ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testTrapezoid.cpp
   # ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testParaboloid.cpp
   ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testPolycone.cpp 
-  ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testFromROOTFile.cpp 
+  # ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testFromROOTFile.cpp 
 )
 set(TEST_EXECUTABLES
   ${TEST_EXECUTABLES_CORE}

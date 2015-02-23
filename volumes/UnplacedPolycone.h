@@ -30,10 +30,16 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 // helper structure to encapsulate a section
 struct PolyconeSection
 {
-    UnplacedCone * solid;
-    double shift;
-    bool tubular;
-    bool convex; // TRUE if all points in section are concave in regards to whole polycone, will be determined
+   PolyconeSection()
+      : fSolid(0), fShift(0.0), fTubular(0), fConvex(0)
+   {}
+
+   ~PolyconeSection() = default;
+   
+   UnplacedCone *fSolid;
+   double fShift;
+   bool fTubular;
+   bool fConvex; // TRUE if all points in section are concave in regards to whole polycone, will be determined
 };
 
 
@@ -133,7 +139,7 @@ public:
         for (int i = 0; i < GetNSections(); i++)
         {
             PolyconeSection const& section = fSections[i];
-            cubicVolume += section.solid->Capacity();
+            cubicVolume += section.fSolid->Capacity();
         }
         return cubicVolume;
     }
@@ -226,22 +232,22 @@ void UnplacedPolycone::ReconstructSectionArrays(PushableContainer & z,
       double prevrmin, prevrmax;
       bool putlowersection=true;
       for(int i=0;i< GetNSections();++i){
-          UnplacedCone const * cone = GetSection(i).solid;
+          UnplacedCone const * cone = GetSection(i).fSolid;
           if( putlowersection ){
             rmin.push_back(cone->GetRmin1());
             rmax.push_back(cone->GetRmax1());
-            z.push_back(-cone->GetDz() + GetSection(i).shift);
+            z.push_back(-cone->GetDz() + GetSection(i).fShift);
           }
           rmin.push_back(cone->GetRmin2());
           rmax.push_back(cone->GetRmax2());
-          z.push_back(cone->GetDz() + GetSection(i).shift);
+          z.push_back(cone->GetDz() + GetSection(i).fShift);
 
           prevrmin = cone->GetRmin2();
           prevrmax = cone->GetRmax2();
 
           // take care of a possible discontinuity
-          if( i < GetNSections()-1 && ( prevrmin != GetSection(i+1).solid->GetRmin1()
-             || prevrmax != GetSection(i+1).solid->GetRmax1() ) ) {
+          if( i < GetNSections()-1 && ( prevrmin != GetSection(i+1).fSolid->GetRmin1()
+             || prevrmax != GetSection(i+1).fSolid->GetRmax1() ) ) {
              putlowersection = true;
           }
           else{
