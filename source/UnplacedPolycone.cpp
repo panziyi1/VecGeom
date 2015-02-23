@@ -279,7 +279,8 @@ template <TranslationCode transCodeT, RotationCode rotCodeT>
     }
 
     void UnplacedPolycone::Print(std::ostream &os) const {
-    os << "UnplacedPolycone output to string not implemented\n";
+      os << "UnplacedPolycone output to string not implemented -- calling Print() instead:\n";
+      Print();
     }
 
 
