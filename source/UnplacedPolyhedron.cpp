@@ -123,7 +123,6 @@ UnplacedPolyhedron::UnplacedPolyhedron(
   // correct inner and outer Radius with conversion factor
   //innerRadius /= cosHalfDeltaPhi;
   //outerRadius /= cosHalfDeltaPhi;
-
   fBoundingTube = UnplacedTube( innerRadius - kTolerance,
                                 outerRadius + kTolerance, 0.5*boundingTubeZ,
                                boundsPhiStart, boundsPhiDelta);
@@ -337,6 +336,15 @@ VPlacedVolume* UnplacedPolyhedron::SpecializedVolume(
 
   #undef POLYHEDRON_CREATE_SPECIALIZATION
 }
+
+#ifdef VECGEOM_USOLIDS
+VECGEOM_CUDA_HEADER_BOTH
+void UnplacedPolyhedron::Extent(Vector3D<Precision>& aMin, Vector3D<Precision>& aMax) const {
+  const UnplacedTube& bTube = GetBoundingTube();
+  bTube.Extent(aMin, aMax);
+}
+#endif
+
 
 VECGEOM_CUDA_HEADER_BOTH
 void UnplacedPolyhedron::Print() const {
