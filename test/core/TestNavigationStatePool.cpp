@@ -50,7 +50,7 @@ int main()
   NavStatePool pool(npoints, GeoManager::Instance().getMaxDepth() );
   pool.Print();
   std::cerr << "#################" << std::endl;
-  
+
   // fill states
   for(unsigned int i=0;i<testpoints.size();++i){
    //     std::cerr << testpoints[i] << "\n";

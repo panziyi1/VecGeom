@@ -23,15 +23,17 @@ void ProcessNavStates( void* gpu_ptr /* a pointer to buffer of navigation states
     dumper->Dump();
   }
 
-  // // get the navigationstate for this thread/lane
-  NavigationState *states  = reinterpret_cast<NavigationState*>(gpu_ptr);
+  // // // get the navigationstate for this thread/lane
+  // NavigationState *states  = reinterpret_cast<NavigationState*>(gpu_ptr);
+  // NavigationState *stateA = &(states[i]);
+  // // Alternative: forcing size=160 to get to next state
+  // NavigationState *state = reinterpret_cast<NavigationState*>(gpu_ptr+i*NavigationState::SizeOf(depth));
+  // printf("Alternative state addresses: stateA=%p  |  state=%p\n", stateA, state);
 
-  NavigationState *stateA = &(states[i]);
-
-  // Alternative: forcing size=160 to get to next state
-  NavigationState *state = reinterpret_cast<NavigationState*>(gpu_ptr+i*NavigationState::SizeOf(depth));
-
-  printf("Alternative state addresses: stateA=%p  |  state=%p\n", stateA, state);
+  // get the navigationstate for this thread/lane
+  // Warning: arithmetic on pointer to void or function type.
+  vecgeom::cuda::NavigationState * state = reinterpret_cast<vecgeom::cuda::NavigationState*>( gpu_ptr +
+        vecgeom::cuda::NavigationState::SizeOf(depth)*i ); 
 
   // actually do something to the states; here just popping off the top volume
   printf("From GPU: "); state->Print();

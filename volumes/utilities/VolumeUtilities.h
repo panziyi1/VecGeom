@@ -15,6 +15,7 @@
 #include "volumes/LogicalVolume.h"
 #include "navigation/NavigationState.h"
 #include "management/GeoManager.h"
+#include <cstdio>
 #ifdef VECGEOM_ROOT
 #include "TGeoShape.h"
 #endif
@@ -135,7 +136,10 @@ void FillBiasedDirections(VPlacedVolume const &volume,
   std::vector<bool> hit(size, false);
   int h;
 
-  // Randomize points
+  int tries = 0;
+  int maxtries = 10000*size;
+
+  // Randomize directions
   FillRandomDirections(dirs);
 
   // Check hits
@@ -152,11 +156,11 @@ void FillBiasedDirections(VPlacedVolume const &volume,
 
   // Remove hits until threshold
   printf("FillBiasedDirs: nhits/size = %i/%i and requested bias=%f\n", n_hits, size, bias);
-  int itries = 0;
+  int tries = 0;
   while (static_cast<Precision>(n_hits)/static_cast<Precision>(size) > bias) {
-    itries++;
-    if(itries%1000000 == 0) {
-      printf("%s line %i: Warning: %i tries to reduce bias... volume=%s. Please check.\n", __FILE__, __LINE__, itries, volume.GetLabel().c_str());
+    tries++;
+    if(tries%1000000 == 0) {
+      printf("%s line %i: Warning: %i tries to reduce bias... volume=%s. Please check.\n", __FILE__, __LINE__, tries, volume.GetLabel().c_str());
     }
 
     h = static_cast<int>(
@@ -169,25 +173,24 @@ void FillBiasedDirections(VPlacedVolume const &volume,
         if (!IsHittingVolume(points[h], dirs[h], **i)) {
           n_hits--;
           hit[h] = false;
-          itries = 0;
+          tries = 0;
           break;
         }
       }
     }
   }
 
-
   // Add hits until threshold
-  itries = 0;
-  while (static_cast<Precision>(n_hits)/static_cast<Precision>(size) < bias) {
+  tries = 0;
+  while (static_cast<Precision>(n_hits)/static_cast<Precision>(size) < bias && tries < maxtries) {
     h = static_cast<int>(
         static_cast<Precision>(size) * RNG::Instance().uniform()
     );
-    while (!hit[h]) {
-      ++itries;
-      if (itries%1000000==0) {
+    while (!hit[h] && tries < maxtries) {
+      ++tries;
+      if (tries%1000000==0) {
         printf("%s line %i: Warning: %i tries to increase bias... volume=%s, current bias=%i/%i=%f.  Please check.\n",
-               __FILE__, __LINE__, itries, volume.GetLabel().c_str(), n_hits, size,
+               __FILE__, __LINE__, tries, volume.GetLabel().c_str(), n_hits, size,
                static_cast<Precision>(n_hits)/static_cast<Precision>(size));
       }
 
@@ -197,12 +200,19 @@ void FillBiasedDirections(VPlacedVolume const &volume,
         if (IsHittingVolume(points[h], dirs[h], **i)) {
           n_hits++;
           hit[h] = true;
-          itries = 0;
+          tries = 0;
           break;
         }
       }
     }
   }
+
+
+  if( tries == maxtries )
+  {
+      printf("WARNING: NUMBER OF DIRECTORY SAMPLING TRIES EXCEEDED MAXIMUM; N_HITS %d; ACHIEVED BIAS %lf \n",n_hits, n_hits/(1.*size));
+  }
+
 }
 
 /**
@@ -245,18 +255,18 @@ void FillUncontainedPoints(VPlacedVolume const &volume,
   const Vector3D<Precision> dim = volume.bounding_box()->dimensions();
 #endif
 
-  int itries = 0;
+  int tries = 0;
   for (int i = 0; i < size; ++i) {
     bool contained;
     Vector3D<Precision> point;
-    itries = 0;
+    tries = 0;
     do {
       // ensure that point is contained in mother volume
       do {
-        ++itries;
-        if(itries%1000000 == 0) {
+        ++tries;
+        if(tries%1000000 == 0) {
           printf("%s line %i: Warning: %i tries to find uncontained points... volume=%s.  Please check.\n",
-                 __FILE__, __LINE__, itries, volume.GetLabel().c_str());
+                 __FILE__, __LINE__, tries, volume.GetLabel().c_str());
         }
 
         point = offset + SamplePoint(dim);
@@ -331,14 +341,14 @@ void FillContainedPoints(VPlacedVolume const &volume,
 
   // remove contained points to reduce bias as needed
   int i = 0;
-  int itries = 0;
+  int tries = 0;
   while (static_cast<double>(insideCount)/static_cast<double>(size) > bias) {
     while (!insideVector[i]) ++i;
     bool contained = false;
     do {
-      ++itries;
-      if(itries%1000000==0) {
-        printf("%s line %i: Warning: %i tries to reduce bias... volume=%s.  Please check.\n", __FILE__, __LINE__, itries, volume.GetLabel().c_str());
+      ++tries;
+      if(tries%1000000==0) {
+        printf("%s line %i: Warning: %i tries to reduce bias... volume=%s.  Please check.\n", __FILE__, __LINE__, tries, volume.GetLabel().c_str());
       }
 
       points.set(i, offset + SamplePoint(dim));
@@ -353,21 +363,21 @@ void FillContainedPoints(VPlacedVolume const &volume,
       }
     } while (contained);
     insideVector[i] = false;
-    itries = 0;
+    tries = 0;
     --insideCount;
     ++i;
   }
 
   // add contained points to increase bias as needed
   i = 0;
-  itries = 0;
+  tries = 0;
   while (static_cast<double>(insideCount)/static_cast<double>(size) < bias) {
     while (insideVector[i]) ++i;
     bool contained = false;
     do {
-      ++itries;
-      if(itries%1000000==0) {
-        printf("%s line %i: Warning: %i tries to increase bias... volume=%s.  Please check.\n", __FILE__, __LINE__, itries, volume.GetLabel().c_str());
+      ++tries;
+      if(tries%1000000==0) {
+        printf("%s line %i: Warning: %i tries to increase bias... volume=%s.  Please check.\n", __FILE__, __LINE__, tries, volume.GetLabel().c_str());
       }
       const Vector3D<Precision> sample = offset + SamplePoint(dim);
       for (Vector<Daughter>::const_iterator v = volume.daughters().cbegin(),
@@ -382,7 +392,7 @@ void FillContainedPoints(VPlacedVolume const &volume,
       }
     } while (!contained);
     insideVector[i] = true;
-    itries = 0;
+    tries = 0;
     ++insideCount;
     ++i;
   }
@@ -412,7 +422,7 @@ void FillRandomPoints(VPlacedVolume const &volume,
   const int size = points.capacity();
   points.resize(points.capacity());
 
-  int itries =0;
+  int tries =0;
 
 #ifdef VECGEOM_USOLIDS
   Vector3D<Precision> lower,upper,offset;
@@ -427,9 +437,9 @@ void FillRandomPoints(VPlacedVolume const &volume,
   for (int i = 0; i < size; ++i) {
     Vector3D<Precision> point;
     do {
-      ++itries;
-      if(itries%1000000==0) {
-        printf("%s line %i: Warning: %i tries to find contained points... volume=%s.  Please check.\n", __FILE__, __LINE__, itries, volume.GetLabel().c_str());
+      ++tries;
+      if(tries%1000000==0) {
+        printf("%s line %i: Warning: %i tries to find contained points... volume=%s.  Please check.\n", __FILE__, __LINE__, tries, volume.GetLabel().c_str());
       }
       point = offset + SamplePoint(dim);
     } while (!volume.Contains(point));

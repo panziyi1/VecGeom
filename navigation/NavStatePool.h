@@ -43,7 +43,7 @@ public:
     {
 
 #ifdef HAVENORMALNAMESPACE
-//#pragma message "in namespace vecgeom"
+// #pragma message "in namespace vecgeom"
 #ifdef VECGEOM_CUDA
         vecgeom::CudaMalloc( &fGPUPointer, NavigationState::SizeOf(depth)*size );
 #endif
