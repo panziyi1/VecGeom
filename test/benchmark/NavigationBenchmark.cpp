@@ -26,7 +26,7 @@ VPlacedVolume* SetupGeometry() {
   UnplacedBox *worldUnplaced = new UnplacedBox(10, 10, 10);
   UnplacedTrapezoid *trapUnplaced = new UnplacedTrapezoid(4,0,0,4,4,4,0,4,4,4,0);
   UnplacedBox *boxUnplaced = new UnplacedBox(2.5, 2.5, 2.5);
-  UnplacedOrb *orbUnplaced = new UnplacedOrb(2.4);
+  UnplacedOrb *orbUnplaced = new UnplacedOrb(2.8);
 
   LogicalVolume *world = new LogicalVolume("world",worldUnplaced);
   LogicalVolume *trap  = new LogicalVolume("trap",trapUnplaced);
@@ -34,8 +34,8 @@ VPlacedVolume* SetupGeometry() {
   LogicalVolume *orb   = new LogicalVolume("orb",orbUnplaced);
 
   Transformation3D *ident = new Transformation3D( 0,  0,  0,  0,  0,  0);
-  box->PlaceDaughter("orb1",orb, ident);
-  trap->PlaceDaughter("box1",box, ident);
+  orb->PlaceDaughter("orb1",box, ident);
+  trap->PlaceDaughter("box1",orb, ident);
 
   Transformation3D *placement1 = new Transformation3D( 5,  5,  5,  0,  0,  0);
   Transformation3D *placement2 = new Transformation3D(-5,  5,  5,  0,  0,  0); //45,  0,  0);
@@ -100,12 +100,24 @@ int main(int argc, char* argv[])
 #ifdef VECGEOM_ROOT
   if(vis) {  // note that visualization block returns, excluding the rest of benchmark
     Visualizer visualizer;
-    visualizer.AddVolume(*world);
+    const VPlacedVolume* world = GeoManager::Instance().GetWorld();
+    world = GeoManager::Instance().FindPlacedVolume(testVolume.c_str());
+    visualizer.AddVolume( *world );
 
     Vector<Daughter> const* daughters = world->logical_volume()->daughtersp();
     for(int i=0; i<daughters->size(); ++i) {
       VPlacedVolume const* daughter = (*daughters)[i];
-      visualizer.AddVolume(*daughter, *(daughter->transformation()));
+      Transformation3D const& trf1 = *(daughter->transformation());
+      visualizer.AddVolume(*daughter, trf1);
+
+      // Vector<Daughter> const* daughters2 = daughter->logical_volume()->daughtersp();
+      // for(int ii=0; ii<daughters2->size(); ++ii) {
+      //   VPlacedVolume const* daughter2 = (*daughters2)[ii];
+      //   Transformation3D const& trf2 = *(daughter2->transformation());
+      //   Transformation3D comb = trf1;
+      //   comb.MultiplyFromRight(trf2);
+      //   visualizer.AddVolume(*daughter2, comb);
+      // }
     }
 
     visualizer.Show();
@@ -144,7 +156,7 @@ int main(int argc, char* argv[])
   std::cout<<"VecGeom validation passed."<< std::endl;
 
   // on mic.fnal.gov CPUs, loop execution takes ~70sec for npoints=10M
-  while(npoints<=100000) {
+  while(npoints<=10000) {
     std::cout<<"\n*** Running navigation benchmarks with npoints="<<npoints<<" and nreps="<< nreps <<".\n";
     runNavigationBenchmarks(startVolume, npoints, nreps);
     npoints*=10;
