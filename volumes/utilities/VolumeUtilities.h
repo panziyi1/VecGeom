@@ -136,9 +136,6 @@ void FillBiasedDirections(VPlacedVolume const &volume,
   std::vector<bool> hit(size, false);
   int h;
 
-  int tries = 0;
-  int maxtries = 10000*size;
-
   // Randomize directions
   FillRandomDirections(dirs);
 
@@ -157,6 +154,7 @@ void FillBiasedDirections(VPlacedVolume const &volume,
   // Remove hits until threshold
   printf("FillBiasedDirs: nhits/size = %i/%i and requested bias=%f\n", n_hits, size, bias);
   int tries = 0;
+  int maxtries = 10000*size;
   while (static_cast<Precision>(n_hits)/static_cast<Precision>(size) > bias) {
     tries++;
     if(tries%1000000 == 0) {
@@ -235,6 +233,7 @@ void FillBiasedDirections(LogicalVolume const &volume,
  * @brief Fills the volume with 3D points which are _not_ contained in
  *    any daughters of the input mother volume.
  * @details Requires a proper bounding box from the input volume.
+ *    Point coordinates are local to input mother volume.
  * @param volume is the input mother volume containing all output points.
  * @param points is the output container, provided by the caller.
  */
@@ -250,6 +249,7 @@ void FillUncontainedPoints(VPlacedVolume const &volume,
   volume.Extent(lower,upper);
   offset = 0.5*(upper+lower);
   const Vector3D<Precision> dim = 0.5*(upper-lower);
+  std::cout<<"lower="<<lower <<" / upper="<< upper <<" / offset="<< offset <<" / dim="<< dim <<"\n";
 #else
   Vector3D<Precision> offset(0,0,0);
   const Vector3D<Precision> dim = volume.bounding_box()->dimensions();
@@ -270,12 +270,19 @@ void FillUncontainedPoints(VPlacedVolume const &volume,
         }
 
         point = offset + SamplePoint(dim);
-      } while (!volume.Contains(point));
+        if(tries>960000) {
+          std::cout<<"VolUtil: FillUncontPts: i="<< i <<" - offset="<< offset <<" --> localpoint="<< point
+                   <<" "<< volume.UnplacedContains(point) <<" / tries="<< tries <<"\n";
+        }
+      } while (!volume.UnplacedContains(point));
       points.set(i, point);
 
       contained = false;
+      int kk=0;
       for (Vector<Daughter>::const_iterator j = volume.daughters().cbegin(),
-          jEnd = volume.daughters().cend(); j != jEnd; ++j) {
+             jEnd = volume.daughters().cend(); j != jEnd; ++j, ++kk) {
+        // std::cout<<"VolUtil: FillUncontPts: dau="<< kk <<" - point="<< points[i]
+        //          <<" - dau.Contains() = "<< (*j)->Contains( points[i] )<<"\n";
         if ((*j)->Contains( points[i] )) {
           contained = true;
           break;
