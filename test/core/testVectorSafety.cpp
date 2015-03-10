@@ -89,15 +89,14 @@ void testVectorNavigator( VPlacedVolume* world ){
    vecgeom::volumeUtilities::FillRandomDirections( dirs );
 
    // now setup all the navigation states
-   NavigationState ** states = new NavigationState*[np];
-   NavigationState ** newstates = new NavigationState*[np];
+   NavStatePool states(np, GeoManager::Instance().getMaxDepth() );
+   NavStatePool newstates(np, GeoManager::Instance().getMaxDepth() );
 
    vecgeom::SimpleNavigator nav;
    for (int i=0;i<np;++i){
-      // pSteps[i] = kInfinity;
-     pSteps[i] = (i%2)? 1 : VECGEOM_NAMESPACE::kInfinity;
-       states[i] =  NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
-       newstates[i] = NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
+       // pSteps[i] = kInfinity;
+       pSteps[i] = (i%2)? 1 : VECGEOM_NAMESPACE::kInfinity;
+       states[i]->Clear();
        nav.LocatePoint( world, points[i], *states[i], true);
    }
 
@@ -107,7 +106,7 @@ void testVectorNavigator( VPlacedVolume* world ){
 
    // verify against serial interface
    for (int i=0;i<np;++i) {
-       Precision s;
+       Precision s=0;
        NavigationState * cmp = NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
        cmp->Clear();
        nav.FindNextBoundaryAndStep( points[i], dirs[i], *states[i],
