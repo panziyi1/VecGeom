@@ -762,8 +762,8 @@ Precision UnplacedPolycone::SurfaceArea() const{
     for (i = 0; i < GetNSections(); i++)
     {
      PolyconeSection const & sec = GetSection(i);
-     if(maxR > sec.fSolid->GetRmax1())  maxR = sec.fSolid->GetRmax1(); 
-     if(maxR > sec.fSolid->GetRmax2())  maxR = sec.fSolid->GetRmax2(); 
+     if(maxR < sec.fSolid->GetRmax1())  maxR = sec.fSolid->GetRmax1();
+     if(maxR < sec.fSolid->GetRmax2())  maxR = sec.fSolid->GetRmax2();
     }
     
      aMin.x() = -maxR;
