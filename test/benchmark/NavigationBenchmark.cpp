@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
   OPTION_INT(nreps, 3);
   OPTION_STRING(geometry, "navBench.root");
   OPTION_STRING(testVolume, "world");
-  OPTION_DOUBLE(fraction, 0.8f);
+  OPTION_DOUBLE(bias, 0.8f);
 #ifdef VECGEOM_ROOT
   OPTION_BOOL(vis, false);
 #endif
@@ -143,7 +143,8 @@ int main(int argc, char* argv[])
   SOA3D<Precision> dirs(np);
   SOA3D<Precision> locpts(np);
 
-  vecgeom::volumeUtilities::FillGlobalPointsAndDirectionsForLogicalVolume( startVolume->logical_volume(), locpts, points, dirs, fraction, np);
+  vecgeom::volumeUtilities::FillGlobalPointsAndDirectionsForLogicalVolume(
+    startVolume->logical_volume(), locpts, points, dirs, bias, np);
 
   bool ok = validateVecGeomNavigation(np, points, dirs);
 
@@ -158,7 +159,7 @@ int main(int argc, char* argv[])
   // on mic.fnal.gov CPUs, loop execution takes ~70sec for npoints=10M
   while(npoints<=10000) {
     std::cout<<"\n*** Running navigation benchmarks with npoints="<<npoints<<" and nreps="<< nreps <<".\n";
-    runNavigationBenchmarks(startVolume, npoints, nreps);
+    runNavigationBenchmarks(startVolume, npoints, nreps, bias);
     npoints*=10;
   }
 

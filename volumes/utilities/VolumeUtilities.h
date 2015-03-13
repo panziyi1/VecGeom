@@ -131,6 +131,13 @@ void FillBiasedDirections(VPlacedVolume const &volume,
                           TrackContainer & dirs) {
   assert(bias >= 0. && bias <= 1.);
 
+  if( bias>0. && volume.daughters().size()==0 ) {
+    printf("\nFillBiasedDirections ERROR:\n bias=%f requested, but no daughter volumes found.\n", bias);
+    // should throw exception, but for now just abort
+    printf("FillBiasedDirections: aborting...\n");
+    exit(1);
+  }
+
   const int size = dirs.capacity();
   int n_hits = 0;
   std::vector<bool> hit(size, false);
@@ -229,6 +236,18 @@ void FillBiasedDirections(LogicalVolume const &volume,
   delete placed;
 }
 
+VECGEOM_INLINE
+Precision UncontainedCapacity(VPlacedVolume const &volume) {
+  Precision momCapacity = const_cast<VPlacedVolume&>(volume).Capacity();
+  Precision dauCapacity = 0.;
+  unsigned int kk = 0;
+  for (Vector<Daughter>::const_iterator j = volume.daughters().cbegin(),
+         jEnd = volume.daughters().cend(); j != jEnd; ++j, ++kk) {
+    dauCapacity += const_cast<VPlacedVolume*>(*j)->Capacity();
+  }
+  return momCapacity - dauCapacity;
+}
+
 /**
  * @brief Fills the volume with 3D points which are _not_ contained in
  *    any daughters of the input mother volume.
@@ -241,6 +260,16 @@ template<typename TrackContainer>
 VECGEOM_INLINE
 void FillUncontainedPoints(VPlacedVolume const &volume,
                            TrackContainer &points) {
+  static bool first = true;
+  if(first) {
+    printf("Uncontained capacity for %s: %f units\n", volume.GetLabel().c_str(), UncontainedCapacity(volume));
+  }
+  if( UncontainedCapacity(volume) <= 0.0 ) {
+    std::cout<<"\nVolUtil: FillUncontPts: ERROR: Volume provided <"
+             << volume.GetLabel() <<"> does not have uncontained capacity!  Aborting.\n";
+    Assert(false);
+  }
+
   const int size = points.capacity();
   points.resize(points.capacity());
 
@@ -270,10 +299,6 @@ void FillUncontainedPoints(VPlacedVolume const &volume,
         }
 
         point = offset + SamplePoint(dim);
-        if(tries>960000) {
-          std::cout<<"VolUtil: FillUncontPts: i="<< i <<" - offset="<< offset <<" --> localpoint="<< point
-                   <<" "<< volume.UnplacedContains(point) <<" / tries="<< tries <<"\n";
-        }
       } while (!volume.UnplacedContains(point));
       points.set(i, point);
 
@@ -281,8 +306,6 @@ void FillUncontainedPoints(VPlacedVolume const &volume,
       int kk=0;
       for (Vector<Daughter>::const_iterator j = volume.daughters().cbegin(),
              jEnd = volume.daughters().cend(); j != jEnd; ++j, ++kk) {
-        // std::cout<<"VolUtil: FillUncontPts: dau="<< kk <<" - point="<< points[i]
-        //          <<" - dau.Contains() = "<< (*j)->Contains( points[i] )<<"\n";
         if ((*j)->Contains( points[i] )) {
           contained = true;
           break;

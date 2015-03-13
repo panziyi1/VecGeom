@@ -51,11 +51,6 @@ Precision benchmarkLocatePoint( VPlacedVolume_t startVol, int nPoints, int nReps
     for( int i=0; i<nPoints; ++i ) {
       state->Clear();
       nav.LocatePoint( startVol, points[i], *state, startVol==GeoManager::Instance().GetWorld());
-      // Temporary:
-      std::cout<<"benchLocate(startVol): point["<< i <<"]=("
-               << points[i].x() <<"; "<< points[i].y()<<"; "<< points[i].z() <<")\n";//) - "<< *state <<"\n";
-      nav.LocatePoint( GeoManager::Instance().GetWorld(), points[i], *state, true );
-      // std::cout<<"benchLocate(top): point["<< i <<"]="<< points[i]<<" / state="<< *state <<"\n";
     }
   }
   Precision elapsed = timer.Stop();
@@ -229,14 +224,13 @@ void testVectorSafety( VPlacedVolume_t startVol ){
 
 //=======================================
 /// Function to run navigation benchmarks
-void runNavigationBenchmarks( VPlacedVolume_t startVol, int np, int nreps) {
+void runNavigationBenchmarks( VPlacedVolume_t startVol, int np, int nreps, Precision bias) {
 
   SOA3D<Precision> points(np);
   SOA3D<Precision> locpts(np);
   SOA3D<Precision> dirs(np);
-  vecgeom::volumeUtilities::FillGlobalPointsAndDirectionsForLogicalVolume( startVol->logical_volume(), locpts, points, dirs, 0.8, np);
-  // vecgeom::volumeUtilities::FillUncontainedPoints( *startVol, points );
-  // vecgeom::volumeUtilities::FillRandomDirections( dirs );
+  vecgeom::volumeUtilities::FillGlobalPointsAndDirectionsForLogicalVolume(
+    startVol->logical_volume(), locpts, points, dirs, bias, np);
 
   Precision cputime;
 
