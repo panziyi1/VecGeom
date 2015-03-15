@@ -379,10 +379,10 @@ Transformation3D const &
 NavigationState::TopMatrix() const
 {
 // this could be actually cached in case the path does not change ( particle stays inside a volume )
-   global_matrix_.CopyFrom( *(fPath[0]->transformation()) );
+   global_matrix_.CopyFrom( *(fPath[0]->GetTransformation()) );
    for(int i=1;i<fCurrentLevel;++i)
    {
-      global_matrix_.MultiplyFromRight( *(fPath[i]->transformation()) );
+      global_matrix_.MultiplyFromRight( *(fPath[i]->GetTransformation()) );
    }
    return global_matrix_;
 }
@@ -400,7 +400,7 @@ NavigationState::GlobalToLocal(Vector3D<Precision> const & globalpoint)
    Vector3D<Precision> current;
    for(int level=0;level<fCurrentLevel;++level)
    {
-      Transformation3D const *m = fPath[level]->transformation();
+      Transformation3D const *m = fPath[level]->GetTransformation();
       current = m->Transform( tmp );
       tmp = current;
    }
@@ -503,9 +503,8 @@ inline
 void NavigationState::ConvertToCPUPointers() {
 #ifdef HAVENORMALNAMESPACE
 #ifdef VECGEOM_CUDA
-   for(int i=0;i<fCurrentLevel;++i) {
-      fPath[i] = vecgeom::CudaManager::Instance().LookupPlacedCPUPtr( (void*) fPath[i] );
-   }
+       for(int i=0;i<fCurrentLevel;++i)
+         fPath[i]=vecgeom::CudaManager::Instance().LookupPlacedCPUPtr( (const void*) fPath[i] );
 #endif
 #endif
 }

@@ -82,7 +82,7 @@ public:
 
   VECGEOM_CUDA_HEADER_BOTH
   VECGEOM_INLINE
-  LogicalVolume const* logical_volume() const {
+  LogicalVolume const* GetLogicalVolume() const {
     return logical_volume_;
   }
 
@@ -100,17 +100,17 @@ public:
 
   VECGEOM_CUDA_HEADER_BOTH
   VECGEOM_INLINE
-  Transformation3D const* transformation() const {
+  Transformation3D const* GetTransformation() const {
     return transformation_;
   }
 
   VECGEOM_CUDA_HEADER_BOTH
-  void set_logical_volume(LogicalVolume const *const logical_vol) {
+  void SetLogicalVolume(LogicalVolume const *const logical_vol) {
     logical_volume_ = logical_vol;
   }
 
   VECGEOM_CUDA_HEADER_BOTH
-  void set_transformation(Transformation3D const *const transform) {
+  void SetTransformation(Transformation3D const *const transform) {
     transformation_ = transform;
   }
 
