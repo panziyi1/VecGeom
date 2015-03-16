@@ -104,13 +104,13 @@ int main(int argc, char* argv[])
     world = GeoManager::Instance().FindPlacedVolume(testVolume.c_str());
     visualizer.AddVolume( *world );
 
-    Vector<Daughter> const* daughters = world->logical_volume()->daughtersp();
+    Vector<Daughter> const* daughters = world->GetLogicalVolume()->daughtersp();
     for(int i=0; i<daughters->size(); ++i) {
       VPlacedVolume const* daughter = (*daughters)[i];
-      Transformation3D const& trf1 = *(daughter->transformation());
+      Transformation3D const& trf1 = *(daughter->GetTransformation());
       visualizer.AddVolume(*daughter, trf1);
 
-      // Vector<Daughter> const* daughters2 = daughter->logical_volume()->daughtersp();
+      // Vector<Daughter> const* daughters2 = daughter->GetLogicalVolume()->daughtersp();
       // for(int ii=0; ii<daughters2->size(); ++ii) {
       //   VPlacedVolume const* daughter2 = (*daughters2)[ii];
       //   Transformation3D const& trf2 = *(daughter2->transformation());
@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
   SOA3D<Precision> locpts(np);
 
   vecgeom::volumeUtilities::FillGlobalPointsAndDirectionsForLogicalVolume(
-    startVolume->logical_volume(), locpts, points, dirs, bias, np);
+    startVolume->GetLogicalVolume(), locpts, points, dirs, bias, np);
 
   bool ok = validateVecGeomNavigation(np, points, dirs);
 

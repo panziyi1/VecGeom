@@ -230,7 +230,7 @@ void runNavigationBenchmarks( VPlacedVolume_t startVol, int np, int nreps, Preci
   SOA3D<Precision> locpts(np);
   SOA3D<Precision> dirs(np);
   vecgeom::volumeUtilities::FillGlobalPointsAndDirectionsForLogicalVolume(
-    startVol->logical_volume(), locpts, points, dirs, bias, np);
+    startVol->GetLogicalVolume(), locpts, points, dirs, bias, np);
 
   Precision cputime;
 
