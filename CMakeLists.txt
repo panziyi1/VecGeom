@@ -30,7 +30,7 @@ option(CTEST "Enable CTest when building." ON)
 
 option(PLANESHELL "Enable the use of PlaneShell class for the trapezoid." ON)
 
-option(DISTANCE_DEBUG "Enable comparison of calculcated distances againt ROOT/Geant4 behind the scenes" OFF)
+option(DISTANCE_DEBUG "Enable comparison of calculated distances againt ROOT/Geant4 behind the scenes" OFF)
 
 option(DATA_DOWNLOAD "Enable downloading of data for tests" OFF)
 
@@ -140,9 +140,6 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
   else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
   endif()
-  set(VECGEOM_NVCC_COMPILATION_FLAGS
-    "${VECGEOM_NVCC_COMPILATION_FLAGS} -g -G"
-    )
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 endif()
@@ -182,24 +179,17 @@ if (CUDA)
   set(CUDA_ARCH 20 CACHE STRING "CUDA device architecture.")
   set(CUDA_ARCH "-arch=sm_${CUDA_ARCH}")
   set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_CUDA")
-  set(VECGEOM_NVCC_COMPILATION_FLAGS "${VECGEOM_NVCC_COMPILATION_FLAGS} -DVECGEOM_CUDA")
   if (CUDA_VOLUME_SPECIALIZATION)
     set(VECGEOM_COMPILATION_FLAGS
         "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_CUDA_VOLUME_SPECIALIZATION")
-    set(VECGEOM_NVCC_COMPILATION_FLAGS
-        "${VECGEOM_NVCC_COMPILATION_FLAGS} -DVECGEOM_CUDA_VOLUME_SPECIALIZATION")
   else()
     set(VECGEOM_COMPILATION_FLAGS
         "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_CUDA_NO_VOLUME_SPECIALIZATION")
-    set(VECGEOM_NVCC_COMPILATION_FLAGS
-        "${VECGEOM_NVCC_COMPILATION_FLAGS} -DVECGEOM_CUDA_NO_VOLUME_SPECIALIZATION")
   endif()
   set(VECGEOM_NVCC_COMPILATION_FLAGS ${VECGEOM_NVCC_COMPILATION_FLAGS}
       -std=c++11
       -Xcudafe "--diag_suppress=code_is_unreachable"
       -Xcudafe "--diag_suppress=initialization_not_reachable")
-
-  set(VECGEOM_NVCC_COMPILATION_FLAGS ${VECGEOM_NVCC_COMPILATION_FLAGS})
   set(VECGEOM_NVCC_CONFIGS
         DEBUG -g -G
         RELEASE  -O2 --use_fast_math

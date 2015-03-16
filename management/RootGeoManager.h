@@ -5,7 +5,6 @@
 #define VECGEOM_MANAGEMENT_ROOTMANAGER_H_
 
 #include "base/Global.h"
-
 #include "base/TypeMap.h"
 
 #include "TGeoNode.h"

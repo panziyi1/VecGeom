@@ -408,7 +408,7 @@ bool UnplacedTrapezoid::Normal(Vector3D<Precision> const& point, Vector3D<Precis
     else                 sumnorm -= Vec3D(0.,0.,1.);
   }
   if (noSurfaces == 0) {
-#ifdef DEBUG
+#ifdef UDEBUG
     UUtils::Exception("UnplacedTrapezoid::SurfaceNormal(point)", "GeomSolids1002",
                       Warning, 1, "Point is not on surface.");
 #endif
@@ -465,6 +465,7 @@ void UnplacedTrapezoid::Extent(Vec3D& aMin, Vec3D& aMax) const {
   extB = ext45<ext67 ? ext45 : ext67;
   aMin.y() = (extA < extB) ? extA : extB;
 }
+#endif
 
 VECGEOM_CUDA_HEADER_BOTH
 Precision UnplacedTrapezoid::SurfaceArea() const {
@@ -501,6 +502,7 @@ Precision UnplacedTrapezoid::SurfaceArea() const {
   return surfArea;
 }
 
+#ifdef VECGEOM_USOLIDS
 Vec3D UnplacedTrapezoid::GetPointOnSurface() const {
 
   TrapCorners_t pt;

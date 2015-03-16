@@ -123,6 +123,7 @@ UnplacedPolyhedron::UnplacedPolyhedron(
   // correct inner and outer Radius with conversion factor
   //innerRadius /= cosHalfDeltaPhi;
   //outerRadius /= cosHalfDeltaPhi;
+
   fBoundingTube = UnplacedTube( innerRadius - kTolerance,
                                 outerRadius + kTolerance, 0.5*boundingTubeZ,
                                boundsPhiStart, boundsPhiDelta);

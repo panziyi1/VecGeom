@@ -234,15 +234,10 @@ public:
   VECGEOM_INLINE
   UnplacedTube const &GetBoundingTube() const { return fBoundingTube; }
 
-  VECGEOM_CUDA_HEADER_BOTH
-  VECGEOM_INLINE
-  Precision GetBoundingTubeOffset() const { return fBoundingTubeOffset; }
-
   // TODO: do this properly
   VECGEOM_CUDA_HEADER_BOTH
   Precision Capacity() const { return 0.; }
 
-#ifdef VECGEOM_USOLIDS
   VECGEOM_CUDA_HEADER_BOTH
   VECGEOM_INLINE
   Precision SurfaceArea() const {
@@ -258,7 +253,11 @@ public:
     // TBDONE
       return Vector3D<Precision>() ;
   }
-#endif
+
+  VECGEOM_CUDA_HEADER_BOTH
+  VECGEOM_INLINE
+  Precision GetBoundingTubeOffset() const { return fBoundingTubeOffset; }
+
 
   /// Not a stored value, and should not be called from performance critical
   /// code.

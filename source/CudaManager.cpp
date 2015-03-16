@@ -174,7 +174,7 @@ void CudaManager::CleanGpu() {
 
   if (memory_map.size() == 0 && world_gpu_ == NULL) return;
 
-  if (verbose_ > 1) std::cerr << "Cleaning GPU...";
+  if (verbose_ > 1) std::cout << "Cleaning GPU...";
 
   for (auto i = allocated_memory_.begin(), i_end = allocated_memory_.end();
        i != i_end; ++i) {
@@ -187,14 +187,14 @@ void CudaManager::CleanGpu() {
   world_gpu_ = vecgeom::DevicePtr<vecgeom::cuda::VPlacedVolume>();
   synchronized = false;
 
-  if (verbose_ > 1) std::cerr << " OK\n";
+  if (verbose_ > 1) std::cout << " OK\n";
 
 }
 
 template <typename Coll>
 bool CudaManager::AllocateCollectionOnCoproc(const char *verbose_title,
                                              const Coll &data,
-					     bool isforplacedvol
+                         bool isforplacedvol
                                              )
 {
    // NOTE: Code need to be enhanced to propage the error correctly.
@@ -213,7 +213,7 @@ bool CudaManager::AllocateCollectionOnCoproc(const char *verbose_title,
    for (auto i : data) {
       memory_map[ToCpuAddress(i)] = gpu_address;
       if(isforplacedvol)
-	  fGPUtoCPUmapForPlacedVolumes[ gpu_address ] = i;
+      fGPUtoCPUmapForPlacedVolumes[ gpu_address ] = i;
       gpu_address += i->DeviceSizeOf();
    }
 
@@ -224,10 +224,10 @@ bool CudaManager::AllocateCollectionOnCoproc(const char *verbose_title,
 
 void CudaManager::AllocateGeometry() {
 
-  if (verbose_ > 1) std::cerr << "Allocating geometry on GPU...";
+  if (verbose_ > 1) std::cout << "Allocating geometry on GPU...";
 
   {
-    if (verbose_ > 2) std::cerr << "Allocating logical volumes...";
+    if (verbose_ > 2) std::cout << "Allocating logical volumes...";
 
     DevicePtr<cuda::LogicalVolume> gpu_array;
     gpu_array.Allocate(logical_volumes_.size());
@@ -242,7 +242,7 @@ void CudaManager::AllocateGeometry() {
       ++gpu_array;
     }
 
-    if (verbose_ > 2) std::cerr << " OK\n";
+    if (verbose_ > 2) std::cout << " OK\n";
   }
 
   AllocateCollectionOnCoproc("unplaced volumes", unplaced_volumes_);
@@ -252,7 +252,7 @@ void CudaManager::AllocateGeometry() {
   AllocateCollectionOnCoproc("transformations", transformations_);
 
   {
-    if (verbose_ > 2) std::cerr << "Allocating daughter lists...";
+    if (verbose_ > 2) std::cout << "Allocating daughter lists...";
 
     DevicePtr<cuda::Vector<CudaDaughter_t> > gpu_array;
     gpu_array.Allocate(daughters_.size());
@@ -273,10 +273,10 @@ void CudaManager::AllocateGeometry() {
 
     }
 
-    if (verbose_ > 2) std::cerr << " OK\n";
+    if (verbose_ > 2) std::cout << " OK\n";
   }
 
-  if (verbose_ == 2) std::cerr << " OK\n";
+  if (verbose_ == 2) std::cout << " OK\n";
 
 
   fprintf(stderr,"NUMBER OF PLACED VOLUMES %ld\n", placed_volumes_.size());

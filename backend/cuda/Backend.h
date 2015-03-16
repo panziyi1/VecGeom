@@ -38,8 +38,7 @@ typedef kCuda::int_v       CudaInt;
 typedef kCuda::precision_v CudaPrecision;
 typedef kCuda::bool_v      CudaBool;
 
-//static const unsigned kThreadsPerBlock = 256;
-static const unsigned kThreadsPerBlock = 192;
+static const unsigned kThreadsPerBlock = 256;
 
 VECGEOM_CUDA_HEADER_BOTH
 VECGEOM_INLINE

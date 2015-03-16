@@ -69,13 +69,13 @@ public:
     return 0.;
   }
 
-#ifdef VECGEOM_USOLIDS
   VECGEOM_CUDA_HEADER_BOTH
   VECGEOM_INLINE
   Precision SurfaceArea() const {
     // TBDONE -- need some sampling
     return 0.;
   }
+
 
   VECGEOM_CUDA_HEADER_BOTH
   void Extent(Vector3D<Precision>& aMin, Vector3D<Precision>& aMax) const;
@@ -85,7 +85,6 @@ public:
     // TBDONE
       return Vector3D<Precision>() ;
   }
-#endif
 
 
   VECGEOM_CUDA_HEADER_BOTH
