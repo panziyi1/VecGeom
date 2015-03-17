@@ -159,7 +159,7 @@ void FillBiasedDirections(VPlacedVolume const &volume,
   }
 
   // Remove hits until threshold
-  printf("FillBiasedDirs: nhits/size = %i/%i and requested bias=%f\n", n_hits, size, bias);
+  printf("VolumeUtilities: FillBiasedDirs: nhits/size = %i/%i and requested bias=%f\n", n_hits, size, bias);
   int tries = 0;
   int maxtries = 10000*size;
   while (static_cast<Precision>(n_hits)/static_cast<Precision>(size) > bias) {

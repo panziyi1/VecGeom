@@ -53,7 +53,7 @@ int main( int argc, char *argv[] ) {
             found++;
             foundvolume = vol;
 
-	    std::cerr << "found matching volume " << fullname << " of type " << vol->GetShape()->ClassName() << "\n";
+        std::cerr << "found matching volume " << fullname << " of type " << vol->GetShape()->ClassName() << "\n";
         }
     }
 

@@ -112,10 +112,10 @@ void SimpleNavigator::InspectSafetyForPoint
    int numberdaughters = daughters->size();
    for(int d = 0; d<numberdaughters; ++d)
    {
-	   VPlacedVolume const * daughter = daughters->operator [](d);
-	   double tmp = daughter->SafetyToIn( localpoint );
+       VPlacedVolume const * daughter = daughters->operator [](d);
+       double tmp = daughter->SafetyToIn( localpoint );
        std::cout << "Safety to Daughter " << tmp << "\n";
-	   safety = Min(safety, tmp);
+       safety = Min(safety, tmp);
    }
    std::cout << "Would return" << safety << "\n";
 
