@@ -1,18 +1,28 @@
 /*
- * testGPUNavigation.cpp
+ *  File: NavigationBenchmark.cpp
  *
  *  Created on: Oct 25, 2014
  *      Author: swenzel, lima
  */
 
-#include "benchmarking/NavigationBenchmarker.h"
-#include "ArgParser.h"
-#include "volumes/utilities/VolumeUtilities.h"
-
 #ifdef VECGEOM_ROOT
-#include "management/RootGeoManager.h"
-#include "utilities/Visualizer.h"
+  #include "management/RootGeoManager.h"
+  #include "utilities/Visualizer.h"
 #endif
+
+#ifdef VECGEOM_GEANT4
+  #include "management/G4GeoManager.h"
+  #include "G4ThreeVector.hh"
+  // #include "G4TouchableHistoryHandle.hh"
+  #include "G4LogicalVolume.hh"
+  #include "G4LogicalVolumeStore.hh"
+  #include "G4PVPlacement.hh"
+  #include "G4GeometryManager.hh"
+#endif
+
+#include "benchmarking/NavigationBenchmarker.h"
+#include "test/benchmark/ArgParser.h"
+#include "volumes/utilities/VolumeUtilities.h"
 
 #include "management/GeoManager.h"
 #include "volumes/Box.h"
@@ -20,6 +30,7 @@
 #include "volumes/Trapezoid.h"
 
 using namespace VECGEOM_NAMESPACE;
+
 
 VPlacedVolume* SetupGeometry() {
 
@@ -55,7 +66,7 @@ VPlacedVolume* SetupGeometry() {
   world->PlaceDaughter("trap7",trap, placement7);
   world->PlaceDaughter("trap8",trap, placement8);
 
-  VPlacedVolume  * w = world->Place();
+  VPlacedVolume* w = world->Place();
   GeoManager::Instance().SetWorld(w);
   GeoManager::Instance().CloseGeometry();
   return w;
@@ -66,8 +77,8 @@ int main(int argc, char* argv[])
 {
   OPTION_INT(npoints, 10000);
   OPTION_INT(nreps, 3);
-  OPTION_STRING(geometry, "navBench.root");
-  OPTION_STRING(testVolume, "world");
+  OPTION_STRING(geometry, "navBench");
+  OPTION_STRING(startVolName, "world");
   OPTION_DOUBLE(bias, 0.8f);
 #ifdef VECGEOM_ROOT
   OPTION_BOOL(vis, false);
@@ -79,7 +90,7 @@ int main(int argc, char* argv[])
   if(help) return 0;
 
   const VPlacedVolume *world = NULL;
-  if(geometry.compare("navBench.root")==0) {
+  if(geometry.compare("navBench")==0) {
     world = SetupGeometry();
 
 #ifdef VECGEOM_ROOT
@@ -92,8 +103,14 @@ int main(int argc, char* argv[])
   // Now try to read back in.  This is needed to make comparisons to VecGeom easily,
   // since it builds VecGeom geometry based on the ROOT geometry and its TGeoNodes.
 #ifdef VECGEOM_ROOT
+  auto rootgeom = geometry+".root";
   RootGeoManager::Instance().set_verbose(0);
-  RootGeoManager::Instance().LoadRootGeometry(geometry.c_str());
+  RootGeoManager::Instance().LoadRootGeometry(rootgeom.c_str());
+#endif
+
+#ifdef VECGEOM_GEANT4
+  auto g4geom = geometry+".gdml";
+  G4GeoManager::Instance().LoadG4Geometry( g4geom.c_str() );
 #endif
 
   // Visualization
@@ -101,7 +118,7 @@ int main(int argc, char* argv[])
   if(vis) {  // note that visualization block returns, excluding the rest of benchmark
     Visualizer visualizer;
     const VPlacedVolume* world = GeoManager::Instance().GetWorld();
-    world = GeoManager::Instance().FindPlacedVolume(testVolume.c_str());
+    world = GeoManager::Instance().FindPlacedVolume(startVolName.c_str());
     visualizer.AddVolume( *world );
 
     Vector<Daughter> const* daughters = world->GetLogicalVolume()->daughtersp();
@@ -130,11 +147,11 @@ int main(int argc, char* argv[])
   std::cout<<"\n*** Validating VecGeom navigation..."<< std::endl;
 
   const VPlacedVolume* startVolume = GeoManager::Instance().GetWorld();
-  if( testVolume.compare("world")!=0 ) {
-    startVolume = GeoManager::Instance().FindPlacedVolume(testVolume.c_str());
+  if( startVolName.compare("world")!=0 ) {
+    startVolume = GeoManager::Instance().FindPlacedVolume(startVolName.c_str());
   }
 
-  std::cout<<"NavigationBenchmark: testVolume=<"<< testVolume
+  std::cout<<"NavigationBenchmark: startVolName=<"<< startVolName
            <<">, startVolume="<< (startVolume ? startVolume->GetLabel() : NULL)
            <<" - "<< *startVolume <<"\n";
 
@@ -146,14 +163,13 @@ int main(int argc, char* argv[])
   vecgeom::volumeUtilities::FillGlobalPointsAndDirectionsForLogicalVolume(
     startVolume->GetLogicalVolume(), locpts, points, dirs, bias, np);
 
-  bool ok = validateVecGeomNavigation(np, points, dirs);
 
   // Must be validated before being benchmarked
+  bool ok = validateVecGeomNavigation(np, points, dirs);
   if(!ok) {
     std::cout<<"VecGeom validation failed."<< std::endl;
     return 1;
   }
-
   std::cout<<"VecGeom validation passed."<< std::endl;
 
   // on mic.fnal.gov CPUs, loop execution takes ~70sec for npoints=10M

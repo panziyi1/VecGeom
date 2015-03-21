@@ -12,7 +12,7 @@ option(VC_ACCELERATION "Internal vectorization using Vc." ON)
 
 option(CUDA "Enable compilation for CUDA." OFF)
 
-option(CUDA_VOLUME_SPECIALIZATION "Use specialized volumes for CUDA." OFF)
+option(CUDA_VOLUME_SPECIALIZATION "Use specialized volumes for CUDA." ON)
 
 option(ROOT "Include ROOT." OFF)
 
@@ -22,7 +22,7 @@ option(GEANT4 "Include Geant4." OFF)
 
 option(BENCHMARK "Enable performance comparisons." OFF)
 
-option(NO_SPECIALIZATION "Disable specialization of volumes." ON)
+option(NO_SPECIALIZATION "Disable specialization of volumes." OFF)
 
 option(COVERAGE_TESTING "Enable coverage testing flags." OFF)
 
@@ -551,7 +551,8 @@ set(TEST_EXECUTABLES_ROOT
   ${CMAKE_SOURCE_DIR}/test/root/trd_validation.cpp
 
   # higher level benchmarks
-  # ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/LocatePointsBenchmark.cpp
+  ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/LocatePointsBenchmark.cpp
+  ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/NavigationBenchmark.cpp
 )
 if(BENCHMARK)
   set(TEST_EXECUTABLES_ROOT
@@ -604,7 +605,6 @@ set(TEST_EXECUTABLES_BENCHMARK
   ${CMAKE_SOURCE_DIR}/test/benchmark/SphereBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/TrdBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/ConeBenchmark.cpp
-  ${CMAKE_SOURCE_DIR}/test/benchmark/NavigationBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/PolyconeBenchmark.cpp
 )
 set(TEST_EXECUTABLES_CUDA
