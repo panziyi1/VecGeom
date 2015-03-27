@@ -37,6 +37,7 @@ int main(int argc, char* argv[]) {
   //Transformation3D placement(5, 5, 5);
   Transformation3D placement(0, 0, 0);
   VPlacedVolume const * vol = world.PlaceDaughter("pcon", &pcon, &placement);
+  if(vol) ; // avoid compiler warning
 
   pcon.Place(&placement);
 

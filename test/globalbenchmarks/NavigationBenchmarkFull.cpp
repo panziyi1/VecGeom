@@ -29,6 +29,8 @@
 #include "volumes/Orb.h"
 #include "volumes/Trapezoid.h"
 
+#include <fstream>
+
 using namespace VECGEOM_NAMESPACE;
 
 
@@ -78,8 +80,7 @@ int main(int argc, char* argv[])
   OPTION_INT(npoints, 10000);
   OPTION_INT(nreps, 3);
   OPTION_STRING(geometry, "navBench");
-  OPTION_STRING(startVolName, "world");
-  OPTION_DOUBLE(bias, 0.8f);
+  OPTION_DOUBLE(bias, 0.0f);
 #ifdef VECGEOM_ROOT
   OPTION_BOOL(vis, false);
 #endif
@@ -114,12 +115,14 @@ int main(int argc, char* argv[])
   G4GeoManager::Instance().LoadG4Geometry( g4geom.c_str() );
 #endif
 
+  std::string volName("world");
+
   // Visualization
 #ifdef VECGEOM_ROOT
   if(vis) {  // note that visualization block returns, excluding the rest of benchmark
     Visualizer visualizer;
     const VPlacedVolume* world = GeoManager::Instance().GetWorld();
-    world = GeoManager::Instance().FindPlacedVolume(startVolName.c_str());
+    world = GeoManager::Instance().FindPlacedVolume(volName.c_str());
     visualizer.AddVolume( *world );
 
     Vector<Daughter> const* daughters = world->GetLogicalVolume()->daughtersp();
@@ -148,38 +151,55 @@ int main(int argc, char* argv[])
   std::cout<<"\n*** Validating VecGeom navigation..."<< std::endl;
 
   const VPlacedVolume* startVolume = GeoManager::Instance().GetWorld();
-  if( startVolName.compare("world")!=0 ) {
-    startVolume = GeoManager::Instance().FindPlacedVolume(startVolName.c_str());
+
+  //.. open input data file with volume names and loop over each volume
+  std::ifstream volumesFile("cms2015-volumeNames.lis");
+  if( !volumesFile.is_open() ) {
+    std::cout<<"\n*** Problems opening file with volume names!\n";
+    exit(-1);
   }
 
+  std::string line;
+  while (getline(volumesFile,volName)) {
 
-  std::cout<<"NavigationBenchmark: startVolName=<"<< startVolName <<">\n";
-  std::cout<<"NavigationBenchmark: startVolName=<"<< startVolName
-           <<">, startVolume="<< (startVolume ? startVolume->GetLabel() : "NULL")
-           <<" - "<< *startVolume <<"\n";
+    std::cout<<"\n===================== volume: "<< volName <<" =================\n";
+    // std::ofstream fout(volName+".out");
+    // if(!fout.is_open()) {
+    //   std::cerr<<"Problems opening file: "<< volName+".out\n";
+    //   continue;
+    // }
 
-  int np = Min( npoints, 1000 );  // no more than 1000 points used for validation
-  SOA3D<Precision> points(np);
-  SOA3D<Precision> dirs(np);
-  SOA3D<Precision> locpts(np);
+    if( volName.compare("world")!=0 ) {
+      startVolume = GeoManager::Instance().FindPlacedVolume(volName.c_str());
+    }
 
-  vecgeom::volumeUtilities::FillGlobalPointsAndDirectionsForLogicalVolume(
-    startVolume->GetLogicalVolume(), locpts, points, dirs, bias, np);
+    std::cout<<"\nNavigationBenchmark: volName=<"<< volName
+             <<">, startVolume="<< (startVolume ? startVolume->GetLabel() : "NULL")
+             <<" - "<< *startVolume <<"\n";
 
+    int np = Min( npoints, 1000 );  // no more than 1000 points used for validation
+    SOA3D<Precision> points(np);
+    SOA3D<Precision> dirs(np);
+    SOA3D<Precision> locpts(np);
 
-  // Must be validated before being benchmarked
-  bool ok = validateVecGeomNavigation(np, points, dirs);
-  if(!ok) {
-    std::cout<<"VecGeom validation failed."<< std::endl;
-    return 1;
-  }
-  std::cout<<"VecGeom validation passed."<< std::endl;
+    vecgeom::volumeUtilities::FillGlobalPointsAndDirectionsForLogicalVolume(
+      startVolume->GetLogicalVolume(), locpts, points, dirs, bias, np);
 
-  // on mic.fnal.gov CPUs, loop execution takes ~70sec for npoints=10M
-  while(npoints<=10000) {
-    std::cout<<"\n*** Running navigation benchmarks with npoints="<<npoints<<" and nreps="<< nreps <<".\n";
-    runNavigationBenchmarks(startVolume, npoints, nreps, bias);
-    npoints*=10;
+    // Must be validated before being benchmarked
+    bool ok = validateVecGeomNavigation(np, points, dirs);
+    if(!ok) {
+      std::cout<<"VecGeom validation failed."<< std::endl;
+      return 1;
+    }
+    std::cout<<"VecGeom validation passed."<< std::endl;
+
+    // on mic.fnal.gov CPUs, loop execution takes ~70sec for npoints=10M
+    // while(npoints<=1000) {
+    //   std::cout<<"\n*** Running navigation benchmarks with npoints="<<npoints<<" and nreps="<< nreps <<".\n";
+    //   runNavigationBenchmarks(startVolume, npoints, nreps, bias);
+    //   npoints*=10;
+    // }
+
   }
 
 

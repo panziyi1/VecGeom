@@ -466,8 +466,6 @@ bool validateVecGeomNavigation( int np, SOA3D<Precision> const& points, SOA3D<Pr
     result &= ok;
     if( !ok ) {
 
-      TGeoNavigator* rootnav = ::gGeoManager->GetCurrentNavigator();
-
       std::cout << "\n=======> Summary: ITERATION " << i
                 <<" - pos = " << pos <<" dir = " << dir
                 <<" / Steps (";
@@ -480,6 +478,7 @@ bool validateVecGeomNavigation( int np, SOA3D<Precision> const& points, SOA3D<Pr
       std::cout<<"VecGeom): ";
 
 #ifdef VECGEOM_ROOT
+      TGeoNavigator* rootnav = ::gGeoManager->GetCurrentNavigator();
       std::cout<< rootnav->GetStep() << " / ";
 #endif
 #ifdef VECGEOM_GEANT4

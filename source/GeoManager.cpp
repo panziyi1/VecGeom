@@ -48,6 +48,7 @@ VPlacedVolume* GeoManager::FindPlacedVolume(const int id) {
 VPlacedVolume* GeoManager::FindPlacedVolume(char const *const label) {
   VPlacedVolume *output = NULL;
   bool multiple = false;
+  printf("FindPlacedVolume: %s - fPlacedVolumesMap.size() = %li\n", label, fPlacedVolumesMap.size());
   for (auto v = fPlacedVolumesMap.begin(), v_end = fPlacedVolumesMap.end();
        v != v_end; ++v) {
     if (v->second->GetLabel() == label) {
