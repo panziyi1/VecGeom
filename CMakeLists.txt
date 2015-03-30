@@ -110,8 +110,6 @@ if (CTEST)
   set (DATA_DOWNLOAD ON)
 endif()
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake/modules)
-
 ################################################################################
 
 # Determine backend
