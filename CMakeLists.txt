@@ -51,8 +51,6 @@ option(DISTANCE_DEBUG "Enable comparison of calculated distances againt ROOT/Gea
 
 option(DATA_DOWNLOAD "Enable downloading of data for tests" OFF)
 
-option(DATA_DOWNLOAD "Enable downloading of data for tests" OFF)
-
 set(VECGEOM_ARCH native sse2 sse3 ssse3 sse4.1 sse4.2 avx avx2 mic avx512)
 
 enum_option(VECGEOM_VECTOR
@@ -454,6 +452,7 @@ set(SRC_CPP_RELATIVE
 
   source/UnplacedPolycone.cpp
   source/PlacedPolycone.cpp
+  source/Wedge.cpp
 )
 foreach(SRC ${SRC_CPP_RELATIVE})
   set(SRC_CPP ${SRC_CPP} ${CMAKE_SOURCE_DIR}/${SRC})
@@ -495,15 +494,18 @@ if (BENCHMARK)
   set(SRC_CPP ${SRC_CPP}
     source/benchmarking/BenchmarkResult.cpp
     source/benchmarking/Benchmarker.cpp
+    #source/benchmarking/NavigationBenchmarker.cpp
     source/benchmarking/VolumePointers.cpp
   )
   set(SRC_CUDA ${SRC_CUDA}
     source/benchmarking/Benchmarker.cu
+    source/benchmarking/NavigationBenchmarker.cu
   )
 endif()
 set(SRC_CPP ${SRC_CPP} ${SRC_EXTERNAL}
   source/GeoManager.cpp
   source/ShapeDebugger.cpp
+  source/CppExporter.cpp
 )
 
 # some CUDA kernel code in "userspace"
@@ -591,7 +593,8 @@ set(TEST_EXECUTABLES_ROOT
   ${CMAKE_SOURCE_DIR}/test/root/trd_validation.cpp
 
   # higher level benchmarks
-  # ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/LocatePointsBenchmark.cpp
+  #${CMAKE_SOURCE_DIR}/test/globalbenchmarks/LocatePointsBenchmark.cpp
+  #${CMAKE_SOURCE_DIR}/test/globalbenchmarks/NavigationBenchmark.cpp
 )
 if(BENCHMARK)
   set(TEST_EXECUTABLES_ROOT
@@ -644,7 +647,6 @@ set(TEST_EXECUTABLES_BENCHMARK
   ${CMAKE_SOURCE_DIR}/test/benchmark/SphereBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/TrdBenchmark.cpp
   ${CMAKE_SOURCE_DIR}/test/benchmark/ConeBenchmark.cpp
-
   ${CMAKE_SOURCE_DIR}/test/benchmark/PolyconeBenchmark.cpp
 )
 set(TEST_EXECUTABLES_CUDA

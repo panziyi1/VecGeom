@@ -42,6 +42,10 @@ public:
                 NavigationState & /* state (volume path) to be returned */,
                 bool /*top*/) const;
 
+  VECGEOM_CUDA_HEADER_BOTH
+   VECGEOM_INLINE
+   SimpleNavigator(){}
+
    /**
     * function to locate a global point in the geometry hierarchy
     * input:  A local point in the referenceframe of the current deepest volume in the path,
@@ -266,16 +270,16 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
    VPlacedVolume const * currentvolume = currentstate.Top();
    int nexthitvolume = -1; // means mother
 
-   step = currentvolume->DistanceToOut( localpoint, localdir, pstep );
+   if(currentvolume) step = currentvolume->DistanceToOut( localpoint, localdir, pstep );
 
    // NOTE: IF STEP IS NEGATIVE HERE, SOMETHING IS TERRIBLY WRONG. WE CAN TRY TO HANDLE THE SITUATION
    // IN TRYING TO PROPOSE THE RIGHT LOCATION IN NEWSTATE AND RETURN
    // I WOULD MUCH FAVOUR IF THIS WAS DONE OUTSIDE OF THIS FUNCTION BY THE USER
    if( step < 0. )
    {
-	   newstate = currentstate;
-	   RelocatePointFromPath( localpoint, newstate );
-	   return;
+       newstate = currentstate;
+       RelocatePointFromPath( localpoint, newstate );
+       return;
    }
 
    // iterate over all the daughter
@@ -293,7 +297,7 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
 
    // now we have the candidates
    // try
-   newstate=currentstate;
+   newstate = currentstate;
 
    // is geometry further away than physics step?
    if(step > pstep)
@@ -304,6 +308,7 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
        return;
    }
    newstate.SetBoundaryState( true );
+
 
    // TODO: this is tedious, please provide operators in Vector3D!!
    // WE SHOULD HAVE A FUNCTION "TRANSPORT" FOR AN OPERATION LIKE THIS
@@ -319,12 +324,14 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
 
       // this should be inlined here
       LocatePoint( nextvol, trans->Transform(newpointafterboundary), newstate, false );
+      // newstate.Print();
    }
    else
    {
       // continue directly further up
       //LocateLocalPointFromPath_Relative_Iterative( newpointafterboundary, newpointafterboundaryinnewframe, outpath, globalm );
       RelocatePointFromPath( newpointafterboundary, newstate );
+      // newstate.Print();
    }
 }
 
@@ -460,7 +467,7 @@ void SimpleNavigator::FindNextBoundaryAndStep(
    // now we have the candidates
    for( int i=0;i<np;++i )
    {
-     *newstates[i]=*currentstates[i];
+     *newstates[i] = *currentstates[i];
 
      // is geometry further away than physics step?
      if( distances[i]>pSteps[i] ) {
@@ -492,6 +499,7 @@ void SimpleNavigator::FindNextBoundaryAndStep(
         // continue directly further up
         RelocatePointFromPath( newpointafterboundary, *newstates[i] );
      }
+
    } // end loop for relocation
 }
 
