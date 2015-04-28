@@ -415,12 +415,12 @@ VECGEOM_INLINE
 VECGEOM_CUDA_HEADER_BOTH
 void NavigationState::Dump() const
 {
-   unsigned int* ptr = (unsigned int*)this;
-   printf("NavState::Dump(): data: %p(%lu) : %p(%lu) : %p(%lu) : %p(%lu)\n", &fCurrentLevel, sizeof(fCurrentLevel),
-          &fOnBoundary, sizeof(fOnBoundary), &global_matrix_, sizeof(global_matrix_), &fPath, sizeof(fPath));
+   const unsigned int* ptr = (const unsigned int*)this;
+   printf("NavState::Dump(): data: %p(%lu) : %p(%lu) : %p(%lu) : %p(%lu)\n",(const void*)&fCurrentLevel, sizeof(fCurrentLevel),
+          (const void*)&fOnBoundary, sizeof(fOnBoundary), (const void*)&global_matrix_, sizeof(global_matrix_),(const void*)&fPath, sizeof(fPath));
    for(unsigned int i=0; i<20; ++i) {
-      printf("%p: ", ptr);
-      for(unsigned int i=0; i<8; ++i) {
+      printf("%p: ", (const void*)ptr);
+      for(unsigned int j=0; j<8; ++j) {
          printf(" %08x ", *ptr);
          ptr++;
       }
@@ -444,14 +444,14 @@ void NavigationState::Print() const
           (Top()?
            Top()->GetLabel().c_str():
            "NULL"),
-          this );
+          (const void*)this );
 #else
    printf("NavState: Level(cur/max)=%i/%i,  onBoundary=%s, topVol=<%p>, this=%p\n",
       fCurrentLevel,
       GetMaxLevel(),
       (fOnBoundary?"true":"false"),
       Top(),
-      this );
+      (const void*)this );
 #endif
 
    // std::cerr << "NavState: Level(cur/max)=" << fCurrentLevel <<'/'<< GetMaxLevel()

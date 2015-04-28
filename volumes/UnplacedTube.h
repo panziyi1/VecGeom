@@ -49,7 +49,7 @@ private:
     fTolIrmin = (fRmin + kTolerance);
 	fTolOrmin2 = fTolOrmin * fTolOrmin;
 	fTolIrmin2 = fTolIrmin * fTolIrmin;
-			     
+
 	fTolOrmax = (fRmax + kTolerance);
 	fTolIrmax = (fRmax - kTolerance);
 	fTolOrmax2 = fTolOrmax * fTolOrmax;
@@ -60,7 +60,7 @@ private:
   }
 
 public:
-  
+
   VECGEOM_CUDA_HEADER_BOTH
   UnplacedTube(const Precision rmin, const Precision rmax, const Precision z,
                const Precision sphi, const Precision dphi) : fRmin(rmin), fRmax(rmax),
@@ -79,11 +79,11 @@ fTolIz(0),
 fTolOz(0),
 fPhiWedge(dphi,sphi)
 {
-    calculateCached();  
+    calculateCached();
   }
 
   VECGEOM_CUDA_HEADER_BOTH
-     UnplacedTube(UnplacedTube const &other) : fRmin(other.fRmin), fRmax(other.fRmax), fZ(other.fZ), fSphi(other.fSphi), fDphi(other.fDphi),  
+     UnplacedTube(UnplacedTube const &other) : fRmin(other.fRmin), fRmax(other.fRmax), fZ(other.fZ), fSphi(other.fSphi), fDphi(other.fDphi),
 fRmin2(other.fRmin2),
 fRmax2(other.fRmax2),
 fAlongPhi1x(other.fAlongPhi1x),
@@ -177,51 +177,51 @@ fPhiWedge(other.fDphi,other.fSphi)
     return fZ * (fRmax2 - fRmin2) * fDphi;
   }
 
-#if !defined(VECGEOM_NVCC)
-	Vector3D<Precision> GetPointOnSurface() const;
-#endif
+//#if !defined(VECGEOM_NVCC)
+#ifndef VECGEOM_NVCC
+  void Extent(Vector3D<Precision>& aMin, Vector3D<Precision>& aMax) const;
 
-  VECGEOM_CUDA_HEADER_BOTH
+  Vector3D<Precision> GetPointOnSurface() const;
+
+  //VECGEOM_CUDA_HEADER_BOTH
   Precision Capacity() const {
       return volume();
   }
 
-  VECGEOM_CUDA_HEADER_BOTH
+  //VECGEOM_CUDA_HEADER_BOTH
   Precision SurfaceArea () const {
 	  //return fZ * (fRmax + fRmin) * fDphi + (fRmax2 - fRmin2) * fDphi;
 	  return fDphi * (fRmax + fRmin) * (fRmax - fRmin + fZ);
   }
 
-  VECGEOM_CUDA_HEADER_BOTH
+  //VECGEOM_CUDA_HEADER_BOTH
   Precision GetTopArea() const {            // Abhijit:: this is top and bottom circular area of tube
 	  return 0.5 * (fRmax2 - fRmin2) * fDphi;
   }
-  
-  VECGEOM_CUDA_HEADER_BOTH
+
+  //VECGEOM_CUDA_HEADER_BOTH
   Precision GetLateralPhiArea() const {     // Abhijit:: this is vertical Phi_start and phi_end opening
 	  return fZ * (fRmax - fRmin);
   }
 
-  VECGEOM_CUDA_HEADER_BOTH
+  //VECGEOM_CUDA_HEADER_BOTH
   Precision GetLateralRInArea() const {    // Abhijit:: this is Inner surface of tube along Z
 	  return fZ * fRmin * fDphi;
   }
 
-  VECGEOM_CUDA_HEADER_BOTH
+  //VECGEOM_CUDA_HEADER_BOTH
   Precision GetLateralROutArea() const {  // Abhijit:: this is Outer surface of tube along Z
 	  return fZ * fRmax * fDphi;
   }
 
-
-
   //  This computes where the random point would be placed
   // 1::rTop, 2::rBot, 3::phiLeft, 4::phiRight, 5::zIn, 6::zOut
-  VECGEOM_CUDA_HEADER_BOTH
-    int ChooseSurface(Precision &rArea, Precision &phiArea, Precision &zInArea, Precision &zOutArea) const;
+  //VECGEOM_CUDA_HEADER_BOTH
+    int ChooseSurface() const;
 
+	bool Normal(Vector3D<Precision>const& point, Vector3D<Precision>& normal) const;
 
-  VECGEOM_CUDA_HEADER_BOTH
-  void Extent(Vector3D<Precision>& aMin, Vector3D<Precision>& aMax) const;
+#endif
 
   virtual int memory_size() const { return sizeof(*this); }
 
