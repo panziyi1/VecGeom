@@ -137,7 +137,6 @@ endif()
 ################################################################################
 
 # Set Default compiler flags for each build type
-
 if (GNU)
   set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -Wall -fPIC")
   if (CMAKE_BUILD_TYPE MATCHES Debug)
@@ -162,6 +161,13 @@ else(Clang)
   else()
     set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -ffast-math -ftree-vectorize")
   endif()
+endif()
+
+if (CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
+  set(VECGEOM_NVCC_COMPILATION_FLAGS -g -G ${VECGEOM_NVCC_COMPILATION_FLAGS})
+endif()
+if (CMAKE_BUILD_TYPE MATCHES MinSizeRel)
+  set(VECGEOM_NVCC_COMPILATION_FLAGS -use_fast_math ${VECGEOM_NVCC_COMPILATION_FLAGS})
 endif()
 
 string(TOLOWER ${VECGEOM_VECTOR} _arch_lo)
@@ -230,9 +236,9 @@ if (CUDA)
       -Xcudafe "--diag_suppress=initialization_not_reachable")
   set(VECGEOM_NVCC_CONFIGS
         DEBUG -g -G
-        RELEASE  -O2 --use_fast_math
-        RELWITHDEBINFO -g -G  -O2 --use_fast_math
-        MINSIZEREL --use_fast_math )
+        RELEASE  -O3 -use_fast_math
+        RELWITHDEBINFO -g -G -O3 -use_fast_math
+        MINSIZEREL -use_fast_math )
 endif()
 
 # Enable pretty diagnostics coloring if gcc 4.9+ is being used
@@ -329,7 +335,6 @@ if (CUDA)
       source/CudaManager.cu)
 
   set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${VECGEOM_NVCC_COMPILATION_FLAGS})
-  message(STATUS "Compiling with NVCC flags: ${CUDA_NVCC_FLAGS}")
 endif()
 
 if (ROOT)
@@ -393,7 +398,7 @@ endif()
 # but rather have it as first set of argument.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_build_type}} ${VECGEOM_CXX_FLAGS} ${VECGEOM_COMPILATION_FLAGS}")
 #set(VECGEOM_CXX_FLAGS ${CMAKE_CXX_FLAGS_${_build_type}})
-unset(CMAKE_CXX_FLAGS_${_build_type} CACHE)
+#unset(CMAKE_CXX_FLAGS_${_build_type} CACHE)
 
 message(STATUS "Compiling with C++ flags: ${CMAKE_CXX_FLAGS}")
 if (CUDA)
