@@ -47,7 +47,7 @@ namespace vecgeom {
 
   void testVectorSafety( VPlacedVolume const* top );
 
-  void runNavigationBenchmarks( VPlacedVolume const* top, int np, int nreps, Precision bias = 0.8);
+  void runNavigationBenchmarks( LogicalVolume const* top, int np, int nreps, Precision bias = 0.8);
 
   bool validateNavigationStepAgainstRoot(
     Vector3D<Precision> const& pos,

@@ -77,8 +77,8 @@ VPlacedVolume* SetupGeometry() {
 
 int main(int argc, char* argv[])
 {
-  OPTION_INT(npoints, 10000);
-  OPTION_INT(nreps, 3);
+  OPTION_INT(ntracks, 10000);
+  // OPTION_INT(nreps, 3);
   OPTION_STRING(geometry, "navBench");
   OPTION_DOUBLE(bias, 0.0f);
 #ifdef VECGEOM_ROOT
@@ -115,14 +115,14 @@ int main(int argc, char* argv[])
   G4GeoManager::Instance().LoadG4Geometry( g4geom.c_str() );
 #endif
 
-  std::string volName("world");
+  std::string logvol("world");
 
   // Visualization
 #ifdef VECGEOM_ROOT
   if(vis) {  // note that visualization block returns, excluding the rest of benchmark
     Visualizer visualizer;
     const VPlacedVolume* world = GeoManager::Instance().GetWorld();
-    world = GeoManager::Instance().FindPlacedVolume(volName.c_str());
+    world = GeoManager::Instance().FindPlacedVolume(logvol.c_str());
     visualizer.AddVolume( *world );
 
     Vector<Daughter> const* daughters = world->GetLogicalVolume()->daughtersp();
@@ -146,44 +146,40 @@ int main(int argc, char* argv[])
   }
 #endif
 
-  //testVectorSafety(world);
+  std::cout<<"\n*** Validating VecGeom navigation...\n";
 
-  std::cout<<"\n*** Validating VecGeom navigation..."<< std::endl;
-
-  const VPlacedVolume* startVolume = GeoManager::Instance().GetWorld();
-
+  const LogicalVolume* startVolume = GeoManager::Instance().GetWorld()->GetLogicalVolume();
   //.. open input data file with volume names and loop over each volume
-  std::ifstream volumesFile("cms2015-volumeNames.lis");
+  std::ifstream volumesFile("cms2015-logVolNames.lis");
   if( !volumesFile.is_open() ) {
     std::cout<<"\n*** Problems opening file with volume names!\n";
     exit(-1);
   }
 
   std::string line;
-  while (getline(volumesFile,volName)) {
+  while (getline(volumesFile,logvol)) {
 
-    std::cout<<"\n===================== volume: "<< volName <<" =================\n";
-    // std::ofstream fout(volName+".out");
+    std::cout<<"\n===================== volume: "<< logvol <<" =================\n";
+    // std::ofstream fout(logvol+".out");
     // if(!fout.is_open()) {
-    //   std::cerr<<"Problems opening file: "<< volName+".out\n";
+    //   std::cerr<<"Problems opening file: "<< logvol+".out\n";
     //   continue;
     // }
 
-    if( volName.compare("world")!=0 ) {
-      startVolume = GeoManager::Instance().FindPlacedVolume(volName.c_str());
+    if( logvol.compare("world")!=0 ) {
+      startVolume = GeoManager::Instance().FindLogicalVolume(logvol.c_str());
     }
 
-    std::cout<<"\nNavigationBenchmark: volName=<"<< volName
+    std::cout<<"\nNavigationBenchmark: logvol=<"<< logvol
              <<">, startVolume="<< (startVolume ? startVolume->GetLabel() : "NULL")
              <<" - "<< *startVolume <<"\n";
 
-    int np = Min( npoints, 1000 );  // no more than 1000 points used for validation
+    int np = Min( ntracks, 1000 );  // no more than 1000 points used for validation
     SOA3D<Precision> points(np);
     SOA3D<Precision> dirs(np);
     SOA3D<Precision> locpts(np);
 
-    vecgeom::volumeUtilities::FillGlobalPointsAndDirectionsForLogicalVolume(
-      startVolume->GetLogicalVolume(), locpts, points, dirs, bias, np);
+    vecgeom::volumeUtilities::FillGlobalPointsAndDirectionsForLogicalVolume(startVolume, locpts, points, dirs, bias, np);
 
     // Must be validated before being benchmarked
     bool ok = validateVecGeomNavigation(np, points, dirs);
@@ -193,11 +189,11 @@ int main(int argc, char* argv[])
     }
     std::cout<<"VecGeom validation passed."<< std::endl;
 
-    // on mic.fnal.gov CPUs, loop execution takes ~70sec for npoints=10M
-    // while(npoints<=1000) {
-    //   std::cout<<"\n*** Running navigation benchmarks with npoints="<<npoints<<" and nreps="<< nreps <<".\n";
-    //   runNavigationBenchmarks(startVolume, npoints, nreps, bias);
-    //   npoints*=10;
+    // on mic.fnal.gov CPUs, loop execution takes ~70sec for ntracks=10M
+    // while(ntracks<=1000) {
+    //    std::cout<<"\n*** Running navigation benchmarks with ntracks="<<ntracks<<" and nreps="<< nreps <<".\n";
+    //    runNavigationBenchmarks(startVolume, ntracks, nreps, bias);
+    //    ntracks*=10;
     // }
 
   }
