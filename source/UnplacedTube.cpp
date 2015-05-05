@@ -3,8 +3,14 @@
 
 #include "volumes/UnplacedTube.h"
 #include "volumes/SpecializedTube.h"
-#include "volumes/utilities/GenerationUtilities.h"
+#include "backend/Backend.h"
+#ifndef VECGEOM_NVCC
+  #include "base/RNG.h"
+#include <cassert>
+#include <cmath>
+#endif
 
+#include "volumes/utilities/GenerationUtilities.h"
 #include "management/VolumeFactory.h"
 
 namespace vecgeom {
@@ -81,6 +87,118 @@ VPlacedVolume* UnplacedTube::SpecializedVolume(
                               placement);
 }
 
+
+#ifndef VECGEOM_NVCC
+
+int UnplacedTube::ChooseSurface() const
+{
+    int choice = 0; // 0 = rTop, 1 = rBot, 2 = phiLeft, 3 = phiRight, 4 = zIn, 5 = zOut
+    Precision S[6], Stotal = 0.0;
+
+    S[0] = S[1] = GetTopArea();        // 50% divide into top and bottom
+    S[2] = S[3] = GetLateralPhiArea(); // 50% divide into left and right
+    S[4] = GetLateralRInArea();        // inner tube surface area
+    S[5] = GetLateralROutArea();       // outer tube surface area
+
+    for (int i = 0; i < 6; ++i)
+        Stotal += S[i];
+
+    /* random value to choose surface to place the point */
+    Precision rand = RNG::Instance().uniform() * Stotal;
+
+    while (rand > S[choice])
+        rand -= S[choice], choice++;
+
+    assert(choice < 6);
+
+    return choice;
+}
+
+Vector3D<Precision> UnplacedTube::GetPointOnSurface() const
+{
+    int surface = ChooseSurface();
+    Precision rVal   = RNG::Instance().uniform(rmin(), rmax());
+    Precision phiVal = RNG::Instance().uniform(sphi(), sphi() + dphi());
+    Precision zVal   = RNG::Instance().uniform() * z();
+
+    switch (surface) {
+        case 0: zVal =  z(); break;
+        case 1: zVal = -z(); break;
+        case 2: phiVal = sphi(); break;
+        case 3: phiVal = sphi() + dphi(); break;
+        case 4: rVal = rmin(); break;
+        case 5: rVal = rmax(); break;
+    }
+
+    Precision xVal = rVal * cos(phiVal);
+    Precision yVal = rVal * sin(phiVal);
+
+    return Vector3D<Precision>(xVal, yVal, zVal);
+}
+
+bool UnplacedTube::Normal(Vector3D<Precision> const& point, Vector3D<Precision>& norm) const {
+	int nosurface = 0;  // idea from trapezoid;; change nomenclature as confusing
+
+	Precision x2y2 = Sqrt(point[0]*point[0] + point[1]*point[1]);
+	Precision fiVal = Sqrt(atan2(point[1],point[0]));
+	Precision thisZ = point[2];
+	Precision rmX = rmax();
+	Precision rmN = rmin();
+	Precision fi1 = sphi();
+	Precision fi2 = sphi() + dphi();
+	Precision zVal = z();
+	bool onSurf(false);
+	bool inZ = ((thisZ < zVal) && (thisZ > -zVal));
+	bool annul = ((x2y2 >= rmN) && (x2y2 <= rmX));
+
+	// is the point on the surface?
+	onSurf = ((Abs(x2y2 - rmN) <= kTolerance) && inZ);              // inner
+	onSurf |= ((Abs(x2y2 - rmX) <= kTolerance) && inZ);    // outer
+	onSurf |= (annul && (Abs(thisZ - zVal) <= kTolerance)); // top
+	onSurf |= (annul && (Abs(thisZ + zVal) <= kTolerance)); // bottom
+	onSurf |= (annul && (Abs(fiVal - fi1) <= kTolerance));  // left i.e. sphi()
+	onSurf |= (annul && (Abs(fiVal - fi2) <= kTolerance));  // right i.e. sphi() + dphi()
+
+	if (onSurf && annul && (abs(thisZ - zVal) <= kTolerance))  { // top lid, normal along +Z
+		norm[0] = 0.0;
+		norm[1] = 0.0;
+		norm[2] = x2y2;
+		nosurface++;
+	}
+	if (onSurf && annul && (abs(thisZ + zVal) <= kTolerance))  {  // bottom base, normal along -Z
+		norm[0] = 0.0;
+		norm[1] = 0.0;
+		norm[2] = -x2y2;
+		nosurface++;
+	}
+	if (onSurf && inZ &&(abs(x2y2 - rmN) <= kTolerance)) { // inner tube wall, normal  towards center
+		norm[0] = -point[0];
+		norm[1] = -point[1];   // -ve due to inwards
+		norm[2] = 0.0;
+		nosurface++;
+	}
+	if (onSurf && inZ && (abs(x2y2 - rmX) <= kTolerance)) { // outer tube wall, normal outwards
+		norm[0] = point[0];
+		norm[1] = point[1];
+		norm[2] = 0.0;
+		nosurface++;
+	}
+	if (onSurf && annul && inZ && (abs(fiVal - fi1) <= kTolerance)) { // normal at fi openings
+		norm[0] = sin(fi1);
+		norm[1] = -cos(fi1);
+		norm[2] = 0.0;
+		nosurface++;
+	}
+	if (onSurf && annul && inZ && (abs(fiVal - fi2) <= kTolerance)) { // normal at fi openings
+		norm[0] = -sin(fi2);
+		norm[1] = cos(fi2);
+		norm[2] = 0.0;
+		nosurface++;
+	}
+	return nosurface != 0; // this is for testing only
+}
+
+/*
   VECGEOM_CUDA_HEADER_BOTH
   Precision UnplacedTube::SurfaceArea () const {
     Precision area = fDphi * (fRmin + fRmax) * (2 * fZ + fRmax - fRmin);
@@ -89,6 +207,8 @@ VPlacedVolume* UnplacedTube::SpecializedVolume(
     }
     return area;
   }
+
+  */
 
   VECGEOM_CUDA_HEADER_BOTH
   void UnplacedTube::Extent(Vector3D<Precision>& aMin, Vector3D<Precision>& aMax) const {
@@ -144,6 +264,7 @@ VPlacedVolume* UnplacedTube::SpecializedVolume(
 
     return;
   }
+#endif
 
 
 #ifdef VECGEOM_CUDA_INTERFACE
@@ -169,7 +290,7 @@ namespace cxx {
 
 template size_t DevicePtr<cuda::UnplacedTube>::SizeOf();
 template void DevicePtr<cuda::UnplacedTube>::Construct(
-    const Precision rmin, const Precision rmax, const Precision z, 
+    const Precision rmin, const Precision rmax, const Precision z,
     const Precision sphi, const Precision dphi) const;
 
 } // End cxx namespace

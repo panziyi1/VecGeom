@@ -89,10 +89,8 @@ int main(int argc, char* argv[])
   OPTION_BOOL(help, false);
   if(help) return 0;
 
-  const VPlacedVolume *world = NULL;
-  if(world) ; // fix compilation warning
   if(geometry.compare("navBench")==0) {
-    world = SetupGeometry();
+    const VPlacedVolume *world = SetupGeometry();
 
 #ifdef VECGEOM_ROOT
     // Exporting to ROOT file
@@ -143,6 +141,7 @@ int main(int argc, char* argv[])
   }
 #endif
 
+
   std::cout<<"\n*** Validating VecGeom navigation...\n";
 
   const LogicalVolume* startVolume = GeoManager::Instance().GetWorld()->GetLogicalVolume();
@@ -155,13 +154,13 @@ int main(int argc, char* argv[])
   if(startVolume) std::cout<< *startVolume <<"\n";
 
   int np = Min( ntracks, 1000 );  // no more than 1000 points used for validation
+
   SOA3D<Precision> points(np);
   SOA3D<Precision> dirs(np);
   SOA3D<Precision> locpts(np);
 
   vecgeom::volumeUtilities::FillGlobalPointsAndDirectionsForLogicalVolume(
     startVolume, locpts, points, dirs, bias, np);
-
 
   // Must be validated before being benchmarked
   bool ok = validateVecGeomNavigation(np, points, dirs);

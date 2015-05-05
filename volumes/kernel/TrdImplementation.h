@@ -8,13 +8,11 @@
 
 #include "base/Global.h"
 #include "base/Transformation3D.h"
-//#include "volumes/kernel/BoxImplementation.h"
 #include "volumes/kernel/GenericKernels.h"
 #include "volumes/UnplacedTrd.h"
 #include "volumes/kernel/shapetypes/TrdTypes.h"
-
 #include <stdlib.h>
-#include <stdio.h>
+#include <cstdio>
 
 namespace vecgeom {
 
