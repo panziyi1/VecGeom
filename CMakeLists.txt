@@ -60,13 +60,16 @@ enum_option(VECGEOM_VECTOR
       CASE_INSENSITIVE
     )
 
-option(Vc "Enable Vc backend" ON)
+set(VECGEOM_BACKEND default Scalar Vc Cilk)
+
+enum_option(BACKEND
+            DOC "Backend infrastructure to be used"
+            TYPE STRING
+            VALUES ${VECGEOM_BACKEND}
+            CASE_INSENSITIVE
+           )
 
 option(VC_ACCELERATION "Internal vectorization using Vc." ON)
-
-option(Cilk "Enable Cilk+ backend" OFF)
-
-option(Scalar "Enable Scalar backend" OFF)
 
 option(VTUNE "Enable the use of profiler Vtune" OFF)
 
@@ -112,31 +115,31 @@ endif()
 
 # Determine backend
 
-if (Vc)
-  if (Cilk OR Scalar)
-    message(WARNING "Multiple backend configuration detected.")
-    message(WARNING "Configuring with \"Vc\" vector backend")
-  else()
-    message(STATUS "Configuring with \"Vc\" vector backend")
-  endif()
-elseif(Cilk)
+string(TOUPPER ${BACKEND} _backend_up)
+
+if (_backend_up MATCHES VC)
+  set(Vc ON)
+  message(WARNING "Configuring with \"Vc\" vector backend")
+elseif (_backend_up MATCHES SCALAR)
+  set(Scalar ON)
+  message(STATUS "Configuring with \"Scalar\" vector backend")
+elseif (_backend_up MATCHES CILK)
   if (NOT Intel)
     message(FATAL_ERROR "Must use Intel C++ compiler (icpc) for Cilk+ backend.")
-  elseif (Scalar)
-    message(WARNING "Multiple backend configuration detected.")
-    message(WARNING "Configuring with \"Cilk+\" vector backend")
-  else()
-    message(STATUS "Configuring with \"Cilk+\" vector backend")
   endif()
-elseif(Scalar)
-  message(STATUS "Configuring with \"Scalar\" vector backend")
+  set(Cilk ON)
+  message(STATUS "Configuring with \"Cilk+\" vector backend")
+elseif (_backend_up MATCHES DEFAULT)
+  set(Vc ON)
+  message(STATUS "Backend not specified. Defaulting to Vc.")
 else()
-  message(FATAL_ERROR "No backend selected. Pls add \"-DVc=ON\" or \"-DCilk=ON\" or \"-DScalar=ON\" to your cmake command.")
+  message(FATAL_ERROR "Value '${BACKEND}' for variable BACKEND is not allowed. ")
 endif()
 
 ################################################################################
 
 # Set Default compiler flags for each build type
+
 if (GNU)
   set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -Wall -fPIC")
   if (CMAKE_BUILD_TYPE MATCHES Debug)
