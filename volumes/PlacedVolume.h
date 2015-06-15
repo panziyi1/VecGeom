@@ -4,6 +4,10 @@
 #ifndef VECGEOM_VOLUMES_PLACEDVOLUME_H_
 #define VECGEOM_VOLUMES_PLACEDVOLUME_H_
 
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(push, target(mic))
+#endif
+
 #include "base/Global.h"
 #include "volumes/LogicalVolume.h"
 #include "volumes/USolidsInterfaceHelper.h"
@@ -172,7 +176,6 @@ public:
   virtual Precision DistanceToIn(Vector3D<Precision> const &position,
                                  Vector3D<Precision> const &direction,
                                  const Precision step_max = kInfinity) const =0;
-
   virtual void DistanceToIn(SOA3D<Precision> const &position,
                             SOA3D<Precision> const &direction,
                             Precision const *const step_max,
@@ -502,6 +505,10 @@ public:
 #endif // VECGEOM_NO_SPECIALIZATION
 
 
+#endif
+
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(pop)
 #endif
 
 #endif // VECGEOM_VOLUMES_PLACEDVOLUME_H_

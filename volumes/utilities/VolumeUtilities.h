@@ -8,6 +8,10 @@
 #ifndef VOLUME_UTILITIES_H_
 #define VOLUME_UTILITIES_H_
 
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(push, target(mic))
+#endif
+
 #include "base/Vector3D.h"
 #include "base/Global.h"
 #include "base/RNG.h"
@@ -19,6 +23,7 @@
 #ifdef VECGEOM_ROOT
 #include "TGeoShape.h"
 #endif
+
 #include <cassert>
 
 #ifdef VECGEOM_ROOT
@@ -627,5 +632,9 @@ inline Precision GetRadiusInRing(Precision rmin, Precision rmax) {
 
 } // end namespace volumeUtilities
 } } // end global namespace
+
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(pop)
+#endif
 
 #endif /* VOLUME_UTILITIES_H_ */
