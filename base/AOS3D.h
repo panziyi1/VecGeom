@@ -36,6 +36,7 @@ public:
   VECGEOM_CUDA_HEADER_BOTH
   AOS3D(Vector3D<T> *data, size_t size);
 
+  VECGEOM_CUDA_HEADER_BOTH
   AOS3D(size_t size);
 
   VECGEOM_CUDA_HEADER_BOTH
@@ -216,6 +217,9 @@ void AOS3D<T>::reserve(size_t newCapacity) {
 }
 
 template <typename T>
+#ifdef OFFLOAD_MODE
+VECGEOM_CUDA_HEADER_BOTH
+#endif
 void AOS3D<T>::clear() {
   Deallocate();
   fAllocated = false;

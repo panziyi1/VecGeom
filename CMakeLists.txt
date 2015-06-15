@@ -75,6 +75,7 @@ option(VC_ACCELERATION "Internal vectorization using Vc." ON)
 
 option(VTUNE "Enable the use of profiler Vtune" OFF)
 
+option(OFFLOAD_MODE "Enable offload mode for Intel Xeon Phi." OFF) 
 
 set(INSTALL_LIB_DIR lib CACHE PATH "Installation directory for libraries.")
 set(INSTALL_INCLUDE_DIR include CACHE PATH
@@ -200,7 +201,7 @@ if (${_arch_lo} MATCHES mic)
     set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -m${_arch_lo}")
     set(MIC TRUE)
   else()
-    message(FATAL_ERROR "MIC native of offload compilation requires Intel Compiler.")
+    message(FATAL_ERROR "MIC native or offload compilation requires Intel Compiler.")
   endif()
 elseif (${_arch_lo} MATCHES native)
   if (Intel)
@@ -325,8 +326,17 @@ endif()
 if (DISTANCE_DEBUG)
   set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_DISTANCE_DEBUG")
 endif()
+if (OFFLOAD_MODE)
+  if (NOT Intel)
+    message(FATAL_ERROR "Must use Intel C++ compiler (icc) for Xeon Phi Offload Mode.")
+  endif()
+  set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DOFFLOAD_MODE")
+  message(STATUS "Preparing for a offload compiler mode.")
+  set(VTUNE OFF)
+endif()
 if (VTUNE)
   set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_VTUNE")
+  message(STATUS "Prepating for Intel VTune profiling.")
 endif()
 
 ################################################################################
@@ -347,6 +357,13 @@ if (VC_ACCELERATION OR Vc)
     set(SRC_EXTERNAL ${SRC_EXTERNAL} source/backend/vc/Backend.cpp)
   endif()
 
+endif()
+
+if (OFFLOAD_MODE)
+  set(SRC_EXTERNAL ${SRC_EXTERNAL} source/backend/mic/Backend.cpp)
+  # This must be changed to an automatic way...
+  set(MICVEC "/opt/intel/composer_xe_2015.2.164/compiler/include/mic")
+  include_directories(${MICVEC})
 endif()
 
 if (Cilk)
@@ -556,9 +573,13 @@ endif()
 set(SRC_CPP ${SRC_CPP} ${SRC_EXTERNAL}
   source/GeoManager.cpp
   source/ShapeDebugger.cpp
-  source/CppExporter.cpp
   source/benchmarking/NavigationBenchmarker.cpp
 )
+if (NOT OFFLOAD_MODE)
+  set(SRC_CPP ${SRC_CPP} ${SRC_EXTERNAL}
+    source/CppExporter.cpp
+  )
+endif()
 
 # some CUDA kernel code in "userspace"
 if (CUDA)
