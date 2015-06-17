@@ -477,7 +477,13 @@ public:
         nextDaughterIdList[i+j]=( ! mask[j] )? daughterId : nextDaughterIdList[i+j];
       }
 #elif MIC_SIDE
-      assert("Not implemented yet.");
+      MicBool mask=result>stepMaxBackend;
+      MaskedAssign(mask,stepMaxBackend,&result);
+      _mm512_store_pd(currentDistance+i,result);
+
+      for(unsigned int j=0;j<kVectorSize;++j) {
+        nextDaughterIdList[i+j]=( ! mask[j] )? daughterId : nextDaughterIdList[i+j];
+      }
 #elif VECGEOM_SCALAR
       if (result < currentDistance[i]) {
         currentDistance[i] = result;
@@ -607,7 +613,8 @@ public:
       result(estimate < result) = estimate;
       result.store(&safeties[i]);
 #elif MIC_SIDE
-      assert("Not implemented yet.");
+      MaskedAssign(result < safeties[i],result,safeties+i);
+      _mm512_store_pd(safeties+i,result);
 #elif VECGEOM_SCALAR
       safeties[i] = (result < safeties[i]) ? result : safeties[i];
 #endif
@@ -658,7 +665,8 @@ public:
       result(estimate < result) = estimate;
       result.store(&safeties[i]);
 #elif MIC_SIDE
-      assert("Not implemented yet.");
+      MaskedAssign(result < safeties[i],result,safeties+i);
+      _mm512_store_pd(safeties+i,result);
 #elif VECGEOM_SCALAR
       safeties[i] = (result < safeties[i]) ? result : safeties[i];
 #endif

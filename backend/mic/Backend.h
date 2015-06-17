@@ -11,13 +11,14 @@
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
+class MicMask;
 class MicIntegerVector;
 class MicDoubleVector;
 
 struct kMic {
   typedef MicIntegerVector int_v;
   typedef MicDoubleVector precision_v;
-  typedef VecMask16 bool_v;
+  typedef MicMask bool_v;
   typedef MicIntegerVector inside_v;
   constexpr static bool early_returns = false;
   const static precision_v kOne;
@@ -27,7 +28,7 @@ struct kMic {
   // alternative typedefs ( might supercede above typedefs )
   typedef MicIntegerVector Int_t;
   typedef MicDoubleVector Double_t;
-  typedef VecMask16 Bool_t;
+  typedef MicMask Bool_t;
   typedef MicDoubleVector Index_t;
 };
 
@@ -41,7 +42,22 @@ typedef kMic::precision_v MicPrecision;
 typedef kMic::bool_v      MicBool;
 typedef kMic::inside_v    MicInside;
 
-// Class, operators and functinos for Integer
+// Class, operators and functions for Mask
+
+class MicMask : public VecMask16 {
+
+public:
+  MicMask() : VecMask16() {}
+  MicMask(__mmask mm) : VecMask16(mm) {}
+  MicMask(int mm) : VecMask16(mm) {}
+  MicMask(VecMask16 mm) : VecMask16(mm) {}
+
+  VECGEOM_INLINE
+  bool operator[](size_t index) const { return static_cast<bool>(m & (1 << index)); }
+
+};
+
+// Class, operators and functions for Integer
 
 class MicIntegerVector : public Is32vec16 {
 
@@ -95,73 +111,73 @@ public:
 // Operators and Functions for MicDoubleVector/MicPrecision
 
 VECGEOM_INLINE
-VecMask16 operator == (MicPrecision const &val1,
+MicMask operator == (MicPrecision const &val1,
                        Precision const &val2) {
   return cmpeq(val1,MicPrecision(val2));
 }
 
 VECGEOM_INLINE
-VecMask16 operator != (MicPrecision const &val1,
+MicMask operator != (MicPrecision const &val1,
                        MicPrecision const &val2) {
   return val1 != val2;
 }
 
 VECGEOM_INLINE
-VecMask16 operator != (MicPrecision const &val1,
+MicMask operator != (MicPrecision const &val1,
                        Precision const &val2) {
   return val1 != MicPrecision(val2);
 }
 
 VECGEOM_INLINE
-VecMask16 operator > (MicPrecision const &val1,
+MicMask operator > (MicPrecision const &val1,
                       MicPrecision const &val2) {
   return cmpnle(val1, val2);
 }
 
 VECGEOM_INLINE
-VecMask16 operator > (MicPrecision const &val1,
+MicMask operator > (MicPrecision const &val1,
                       Precision const &val2) {
   return val1 > MicPrecision(val2);
 }
 
 VECGEOM_INLINE
-VecMask16 operator >= (MicPrecision const &val1,
+MicMask operator >= (MicPrecision const &val1,
                        MicPrecision const &val2) {
   return cmpnlt(val1, val2);
 }
 
 VECGEOM_INLINE
-VecMask16 operator >= (MicPrecision const &val1,
+MicMask operator >= (MicPrecision const &val1,
                        Precision const &val2) {
   return val1 >= MicPrecision(val2);
 }
 
 VECGEOM_INLINE
-VecMask16 operator < (MicPrecision const &val1,
+MicMask operator < (MicPrecision const &val1,
                       MicPrecision const &val2) {
   return cmplt(val1, val2);
 }
 
 VECGEOM_INLINE
-VecMask16 operator < (MicPrecision const &val1,
+MicMask operator < (MicPrecision const &val1,
                       int const &val2) {
   return val1 < MicPrecision((double)val2);
 }
 
 VECGEOM_INLINE
-VecMask16 operator <= (MicPrecision const &val1,
+MicMask operator <= (MicPrecision const &val1,
                        MicPrecision const &val2) {
   return cmple(val1, val2);
 }
 
 VECGEOM_INLINE
-VecMask16 operator <= (MicPrecision const &val1,
+MicMask operator <= (MicPrecision const &val1,
                        Precision const &val2) {
   return val1 <= MicPrecision(val2);
 }
 
 VECGEOM_INLINE
-VecMask16 operator <= (Precision const &val1,
+MicMask operator <= (Precision const &val1,
                        MicPrecision const &val2) {
   return MicPrecision(val1) <= val2;
 }
@@ -195,6 +211,15 @@ void MaskedAssign(MicBool const &cond,
                   MicPrecision const &thenval,
                   MicPrecision * const output) {
   (*output) = _mm512_castsi512_pd(_mm512_mask_or_epi64(_mm512_castpd_si512(*output), cond, _mm512_castpd_si512(thenval), _mm512_castpd_si512(thenval)));
+}
+
+VECGEOM_INLINE
+void MaskedAssign(MicBool const &cond,
+                  MicPrecision const &thenval,
+                  double *const output) {
+  MicPrecision _m(output);
+  _m = _mm512_castsi512_pd(_mm512_mask_or_epi64(_mm512_castpd_si512(_m), cond, _mm512_castpd_si512(thenval), _mm512_castpd_si512(thenval)));
+  _mm512_store_pd(output,_m);
 }
 
 VECGEOM_INLINE
