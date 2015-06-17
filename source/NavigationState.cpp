@@ -2,6 +2,10 @@
 /// \author Sandro Wenzel (sandro.wenzel@cern.ch)
 /// \date 17.04.2014
 
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(push, target(mic))
+#endif
+
 #include "navigation/NavigationState.h"
  
 #include <cassert>
@@ -162,4 +166,8 @@ NavigationState::GlobalToLocal(Vector3D<Precision> const & globalpoint) const
 #endif
 
 } } // End global namespace
+
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(pop)
+#endif
 

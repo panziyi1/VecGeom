@@ -5,6 +5,10 @@
 #ifndef VECGEOM_NAVIGATION_NAVIGATIONSTATE_H_
 #define VECGEOM_NAVIGATION_NAVIGATIONSTATE_H_
 
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(push, target(mic))
+#endif
+
 #include "backend/Backend.h"
 #include "VariableSizeObj.h"
 #include "base/Transformation3D.h"
@@ -516,6 +520,10 @@ void NavigationState::ConvertToCPUPointers() {
 #if defined(GCC_DIAG_POP_NEEDED)
   #pragma GCC diagnostic pop
   #undef GCC_DIAG_POP_NEEDED
+#endif
+
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(pop)
 #endif
 
 #endif // VECGEOM_NAVIGATION_NAVIGATIONSTATE_H_
