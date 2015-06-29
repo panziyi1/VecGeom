@@ -398,9 +398,6 @@ public:
                             SOA3D<Precision> const &directions,
                             Precision const *const stepMax,
                             Precision *const output) const {
-#ifdef MIC_SIDE
-  #pragma omp parallel for
-#endif
     for (int i = 0, i_max = points.size(); i < i_max; i += kVectorSize) {
       Vector3D<VECGEOM_BACKEND_TYPE::precision_v> point(
         VECGEOM_BACKEND_PRECISION(points.x()+i),
