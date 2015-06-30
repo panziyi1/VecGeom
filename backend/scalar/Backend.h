@@ -11,9 +11,6 @@
 #endif
 #include <algorithm>
 #include <cstring>
-#ifdef OFFLOAD_MODE
-  #pragma offload_attribute(pop)
-#endif
 
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
@@ -74,6 +71,12 @@ typedef kScalar::precision_v ScalarDouble;
 typedef kScalar::bool_v   ScalarBool;
 
 #define kVectorSize 1
+#ifdef VECGEOM_SCALAR
+#define VECGEOM_BACKEND_TYPE         kScalar
+#define VECGEOM_BACKEND_PRECISION(P) (*(P))
+#define VECGEOM_BACKEND_BOOL         ScalarBool
+#define VECGEOM_BACKEND_INSIDE       kScalar::inside_v
+#endif
 
 template <typename Type>
 VECGEOM_CUDA_HEADER_BOTH
@@ -322,4 +325,7 @@ bool equal(InputIterator1 first, InputIterator1 last, InputIterator2 target) {
 
 } } // End global namespace
 
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(pop)
+#endif
 #endif // VECGEOM_BACKEND_SCALARBACKEND_H_

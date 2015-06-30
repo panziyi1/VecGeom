@@ -34,6 +34,12 @@ struct kVc {
 #undef kVectorSize
 #endif
 constexpr int kVectorSize = kVc::precision_v::Size;
+#ifdef VECGEOM_VC
+#define VECGEOM_BACKEND_TYPE         kVc
+#define VECGEOM_BACKEND_PRECISION    VcPrecision
+#define VECGEOM_BACKEND_BOOL         VcBool
+#define VECGEOM_BACKEND_INSIDE       kVc::inside_v
+#endif
 
 typedef kVc::int_v       VcInt;
 typedef kVc::precision_v VcPrecision;

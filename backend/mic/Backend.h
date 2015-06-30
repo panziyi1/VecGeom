@@ -36,6 +36,12 @@ struct kMic {
 #undef kVectorSize
 #endif
 constexpr int kVectorSize = 8;
+#ifdef MIC_SIDE
+#define VECGEOM_BACKEND_TYPE         kMic
+#define VECGEOM_BACKEND_PRECISION    MicPrecision
+#define VECGEOM_BACKEND_BOOL         MicBool
+#define VECGEOM_BACKEND_INSIDE       kMic::inside_v
+#endif
 
 typedef kMic::int_v       MicInt;
 typedef kMic::precision_v MicPrecision;
