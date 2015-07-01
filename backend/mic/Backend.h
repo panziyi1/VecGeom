@@ -124,73 +124,79 @@ public:
 
 VECGEOM_INLINE
 MicMask operator == (MicPrecision const &val1,
-                       Precision const &val2) {
+                     MicPrecision const &val2) {
+  return cmpeq(val1,val2);
+}
+
+VECGEOM_INLINE
+MicMask operator == (MicPrecision const &val1,
+                     Precision const &val2) {
   return cmpeq(val1,MicPrecision(val2));
 }
 
 VECGEOM_INLINE
 MicMask operator != (MicPrecision const &val1,
-                       MicPrecision const &val2) {
+                     MicPrecision const &val2) {
   return val1 != val2;
 }
 
 VECGEOM_INLINE
 MicMask operator != (MicPrecision const &val1,
-                       Precision const &val2) {
+                     Precision const &val2) {
   return val1 != MicPrecision(val2);
 }
 
 VECGEOM_INLINE
 MicMask operator > (MicPrecision const &val1,
-                      MicPrecision const &val2) {
+                    MicPrecision const &val2) {
   return cmpnle(val1, val2);
 }
 
 VECGEOM_INLINE
 MicMask operator > (MicPrecision const &val1,
-                      Precision const &val2) {
+                    Precision const &val2) {
   return val1 > MicPrecision(val2);
 }
 
 VECGEOM_INLINE
 MicMask operator >= (MicPrecision const &val1,
-                       MicPrecision const &val2) {
+                     MicPrecision const &val2) {
   return cmpnlt(val1, val2);
 }
 
 VECGEOM_INLINE
 MicMask operator >= (MicPrecision const &val1,
-                       Precision const &val2) {
+                     Precision const &val2) {
   return val1 >= MicPrecision(val2);
 }
 
 VECGEOM_INLINE
 MicMask operator < (MicPrecision const &val1,
-                      MicPrecision const &val2) {
+                    MicPrecision const &val2) {
   return cmplt(val1, val2);
 }
 
 VECGEOM_INLINE
 MicMask operator < (MicPrecision const &val1,
-                      int const &val2) {
+                    int const &val2) {
   return val1 < MicPrecision((double)val2);
 }
 
 VECGEOM_INLINE
 MicMask operator <= (MicPrecision const &val1,
-                       MicPrecision const &val2) {
+                     MicPrecision const &val2) {
   return cmple(val1, val2);
 }
 
 VECGEOM_INLINE
 MicMask operator <= (MicPrecision const &val1,
-                       Precision const &val2) {
+                     Precision const &val2) {
   return val1 <= MicPrecision(val2);
 }
 
 VECGEOM_INLINE
 MicMask operator <= (Precision const &val1,
-                       MicPrecision const &val2) {
+                     MicPrecision const &val2) {
   return MicPrecision(val1) <= val2;
 }
 
@@ -216,6 +222,16 @@ VECGEOM_INLINE
 MicPrecision operator / (int const &val1,
                          MicPrecision const &val2) {
   return MicPrecision((double)val1) / val2;
+}
+
+VECGEOM_INLINE
+void MaskedAssign(MicBool const &cond,
+                  MicBool const &thenval,
+                  MicBool * const output) {
+  MicBool not_cond(~cond);
+  MicBool p1(not_cond & (*output));
+  MicBool p2(cond & thenval);
+  (*output) = p1 | p2;
 }
 
 VECGEOM_INLINE
