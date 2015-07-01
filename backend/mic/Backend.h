@@ -6,7 +6,7 @@
 #include "base/Global.h"
 #include "backend/scalar/Backend.h"
 
-#include <micvec.h>
+#include <mic/micvec.h>
 
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
@@ -37,6 +37,12 @@ struct kMic {
 #endif
 constexpr int kVectorSize = 8;
 #ifdef MIC_SIDE
+#ifdef VECGEOM_SCALAR
+#undef VECGEOM_BACKEND_TYPE
+#undef VECGEOM_BACKEND_PRECISION
+#undef VECGEOM_BACKEND_BOOL
+#undef VECGEOM_BACKEND_INSIDE
+#endif
 #define VECGEOM_BACKEND_TYPE         kMic
 #define VECGEOM_BACKEND_PRECISION    MicPrecision
 #define VECGEOM_BACKEND_BOOL         MicBool
