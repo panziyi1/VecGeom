@@ -197,14 +197,14 @@ bool IsInf( T x ){
 #endif
 }
 
-#ifndef VECGEOM_USOLIDS
-template <typename Type>
-VECGEOM_CUDA_HEADER_BOTH
-VECGEOM_INLINE
-void swap(Type &a, Type &b) {
-  std::swap(a, b);
-}
-#endif
+//#ifndef VECGEOM_USOLIDS
+//template <typename Type>
+//VECGEOM_CUDA_HEADER_BOTH
+//VECGEOM_INLINE
+//void swap(Type &a, Type &b) {
+//  std::swap(a, b);
+//}
+//#endif
 
 template <typename Type>
 VECGEOM_CUDA_HEADER_BOTH
