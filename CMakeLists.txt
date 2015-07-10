@@ -45,6 +45,8 @@ option(COVERAGE_TESTING "Enable coverage testing flags." OFF)
 
 option(CTEST "Enable CTest when building." ON)
 
+option(VALIDATION "Enable validation tests from CMS geometry." OFF)
+
 option(PLANESHELL "Enable the use of PlaneShell class for the trapezoid." ON)
 
 option(DISTANCE_DEBUG "Enable comparison of calculated distances againt ROOT/Geant4 behind the scenes" OFF)
@@ -113,7 +115,7 @@ string(TOUPPER ${BACKEND} _backend_up)
 
 if (_backend_up MATCHES VC)
   set(Vc ON)
-  message(WARNING "Configuring with \"Vc\" vector backend")
+  message(STATUS "Configuring with \"Vc\" vector backend")
 elseif (_backend_up MATCHES SCALAR)
   set(Scalar ON)
   message(STATUS "Configuring with \"Scalar\" vector backend")
@@ -125,7 +127,7 @@ elseif (_backend_up MATCHES CILK)
   message(STATUS "Configuring with \"Cilk+\" vector backend")
 elseif (_backend_up MATCHES DEFAULT)
   set(Vc ON)
-  message(STATUS "Backend not specified. Defaulting to Vc.")
+  message(WARNING "Backend not specified. Defaulting to Vc.")
 else()
   message(FATAL_ERROR "Value '${BACKEND}' for variable BACKEND is not allowed. ")
 endif()
@@ -158,7 +160,7 @@ elseif(Intel)
 else(Clang)
   set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -Wall -fPIC")
   if (CMAKE_BUILD_TYPE MATCHES Debug)
-    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -Weffc++ -ggdb -O0")
+    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS}  -ggdb -O0")
   else()
     set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -ffast-math -ftree-vectorize")
   endif()
@@ -181,6 +183,7 @@ string(TOUPPER ${VECGEOM_VECTOR} _arch_up)
 if (${_arch_lo} MATCHES mic)
   if (Intel)
     set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -m${_arch_lo}")
+    set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -m${_arch_lo}")
     set(MIC TRUE)
   else()
     message(FATAL_ERROR "MIC native of offload compilation requires Intel Compiler.")
@@ -188,19 +191,24 @@ if (${_arch_lo} MATCHES mic)
 elseif (${_arch_lo} MATCHES native)
   if (Intel)
     set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -xHost")
+    set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -xHost")
   else()
     set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -march=${_arch_lo}")
+    set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -march=${_arch_lo}")
   endif()
   set(VECGEOM_NVCC_COMPILATION_FLAGS -g -G ${VECGEOM_NVCC_COMPILATION_FLAGS})
 else()
   if (Intel)
     if (${_arch_lo} MATCHES avx2)
       set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -xCORE-${_arch_up}")
+      set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -xCORE-${_arch_up}")
     else()
       set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -x${_arch_up}")
+      set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -x${_arch_up}")
     endif()
   else()
     set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -m${_arch_lo}")
+    set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -m${_arch_lo}")
   endif()
 endif()
 message(STATUS "Compiling for ${_arch_up} SIMD achitecture")
@@ -247,6 +255,8 @@ endif()
 
 # Enable pretty diagnostics coloring if gcc 4.9+ is being used
 if (GNU)
+  # gcc needs -ldl to be added explicitly
+  set(VECGEOM_LIBRARIES_EXTERNAL ${VECGEOM_LIBRARIES_EXTERNAL} dl)
   set(VECGEOM_ERROR_LIMIT 20 CACHE STRING
       "Limit number of errors output by diagnostics.")
   set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -fmax-errors=${VECGEOM_ERROR_LIMIT}")
@@ -416,6 +426,7 @@ set(SRC_CPP_RELATIVE
   source/PlacedBox.cpp
   source/PlacedTube.cpp
   source/PlacedTorus.cpp
+  source/PlacedTorus2.cpp
   source/PlacedTrd.cpp
   source/PlacedParallelepiped.cpp
   source/PlacedParaboloid.cpp
@@ -431,6 +442,7 @@ set(SRC_CPP_RELATIVE
   source/UnplacedBox.cpp
   source/UnplacedTube.cpp
   source/UnplacedTorus.cpp
+  source/UnplacedTorus2.cpp
   source/UnplacedTrd.cpp
   source/UnplacedParaboloid.cpp
   source/UnplacedParallelepiped.cpp
@@ -457,6 +469,15 @@ set(SRC_CPP_RELATIVE
 
   source/USolidsInterfaceHelper.cpp
 )
+
+# avoid "file has no symbols" warning
+if(NOT CUDA)
+  list(REMOVE_ITEM SRC_CPP_RELATIVE souce/RNG.cpp)
+  list(REMOVE_ITEM SRC_CPP_RELATIVE souce/AOS3D.cpp)
+  list(REMOVE_ITEM SRC_CPP_RELATIVE souce/SOA3D.cpp)
+  list(REMOVE_ITEM SRC_CPP_RELATIVE souce/Vector.cpp)
+endif()
+
 foreach(SRC ${SRC_CPP_RELATIVE})
   set(SRC_CPP ${SRC_CPP} ${CMAKE_SOURCE_DIR}/${SRC})
 endforeach()
@@ -579,7 +600,7 @@ set(TEST_EXECUTABLES_CORE
 #  ${CMAKE_SOURCE_DIR}/test/core/boolminustest.cpp
 #  ${CMAKE_SOURCE_DIR}/test/core/boolminustest2.cpp
   ${CMAKE_SOURCE_DIR}/test/core/PhiWedgeTest.cpp
-  ${CMAKE_SOURCE_DIR}/test/core/BitSetTest.cpp
+  ${CMAKE_SOURCE_DIR}/test/core/ThetaConeTest.cpp
   ${CMAKE_SOURCE_DIR}/test/unit_tests/TestVecGeomPolycone.cpp
 )
 
@@ -593,12 +614,24 @@ set(TEST_EXECUTABLES_ROOT
   ${CMAKE_SOURCE_DIR}/test/root/ImportTGeoPgon.cpp
   ${CMAKE_SOURCE_DIR}/test/root/TestExportToROOT.cpp
   ${CMAKE_SOURCE_DIR}/test/root/ExitingOrEntering.cpp
-  # higher level benchmarks
-  ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/LocatePointsBenchmark.cpp
-  ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/XRayBenchmarkFromROOTFile.cpp
-  ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/TraceTrack.cpp
-  ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/NavigationBenchmark.cpp
 )
+
+# Tests below fail to build when both ROOT and USolids are enabled
+if(NOT USolids)
+  set(TEST_EXECUTABLES_CORE
+    ${TEST_EXECUTABLES_CORE}
+    ${CMAKE_SOURCE_DIR}/test/core/BitSetTest.cpp
+  )
+  # higher level benchmarks
+  set(TEST_EXECUTABLES_ROOT
+    ${TEST_EXECUTABLES_ROOT}
+    ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/LocatePointsBenchmark.cpp
+    ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/NavigationBenchmark.cpp
+    ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/TraceTrack.cpp
+    ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/XRayBenchmarkFromROOTFile.cpp
+  )
+endif()
+
 # separate list for ROOT UNIT tests
 set(TEST_UNITTESTEXECUTABLES_ROOT
   ${CMAKE_SOURCE_DIR}/test/root/complex_test1.cpp
@@ -607,7 +640,6 @@ set(TEST_UNITTESTEXECUTABLES_ROOT
   ${CMAKE_SOURCE_DIR}/test/root/ImportTGeoPgon.cpp
   ${CMAKE_SOURCE_DIR}/test/core/TestNavigationStatePool.cpp
 )
-
 
 if(BENCHMARK)
   set(TEST_EXECUTABLES_ROOT
@@ -670,6 +702,7 @@ set(TEST_EXECUTABLES_CUDA
 set(TEST_EXECUTABLES_SHAPETESTER
   ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testBox.cpp
   ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testOrb.cpp
+  ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testSphere.cpp
   ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testCone.cpp
   ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testTube.cpp
   ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testTrd.cpp
@@ -725,11 +758,13 @@ add_to_ctest("${TEST_EXECUTABLES_CORE}")
 if (BENCHMARK)
   build_executables("${TEST_EXECUTABLES_BENCHMARK}")
 endif()
+
 if (ROOT)
   build_executables("${TEST_EXECUTABLES_ROOT}")
   build_executables("${TEST_EXECUTABLES_VISUALIZATION}")
   add_to_ctest("${TEST_UNITTESTEXECUTABLES_ROOT}")
 endif()
+
 if (USolids)
   build_executables("${TEST_EXECUTABLES_USOLIDS}")
   build_executables("${TEST_EXECUTABLES_SHAPETESTER}")
@@ -743,6 +778,7 @@ if (USolids)
   add_test(NAME VecTube COMMAND TestTube --vecgeom)
 
 endif()
+
 if (CUDA)
   build_executables("${TEST_EXECUTABLES_CUDA}")
 #  add_to_ctest("${TEST_EXECUTABLES_CUDA}")

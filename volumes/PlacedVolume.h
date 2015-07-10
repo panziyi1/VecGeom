@@ -88,14 +88,14 @@ public:
 
   VECGEOM_CUDA_HEADER_BOTH
   VECGEOM_INLINE
-  Vector<Daughter> const& daughters() const {
-    return logical_volume_->daughters();
+  Vector<Daughter> const& GetDaughters() const {
+    return logical_volume_->GetDaughters();
   }
 
   VECGEOM_CUDA_HEADER_BOTH
   VECGEOM_INLINE
-  VUnplacedVolume const* unplaced_volume() const {
-    return logical_volume_->unplaced_volume();
+  VUnplacedVolume const* GetUnplacedVolume() const {
+    return logical_volume_->GetUnplacedVolume();
   }
 
   VECGEOM_CUDA_HEADER_BOTH
@@ -263,8 +263,8 @@ public:
   }
 
 
-  virtual bool Normal(Vector3D<double> const &point,
-                      Vector3D<double> &normal) const {
+  virtual bool Normal(Vector3D<double> const &,
+                      Vector3D<double> &) const {
 
     assert(0 &&
            "Normal not implemented.");

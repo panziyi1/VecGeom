@@ -206,6 +206,10 @@ public:
       stepMax,
       output
     );
+
+#ifdef VECGEOM_DISTANCE_DEBUG
+    DistanceComparator::CompareDistanceToIn( this, output, point, direction, stepMax );
+#endif
     return output;
   }
 
@@ -221,6 +225,13 @@ public:
       stepMax,
       output
     );
+
+    // detect -inf responses which are often an indication for a real bug
+#ifndef VECGEOM_NVCC
+    assert( ! ( (output < 0.) && std::isinf(output) ) );
+#endif
+
+
     return output;
   }
 

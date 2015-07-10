@@ -38,7 +38,7 @@ VPlacedVolume* UnplacedTube::Create(
     VPlacedVolume *const placement) {
 
       using namespace TubeTypes;
-      __attribute__((unused)) const UnplacedTube &tube = static_cast<const UnplacedTube&>( *(logical_volume->unplaced_volume()) );
+      __attribute__((unused)) const UnplacedTube &tube = static_cast<const UnplacedTube&>( *(logical_volume->GetUnplacedVolume()) );
 
       #ifdef VECGEOM_NVCC
         #define RETURN_SPECIALIZATION(tubeTypeT) return CreateSpecializedWithPlacement< \
@@ -239,7 +239,6 @@ bool UnplacedTube::Normal(Vector3D<Precision> const& point, Vector3D<Precision>&
   */
 #endif
 
-  VECGEOM_CUDA_HEADER_BOTH
   void UnplacedTube::Extent(Vector3D<Precision>& aMin, Vector3D<Precision>& aMax) const {
     // most general case
     aMin = Vector3D<Precision>(-fRmax,-fRmax,-fZ);

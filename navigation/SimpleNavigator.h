@@ -214,7 +214,7 @@ SimpleNavigator::LocatePoint( VPlacedVolume const * vol, Vector3D<Precision> con
    }
    if( candvolume ) {
       path.Push( candvolume );
-      Vector<Daughter> const * daughters = candvolume->GetLogicalVolume()->daughtersp();
+      Vector<Daughter> const * daughters = candvolume->GetLogicalVolume()->GetDaughtersp();
 
       bool godeeper = true;
       while( godeeper && daughters->size() > 0)
@@ -230,7 +230,7 @@ SimpleNavigator::LocatePoint( VPlacedVolume const * vol, Vector3D<Precision> con
                path.Push( nextvolume );
                tmp = transformedpoint;
                candvolume =  nextvolume;
-               daughters = candvolume->GetLogicalVolume()->daughtersp();
+               daughters = candvolume->GetLogicalVolume()->GetDaughtersp();
                godeeper=true;
                break;
             }
@@ -260,7 +260,7 @@ SimpleNavigator::LocatePoint( VPlacedVolume const * vol, Vector3D<Precision> con
       }
       if( candvolume ) {
            path.Push( candvolume );
-           Vector<Daughter> const * daughters = candvolume->GetLogicalVolume()->daughtersp();
+           Vector<Daughter> const * daughters = candvolume->GetLogicalVolume()->GetDaughtersp();
 
            bool godeeper = true;
            while( godeeper && daughters->size() > 0)
@@ -277,7 +277,7 @@ SimpleNavigator::LocatePoint( VPlacedVolume const * vol, Vector3D<Precision> con
                         path.Push( nextvolume );
                         tmp = transformedpoint;
                         candvolume =  nextvolume;
-                        daughters = candvolume->GetLogicalVolume()->daughtersp();
+                        daughters = candvolume->GetLogicalVolume()->GetDaughtersp();
                         godeeper=true;
                         break;
                      }
@@ -347,9 +347,9 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
                                         ) const
 {
 #ifndef VECGEOM_NVCC
- //  static int counter=0;
+   static int counter=0;
+   counter++;
 #endif
-   
    // this information might have been cached in previous navigators??
    Transformation3D m;
    currentstate.TopMatrix(m);
@@ -357,7 +357,7 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
    Vector3D<Precision> localdir=m.TransformDirection(globaldir);
 
    VPlacedVolume const * currentvolume = currentstate.Top();
-#ifdef VERBOSE
+#if defined(VERBOSE) && !defined(VECGEOM_NVCC)
    if( counter % 1 == 0)
    {
        std::cerr << "navigating in " << currentvolume->GetLabel() << " stepnumber " << counter << "pstep " << pstep << " pos " << globalpoint << " dir " << globaldir ;
@@ -372,7 +372,7 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
    // NOTE: IF STEP IS NEGATIVE HERE, SOMETHING IS TERRIBLY WRONG. WE CAN TRY TO HANDLE THE SITUATION
    // IN TRYING TO PROPOSE THE RIGHT LOCATION IN NEWSTATE AND RETURN
    // I WOULD MUCH FAVOUR IF THIS WAS DONE OUTSIDE OF THIS FUNCTION BY THE USER
-   if( step <= 0. )
+   if( step < 0. )
    {
 //       newstate = currentstate;
 //       RelocatePointFromPath( localpoint, newstate );
@@ -381,7 +381,7 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
    }
 
    // iterate over all the daughter
-   Vector<Daughter> const * daughters = currentvolume->GetLogicalVolume()->daughtersp();
+   Vector<Daughter> const * daughters = currentvolume->GetLogicalVolume()->GetDaughtersp();
 
    for(int d = 0; d<daughters->size(); ++d)
    {
@@ -425,13 +425,34 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
    // do nothing (step=0) and retry one level higher
    if( step == kInfinity && pstep > 0. )
    {
-      //std::cout << "WARNING: STEP INFINITY; should never happen unless outside\n";
+#if !defined(VECGEOM_NVCC)
+      std::cout << "WARNING: STEP INFINITY; should never happen unless outside\n";
       //InspectEnvironmentForPointAndDirection( globalpoint, globaldir, currentstate );
       // set step to zero and retry one level higher
-      step = 0;
-      newstate.Pop();
+      // if( nexthitvolume!=-1 ) std::cout << "catastrophee\n";
+#if defined(VECGEOM_ROOT)
+      currentstate.printVolumePath(std::cout); std::cout << "\n";
+#endif
+      newstate.Clear();
+      VPlacedVolume const *world = GeoManager::Instance().GetWorld();
+      LocatePoint(world, globalpoint + vecgeom::kTolerance*globaldir, newstate, true);
+      step = vecgeom::kTolerance;
+#if defined(VECGEOM_ROOT)
+     // InspectEnvironmentForPointAndDirection( globalpoint, localpoint, currentstate );
+      newstate.printVolumePath(std::cout); std::cout << "\n";
+      InspectEnvironmentForPointAndDirection( globalpoint, globaldir, currentstate );
+      std::cout << " counter is " << counter << "\n";
+#endif
       newstate.SetBoundaryState(true);
+      if( newstate.HasSamePathAsOther(currentstate) ) {
+          std::cout << "$$$$$$$$$$$$$$$$$$$$$$$4 MASSIVE WARNING $$$$$$$$$$$$$$$$$$$$$$$$$ \n";
+          newstate.Pop();
+      }
       return;
+#else
+      // Can't call GeoManager::Instance().GetWorld() from CUDA code
+      assert(false && "ERROR: point is outside expected volumes");
+#endif
    }
    // is geometry further away than physics step?
    if(step > pstep)
@@ -454,11 +475,11 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
     }
 
 #ifdef VERBOSE
-    std::cerr << " step " << step << " nextvol " << nexthitvolume << "\n";
+   std::cout << " step " << step << " nextvol " << nexthitvolume << "\n";
 #endif
-
+   step+=1E-6;
    Vector3D<Precision> newpointafterboundary = localdir;
-   newpointafterboundary*=(step + 1e-6);
+   newpointafterboundary*=step;
    newpointafterboundary+=localpoint;
 
    if( nexthitvolume != -1 ) // not hitting mother
@@ -502,15 +523,18 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
        if( orignode!= NULL)
            vecgeomcmpcur = RootGeoManager::Instance().GetPlacedVolume( orignode );
 
+#ifndef VECGEOM_NVCC
        if ( currentstate.Top() != vecgeomcmpcur )
        {
            std::cout << "##-- INCONSISTENT START STATE --##\n";
        }
+#endif
 
        if( newstate.Top() != vecgeomcmpnext || currentstate.Top() != vecgeomcmpcur )
        {
            CreateDebugDump( globalpoint, globaldir, currentstate, pstep);
 
+#ifndef VECGEOM_NVCC
            std::cout << "##-- INCONSISTENCY IN NAVIGATION --##\n";
            std::cout << "  ROOT step " << nav->GetStep() << "\n";
            std::cout << "  VecGeom step " << step << "\n";
@@ -548,6 +572,7 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
            // list exiting ; entering etc.
            InspectEnvironmentForPointAndDirection(
                globalpoint, globaldir, currentstate);
+#endif
        }
    //#endif
    #endif // distance debug
@@ -584,7 +609,7 @@ Precision SimpleNavigator::GetSafety(Vector3D<Precision> const & globalpoint,
    //assert( safety > 0 );
 
    // safety to daughters
-   Vector<Daughter> const * daughters = currentvol->GetLogicalVolume()->daughtersp();
+   Vector<Daughter> const * daughters = currentvol->GetLogicalVolume()->GetDaughtersp();
    int numberdaughters = daughters->size();
    for(int d = 0; d<numberdaughters; ++d)
    {
@@ -621,7 +646,7 @@ void SimpleNavigator::GetSafeties(Container3D const & globalpoints,
     currentvol->SafetyToOut( workspaceforlocalpoints, safeties );
 
     // safety to daughters; brute force but each function vectorized
-    Vector<Daughter> const * daughters = currentvol->GetLogicalVolume()->daughtersp();
+    Vector<Daughter> const * daughters = currentvol->GetLogicalVolume()->GetDaughtersp();
     int numberdaughters = daughters->size();
     for (int d = 0; d<numberdaughters; ++d) {
          VPlacedVolume const * daughter = daughters->operator [](d);
@@ -678,7 +703,7 @@ void SimpleNavigator::FindNextBoundaryAndStep(
            pSteps, distances, nextnodeworkspace );
 
    // iterate over all the daughter
-   Vector<Daughter> const * daughters = currentvolume->GetLogicalVolume()->daughtersp();
+   Vector<Daughter> const * daughters = currentvolume->GetLogicalVolume()->GetDaughtersp();
    for (int daughterindex=0; daughterindex < daughters->size(); ++daughterindex)
    {
       VPlacedVolume const * daughter = daughters->operator [](daughterindex);
