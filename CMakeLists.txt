@@ -524,7 +524,6 @@ endif()
 ################################################################################
 
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 if (USolids)
   if (USOLIDS_EMBEDDED) 
@@ -706,23 +705,23 @@ macro(build_executables EXECUTABLES)
   foreach(_exec ${EXECUTABLES})
     get_filename_component(_target ${_exec} NAME_WE)
     add_executable(${_target} ${_exec})
+    set_target_properties(${_target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
     target_link_libraries(${_target} ${VECGEOM_LIBRARIES}
                           ${VECGEOM_LIBRARIES_EXTERNAL}
                           ${USERKERNELLIB})
   endforeach()
 endmacro()
 
-function(add_to_ctest EXECUTABLES)
-  foreach(EXECUTABLE ${EXECUTABLES})
-    if (CTEST)
-      get_filename_component(TARGET_NAME ${EXECUTABLE} NAME_WE)
-      add_test(${TARGET_NAME} ${TARGET_NAME})
-    endif()
+macro(add_to_ctest EXECUTABLES)
+  foreach(_exec ${EXECUTABLES})
+    get_filename_component(_target ${_exec} NAME_WE)
+    add_test(NAME ${_target} COMMAND ${_target})
   endforeach()
-endfunction()
+endmacro()
 
 build_executables("${TEST_EXECUTABLES_CORE}")
 add_to_ctest("${TEST_EXECUTABLES_CORE}")
+
 if (BENCHMARK)
   build_executables("${TEST_EXECUTABLES_BENCHMARK}")
 endif()
@@ -754,6 +753,7 @@ macro(add_cmsshapevalidation_test TESTNAME SHAPEFILE)
 endmacro()
 
 # Adding various shapes tests for nightlies
+if(BENCHMARK AND ROOT)
 add_cmsshapevalidation_test( tubevalidation cmstubes.txt )
 add_cmsshapevalidation_test( trapvalidation cmstraps.txt )
 add_cmsshapevalidation_test( polyconevalidation cmspolycones.txt )
@@ -762,6 +762,7 @@ add_cmsshapevalidation_test( conevalidation cmscones.txt )
 add_cmsshapevalidation_test( boxvalidation cmsboxes.txt )
 #taken out due to problems: add_cmsshapevalidation_test( booleanvalidation cmsbooleans.txt )
 #taken out due to Issue-133: add_cmsshapevalidation_test( torusvalidation cmstori.txt )
+endif()
 
 
 
