@@ -75,14 +75,6 @@ option(VC_ACCELERATION "Internal vectorization using Vc." ON)
 
 option(VTUNE "Enable the use of profiler Vtune" OFF)
 
-# Make relative paths absolute
-foreach(p LIB BIN INCLUDE CMAKE)
-  set(var INSTALL_${p}_DIR)
-  if(NOT IS_ABSOLUTE "${${var}}")
-    set(${var} "${CMAKE_INSTALL_PREFIX}/${${var}}")
-  endif()
-endforeach()
-
 if (USOLIDS)
   set(USolids ON)
 endif()
