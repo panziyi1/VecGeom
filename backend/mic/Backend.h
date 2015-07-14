@@ -7,6 +7,9 @@
 #include "backend/scalar/Backend.h"
 
 #include <mic/micvec.h>
+#if defined(DEBUG) || defined(NDEBUG) || defined(_DEBUG)
+#include <iostream>
+#endif
 
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
@@ -67,7 +70,46 @@ public:
   VECGEOM_INLINE
   bool operator[](size_t index) const { return static_cast<bool>(m & (1 << index)); }
 
+#if defined(_IOSTREAM_) || defined(_CPP_IOSTREAM) || defined(_GLIBCXX_IOSTREAM)
+  friend std::ostream& operator << (std::ostream &os,
+                                    const MicMask &a) {
+    int size = sizeof(__mmask)*8;
+    unsigned int num = a;
+    int i;
+    os << "{";
+    for(i=0;i<size;i++) {
+      os << (num&0x01);
+      num = num >> 1;
+    }
+    os << "}";
+    return os;
+  }
+#endif
 };
+
+VECGEOM_INLINE
+MicMask operator ! (MicMask const &val) {
+  MicMask r(val);
+  return ~r;
+}
+
+VECGEOM_INLINE
+MicMask operator && (MicMask const &val1,
+                     MicMask const &val2) {
+  return val1 & val2;
+}
+
+VECGEOM_INLINE
+MicMask operator && (bool const &val1,
+                     MicMask const &val2) {
+  return MicMask(val1) & val2;
+}
+
+VECGEOM_INLINE
+MicMask operator && (MicMask const &val1,
+                     bool const &val2) {
+  return val1 & MicMask(val2);
+}
 
 // Class, operators and functions for Integer
 
