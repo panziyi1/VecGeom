@@ -75,6 +75,8 @@ option(VC_ACCELERATION "Internal vectorization using Vc." ON)
 
 option(VTUNE "Enable the use of profiler Vtune" OFF)
 
+option(OFFLOAD_MODE "Enable offload mode for Intel Xeon Phi." OFF) 
+
 if (USOLIDS)
   set(USolids ON)
 endif()
@@ -126,7 +128,7 @@ endif()
 
 ################################################################################
 
-# Set Default C++ compiler flags for each build type
+# Set default C++ compiler flags for each build type
 # C++ standard set to c++11 by default
 
 set(VECGEOM_CXX_FLAGS "-std=c++11")
@@ -178,7 +180,7 @@ if (${_arch_lo} MATCHES mic)
     set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -m${_arch_lo}")
     set(MIC TRUE)
   else()
-    message(FATAL_ERROR "MIC native of offload compilation requires Intel Compiler.")
+    message(FATAL_ERROR "MIC native or offload compilation requires Intel Compiler.")
   endif()
 elseif (${_arch_lo} MATCHES native)
   if (Intel)
@@ -304,7 +306,14 @@ endif()
 if (VTUNE)
   set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_VTUNE")
 endif()
-
+if (OFFLOAD_MODE)
+  if (NOT Intel)
+    message(FATAL_ERROR "Must use Intel C++ compiler (icc) for Xeon Phi Offload Mode.")
+  endif()
+  set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DOFFLOAD_MODE")
+  message(STATUS "Preparing for a offload compiler mode.")
+  set(VTUNE OFF)
+endif()
 ################################################################################
 
 include_directories(AFTER ${CMAKE_SOURCE_DIR})
@@ -325,6 +334,13 @@ if (VC_ACCELERATION OR Vc)
     set(SRC_EXTERNAL ${SRC_EXTERNAL} source/backend/vc/Backend.cpp)
   endif()
 
+endif()
+
+if (OFFLOAD_MODE)
+  set(SRC_EXTERNAL ${SRC_EXTERNAL} source/backend/mic/Backend.cpp)
+  # This must be changed to an automatic way...
+  set(MICVEC "/opt/intel/composer_xe_2015.2.164/compiler/include/mic")
+  include_directories(${MICVEC})
 endif()
 
 if (Cilk)
@@ -521,9 +537,13 @@ endif()
 set(SRC_CPP ${SRC_CPP} ${SRC_EXTERNAL}
   source/GeoManager.cpp
   source/ShapeDebugger.cpp
-  source/CppExporter.cpp
   source/benchmarking/NavigationBenchmarker.cpp
 )
+if (NOT OFFLOAD_MODE)
+  set(SRC_CPP ${SRC_CPP} ${SRC_EXTERNAL}
+    source/CppExporter.cpp
+  )
+endif()
 
 # some CUDA kernel code in "userspace"
 if (CUDA)

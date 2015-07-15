@@ -4,6 +4,10 @@
 #ifndef VECGEOM_BENCHMARKING_BENCHMARKER_H_
 #define VECGEOM_BENCHMARKING_BENCHMARKER_H_
 
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(push, target(mic))
+#endif
+
 #include "base/Global.h"
 
 #include "volumes/PlacedVolume.h"
@@ -28,9 +32,9 @@
 #include <utility> // for std::pair
 
 #if defined(VECGEOM_VTUNE)
-#include "ittnotify.h"
+#include <ittnotify.h>
 #else
-#define __itt_resumme()
+#define __itt_resume()
 #define __itt_start()
 #endif
 
@@ -358,5 +362,9 @@ private:
 };
 
 } // End namespace vecgeom
+
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(pop)
+#endif
 
 #endif // VECGEOM_BENCHMARKING_BENCHMARKER_H_
