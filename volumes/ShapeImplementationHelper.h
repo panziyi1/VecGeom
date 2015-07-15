@@ -371,7 +371,7 @@ public:
       for (unsigned j = 0; j < kVectorSize; ++j) {
         output[j+i] = result[j];
       }
-#elif MIC_SIDE
+#elif VECGEOM_MICVEC
       for (unsigned j = 0; j < kVectorSize; ++j) {
         output[j+i] = result[j];
       }
@@ -408,7 +408,7 @@ public:
       );
 #ifdef VECGEOM_VC
       result.store(&output[i]);
-#elif MIC_SIDE
+#elif VECGEOM_MICVEC
       _mm512_store_pd(output+i,result);
 #elif VECGEOM_SCALAR
       output[i] = result;
@@ -460,7 +460,7 @@ public:
       for(unsigned int j=0;j<kVectorSize;++j) {
         nextDaughterIdList[i+j]=( ! mask[j] )? daughterId : nextDaughterIdList[i+j];
       }
-#elif MIC_SIDE
+#elif VECGEOM_MICVEC
       MicBool mask=result>stepMaxBackend;
       MaskedAssign(mask,stepMaxBackend,&result);
       _mm512_store_pd(currentDistance+i,result);
@@ -506,7 +506,7 @@ public:
       );
 #ifdef VECGEOM_VC
       result.store(&output[i]);
-#elif MIC_SIDE
+#elif VECGEOM_MICVEC
       _mm512_store_pd(output+i,result);
 #elif VECGEOM_SCALAR
       output[i] = result;
@@ -569,7 +569,7 @@ public:
       );
 #ifdef VECGEOM_VC
       result.store(&output[i]);
-#elif MIC_SIDE
+#elif VECGEOM_MICVEC
       _mm512_store_pd(output+i,result);
 #elif VECGEOM_SCALAR
       output[i] = result;
@@ -596,7 +596,7 @@ public:
       VECGEOM_BACKEND_TYPE::precision_v estimate = VECGEOM_BACKEND_PRECISION(&safeties[i]);
       result(estimate < result) = estimate;
       result.store(&safeties[i]);
-#elif MIC_SIDE
+#elif VECGEOM_MICVEC
       MaskedAssign(result < safeties[i],result,safeties+i);
       _mm512_store_pd(safeties+i,result);
 #elif VECGEOM_SCALAR
@@ -621,7 +621,7 @@ public:
       );
 #ifdef VECGEOM_VC
       result.store(&output[i]);
-#elif MIC_SIDE
+#elif VECGEOM_MICVEC
       _mm512_store_pd(output+i,result);
 #elif VECGEOM_SCALAR
       output[i] = result;
@@ -648,7 +648,7 @@ public:
       VECGEOM_BACKEND_TYPE::precision_v estimate = VECGEOM_BACKEND_PRECISION(&safeties[i]);
       result(estimate < result) = estimate;
       result.store(&safeties[i]);
-#elif MIC_SIDE
+#elif VECGEOM_MICVEC
       MaskedAssign(result < safeties[i],result,safeties+i);
       _mm512_store_pd(safeties+i,result);
 #elif VECGEOM_SCALAR

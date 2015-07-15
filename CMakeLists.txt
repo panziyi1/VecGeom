@@ -53,25 +53,25 @@ option(DISTANCE_DEBUG "Enable comparison of calculated distances againt ROOT/Gea
 
 option(DATA_DOWNLOAD "Enable downloading of data for tests" OFF)
 
-set(VECGEOM_ARCH native sse2 sse3 ssse3 sse4.1 sse4.2 avx avx2 mic avx512)
+set(_vector native sse2 sse3 ssse3 sse4.1 sse4.2 avx avx2 mic avx512)
 
 enum_option(VECGEOM_VECTOR
       DOC "Vector instruction set to be used"
       TYPE STRING
-      VALUES ${VECGEOM_ARCH}
+      VALUES ${_vector}
       CASE_INSENSITIVE
     )
 
-set(VECGEOM_BACKEND default Scalar Vc Cilk)
+set(_backend default Scalar Vc Cilk micvec)
 
-enum_option(BACKEND
+enum_option(VECGEOM_BACKEND
             DOC "Backend infrastructure to be used"
             TYPE STRING
-            VALUES ${VECGEOM_BACKEND}
+            VALUES ${_backend}
             CASE_INSENSITIVE
            )
 
-option(VC_ACCELERATION "Internal vectorization using Vc." ON)
+option(VC_ACCELERATION "Internal vectorization using Vc." OFF)
 
 option(VTUNE "Enable the use of profiler Vtune" OFF)
 
@@ -101,30 +101,6 @@ if (CTEST)
   set (DATA_DOWNLOAD ON)
 endif()
 
-################################################################################
-
-# Determine backend
-
-string(TOUPPER ${BACKEND} _backend_up)
-
-if (_backend_up MATCHES VC)
-  set(Vc ON)
-  message(STATUS "Configuring with \"Vc\" vector backend")
-elseif (_backend_up MATCHES SCALAR)
-  set(Scalar ON)
-  message(STATUS "Configuring with \"Scalar\" vector backend")
-elseif (_backend_up MATCHES CILK)
-  if (NOT Intel)
-    message(FATAL_ERROR "Must use Intel C++ compiler (icpc) for Cilk+ backend.")
-  endif()
-  set(Cilk ON)
-  message(STATUS "Configuring with \"Cilk+\" vector backend")
-elseif (_backend_up MATCHES DEFAULT)
-  set(Vc ON)
-  message(WARNING "Backend not specified. Defaulting to Vc.")
-else()
-  message(FATAL_ERROR "Value '${BACKEND}' for variable BACKEND is not allowed. ")
-endif()
 
 ################################################################################
 
@@ -177,7 +153,6 @@ string(TOUPPER ${VECGEOM_VECTOR} _arch_up)
 if (${_arch_lo} MATCHES mic)
   if (Intel)
     set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -m${_arch_lo}")
-    set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -m${_arch_lo}")
     set(MIC TRUE)
   else()
     message(FATAL_ERROR "MIC native or offload compilation requires Intel Compiler.")
@@ -185,24 +160,19 @@ if (${_arch_lo} MATCHES mic)
 elseif (${_arch_lo} MATCHES native)
   if (Intel)
     set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -xHost")
-    set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -xHost")
   else()
     set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -march=${_arch_lo}")
-    set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -march=${_arch_lo}")
   endif()
   set(VECGEOM_NVCC_COMPILATION_FLAGS -g -G ${VECGEOM_NVCC_COMPILATION_FLAGS})
 else()
   if (Intel)
     if (${_arch_lo} MATCHES avx2)
       set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -xCORE-${_arch_up}")
-      set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -xCORE-${_arch_up}")
     else()
       set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -x${_arch_up}")
-      set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -x${_arch_up}")
     endif()
   else()
     set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -m${_arch_lo}")
-    set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -m${_arch_lo}")
   endif()
 endif()
 message(STATUS "Compiling for ${_arch_up} SIMD achitecture")
@@ -214,16 +184,6 @@ if ((NOT PLANESHELL))
   set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_PLANESHELL_DISABLE")
 endif()
 
-# Backend specific
-if (Scalar)
-  set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_SCALAR")
-endif()
-if (Vc)
-  set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_VC")
-endif()
-if (Cilk)
-  set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_CILK")
-endif()
 
 if (CUDA)
   set(CUDA_ARCH 20 CACHE STRING "CUDA device architecture.")
@@ -245,6 +205,51 @@ if (CUDA)
         RELEASE  -O3 -use_fast_math
         RELWITHDEBINFO -g -G -O3 -use_fast_math
         MINSIZEREL -use_fast_math )
+endif()
+
+################################################################################
+
+# Determine backend
+
+string(TOUPPER ${VECGEOM_BACKEND} _backend_up)
+
+if (_backend_up MATCHES VC)
+  set(Vc ON)
+  message(STATUS "Configuring with \"Vc\" vector backend")
+elseif (_backend_up MATCHES SCALAR)
+  set(Scalar ON)
+  message(STATUS "Configuring with \"Scalar\" vector backend")
+elseif (_backend_up MATCHES CILK)
+  if (NOT Intel)
+    message(FATAL_ERROR "Must use Intel C++ compiler (icpc) for Cilk+ backend.")
+  endif()
+  set(Cilk ON)
+  message(STATUS "Configuring with \"Cilk+\" vector backend")
+elseif (_backend_up MATCHES MICVEC)
+  if (NOT Intel OR NOT MIC)
+    message(FATAL_ERROR "Must use Intel C++ compiler (icpc) with MIC SIMD for MICVEC backend.")
+  endif()
+  set(MICVEC ON)
+  message(STATUS "Configuring with \"Micvec\" vector backend")
+elseif (_backend_up MATCHES DEFAULT)
+  set(Vc ON)
+  message(WARNING "Backend not specified. Defaulting to Vc.")
+else()
+  message(FATAL_ERROR "Value '${VECGEOM_BACKEND}' for variable VECGEOM_BACKEND is not allowed. ")
+endif()
+
+# Backend specific
+if (Scalar)
+  set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_SCALAR")
+endif()
+if (Vc)
+  set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_VC")
+endif()
+if (Cilk)
+  set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_CILK")
+endif()
+if (MICVEC)
+  set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_MICVEC")
 endif()
 
 # Enable pretty diagnostics coloring if gcc 4.9+ is being used
@@ -306,14 +311,6 @@ endif()
 if (VTUNE)
   set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_VTUNE")
 endif()
-if (OFFLOAD_MODE)
-  if (NOT Intel)
-    message(FATAL_ERROR "Must use Intel C++ compiler (icc) for Xeon Phi Offload Mode.")
-  endif()
-  set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DOFFLOAD_MODE")
-  message(STATUS "Preparing for a offload compiler mode.")
-  set(VTUNE OFF)
-endif()
 ################################################################################
 
 include_directories(AFTER ${CMAKE_SOURCE_DIR})
@@ -336,11 +333,8 @@ if (VC_ACCELERATION OR Vc)
 
 endif()
 
-if (OFFLOAD_MODE)
+if (MICVEC)
   set(SRC_EXTERNAL ${SRC_EXTERNAL} source/backend/mic/Backend.cpp)
-  # This must be changed to an automatic way...
-  set(MICVEC "/opt/intel/composer_xe_2015.2.164/compiler/include/mic")
-  include_directories(${MICVEC})
 endif()
 
 if (Cilk)
@@ -538,12 +532,8 @@ set(SRC_CPP ${SRC_CPP} ${SRC_EXTERNAL}
   source/GeoManager.cpp
   source/ShapeDebugger.cpp
   source/benchmarking/NavigationBenchmarker.cpp
+  source/CppExporter.cpp
 )
-if (NOT OFFLOAD_MODE)
-  set(SRC_CPP ${SRC_CPP} ${SRC_EXTERNAL}
-    source/CppExporter.cpp
-  )
-endif()
 
 # some CUDA kernel code in "userspace"
 if (CUDA)

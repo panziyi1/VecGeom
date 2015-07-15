@@ -632,7 +632,7 @@ std::cout<<"g1="<<gamma1<<" g2="<<gamma2<<" g3="<<gamma3<<" g="<<gammasum<<" inv
   roots[3] = aRoot;
 }
 #endif
-#ifdef MIC_SIDE
+#ifdef VECGEOM_MICVEC
 VECGEOM_CUDA_HEADER_BOTH
 VECGEOM_INLINE
 void solveQuartic2(MicPrecision a, MicPrecision b, MicPrecision c,

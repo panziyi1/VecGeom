@@ -13,7 +13,7 @@
 //#include "backend/vcfloat/Backend.h"
 #elif defined(VECGEOM_CILK)
 #include "backend/cilk/Backend.h"
-#elif defined(MIC_SIDE)
+#elif defined(VECGEOM_MICVEC)
 #include "backend/mic/Backend.h"
 #else
 #include "backend/scalar/Backend.h"
