@@ -342,6 +342,10 @@ public:
       for (unsigned j = 0; j < kVectorSize; ++j) {
         output[j+i] = result[j];
       }
+#elif MIC_SIDE
+      for (unsigned j = 0; j < kVectorSize; ++j) {
+        output[j+i] = result[j];
+      }
 #elif VECGEOM_SCALAR
       output[i] = result;
 #endif
