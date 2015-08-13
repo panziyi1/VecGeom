@@ -1,5 +1,10 @@
 /// \file Transformation3D.cpp
 /// \author Johannes de Fine Licht (johannes.definelicht@cern.ch)
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(push,target(mic))
+  #include <map>
+#endif
+
 #include "base/Transformation3D.h"
 
 #include "backend/Backend.h"
@@ -222,6 +227,43 @@ DevicePtr<cuda::Transformation3D> Transformation3D::CopyToGpu() const {
 
 #endif // VECGEOM_CUDA_INTERFACE
 
+#ifdef OFFLOAD_MODE
+
+static
+std::map<size_t,Transformation3D*> _transformation;
+
+size_t Transformation3D::CopyToXeonPhi() const {
+  size_t addr = size_t(this);
+  // For some reason, these attributes can not be sent to XeonPhi
+  // I think it is because the objects (this or tranf) are/have a const...
+  Precision translation[3];
+  Precision rotation[9];
+  bool identity;
+  bool hasRotation;
+  bool hasTranslation;
+  copy(this->fTranslation, this->fTranslation+3, translation);
+  copy(this->fRotation, this->fRotation+9, rotation);
+  identity = this->fIdentity;
+  hasRotation = this->fRotation;
+  hasTranslation = this->fHasTranslation;
+#pragma offload target(mic) in(translation, rotation, identity, hasRotation, hasTranslation) nocopy(_transformation)
+{
+  auto it = _transformation.find(addr);
+  if(it == _transformation.end()) {
+    Transformation3D *transf = new Transformation3D(translation[0], translation[1], translation[2]);
+    copy(rotation, rotation+9, transf->fRotation);
+    transf->fIdentity = identity;
+    transf->fHasTranslation = hasTranslation;
+    transf->fHasRotation = hasRotation;
+    _transformation[addr] = transf;
+  }
+  addr = size_t(_transformation[addr]);
+}
+  return addr;
+}
+
+#endif
+
 } // End impl namespace
 
 #ifdef VECGEOM_NVCC
@@ -241,3 +283,6 @@ template void DevicePtr<cuda::Transformation3D>::Construct(
 
 } // End global namespace
 
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(pop)
+#endif

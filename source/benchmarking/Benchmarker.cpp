@@ -410,7 +410,7 @@ int Benchmarker::RunInsideBenchmark() {
            "%i repetitions.\n", fPointCount, fRepetitions);
   }
   if (fVerbosity > 1) {
-    printf("Vector instruction size is %i doubles.\n", kVectorSize);
+    printf("Vector instruction size is %i double(s).\n", kVectorSize);
   }
 
   if (fPointPool) delete fPointPool;
@@ -453,6 +453,12 @@ int Benchmarker::RunInsideBenchmark() {
   outputLabelsContains << " - CUDA";
   outputLabelsInside << " - CUDA";
 #endif
+#ifdef OFFLOAD_MODE
+  bool *containsOffload = AllocateAligned<bool>();
+  Inside_t *insideOffload = AllocateAligned<Inside_t>();
+  outputLabelsContains << " - Offload to Xeon Phi";
+  outputLabelsInside << " - Offload to Xeon Phi";
+#endif
 
   // Run all benchmarks
   for(unsigned int i=0; i<fMeasurementCount; ++i) {
@@ -490,6 +496,9 @@ int Benchmarker::RunInsideBenchmark() {
     RunInsideCuda(fPointPool->x(), fPointPool->y(), fPointPool->z(),
                   containsCuda, insideCuda);
 #endif
+#ifdef OFFLOAD_MODE
+    RunInsideOffload(containsOffload, insideOffload);
+#endif
   }
 
   if (fPoolMultiplier == 1 && fVerbosity > 0) {
@@ -521,9 +530,13 @@ int Benchmarker::RunInsideBenchmark() {
       if (containsSpecialized[i] != containsCuda[i]) mismatch = true;
       if (fVerbosity > 2) mismatchOutput << " / " << containsCuda[i];
 #endif
+#ifdef OFFLOAD_MODE
+      if (containsSpecialized[i] != containsOffload[i]) mismatch = true;
+      if (fVerbosity > 2) mismatchOutput << " / " << containsOffload[i];
+#endif
       mismatches += mismatch;
       if ((mismatch && fVerbosity > 2) || fVerbosity > 4) {
-        printf("Point (%f, %f, %f): ", fPointPool->x(i),
+        printf("(%d) Point (%f, %f, %f): ", i, fPointPool->x(i),
                fPointPool->y(i), fPointPool->z(i));
 
         // store point for later inspection
@@ -577,9 +590,13 @@ int Benchmarker::RunInsideBenchmark() {
       if (insideSpecialized[i] != insideCuda[i]) mismatch = true;
       if (fVerbosity > 2) mismatchOutput << " / " << insideCuda[i];
 #endif
+#ifdef OFFLOAD_MODE
+      if (insideSpecialized[i] != insideOffload[i]) mismatch = true;
+      if (fVerbosity > 2) mismatchOutput << " / " << insideOffload[i];
+#endif
       insidemismatches += mismatch;
       if ((mismatch && fVerbosity > 2) || fVerbosity > 4) {
-        printf("Point (%f, %f, %f): ", *(fPointPool->x()+i),
+        printf("(%d) Point (%f, %f, %f): ", i, *(fPointPool->x()+i),
                *(fPointPool->y()+i), fPointPool->z(i));
       }
       if ((mismatch && fVerbosity > 2) || fVerbosity > 3) {
@@ -614,6 +631,10 @@ int Benchmarker::RunInsideBenchmark() {
 #ifdef VECGEOM_CUDA
   FreeAligned(containsCuda);
   FreeAligned(insideCuda);
+#endif
+#ifdef OFFLOAD
+  FreeAligned(containsOffload);
+  FreeAligned(insideOffload);
 #endif
   return mismatches + insidemismatches;
 }
@@ -664,7 +685,7 @@ int Benchmarker::RunToInBenchmark() {
            "%i repetitions.\n", fPointCount, fRepetitions);
   }
   if (fVerbosity > 1) {
-    printf("Vector instruction size is %i doubles.\n", kVectorSize);
+    printf("Vector instruction size is %i double(s).\n", kVectorSize);
   }
 
   // Allocate memory
@@ -849,7 +870,7 @@ int Benchmarker::RunToOutBenchmark() {
            "%i repetitions.\n", fPointCount, fRepetitions);
   }
   if (fVerbosity > 1) {
-    printf("Vector instruction size is %i doubles.\n", kVectorSize);
+    printf("Vector instruction size is %i double(s).\n", kVectorSize);
   }
 
   // Allocate memory
@@ -1765,6 +1786,77 @@ void Benchmarker::RunToOutRoot(
   fResults.push_back( GenerateBenchmarkResult( elapsedDistance, kBenchmarkDistanceToOut, kBenchmarkRoot, 1) );
   fResults.push_back( GenerateBenchmarkResult( elapsedSafety, kBenchmarkSafetyToOut, kBenchmarkRoot, 1)  );
 }
+#endif
+
+#ifdef OFFLOAD_MODE
+
+#define ALLOC  alloc_if(1)
+#define FREE   free_if(1)
+#define RETAIN free_if(0)
+#define REUSE  alloc_if(0)
+
+  void Benchmarker::RunInsideOffload(bool *contains, Inside_t *inside) {
+  if (fVerbosity > 0) {
+    printf("Offload       - ");
+  }
+
+  auto _s_fpp = fPointPool->size();
+  auto _fpp_x = fPointPool->x();
+#pragma offload_transfer target(mic) in(_fpp_x : length(_s_fpp) ALLOC RETAIN align(64))
+  auto _fpp_y = fPointPool->y();
+#pragma offload_transfer target(mic) in(_fpp_y : length(_s_fpp) ALLOC RETAIN align(64))
+  auto _fpp_z = fPointPool->z();
+#pragma offload_transfer target(mic) in(_fpp_z : length(_s_fpp) ALLOC RETAIN align(64))
+  std::list<size_t> fVolumes;
+  for (auto v = this->fVolumes.begin(), vEnd = this->fVolumes.end(); v != vEnd; ++v) {
+    fVolumes.push_back(v->Specialized()->CopyToXeonPhi());
+  }
+
+  Stopwatch timer;
+  timer.Start();
+  for (unsigned r = 0; r < fRepetitions; ++r) {
+    int index = (rand() % fPoolMultiplier) * fPointCount;
+    for (auto v = fVolumes.begin(), vEnd = fVolumes.end(); v != vEnd; ++v) {
+      size_t addr = (*v);
+#pragma offload target(mic) in(addr) inout(contains:length(fPointCount) align(64)) in(_fpp_x,_fpp_y,_fpp_z : length(_s_fpp) REUSE RETAIN)
+{
+      SOA3D<Precision> points(_fpp_x+index,_fpp_y+index,_fpp_z+index,fPointCount);
+      ((VPlacedVolume*)addr)->Contains(points, contains);
+}
+    }
+  }
+  Precision elapsedContains = timer.Stop();
+  timer.Start();
+  for (unsigned r = 0; r < fRepetitions; ++r) {
+    int index = (rand() % fPoolMultiplier) * fPointCount;
+    SOA3D<Precision> points(fPointPool->x()+index, fPointPool->y()+index,
+                            fPointPool->z()+index, fPointCount);
+    for (auto v = fVolumes.begin(), v_end = fVolumes.end(); v != v_end; ++v) {
+      size_t addr = (*v);
+#pragma offload target(mic) in(addr) inout(inside:length(fPointCount) align(64)) in(_fpp_x,_fpp_y,_fpp_z : length(_s_fpp) REUSE RETAIN)
+{
+      SOA3D<Precision> points(_fpp_x+index,_fpp_y+index,_fpp_z+index,fPointCount);
+      ((VPlacedVolume*)addr)->Inside(points, inside);
+}
+    }
+  }
+  Precision elapsedInside = timer.Stop();
+  if (fVerbosity > 0 && fMeasurementCount==1) {
+    printf("Inside: %.6fs (%.6fs), Contains: %.6fs (%.6fs), "
+           "Inside/Contains: %.2f\n",
+           elapsedInside, elapsedInside/fVolumes.size(),
+           elapsedContains, elapsedContains/fVolumes.size(),
+           elapsedInside/elapsedContains);
+  }
+  fResults.push_back(GenerateBenchmarkResult(elapsedContains, kBenchmarkContains, kBenchmarkVectorized,fInsideBias));
+  fResults.push_back( GenerateBenchmarkResult( elapsedInside, kBenchmarkInside, kBenchmarkVectorized, fInsideBias) );
+  }
+
+#undef ALLOC
+#undef FREE
+#undef RETAIN
+#undef REUSE
+
 #endif
 
 template <typename Type>

@@ -311,6 +311,9 @@ private:
     Precision *distances, Precision *safeties);
   void GetVolumePointers( std::list<cxx::DevicePtr<cuda::VPlacedVolume> > &volumesGpu );
 #endif
+#ifdef OFFLOAD_MODE
+  void RunInsideOffload(bool *contains, Inside_t *inside);
+#endif
 
   template <typename Type>
   Type* AllocateAligned() const;

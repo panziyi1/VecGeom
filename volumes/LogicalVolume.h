@@ -151,6 +151,10 @@ public:
                                            DevicePtr<cuda::LogicalVolume> const gpu_ptr) const;
 #endif
 
+#ifdef OFFLOAD_MODE
+  size_t CopyToXeonPhi() const;
+#endif
+
 };
 
 } } // End global namespace

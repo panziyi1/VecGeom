@@ -1,6 +1,11 @@
 /// \file UnplacedBox.cpp
 /// \author Johannes de Fine Licht (johannes.definelicht@cern.ch)
 
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(push,target(mic))
+  #include <map>
+#endif
+
 #include "volumes/UnplacedBox.h"
 
 #include "backend/Backend.h"
@@ -10,6 +15,7 @@
   #include "base/RNG.h"
 #endif
 #include <stdio.h>
+
 
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
@@ -127,6 +133,27 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedBox::CopyToGpu() const
 
 #endif // VECGEOM_CUDA_INTERFACE
 
+#ifdef OFFLOAD_MODE
+
+static
+std::map<size_t, UnplacedBox*> _boxes;
+
+size_t UnplacedBox::CopyToXeonPhi() const {
+  size_t addr = size_t(this);
+  //printf("UnplacedBox: (%ld) -",addr); fflush(stdout);
+#pragma offload target(mic) inout(addr) nocopy(_boxes)
+{
+  auto it = _boxes.find(addr);
+  if(it == _boxes.end())
+    _boxes[addr]=new UnplacedBox(dimensions_);
+  addr = size_t(_boxes[addr]);
+}
+  //printf("(%ld)\n",addr); fflush(stdout);
+  return addr;
+}
+
+#endif
+
 } // End impl namespace
 
 #ifdef VECGEOM_NVCC
@@ -142,3 +169,7 @@ template void DevicePtr<cuda::UnplacedBox>::Construct(
 #endif
 
 } // End global namespace
+
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(pop)
+#endif

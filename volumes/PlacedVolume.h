@@ -331,6 +331,10 @@ public:
 #endif
 #endif // VECGEOM_NVCC
 
+#ifdef OFFLOAD_MODE
+  virtual size_t CopyToXeonPhi() const =0;
+#endif
+
 };
 
 } } // End global namespace
