@@ -1799,7 +1799,9 @@ void Benchmarker::RunToOutRoot(
   if (fVerbosity > 0) {
     printf("Offload       - ");
   }
+  Stopwatch timer;
 
+  timer.Start();
   auto _s_fpp = fPointPool->size();
   auto _fpp_x = fPointPool->x();
 #pragma offload_transfer target(mic) in(_fpp_x : length(_s_fpp) ALLOC RETAIN align(64))
@@ -1811,14 +1813,16 @@ void Benchmarker::RunToOutRoot(
   for (auto v = this->fVolumes.begin(), vEnd = this->fVolumes.end(); v != vEnd; ++v) {
     fVolumes.push_back(v->Specialized()->CopyToXeonPhi());
   }
+#pragma offload_transfer target(mic) nocopy(contains : length(fPointCount) ALLOC RETAIN align(64))
+#pragma offload_transfer target(mic) nocopy(inside : length(fPointCount) ALLOC RETAIN align(64))
+  Precision transferIn = timer.Stop();
 
-  Stopwatch timer;
   timer.Start();
   for (unsigned r = 0; r < fRepetitions; ++r) {
     int index = (rand() % fPoolMultiplier) * fPointCount;
     for (auto v = fVolumes.begin(), vEnd = fVolumes.end(); v != vEnd; ++v) {
       size_t addr = (*v);
-#pragma offload target(mic) in(addr) inout(contains:length(fPointCount) align(64)) in(_fpp_x,_fpp_y,_fpp_z : length(_s_fpp) REUSE RETAIN)
+#pragma offload target(mic) in(addr) nocopy(contains,_fpp_x,_fpp_y,_fpp_z)
 {
       SOA3D<Precision> points(_fpp_x+index,_fpp_y+index,_fpp_z+index,fPointCount);
       ((VPlacedVolume*)addr)->Contains(points, contains);
@@ -1829,11 +1833,9 @@ void Benchmarker::RunToOutRoot(
   timer.Start();
   for (unsigned r = 0; r < fRepetitions; ++r) {
     int index = (rand() % fPoolMultiplier) * fPointCount;
-    SOA3D<Precision> points(fPointPool->x()+index, fPointPool->y()+index,
-                            fPointPool->z()+index, fPointCount);
     for (auto v = fVolumes.begin(), v_end = fVolumes.end(); v != v_end; ++v) {
       size_t addr = (*v);
-#pragma offload target(mic) in(addr) inout(inside:length(fPointCount) align(64)) in(_fpp_x,_fpp_y,_fpp_z : length(_s_fpp) REUSE RETAIN)
+#pragma offload target(mic) in(addr) nocopy(inside,_fpp_x,_fpp_y,_fpp_z)
 {
       SOA3D<Precision> points(_fpp_x+index,_fpp_y+index,_fpp_z+index,fPointCount);
       ((VPlacedVolume*)addr)->Inside(points, inside);
@@ -1841,12 +1843,22 @@ void Benchmarker::RunToOutRoot(
     }
   }
   Precision elapsedInside = timer.Stop();
+
+  // Freeing the Xeon Phi memory
+  timer.Start();
+#pragma offload_transfer target(mic) nocopy(_fpp_x : length(_s_fpp) align(64) REUSE FREE)
+#pragma offload_transfer target(mic) nocopy(_fpp_y : length(_s_fpp) align(64) REUSE FREE)
+#pragma offload_transfer target(mic) nocopy(_fpp_z : length(_s_fpp) align(64) REUSE FREE)
+#pragma offload_transfer target(mic) out(contains : length(fPointCount) align(64) REUSE FREE)
+#pragma offload_transfer target(mic) out(inside : length(fPointCount) align(64) REUSE FREE)
+  Precision transferOut = timer.Stop();
+
   if (fVerbosity > 0 && fMeasurementCount==1) {
     printf("Inside: %.6fs (%.6fs), Contains: %.6fs (%.6fs), "
-           "Inside/Contains: %.2f\n",
+           "Inside/Contains: %.2f, TransferIn/Out: %.2fs/%.2fs\n",
            elapsedInside, elapsedInside/fVolumes.size(),
            elapsedContains, elapsedContains/fVolumes.size(),
-           elapsedInside/elapsedContains);
+           elapsedInside/elapsedContains, transferIn, transferOut);
   }
   fResults.push_back(GenerateBenchmarkResult(elapsedContains, kBenchmarkContains, kBenchmarkVectorized,fInsideBias));
   fResults.push_back( GenerateBenchmarkResult( elapsedInside, kBenchmarkInside, kBenchmarkVectorized, fInsideBias) );
