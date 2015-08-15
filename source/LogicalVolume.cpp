@@ -176,35 +176,35 @@ DevicePtr<cuda::LogicalVolume> LogicalVolume::CopyToGpu(
 #ifdef OFFLOAD_MODE
 
 static
-std::map<size_t, LogicalVolume*> _logical_volumes;
+std::map<size_t, size_t> _logical_volumes;
 
-size_t LogicalVolume::CopyToXeonPhi() const {
+size_t LogicalVolume::CopyToXeonPhi() const
+{
   size_t addr = size_t(this);
   size_t ret;
-  size_t upv = unplaced_volume_->CopyToXeonPhi();
-  const char *label = label_->c_str();
+  auto it = _logical_volumes.find(addr);
+  if(it == _logical_volumes.end()) {
+    size_t upv = unplaced_volume_->CopyToXeonPhi();
+    const char *label = label_->c_str();
 #pragma offload target(mic) out(ret) in(addr,upv,id_,label) nocopy(_logical_volumes)
 {
-  auto it = _logical_volumes.find(addr);
-  if(it == _logical_volumes.end())
-  {
     LogicalVolume *v = new LogicalVolume(label,(VUnplacedVolume const *const)upv);
     v->id_ = id_;
-    _logical_volumes[addr] = v;
-  }
-  ret = size_t(_logical_volumes[addr]);
+    _logical_volumes[addr] = size_t(v);
+    ret = size_t(v);
 }
-  for(auto *i=daughters().begin();
-      i!=daughters().end();i++) {
-    const char *label = (*i)->GetLabel().c_str();
-    size_t logical_volume = (*i)->GetLogicalVolume()->CopyToXeonPhi();
-    size_t transf = (*i)->GetTransformation()->CopyToXeonPhi();
+    _logical_volumes[addr] = ret;
+    for(auto *i=daughters().begin();i!=daughters().end();i++) {
+      const char *label = (*i)->GetLabel().c_str();
+      size_t logical_volume = (*i)->GetLogicalVolume()->CopyToXeonPhi();
+      size_t transf = (*i)->GetTransformation()->CopyToXeonPhi();
 #pragma offload target(mic) in(addr, label, logical_volume, transf) nocopy(_logical_volumes)
 {
-    _logical_volumes[addr]->PlaceDaughter(label, (LogicalVolume const *const)logical_volume, (Transformation3D const *const)transf);
+      ((LogicalVolume*)_logical_volumes[addr])->PlaceDaughter(label, (LogicalVolume const *const)logical_volume, (Transformation3D const *const)transf);
 }
+    }
   }
-  return ret;
+  return _logical_volumes[addr];
 }
 
 #endif

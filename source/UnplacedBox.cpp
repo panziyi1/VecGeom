@@ -136,23 +136,24 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedBox::CopyToGpu() const
 #ifdef OFFLOAD_MODE
 
 static
-std::map<size_t, UnplacedBox*> _boxes;
+std::map<size_t, size_t> _boxes;
 
 size_t UnplacedBox::CopyToXeonPhi() const {
   size_t addr = size_t(this);
-  Precision vec[] = { dimensions_[0], dimensions_[1], dimensions_[2] };
-  //printf("UnplacedBox: (%ld) -",addr); fflush(stdout);
-#pragma offload target(mic) inout(addr) nocopy(_boxes) in(vec)
-{
+  size_t ret;
   auto it = _boxes.find(addr);
   if(it == _boxes.end()) {
+    Precision vec[] = { dimensions_[0], dimensions_[1], dimensions_[2] };
+#pragma offload target(mic) out(ret) nocopy(_boxes) in(addr,vec)
+{
     Vector3D<Precision> dim(vec[0],vec[1],vec[2]);
-    _boxes[addr]=new UnplacedBox(dim);
-  }
-  addr = size_t(_boxes[addr]);
+    UnplacedBox *b = new UnplacedBox(dim);
+    _boxes[addr] = size_t(b);
+    ret = size_t(b);
 }
-  //printf("(%ld)\n",addr); fflush(stdout);
-  return addr;
+    _boxes[addr] = ret;
+  }
+  return _boxes[addr];
 }
 
 #endif

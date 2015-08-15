@@ -60,23 +60,25 @@ G4VSolid const* PlacedBox::ConvertToGeant4() const {
 #ifdef OFFLOAD_MODE
 
 static
-std::map<size_t,VPlacedVolume*> _vplaced_volumes;
+std::map<size_t, size_t> _vplaced_volumes;
 
 size_t PlacedBox::CopyToXeonPhi() const {
-  size_t logical_volume = logical_volume_->CopyToXeonPhi();
-  size_t transf = transformation_->CopyToXeonPhi();
   size_t addr = size_t(this);
-#pragma offload target(mic) inout(addr) in(logical_volume, transf) nocopy(_vplaced_volumes)
-{
+  size_t ret;
   auto it = _vplaced_volumes.find(addr);
   if(it == _vplaced_volumes.end()) {
+    size_t logical_volume = logical_volume_->CopyToXeonPhi();
+    size_t transf = transformation_->CopyToXeonPhi();
+#pragma offload target(mic) out(ret) in(addr,logical_volume,transf) nocopy(_vplaced_volumes)
+{
     LogicalVolume *lv = (LogicalVolume*)logical_volume;
     VPlacedVolume *vpv = lv->Place((Transformation3D const *const)transf);
-    _vplaced_volumes[addr] = vpv;
-  }
-  addr = size_t(_vplaced_volumes[addr]);
+    _vplaced_volumes[addr] = size_t(vpv);
+    ret = size_t(vpv);
 }
-  return addr;
+    _vplaced_volumes[addr] = ret;
+  }
+  return _vplaced_volumes[addr];
 }
 
 #endif

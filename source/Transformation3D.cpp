@@ -230,36 +230,39 @@ DevicePtr<cuda::Transformation3D> Transformation3D::CopyToGpu() const {
 #ifdef OFFLOAD_MODE
 
 static
-std::map<size_t,Transformation3D*> _transformation;
+std::map<size_t, size_t> _transformation;
 
-size_t Transformation3D::CopyToXeonPhi() const {
-  size_t addr = size_t(this);
-  // For some reason, these attributes can not be sent to XeonPhi
-  // I think it is because the objects (this or tranf) are/have a const...
-  Precision translation[3];
-  Precision rotation[9];
-  bool identity;
-  bool hasRotation;
-  bool hasTranslation;
-  copy(this->fTranslation, this->fTranslation+3, translation);
-  copy(this->fRotation, this->fRotation+9, rotation);
-  identity = this->fIdentity;
-  hasRotation = this->fRotation;
-  hasTranslation = this->fHasTranslation;
-#pragma offload target(mic) in(translation, rotation, identity, hasRotation, hasTranslation) nocopy(_transformation)
+size_t Transformation3D::CopyToXeonPhi() const
 {
+  size_t addr = size_t(this);
+  size_t ret;
   auto it = _transformation.find(addr);
   if(it == _transformation.end()) {
+    // For some reason, these attributes can not be sent to XeonPhi
+    // I think it is because the objects (this or tranf) are/have a const...
+    Precision translation[3];
+    Precision rotation[9];
+    bool identity;
+    bool hasRotation;
+    bool hasTranslation;
+    copy(this->fTranslation, this->fTranslation+3, translation);
+    copy(this->fRotation, this->fRotation+9, rotation);
+    identity = this->fIdentity;
+    hasRotation = this->fRotation;
+    hasTranslation = this->fHasTranslation;
+#pragma offload target(mic) out(ret) in(addr,translation,rotation,identity,hasRotation,hasTranslation) nocopy(_transformation)
+{
     Transformation3D *transf = new Transformation3D(translation[0], translation[1], translation[2]);
     copy(rotation, rotation+9, transf->fRotation);
     transf->fIdentity = identity;
     transf->fHasTranslation = hasTranslation;
     transf->fHasRotation = hasRotation;
-    _transformation[addr] = transf;
-  }
-  addr = size_t(_transformation[addr]);
+    _transformation[addr] = size_t(transf);
+    ret = size_t(transf);
 }
-  return addr;
+   _transformation[addr] = ret;
+  }
+  return _transformation[addr];
 }
 
 #endif
