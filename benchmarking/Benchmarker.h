@@ -313,6 +313,8 @@ private:
 #endif
 #ifdef OFFLOAD_MODE
   void RunInsideOffload(bool *contains, Inside_t *inside);
+  void RunToInOffload(Precision *distances, Precision *safeties);
+  void RunToOutOffload(Precision *distances, Precision *safeties);
 #endif
 
   template <typename Type>
@@ -340,6 +342,9 @@ private:
 #ifdef VECGEOM_CUDA
     Precision const *const cuda,
 #endif
+#ifdef OFFLOAD_MODE
+    Precision const *const offload,
+#endif
     char const *const method);
 
   int CompareSafeties(
@@ -359,6 +364,9 @@ private:
 #endif
 #ifdef VECGEOM_CUDA
     Precision const *const cuda,
+#endif
+#ifdef OFFLOAD_MODE
+    Precision const *const offload,
 #endif
     char const *const method) const;
   

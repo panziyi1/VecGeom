@@ -140,12 +140,17 @@ std::map<size_t, UnplacedBox*> _boxes;
 
 size_t UnplacedBox::CopyToXeonPhi() const {
   size_t addr = size_t(this);
+  auto _x = dimensions_[0];
+  auto _y = dimensions_[1];
+  auto _z = dimensions_[2];
   //printf("UnplacedBox: (%ld) -",addr); fflush(stdout);
-#pragma offload target(mic) inout(addr) nocopy(_boxes)
+#pragma offload target(mic) inout(addr) nocopy(_boxes) in(_x,_y,_z)
 {
   auto it = _boxes.find(addr);
-  if(it == _boxes.end())
-    _boxes[addr]=new UnplacedBox(dimensions_);
+  if(it == _boxes.end()) {
+    Vector3D<Precision> dim(_x,_y,_z);
+    _boxes[addr]=new UnplacedBox(dim);
+  }
   addr = size_t(_boxes[addr]);
 }
   //printf("(%ld)\n",addr); fflush(stdout);
