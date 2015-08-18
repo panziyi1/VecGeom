@@ -39,7 +39,7 @@ option(GEANT4 "Include Geant4." OFF)
 
 option(BENCHMARK "Enable performance comparisons." OFF)
 
-option(NO_SPECIALIZATION "Disable specialization of volumes." OFF)
+option(NO_SPECIALIZATION "Disable specialization of volumes." ON)
 
 option(COVERAGE_TESTING "Enable coverage testing flags." OFF)
 
@@ -106,8 +106,10 @@ endif()
 
 # Set default C++ compiler flags for each build type
 # C++ standard set to c++11 by default
-
-set(VECGEOM_CXX_FLAGS "-std=c++11")
+# some compilers do not default to C++11 standard yet
+if (NOT CUDA)
+  set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -std=c++11")
+endif()
 
 if (GNU)
   set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -Wall -fPIC")
@@ -355,6 +357,27 @@ if (CUDA)
   set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${VECGEOM_NVCC_COMPILATION_FLAGS})
 endif()
 
+### CXXFLAGS needs to be set early, so that VECGEOM_GEANT4, VECGEOM_ROOT,
+### and VECGEOM_USOLIDS are already defined when compiling USolids, or it breaks
+
+# Pass flags to compilers
+# We may have addition in compiler flags from the above included packages
+# We don't want to have trailing CMAKE_CXX_FLAGS_"BUILD_TYPE" options on the command line
+# but rather have it as first set of argument.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_build_type}} ${VECGEOM_CXX_FLAGS} ${VECGEOM_COMPILATION_FLAGS}")
+#set(VECGEOM_CXX_FLAGS ${CMAKE_CXX_FLAGS_${_build_type}})
+#unset(CMAKE_CXX_FLAGS_${_build_type} CACHE)
+
+message(STATUS "Compiling with C++ flags: ${CMAKE_CXX_FLAGS}")
+if (CUDA)
+  message(STATUS "Compiling with NVCC flags: ${CUDA_NVCC_FLAGS}")
+endif()
+
+# until VecCore is separated from VecGeom (then it become something
+# ${VecCore_DIR}/include
+# include_directories(${CMAKE_SOURCE_DIR}/VecCore/inc )
+# include_directories(${CMAKE_INSTALL_PREFIX}/VecCore)
+
 if (ROOT)
 
   find_package(ROOT REQUIRED)
@@ -399,24 +422,7 @@ if (VTUNE)
 endif()
 
 
-# until VecCore is separated from VecGeom (then it become something
-# ${VecCore_DIR}/include
-include_directories(AFTER ${CMAKE_SOURCE_DIR}/VecCore/inc )
-#include_directories(${CMAKE_INSTALL_PREFIX}/VecCore)
-
-# Pass flags to compilers
-# We may have addition in compiler flags from the above included packages
-# This is why no build can occur before
-# We don't want to have trailing CMAKE_CXX_FLAGS_"BUILD_TYPE" options on the command line
-# but rather have it as first set of argument.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_build_type}} ${VECGEOM_CXX_FLAGS} ${VECGEOM_DEFINITION_FLAGS}")
-set(CMAKE_CXX_FLAGS_${_build_type} "" CACHE STRING "" FORCE)
-
-message(STATUS "Compiling with C++ flags: ${CMAKE_CXX_FLAGS}")
-if (CUDA)
-  message(STATUS "Compiling with NVCC flags: ${CUDA_NVCC_FLAGS}")
-endif()
-
+#include_directories(AFTER ${CMAKE_SOURCE_DIR}/VecCore/inc )
 ################################################################################
 
 
@@ -474,10 +480,10 @@ set(SRC_CPP_RELATIVE
 
 # avoid "file has no symbols" warning
 if(NOT CUDA)
-  list(REMOVE_ITEM SRC_CPP_RELATIVE souce/RNG.cpp)
-  list(REMOVE_ITEM SRC_CPP_RELATIVE souce/AOS3D.cpp)
-  list(REMOVE_ITEM SRC_CPP_RELATIVE souce/SOA3D.cpp)
-  list(REMOVE_ITEM SRC_CPP_RELATIVE souce/Vector.cpp)
+  list(REMOVE_ITEM SRC_CPP_RELATIVE source/RNG.cpp)
+  list(REMOVE_ITEM SRC_CPP_RELATIVE source/AOS3D.cpp)
+  list(REMOVE_ITEM SRC_CPP_RELATIVE source/SOA3D.cpp)
+  list(REMOVE_ITEM SRC_CPP_RELATIVE source/Vector.cpp)
 endif()
 
 foreach(SRC ${SRC_CPP_RELATIVE})
@@ -542,6 +548,12 @@ if (CUDA)
     )
 endif()
 
+# Compile cpp-files for C++11
+
+if (CUDA)
+  set_source_files_properties(${SRC_CPP} PROPERTIES COMPILE_FLAGS -std=c++11)
+endif()
+
 ################################################################################
 # Build libraries
 ################################################################################
@@ -561,6 +573,13 @@ target_link_libraries(vecgeom ${VECGEOM_LIBRARIES}
 set(VECGEOM_LIBRARIES ${VECGEOM_LIBRARIES} vecgeom)
 if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   set(VECGEOM_LIBRARIES_EXTERNAL ${VECGEOM_LIBRARIES_EXTERNAL} rt)
+endif()
+
+if (CUDA)
+  set_source_files_properties(
+    ${SRC_EXECUTABLES}
+    PROPERTIES COMPILE_FLAGS -std=c++11
+  )
 endif()
 
 # build the CUDA version of the library
@@ -728,6 +747,13 @@ set(TEST_EXECUTABLES
   ${TEST_EXECUTABLES_CUDA}
   ${TEST_EXECUTABLES_SHAPETESTER}
 )
+
+if (CUDA)
+  set_source_files_properties(
+    ${TEST_EXECUTABLES}
+    PROPERTIES COMPILE_FLAGS -std=c++11
+  )
+endif()
 
 # Build executables
 
