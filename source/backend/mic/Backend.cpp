@@ -1,4 +1,7 @@
+#ifdef OFFLOAD_MODE
 #pragma offload_attribute(push, target(mic))
+#endif 
+
 #include "backend/mic/Backend.h"
 
 namespace vecgeom {
@@ -11,4 +14,7 @@ const MicPrecision kMic::kZero = MicPrecision(0.0);
 
 }
 }
+
+#ifdef OFFLOAD_MODE
 #pragma offload_attribute(pop)
+#endif

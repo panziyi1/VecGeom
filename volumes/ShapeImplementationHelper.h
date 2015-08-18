@@ -346,7 +346,7 @@ public:
       for (unsigned j = 0; j < kVectorSize; ++j) {
         output[j+i] = result[j];
       }
-#elif MIC_SIDE
+#elif VECGEOM_MICVEC
       for (unsigned j = 0; j < kVectorSize; ++j) {
         output[j+i] = result[j];
       }

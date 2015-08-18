@@ -63,8 +63,7 @@ public:
   bool operator[](size_t index) const { return static_cast<bool>(m & (1 << index)); }
 
 #if defined(_IOSTREAM_) || defined(_CPP_IOSTREAM) || defined(_GLIBCXX_IOSTREAM)
-  friend std::ostream& operator << (std::ostream &os,
-                                    const MicMask &a) {
+  friend std::ostream& operator <<(std::ostream &os, const MicMask &a) {
     int size = 8;
     unsigned int num = a;
     int i;
@@ -80,31 +79,28 @@ public:
 };
 
 VECGEOM_INLINE
-MicMask operator ! (MicMask const &val) {
+MicMask operator !(MicMask const &val) {
   MicMask r(val);
   return ~r;
 }
 
 VECGEOM_INLINE
-MicMask operator && (MicMask const &val1,
-                     MicMask const &val2) {
+MicMask operator &&(MicMask const &val1, MicMask const &val2) {
   return val1 & val2;
 }
 
 VECGEOM_INLINE
-MicMask operator && (bool const &val1,
-                     MicMask const &val2) {
+MicMask operator &&(bool const &val1, MicMask const &val2) {
   return MicMask(val1) & val2;
 }
 
 VECGEOM_INLINE
-MicMask operator && (MicMask const &val1,
-                     bool const &val2) {
+MicMask operator &&(MicMask const &val1, bool const &val2) {
   return val1 & MicMask(val2);
 }
 
 VECGEOM_INLINE
-bool IsFull(MicMask const &cond){
+bool IsFull(MicMask const &cond) {
   return  _mm512_kortestc(cond, cond);
 }
 
@@ -133,134 +129,108 @@ public:
   MicDoubleVector(F64vec8 m) : MicDoubleVector((__m512d)m) {}
 
   VECGEOM_INLINE
-  MicDoubleVector operator = (Precision const &val) {
-    return MicDoubleVector(vec = _mm512_set1_pd(val));
-  }
+  MicDoubleVector operator =(Precision const &val) { return MicDoubleVector(vec = _mm512_set1_pd(val)); }
 
   VECGEOM_INLINE
-  MicDoubleVector operator = (MicDoubleVector const &val) {
-    return MicDoubleVector(vec = val.vec);
-  }
+  MicDoubleVector operator =(MicDoubleVector const &val) { return MicDoubleVector(vec = val.vec); }
 
   VECGEOM_INLINE
-  MicDoubleVector operator - () const {
-    return MicPrecision(0.0) - vec;
-  }
+  MicDoubleVector operator -() const { return MicPrecision(0.0) - vec; }
 
   VECGEOM_INLINE
-  MicDoubleVector operator - (Precision const &val) const {
-    return (*this) - MicDoubleVector(val);
-  }
+  MicDoubleVector operator -(Precision const &val) const { return (*this) - MicDoubleVector(val); }
 
 };
 
 // Operators and Functions for MicDoubleVector/MicPrecision
 
 VECGEOM_INLINE
-MicMask operator == (MicPrecision const &val1,
-                     MicPrecision const &val2) {
+MicMask operator ==(MicPrecision const &val1, MicPrecision const &val2) {
   return cmpeq(val1,val2);
 }
 
 VECGEOM_INLINE
-MicMask operator == (MicPrecision const &val1,
-                     Precision const &val2) {
+MicMask operator ==(MicPrecision const &val1, Precision const &val2) {
   return cmpeq(val1,MicPrecision(val2));
 }
 
 VECGEOM_INLINE
-MicMask operator != (MicPrecision const &val1,
-                     MicPrecision const &val2) {
+MicMask operator !=(MicPrecision const &val1, MicPrecision const &val2) {
   return val1 != val2;
 }
 
 VECGEOM_INLINE
-MicMask operator != (MicPrecision const &val1,
-                     Precision const &val2) {
+MicMask operator !=(MicPrecision const &val1, Precision const &val2) {
   return val1 != MicPrecision(val2);
 }
 
 VECGEOM_INLINE
-MicMask operator > (MicPrecision const &val1,
-                    MicPrecision const &val2) {
+MicMask operator >(MicPrecision const &val1, MicPrecision const &val2) {
   return cmpnle(val1, val2);
 }
 
 VECGEOM_INLINE
-MicMask operator > (MicPrecision const &val1,
-                    Precision const &val2) {
+MicMask operator >(MicPrecision const &val1, Precision const &val2) {
   return val1 > MicPrecision(val2);
 }
 
 VECGEOM_INLINE
-MicMask operator >= (MicPrecision const &val1,
-                     MicPrecision const &val2) {
+MicMask operator >=(MicPrecision const &val1, MicPrecision const &val2) {
   return cmpnlt(val1, val2);
 }
 
 VECGEOM_INLINE
-MicMask operator >= (MicPrecision const &val1,
-                     Precision const &val2) {
+MicMask operator >=(MicPrecision const &val1, Precision const &val2) {
   return val1 >= MicPrecision(val2);
 }
 
 VECGEOM_INLINE
-MicMask operator < (MicPrecision const &val1,
-                    MicPrecision const &val2) {
+MicMask operator <(MicPrecision const &val1, MicPrecision const &val2) {
   return cmplt(val1, val2);
 }
 
 VECGEOM_INLINE
-MicMask operator < (MicPrecision const &val1,
-                    double const &val2) {
+MicMask operator <(MicPrecision const &val1, double const &val2) {
   return val1 < MicPrecision(val2);
 }
 
 VECGEOM_INLINE
-MicMask operator <= (MicPrecision const &val1,
-                     MicPrecision const &val2) {
+MicMask operator <=(MicPrecision const &val1, MicPrecision const &val2) {
   return cmple(val1, val2);
 }
 
 VECGEOM_INLINE
-MicMask operator <= (MicPrecision const &val1,
-                     Precision const &val2) {
+MicMask operator <=(MicPrecision const &val1, Precision const &val2) {
   return val1 <= MicPrecision(val2);
 }
 
 VECGEOM_INLINE
-MicMask operator <= (Precision const &val1,
-                     MicPrecision const &val2) {
+MicMask operator <=(Precision const &val1, MicPrecision const &val2) {
   return MicPrecision(val1) <= val2;
 }
 
 VECGEOM_INLINE
-MicPrecision operator - (double const &val1,
-                         MicPrecision const &val2) {
+MicPrecision operator -(double const &val1, MicPrecision const &val2) {
   return MicPrecision(MicPrecision((double)val1) - val2);
 }
 
 VECGEOM_INLINE
-MicPrecision operator + (MicPrecision const &val1,
-                         Precision const &val2) {
+MicPrecision operator +(MicPrecision const &val1, Precision const &val2) {
   return val1 + MicPrecision(val2);
 }
 
 VECGEOM_INLINE
-MicPrecision operator + (Precision const &val1,
-                         MicPrecision const &val2) {
+MicPrecision operator +(Precision const &val1, MicPrecision const &val2) {
   return MicPrecision(val1) + val2;
 }
 
 VECGEOM_INLINE
-MicPrecision operator * (Precision const &val1,
-                         MicPrecision const &val2) {
+MicPrecision operator *(Precision const &val1, MicPrecision const &val2) {
   return MicPrecision(val1) * val2;
 }
 
 VECGEOM_INLINE
-MicPrecision operator / (double const &val1,
-                         MicPrecision const &val2) {
+MicPrecision operator /(double const &val1, MicPrecision const &val2) {
   return MicPrecision((double)val1) / val2;
 }
 
