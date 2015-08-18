@@ -332,7 +332,7 @@ public:
 #endif // VECGEOM_NVCC
 
 #ifdef OFFLOAD_MODE
-  virtual size_t CopyToXeonPhi() const =0;
+  virtual size_t CopyToXeonPhi() const;
 #endif
 
 };

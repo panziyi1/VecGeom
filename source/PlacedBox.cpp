@@ -1,11 +1,6 @@
 /// \file PlacedBox.cpp
 /// \author Johannes de Fine Licht (johannes.definelicht@cern.ch)
 
-#ifdef OFFLOAD_MODE
-  #pragma offload_attribute(push,target(mic))
-  #include <map>
-#endif
-
 #include "volumes/PlacedBox.h"
 
 #include "base/AOS3D.h"
@@ -57,32 +52,6 @@ G4VSolid const* PlacedBox::ConvertToGeant4() const {
 
 #endif // VECGEOM_NVCC
 
-#ifdef OFFLOAD_MODE
-
-static
-std::map<size_t, size_t> _vplaced_volumes;
-
-size_t PlacedBox::CopyToXeonPhi() const {
-  size_t addr = size_t(this);
-  size_t ret;
-  auto it = _vplaced_volumes.find(addr);
-  if(it == _vplaced_volumes.end()) {
-    size_t logical_volume = logical_volume_->CopyToXeonPhi();
-    size_t transf = transformation_->CopyToXeonPhi();
-#pragma offload target(mic) out(ret) in(addr,logical_volume,transf) nocopy(_vplaced_volumes)
-{
-    LogicalVolume *lv = (LogicalVolume*)logical_volume;
-    VPlacedVolume *vpv = lv->Place((Transformation3D const *const)transf);
-    _vplaced_volumes[addr] = size_t(vpv);
-    ret = size_t(vpv);
-}
-    _vplaced_volumes[addr] = ret;
-  }
-  return _vplaced_volumes[addr];
-}
-
-#endif
-
 } // End impl namespace
 
 #ifdef VECGEOM_NVCC
@@ -92,7 +61,3 @@ VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC( SpecializedBox )
 #endif // VECGEOM_NVCC
 
 } // End namespace vecgeom
-
-#ifdef OFFLOAD_MODE
-  #pragma offload_attribute(pop)
-#endif
