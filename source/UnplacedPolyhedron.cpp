@@ -1,6 +1,11 @@
 /// \file UnplacedPolyhedron.cpp
 /// \author Johannes de Fine Licht (johannes.definelicht@cern.ch)
 
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(push,target(mic))
+  #include <map>
+#endif
+
 #include "volumes/UnplacedPolyhedron.h"
 
 #include "volumes/PlacedPolyhedron.h"
@@ -872,6 +877,38 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedPolyhedron::CopyToGpu() const
 #endif
 
 
+#ifdef OFFLOAD_MODE
+
+static
+std::map<size_t, size_t> _polyhedrons;
+
+size_t UnplacedPolyhedron::CopyToXeonPhi() const {
+  size_t addr = size_t(this);
+  size_t ret;
+  auto it = _polyhedrons.find(addr);
+  if(it == _polyhedrons.end()) {
+    Precision phiStart = fPhiStart;
+    Precision phiDelta = fPhiDelta;
+    int sideCount = fSideCount;
+    int zPlaneCount = fZPlanes.size();
+    Precision vec[zPlaneCount*3];
+    copy(&fZPlanes[0], &fZPlanes[0]+zPlaneCount, vec);
+    copy(&fRMin[0], &fRMin[0]+zPlaneCount, vec+zPlaneCount);
+    copy(&fRMax[0], &fRMax[0]+zPlaneCount, vec+zPlaneCount*2);
+#pragma offload target(mic) out(ret) nocopy(_polyhedrons) in(addr,phiStart,phiDelta,sideCount,zPlaneCount,vec)
+{
+    UnplacedPolyhedron *p = new UnplacedPolyhedron(phiStart,phiDelta,sideCount,zPlaneCount,
+						   vec,vec+zPlaneCount,vec+zPlaneCount*2);
+    _polyhedrons[addr] = size_t(p);
+    ret = size_t(p);
+}
+    _polyhedrons[addr] = ret;
+  }
+  return _polyhedrons[addr];
+}
+
+#endif
+
 } // End impl namespace
 
 #ifdef VECGEOM_NVCC
@@ -892,3 +929,7 @@ template void DevicePtr<cuda::UnplacedPolyhedron>::Construct(Precision phiStart,
 #endif
  
 } // End namespace vecgeom
+
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(pop)
+#endif

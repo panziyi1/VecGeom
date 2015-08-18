@@ -5,6 +5,11 @@
  * 140407 G.Lima - based on equivalent box code
  */
 
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(push,target(mic))
+  #include <map>
+#endif
+
 #include "volumes/UnplacedTrapezoid.h"
 
 #include "management/VolumeFactory.h"
@@ -711,6 +716,31 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedTrapezoid::CopyToGpu() const
 
 #endif // VECGEOM_CUDA_INTERFACE
 
+#ifdef OFFLOAD_MODE
+
+static
+std::map<size_t, size_t> _trapezoids;
+
+size_t UnplacedTrapezoid::CopyToXeonPhi() const {
+  size_t addr = size_t(this);
+  size_t ret;
+  auto it = _trapezoids.find(addr);
+  if(it == _trapezoids.end()) {
+    Precision vec[] = { fDz, fTheta, fPhi, fDy1, fDx1, fDx2, fTanAlpha1,
+			fDy2, fDx3, fDx4, fTanAlpha2 };
+#pragma offload target(mic) out(ret) nocopy(_trapezoids) in(addr,vec)
+{
+    UnplacedTrapezoid *t = new UnplacedTrapezoid(vec);
+    _trapezoids[addr] = size_t(t);
+    ret = size_t(t);
+}
+    _trapezoids[addr] = ret;
+  }
+  return _trapezoids[addr];
+}
+
+#endif
+
 } // End impl namespace
 
 #ifdef VECGEOM_NVCC
@@ -728,3 +758,7 @@ template void DevicePtr<cuda::UnplacedTrapezoid>::Construct(
 #endif // VECGEOM_NVCC
 
 } // End global namespace
+
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(pop)
+#endif

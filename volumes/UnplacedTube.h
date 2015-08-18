@@ -263,6 +263,10 @@ private:
 #endif
       VPlacedVolume *const placement = NULL) const;
 
+#ifdef OFFLOAD_MODE
+  virtual size_t CopyToXeonPhi() const override;
+#endif
+
 };
 
 } } // end global namespace

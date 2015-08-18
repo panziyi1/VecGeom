@@ -336,6 +336,10 @@ Precision fSinEPhi;
 
 #endif // !VECGEOM_NVCC
 
+#ifdef OFFLOAD_MODE
+  virtual size_t CopyToXeonPhi() const override;
+#endif
+  
 };
 
 

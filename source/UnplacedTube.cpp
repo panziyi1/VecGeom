@@ -1,6 +1,11 @@
 /// \file UnplacedTube.cpp
 /// \author Georgios Bitzes (georgios.bitzes@cern.ch)
 
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(push,target(mic))
+  #include <map>
+#endif
+
 #include "volumes/UnplacedTube.h"
 #include "volumes/SpecializedTube.h"
 #include "backend/Backend.h"
@@ -309,6 +314,30 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedTube::CopyToGpu() const
 
 #endif // VECGEOM_CUDA_INTERFACE
 
+#ifdef OFFLOAD_MODE
+
+static
+std::map<size_t, size_t> _tubes;
+
+size_t UnplacedTube::CopyToXeonPhi() const {
+  size_t addr = size_t(this);
+  size_t ret;
+  auto it = _tubes.find(addr);
+  if(it == _tubes.end()) {
+    Precision vec[] = {fRmin, fRmax, fZ, fSphi, fDphi };
+#pragma offload target(mic) out(ret) nocopy(_tubes) in(addr,vec)
+{
+    UnplacedTube *t = new UnplacedTube(vec[0],vec[1],vec[2],vec[3],vec[4]);
+    _tubes[addr] = size_t(t);
+    ret = size_t(t);
+}
+    _tubes[addr] = ret;
+  }
+  return _tubes[addr];
+}
+
+#endif
+
 } // End impl namespace
 
 #ifdef VECGEOM_NVCC
@@ -325,3 +354,7 @@ template void DevicePtr<cuda::UnplacedTube>::Construct(
 #endif
 
 } // End global namespace
+
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(pop)
+#endif

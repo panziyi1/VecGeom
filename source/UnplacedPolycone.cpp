@@ -5,6 +5,11 @@
  *      Author: swenzel
  */
 
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(push,target(mic))
+  #include <map>
+#endif
+
 #include "volumes/UnplacedPolycone.h"
 #include "volumes/UnplacedCone.h"
 #include "volumes/SpecializedPolycone.h"
@@ -672,6 +677,30 @@ void UnplacedPolycone::Extent(Vector3D<Precision> & aMin, Vector3D<Precision> & 
 }
 #endif // !VECGEOM_NVCC
 
+#ifdef OFFLOAD_MODE
+
+static
+std::map<size_t, size_t> _polycones;
+
+size_t UnplacedPolycone::CopyToXeonPhi() const {
+  assert(0 && "UnplacedPolycone::CopyToXeonPhi() not implemented.");
+  size_t addr = size_t(this);
+  size_t ret;
+  auto it = _polycones.find(addr);
+  if(it == _polycones.end()) {
+#pragma offload target(mic) out(ret) nocopy(_polycones) in(addr)
+{
+    UnplacedPolycone *b = NULL; // <- instantiate UnplacedPolycone(...)
+    _polycones[addr] = size_t(b);
+    ret = size_t(b);
+}
+    _polycones[addr] = ret;
+  }
+  return _polycones[addr];
+}
+
+#endif
+
 } // End impl namespace
 
 #ifdef VECGEOM_NVCC
@@ -687,3 +716,7 @@ template void DevicePtr<cuda::UnplacedPolycone>::Construct(
 #endif
 
 } // end global namespace
+
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(pop)
+#endif

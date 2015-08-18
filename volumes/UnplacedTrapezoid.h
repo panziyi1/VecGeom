@@ -270,6 +270,11 @@ private:
 #else
                   TrapSidePlane& plane );
 #endif
+
+#ifdef OFFLOAD_MODE
+  virtual size_t CopyToXeonPhi() const override;
+#endif
+
 };
 
 } } // End global namespace
