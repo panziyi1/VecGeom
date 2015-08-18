@@ -149,6 +149,10 @@ public:
 #endif
   
   
+#ifdef OFFLOAD_MODE
+  virtual size_t CopyToXeonPhi() const override;
+#endif
+  
 
 private:
 

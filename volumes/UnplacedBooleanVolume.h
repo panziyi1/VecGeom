@@ -104,6 +104,10 @@ public:
                                 VPlacedVolume *const placement = NULL);
 
 
+#ifdef OFFLOAD_MODE
+  virtual size_t CopyToXeonPhi() const override;
+#endif
+  
  private:
 
    VECGEOM_CUDA_HEADER_DEVICE
