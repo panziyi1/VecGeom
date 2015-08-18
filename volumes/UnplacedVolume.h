@@ -81,6 +81,10 @@ public:
 
 #endif
 
+#ifdef OFFLOAD_MODE
+  virtual size_t CopyToXeonPhi() const =0;
+#endif
+
   /**
    * Virtual print to accommodate outstreams.
    */

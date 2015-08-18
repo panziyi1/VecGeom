@@ -143,11 +143,6 @@ public:
   }
 
   VECGEOM_INLINE
-  MicDoubleVector operator + (Precision const &val) const {
-    return (*this) + MicDoubleVector(val);
-  }
-
-  VECGEOM_INLINE
   MicDoubleVector operator - () const {
     return MicPrecision(0.0) - vec;
   }
@@ -243,6 +238,12 @@ VECGEOM_INLINE
 MicPrecision operator - (double const &val1,
                          MicPrecision const &val2) {
   return MicPrecision(MicPrecision((double)val1) - val2);
+}
+
+VECGEOM_INLINE
+MicPrecision operator + (MicPrecision const &val1,
+                         Precision const &val2) {
+  return val1 + MicPrecision(val2);
 }
 
 VECGEOM_INLINE

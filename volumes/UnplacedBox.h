@@ -118,6 +118,10 @@ public:
       const int id, VPlacedVolume *const placement = NULL);
 
 #endif
+
+#ifdef OFFLOAD_MODE
+  virtual size_t CopyToXeonPhi() const override;
+#endif
   
 private:
 

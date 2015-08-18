@@ -322,6 +322,9 @@ public:
   DevicePtr<cuda::Transformation3D> CopyToGpu(DevicePtr<cuda::Transformation3D> const gpu_ptr) const;
 #endif
 
+#ifdef OFFLOAD_MODE
+  size_t CopyToXeonPhi() const;
+#endif
 
 #ifdef VECGEOM_ROOT
 // function to convert this transformation to a TGeo transformation

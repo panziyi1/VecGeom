@@ -1,6 +1,10 @@
 /// \file UnplacedParaboloid.cpp
 /// \author Marilena Bandieramonte (marilena.bandieramonte@cern.ch)
 
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(push,target(mic))
+#endif
+
 #include "volumes/UnplacedParaboloid.h"
 
 #include "management/VolumeFactory.h"
@@ -323,6 +327,15 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedParaboloid::CopyToGpu() const
 
 #endif // VECGEOM_CUDA_INTERFACE
 
+#ifdef OFFLOAD_MODE
+
+size_t UnplacedParaboloid::CopyToXeonPhi() const {
+  assert(0 && "UnplacedParaboloid::CopyToXeonPhi() not implemented.");
+  return 0;
+}
+
+#endif
+
 } // End impl namespace
 
 #ifdef VECGEOM_NVCC
@@ -337,3 +350,7 @@ template void DevicePtr<cuda::UnplacedParaboloid>::Construct(const Precision rlo
 #endif
 
 } // End global namespace
+
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(pop)
+#endif

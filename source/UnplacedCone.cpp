@@ -5,6 +5,11 @@
  *      Author: swenzel
  */
 
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(push,target(mic))
+  #include <map>
+#endif
+
 #include "volumes/UnplacedCone.h"
 #include "volumes/SpecializedCone.h"
 #include "volumes/utilities/VolumeUtilities.h"
@@ -309,6 +314,30 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedCone::CopyToGpu() const
 
 #endif // VECGEOM_CUDA_INTERFACE
 
+#ifdef OFFLOAD_MODE
+
+static
+std::map<size_t, size_t> _cones;
+
+size_t UnplacedCone::CopyToXeonPhi() const {
+  size_t addr = size_t(this);
+  size_t ret;
+  auto it = _cones.find(addr);
+  if(it == _cones.end()) {
+    Precision vec[] = { fRmin1, fRmax1, fRmin2, fRmax2, fDz, fSPhi, fDPhi };
+#pragma offload target(mic) out(ret) nocopy(_cones) in(addr,vec)
+{
+    UnplacedCone *c = new UnplacedCone(vec[0],vec[1],vec[2],vec[3],vec[4],vec[5],vec[6]);
+    _cones[addr] = size_t(c);
+    ret = size_t(c);
+}
+    _cones[addr] = ret;
+  }
+  return _cones[addr];
+}
+
+#endif
+
 } // End impl namespace
 
 #ifdef VECGEOM_NVCC
@@ -326,3 +355,7 @@ template void DevicePtr<cuda::UnplacedCone>::Construct(
 #endif
 
 } // End namespace vecgeom
+
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(pop)
+#endif

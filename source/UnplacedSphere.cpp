@@ -1,6 +1,10 @@
 /// \file UnplacedSphere.cpp
 /// \author Raman Sehgal (raman.sehgal@cern.ch)
 
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(push,target(mic))
+#endif
+
 #include "volumes/UnplacedSphere.h"
 #include "backend/Backend.h"
 
@@ -407,6 +411,15 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedSphere::CopyToGpu() const
 
 #endif // VECGEOM_CUDA_INTERFACE
 
+#ifdef OFFLOAD_MODE
+
+size_t UnplacedSphere::CopyToXeonPhi() const {
+  assert(0 && "UnplacedSphere::CopyToXeonPhi() not implemented.");
+  return 0;
+}
+
+#endif
+
 } // End impl namespace
 
 #ifdef VECGEOM_NVCC
@@ -424,3 +437,6 @@ template void DevicePtr<cuda::UnplacedSphere>::Construct(
 
 } // End global namespace
 
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(pop)
+#endif
