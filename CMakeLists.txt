@@ -374,10 +374,8 @@ if (CUDA)
   message(STATUS "Compiling with NVCC flags: ${CUDA_NVCC_FLAGS}")
 endif()
 
-# until VecCore is separated from VecGeom (then it become something
-# ${VecCore_DIR}/include
-# include_directories(${CMAKE_SOURCE_DIR}/VecCore/inc )
-# include_directories(${CMAKE_INSTALL_PREFIX}/VecCore)
+# Uncomment line below for building/installing VecCore 
+# add_subdirectory(VecCore)
 
 if (ROOT)
 
@@ -954,7 +952,6 @@ configure_file(VecGeomConfig.cmake.in
                "${PROJECT_BINARY_DIR}/VecGeomConfig.cmake" @ONLY)
 # Installation
 set(CONF_TYPE "install")
-set(CONF_INCLUDE_DIR "\${THIS_DIR}/${INSTALL_INCLUDE_DIR_RELATIVE}" "\${THIS_DIR}/${INSTALL_INCLUDE_DIR_RELATIVE}/VecCore/")
 set(CONF_LIBRARY_DIR "\${THIS_DIR}/${INSTALL_LIB_DIR_RELATIVE}")
 set(CONF_LIBRARIES ${VECGEOM_LIBRARIES_EXTERNAL}
     "${CONF_LIBRARY_DIR}/libvecgeom.a")
@@ -988,6 +985,3 @@ if (CUDA)
   install(TARGETS vecgeomcuda DESTINATION ${INSTALL_LIB_DIR})
 endif()
 
-
-# Not yet a proper project.
-add_subdirectory (VecCore)
