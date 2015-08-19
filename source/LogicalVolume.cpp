@@ -184,17 +184,17 @@ size_t LogicalVolume::CopyToXeonPhi() const
   size_t ret;
   auto it = _logical_volumes.find(addr);
   if(it == _logical_volumes.end()) {
-    size_t upv = unplaced_volume_->CopyToXeonPhi();
-    const char *label = label_->c_str();
-#pragma offload target(mic) out(ret) in(addr,upv,id_,label) nocopy(_logical_volumes)
+    size_t upv = fUnplacedVolume->CopyToXeonPhi();
+    const char *label = fLabel->c_str();
+#pragma offload target(mic) out(ret) in(addr,upv,fId,label) nocopy(_logical_volumes)
 {
     LogicalVolume *v = new LogicalVolume(label,(VUnplacedVolume const *const)upv);
-    v->id_ = id_;
+    v->fId = fId;
     _logical_volumes[addr] = size_t(v);
     ret = size_t(v);
 }
     _logical_volumes[addr] = ret;
-    for(auto *i=daughters().begin();i!=daughters().end();i++) {
+    for(auto *i=GetDaughters().begin();i!=GetDaughters().end();i++) {
       const char *label = (*i)->GetLabel().c_str();
       size_t logical_volume = (*i)->GetLogicalVolume()->CopyToXeonPhi();
       size_t transf = (*i)->GetTransformation()->CopyToXeonPhi();

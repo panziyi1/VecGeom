@@ -310,10 +310,19 @@ endif()
 if (DISTANCE_DEBUG)
   set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_DISTANCE_DEBUG")
 endif()
+if (OFFLOAD_MODE)
+  if (NOT Intel)
+    message(FATAL_ERROR "Must use Intel C++ compiler (icc) for Xeon Phi Offload Mode.")
+  endif()
+  set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DOFFLOAD_MODE")
+  message(STATUS "Preparing for a offload compiler mode.")
+  set(MICVEC ON)
+  set(VTUNE OFF)
+endif()
 if (VTUNE)
   set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_VTUNE")
 endif()
-################################################################################
+#################################################################################
 
 include_directories(AFTER ${CMAKE_SOURCE_DIR})
 
@@ -364,7 +373,7 @@ endif()
 # We may have addition in compiler flags from the above included packages
 # We don't want to have trailing CMAKE_CXX_FLAGS_"BUILD_TYPE" options on the command line
 # but rather have it as first set of argument.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_build_type}} ${VECGEOM_CXX_FLAGS} ${VECGEOM_COMPILATION_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_build_type}} ${VECGEOM_CXX_FLAGS} ${VECGEOM_COMPILATION_FLAGS} ${VECGEOM_DEFINITION_FLAGS}")
 #set(VECGEOM_CXX_FLAGS ${CMAKE_CXX_FLAGS_${_build_type}})
 #unset(CMAKE_CXX_FLAGS_${_build_type} CACHE)
 

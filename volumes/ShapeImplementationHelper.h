@@ -420,7 +420,7 @@ public:
     }
   }
 
-#if !defined(__clang__) && !defined(VECGEOM_INTEL)
+#if !defined(__clang__) && !defined(VECGEOM_INTEL) && defined(VECGEOM_VC)
   #pragma GCC push_options
   #pragma GCC optimize ("unroll-loops")
 #endif
@@ -480,7 +480,7 @@ public:
 #endif
     }
   }
-#if !defined(__clang__) && !defined(VECGEOM_INTEL)
+#if !defined(__clang__) && !defined(VECGEOM_INTEL) && defined(VECGEOM_VC)
 #pragma GCC pop_options
 #endif
 

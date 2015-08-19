@@ -39,6 +39,14 @@ struct kMic {
 #undef kVectorSize
 #endif
 constexpr int kVectorSize = 8;
+#ifdef OFFLOAD_MODE
+#ifdef VECGEOM_SCALAR
+#undef VECGEOM_BACKEND_TYPE
+#undef VECGEOM_BACKEND_PRECISION
+#undef VECGEOM_BACKEND_BOOL
+#undef VECGEOM_BACKEND_INSIDE
+#endif
+#endif
 #define VECGEOM_BACKEND_TYPE         kMic
 #define VECGEOM_BACKEND_PRECISION    MicPrecision
 #define VECGEOM_BACKEND_BOOL         MicBool
