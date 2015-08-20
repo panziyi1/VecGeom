@@ -933,10 +933,10 @@ set(CONF_TYPE "install")
 if (CUDA)
    set(CONF_LIBRARIES "${CONF_LIBRARY_DIR}/libvecgeomcuda.a" ${CONF_LIBRARIES}  "${CONF_LIBRARY_DIR}/libvecgeomcuda.a")
 endif()
-configure_file(VecGeomConfig.cmake.in "${CMAKE_BINARY_DIR}/lib/Cmake/VecGeomConfig.cmake" @ONLY)
+configure_file(VecGeomConfig.cmake.in "${CMAKE_BINARY_DIR}/lib/cmake/VecGeomConfig.cmake" @ONLY)
 
 # Install the VecGeomConfig.cmake
-install(FILES "${CMAKE_BINARY_DIR}/lib/Cmake/VecGeomConfig.cmake" DESTINATION "lib/Cmake/" COMPONENT dev)
+install(FILES "${CMAKE_BINARY_DIR}/lib/cmake/VecGeomConfig.cmake" DESTINATION "lib/cmake/" COMPONENT dev)
 
 # Install headers and libraries
 foreach(_folder base benchmarking management navigation volumes backend)
