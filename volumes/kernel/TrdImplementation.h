@@ -190,8 +190,8 @@ static void UnplacedInside(
     // inside X?
     Float_t cross;
     PointLineOrientation<Backend>(Abs(point.x()) - trd.dx1(), pzPlusDz, trd.x2minusx1(), trd.dztimes2(), cross);
-    completelyoutside |= MakePlusTolerant<surfaceT>(cross) < 0;
-    if(surfaceT) completelyinside &= MakeMinusTolerant<surfaceT>(cross) > 0;
+    completelyoutside |= MakePlusTolerant<surfaceT>(cross) < Backend::kZero;
+    if(surfaceT) completelyinside &= MakeMinusTolerant<surfaceT>(cross) > Backend::kZero;
 
     if(HasVaryingY<trdTypeT>::value != TrdTypes::kNo) {
         // If Trd type is unknown don't bother with a runtime check, assume
@@ -216,8 +216,13 @@ class PlacedTrd;
 template <TranslationCode transCodeT, RotationCode rotCodeT, typename trdTypeT>
 struct TrdImplementation {
 
+#ifdef OFFLOAD_MODE
+  VECGEOM_GLOBAL int transC = transCodeT;
+  VECGEOM_GLOBAL int rotC   = rotCodeT;
+#else
   static const int transC = transCodeT;
   static const int rotC   = rotCodeT;
+#endif
 
   using PlacedShape_t = PlacedTrd;
   using UnplacedShape_t = UnplacedTrd;

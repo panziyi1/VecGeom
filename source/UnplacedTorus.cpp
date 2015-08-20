@@ -219,6 +219,15 @@ bool UnplacedTorus::Normal(Vector3D<Precision> const& point, Vector3D<Precision>
 }
 
 
+#ifdef OFFLOAD_MODE
+
+size_t UnplacedTorus::CopyToXeonPhi() const {
+  assert(0 && "UnplacedTorus::CopyToXeonPhi() not implemented.");
+  return 0;
+}
+
+#endif
+
 } // End impl namespace
 
 #ifdef VECGEOM_NVCC

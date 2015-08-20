@@ -4,6 +4,10 @@
 #ifndef VECGEOM_BASE_TRANSFORMATION3D_H_
 #define VECGEOM_BASE_TRANSFORMATION3D_H_
 
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(push, target(mic))
+#endif
+
 #include "base/Global.h"
 
 #include "base/Vector3D.h"
@@ -318,6 +322,9 @@ public:
   DevicePtr<cuda::Transformation3D> CopyToGpu(DevicePtr<cuda::Transformation3D> const gpu_ptr) const;
 #endif
 
+#ifdef OFFLOAD_MODE
+  size_t CopyToXeonPhi() const;
+#endif
 
 #ifdef VECGEOM_ROOT
 // function to convert this transformation to a TGeo transformation
@@ -803,5 +810,9 @@ Vector3D<InputType> Transformation3D::TransformDirection(
 std::ostream& operator<<(std::ostream& os, Transformation3D const &trans);
 
 } } // End global namespace
+
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(pop)
+#endif
 
 #endif // VECGEOM_BASE_TRANSFORMATION3D_H_

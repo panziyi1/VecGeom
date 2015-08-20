@@ -1,6 +1,10 @@
 /// \file LogicalVolume.cpp
 /// \author Johannes de Fine Licht (johannes.definelicht@cern.ch)
 
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(push,target(mic))
+#endif
+
 #include "volumes/LogicalVolume.h"
 
 #include "backend/Backend.h"
@@ -169,6 +173,42 @@ DevicePtr<cuda::LogicalVolume> LogicalVolume::CopyToGpu(
 
 #endif // VECGEOM_CUDA_INTERFACE
 
+#ifdef OFFLOAD_MODE
+
+static
+std::map<size_t, size_t> _logical_volumes;
+
+size_t LogicalVolume::CopyToXeonPhi() const
+{
+  size_t addr = size_t(this);
+  size_t ret;
+  auto it = _logical_volumes.find(addr);
+  if(it == _logical_volumes.end()) {
+    size_t upv = fUnplacedVolume->CopyToXeonPhi();
+    const char *label = fLabel->c_str();
+#pragma offload target(mic) out(ret) in(addr,upv,fId,label) nocopy(_logical_volumes)
+{
+    LogicalVolume *v = new LogicalVolume(label,(VUnplacedVolume const *const)upv);
+    v->fId = fId;
+    _logical_volumes[addr] = size_t(v);
+    ret = size_t(v);
+}
+    _logical_volumes[addr] = ret;
+    for(auto *i=GetDaughters().begin();i!=GetDaughters().end();i++) {
+      const char *label = (*i)->GetLabel().c_str();
+      size_t logical_volume = (*i)->GetLogicalVolume()->CopyToXeonPhi();
+      size_t transf = (*i)->GetTransformation()->CopyToXeonPhi();
+#pragma offload target(mic) in(addr, label, logical_volume, transf) nocopy(_logical_volumes)
+{
+      ((LogicalVolume*)_logical_volumes[addr])->PlaceDaughter(label, (LogicalVolume const *const)logical_volume, (Transformation3D const *const)transf);
+}
+    }
+  }
+  return _logical_volumes[addr];
+}
+
+#endif
+
 } // End impl namespace
 
 #ifdef VECGEOM_NVCC
@@ -185,3 +225,7 @@ template void DevicePtr<cuda::LogicalVolume>::Construct(
 #endif // VECGEOM_NVCC
 
 } // End global namespace
+
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(pop)
+#endif
