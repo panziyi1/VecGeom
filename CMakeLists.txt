@@ -75,6 +75,9 @@ option(VTUNE "Enable the use of profiler Vtune" OFF)
 
 option(OFFLOAD_MODE "Enable offload mode for Intel Xeon Phi." OFF)
 
+option(OPENMP "Enable use of openMP" OFF)
+
+
 if (USOLIDS)
   set(USolids ON)
 endif()
@@ -318,6 +321,11 @@ if (OFFLOAD_MODE)
 endif()
 if (VTUNE)
   set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_VTUNE")
+endif()
+if (OPENMP)
+  message(STATUS "Using OpenMP")
+  set(VECGEOM_DEFINITION_FLAGS
+      "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_OPENMP")
 endif()
 #################################################################################
 
@@ -616,6 +624,8 @@ endif()
 # Define executables
 
 set(TEST_EXECUTABLES_CORE
+    ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/XRayBenchmark.cpp
+    ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/CompareDistancesNoROOT.cpp
   ${CMAKE_SOURCE_DIR}/test/core/ContainerTest.cpp
   ${CMAKE_SOURCE_DIR}/test/core/create_geometry.cpp
   ${CMAKE_SOURCE_DIR}/test/core/testVectorSafety.cpp
