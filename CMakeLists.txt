@@ -77,7 +77,6 @@ option(OFFLOAD_MODE "Enable offload mode for Intel Xeon Phi." OFF)
 
 option(OPENMP "Enable use of openMP" OFF)
 
-
 if (USOLIDS)
   set(USolids ON)
 endif()
@@ -92,10 +91,6 @@ if (GEANT4)
 #    set(Geant4 OFF)
 #  endif()
    set(Geant4 ON)
-endif()
-
-if (VC_ACCELERATION)
-  set (Vc ON)
 endif()
 
 if (CTEST)
@@ -118,9 +113,6 @@ if (GNU)
 
   else()
     set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -finline-limit=10000000 -ffast-math -ftree-vectorize")
-  endif()
-  if (Vc)
-    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -fabi-version=6")
   endif()
 elseif(Intel)
   set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -Wall -fPIC")
@@ -228,7 +220,7 @@ elseif (_backend_up MATCHES CILK)
   set(Cilk ON)
   message(STATUS "Configuring with \"Cilk+\" vector backend")
 elseif (_backend_up MATCHES MICVEC)
-  if (NOT Intel OR NOT MIC)
+  if (NOT Intel)
     message(FATAL_ERROR "Must use Intel C++ compiler (icpc) with MIC SIMD for MICVEC backend.")
   endif()
   set(MICVEC ON)
@@ -252,6 +244,16 @@ if (Cilk)
 endif()
 if (MICVEC)
   set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_MICVEC")
+endif()
+
+if (VC_ACCELERATION AND NOT Vc)
+  message(FATAL_ERROR "VC_ACCELERATION only available with Vc backend." )
+endif()
+
+if (GNU)
+  if (Vc)
+    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -fabi-version=6")
+  endif()
 endif()
 
 # Enable pretty diagnostics coloring if gcc 4.9+ is being used
@@ -371,25 +373,6 @@ if (CUDA)
   set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${VECGEOM_NVCC_COMPILATION_FLAGS})
 endif()
 
-### CXXFLAGS needs to be set early, so that VECGEOM_GEANT4, VECGEOM_ROOT,
-### and VECGEOM_USOLIDS are already defined when compiling USolids, or it breaks
-
-# Pass flags to compilers
-# We may have addition in compiler flags from the above included packages
-# We don't want to have trailing CMAKE_CXX_FLAGS_"BUILD_TYPE" options on the command line
-# but rather have it as first set of argument.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_build_type}} ${VECGEOM_CXX_FLAGS} ${VECGEOM_DEFINITION_FLAGS}")
-set(VECGEOM_COMPILATION_FLAGS ${VECGEOM_CXX_FLAGS})
-#set(VECGEOM_CXX_FLAGS ${CMAKE_CXX_FLAGS_${_build_type}})
-#unset(CMAKE_CXX_FLAGS_${_build_type} CACHE)
-
-message(STATUS "Compiling with C++ flags: ${CMAKE_CXX_FLAGS}")
-if (CUDA)
-  message(STATUS "Compiling with NVCC flags: ${CUDA_NVCC_FLAGS}")
-endif()
-
-# Uncomment line below for building/installing VecCore
-# add_subdirectory(VecCore)
 
 if (ROOT)
 
@@ -434,8 +417,23 @@ if (VTUNE)
 
 endif()
 
+# Uncomment line below for building/installing VecCore
+# add_subdirectory(VecCore)
 
-#include_directories(AFTER ${CMAKE_SOURCE_DIR}/VecCore/inc )
+# Pass flags to compilers
+# We may have addition in compiler flags from the above included packages
+# We don't want to have trailing CMAKE_CXX_FLAGS_"BUILD_TYPE" options on the command line
+# but rather have it as first set of argument.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_build_type}} ${VECGEOM_CXX_FLAGS} ${VECGEOM_DEFINITION_FLAGS}")
+set(VECGEOM_COMPILATION_FLAGS ${VECGEOM_CXX_FLAGS})
+set(CMAKE_CXX_FLAGS_${_build_type} "" CACHE STRING "" FORCE)
+
+message(STATUS "Compiling with C++ flags: ${CMAKE_CXX_FLAGS}")
+if (CUDA)
+  message(STATUS "Compiling with NVCC flags: ${CUDA_NVCC_FLAGS}")
+endif()
+
+
 ################################################################################
 
 
