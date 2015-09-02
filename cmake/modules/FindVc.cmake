@@ -58,7 +58,7 @@
 if ($ENV{Vc_DIR})
   set(Vc_DIR $ENV{Vc_DIR})
 endif()
-find_package(Vc ${Vc_FIND_VERSION} QUIET NO_MODULE PATHS ${Vc_DIR} $ENV{HOME} /opt/Vc)
+find_package(Vc ${Vc_FIND_VERSION} QUIET NO_MODULE PATHS ${Vc_DIR} $ENV{HOME} /opt/Vc NO_DEFAULT_PATH)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Vc CONFIG_MODE)

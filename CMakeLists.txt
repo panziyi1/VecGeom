@@ -116,6 +116,9 @@ if (GNU)
   endif()
 elseif(Intel)
   set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -Wall -fPIC")
+  if (OPENMP)
+    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -qopenmp")
+  endif()
   if (CMAKE_BUILD_TYPE MATCHES Debug)
     set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -g -O0")
   else()
@@ -220,7 +223,7 @@ elseif (_backend_up MATCHES CILK)
   set(Cilk ON)
   message(STATUS "Configuring with \"Cilk+\" vector backend")
 elseif (_backend_up MATCHES MICVEC)
-  if (NOT Intel)
+  if (NOT Intel OR NOT MIC)
     message(FATAL_ERROR "Must use Intel C++ compiler (icpc) with MIC SIMD for MICVEC backend.")
   endif()
   set(MICVEC ON)
@@ -417,15 +420,12 @@ if (VTUNE)
 
 endif()
 
-# Uncomment line below for building/installing VecCore
-# add_subdirectory(VecCore)
 
 # Pass flags to compilers
 # We may have addition in compiler flags from the above included packages
 # We don't want to have trailing CMAKE_CXX_FLAGS_"BUILD_TYPE" options on the command line
 # but rather have it as first set of argument.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_build_type}} ${VECGEOM_CXX_FLAGS} ${VECGEOM_DEFINITION_FLAGS}")
-set(VECGEOM_COMPILATION_FLAGS ${VECGEOM_CXX_FLAGS})
 set(CMAKE_CXX_FLAGS_${_build_type} "" CACHE STRING "" FORCE)
 
 message(STATUS "Compiling with C++ flags: ${CMAKE_CXX_FLAGS}")
@@ -570,6 +570,9 @@ endif()
 ################################################################################
 
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+
+# Uncomment line below for building/installing VecCore
+# add_subdirectory(VecCore)
 
 if (USolids)
   if (USOLIDS_EMBEDDED)
@@ -941,10 +944,10 @@ set(CONF_TYPE "install")
 if (CUDA)
    set(CONF_LIBRARIES "${CONF_LIBRARY_DIR}/libvecgeomcuda.a" ${CONF_LIBRARIES}  "${CONF_LIBRARY_DIR}/libvecgeomcuda.a")
 endif()
-configure_file(VecGeomConfig.cmake.in "${CMAKE_BINARY_DIR}/lib/cmake/VecGeomConfig.cmake" @ONLY)
+configure_file(VecGeomConfig.cmake.in "${CMAKE_BINARY_DIR}/lib/cmake/${CMAKE_PROJECT_NAME}/${CMAKE_PROJECT_NAME}Config.cmake" @ONLY)
 
 # Install the VecGeomConfig.cmake
-install(FILES "${CMAKE_BINARY_DIR}/lib/cmake/VecGeomConfig.cmake" DESTINATION "lib/cmake/" COMPONENT dev)
+install(FILES "${CMAKE_BINARY_DIR}/lib/cmake/${CMAKE_PROJECT_NAME}/${CMAKE_PROJECT_NAME}Config.cmake" DESTINATION "lib/cmake/${CMAKE_PROJECT_NAME}/" COMPONENT dev)
 
 # Install headers and libraries
 foreach(_folder base benchmarking management navigation volumes backend)
