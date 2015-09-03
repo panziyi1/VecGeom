@@ -33,6 +33,8 @@ option(ROOT "Include ROOT." OFF)
 
 option(USOLIDS "Include USolids." OFF)
 
+option(CMSGEOM "Include CMSGeom." ON)
+
 option(GEANT4 "Include Geant4." OFF)
 
 option(BENCHMARK "Enable performance comparisons." OFF)
@@ -79,6 +81,10 @@ option(OPENMP "Enable use of openMP" OFF)
 
 if (USOLIDS)
   set(USolids ON)
+endif()
+
+if (CMSGEOM)
+  set(CMSGeom ON)
 endif()
 
 if (GEANT4)
@@ -402,6 +408,12 @@ if (USolids)
 
 endif()
 
+if (CMSGeom)
+
+  find_package(CMSGeom REQUIRED)
+
+endif()
+
 if (Geant4)
 
   find_package(Geant4 REQUIRED)
@@ -577,6 +589,12 @@ set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 if (USolids)
   if (USOLIDS_EMBEDDED)
     add_subdirectory(${USOLIDS_DIR})
+  endif()
+endif()
+
+if (CMSGeom)
+  if (CMSGEOM_EMBEDDED)
+    add_subdirectory(${CMSGEOM_DIR})
   endif()
 endif()
 

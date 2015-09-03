@@ -399,7 +399,7 @@ int main(int argc, char * argv[])
   }
 
   GeoManager &gGeoManager = GeoManager::Instance();
-  gGeoManager.LoadGeometryFromSharedLib("./libCMSgeom.so");
+  gGeoManager.LoadGeometryFromSharedLib("libCMSGeom.so");
 
   std::string testvolume( argv[1] );
 
