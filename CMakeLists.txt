@@ -83,7 +83,7 @@ option(VTUNE "Enable the use of profiler Vtune" OFF)
 
 option(OFFLOAD_MODE "Enable offload mode for Intel Xeon Phi." OFF)
 
-option(OPENMP "Enable use of openMP" OFF)
+option(OPENMP "Enable use of openMP" ON)
 
 if (USOLIDS)
   set(USolids ON)
