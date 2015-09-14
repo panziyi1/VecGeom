@@ -33,6 +33,10 @@
 #ifndef VECGEOM_VOLUMES_UNPLACEDPARABOLOID_H_
 #define VECGEOM_VOLUMES_UNPLACEDPARABOLOID_H_
 
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(push, target(mic))
+#endif
+
 #include "base/Global.h"
 
 #include "base/AlignedBase.h"
@@ -233,6 +237,10 @@ public:
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const gpu_ptr) const;
 #endif
 
+#ifdef OFFLOAD_MODE
+  virtual size_t CopyToXeonPhi() const override;
+#endif
+  
 private:
 
   
@@ -250,5 +258,9 @@ private:
 };
 
 } } // End global namespace
+
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(pop)
+#endif
 
 #endif // VECGEOM_VOLUMES_UNPLACEDPARABOLOID_H_

@@ -5,6 +5,10 @@
  *      Author: swenzel
  */
 
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(push, target(mic))
+#endif
+
 #include "management/CppExporter.h"
 #include "management/GeoManager.h"
 #include "base/Transformation3D.h"
@@ -689,4 +693,8 @@ outfile << "#include \"base/Stopwatch.h\"\n";
 
 }} // end namespace
 
+
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(pop)
+#endif
 

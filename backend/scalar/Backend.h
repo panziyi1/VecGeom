@@ -6,6 +6,9 @@
 
 #include "base/Global.h"
 
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(push,target(mic))
+#endif
 #include <algorithm>
 #include <cstring>
 
@@ -17,7 +20,11 @@ struct kScalar {
   typedef Precision precision_v;
   typedef bool      bool_v;
   typedef Inside_t  inside_v;
+#ifdef OFFLOAD_MODE
+  VECGEOM_GLOBAL bool early_returns = true;
+#else
   const static bool early_returns = true;
+#endif
   // alternative typedefs ( might supercede above typedefs )
   typedef int                   Int_t;
   typedef Precision       Double_t;
@@ -25,14 +32,24 @@ struct kScalar {
   typedef int  Index_t; // the type of indices
 
 #ifdef VECGEOM_STD_CXX11
+#ifdef OFFLOAD_MODE
+  VECGEOM_GLOBAL precision_v kOne = 1.0;
+  VECGEOM_GLOBAL precision_v kZero = 0.0;
+#else
   constexpr static precision_v kOne = 1.0;
   constexpr static precision_v kZero = 0.0;
+#endif
 #else
   const static precision_v kOne = 1.0;
   const static precision_v kZero = 0.0;
 #endif
+#ifdef OFFLOAD_MODE
+  VECGEOM_GLOBAL bool_v kTrue = true;
+  VECGEOM_GLOBAL bool_v kFalse = false;
+#else
   const static bool_v kTrue = true;
   const static bool_v kFalse = false;
+#endif
 
   template <class Backend>
   VECGEOM_CUDA_HEADER_BOTH
@@ -52,6 +69,14 @@ inline VECGEOM_CONSTEXPR_RETURN bool kScalar::IsEqual<kScalar>() {
 typedef kScalar::int_v    ScalarInt;
 typedef kScalar::precision_v ScalarDouble;
 typedef kScalar::bool_v   ScalarBool;
+
+#define kVectorSize 1
+#ifdef VECGEOM_SCALAR
+#define VECGEOM_BACKEND_TYPE         kScalar
+#define VECGEOM_BACKEND_PRECISION(P) (*(P))
+#define VECGEOM_BACKEND_BOOL         ScalarBool
+#define VECGEOM_BACKEND_INSIDE       kScalar::inside_v
+#endif
 
 template <typename Type>
 VECGEOM_CUDA_HEADER_BOTH
@@ -115,6 +140,7 @@ Type Sqrt(const Type val) {
   return std::sqrt(val);
 }
 
+#if 0
 template <typename Type>
 VECGEOM_CUDA_HEADER_BOTH
 VECGEOM_INLINE
@@ -142,6 +168,7 @@ VECGEOM_INLINE
 Type Pow(const Type val1, const Type val2) {
   return std::pow(val1, val2);
 }
+#endif
 
 template <typename Type>
 VECGEOM_CUDA_HEADER_BOTH
@@ -224,14 +251,14 @@ bool IsInf( T x ){
 #endif
 }
 
-#ifndef VECGEOM_USOLIDS
-template <typename Type>
-VECGEOM_CUDA_HEADER_BOTH
-VECGEOM_INLINE
-void swap(Type &a, Type &b) {
-  std::swap(a, b);
-}
-#endif
+//#ifndef VECGEOM_USOLIDS
+//template <typename Type>
+//VECGEOM_CUDA_HEADER_BOTH
+//VECGEOM_INLINE
+//void swap(Type &a, Type &b) {
+//  std::swap(a, b);
+//}
+//#endif
 
 template <typename Type>
 VECGEOM_CUDA_HEADER_BOTH
@@ -327,4 +354,7 @@ bool equal(InputIterator1 first, InputIterator1 last, InputIterator2 target) {
 
 } } // End global namespace
 
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(pop)
+#endif
 #endif // VECGEOM_BACKEND_SCALARBACKEND_H_

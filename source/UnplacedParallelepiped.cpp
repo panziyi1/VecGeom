@@ -140,6 +140,15 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedParallelepiped::CopyToGpu() const
 
 #endif // VECGEOM_CUDA_INTERFACE
 
+#ifdef OFFLOAD_MODE
+
+size_t UnplacedParallelepiped::CopyToXeonPhi() const {
+  assert(0 && "UnplacedParallelepiped::CopyToXeonPhi() not implemented.");
+  return 0;
+}
+
+#endif
+
 } // End impl namespace
 
 #ifdef VECGEOM_NVCC

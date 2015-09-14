@@ -468,8 +468,8 @@ SimpleNavigator::FindNextBoundaryAndStep( Vector3D<Precision> const & globalpoin
                                           Precision                 & step
                                         ) const
 {
-#ifndef VECGEOM_NVCC
-   static int counter=0;
+#if defined(VERBOSE) && !defined(VECGEOM_NVCC)
+   thread_local static int counter=0;
    counter++;
 #endif
    // this information might have been cached in previous navigators??

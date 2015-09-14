@@ -3,6 +3,10 @@
 #ifndef VECGEOM_VOLUMES_SCALARSHAPEIMPLEMENTATIONHELPER_H_
 #define VECGEOM_VOLUMES_SCALARSHAPEIMPLEMENTATIONHELPER_H_
 
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(push, target(mic))
+#endif
+
 #include "base/Global.h"
 #include "base/SOA3D.h"
 #include "base/AOS3D.h"
@@ -559,5 +563,9 @@ public:
 } // End Impl namespace
 
 } // End global namespace
+
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(pop)
+#endif
 
 #endif // VECGEOM_VOLUMES_SCALARSHAPEIMPLEMENTATIONHELPER_H_

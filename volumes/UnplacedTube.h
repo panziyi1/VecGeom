@@ -4,6 +4,10 @@
 #ifndef VECGEOM_VOLUMES_UNPLACEDTUBE_H_
 #define VECGEOM_VOLUMES_UNPLACEDTUBE_H_
 
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(push, target(mic))
+#endif
+
 #include "base/Global.h"
 #include "base/RNG.h"
 #include "base/AlignedBase.h"
@@ -259,8 +263,17 @@ private:
 #endif
       VPlacedVolume *const placement = NULL) const;
 
+#ifdef OFFLOAD_MODE
+  virtual size_t CopyToXeonPhi() const override;
+#endif
+
 };
 
 } } // end global namespace
 
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(pop)
+#endif
+
 #endif // VECGEOM_VOLUMES_UNPLACEDTUBE_H_
+

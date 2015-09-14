@@ -4,6 +4,10 @@
 #ifndef VECGEOM_BENCHMARKING_BENCHMARKER_H_
 #define VECGEOM_BENCHMARKING_BENCHMARKER_H_
 
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(push, target(mic))
+#endif
+
 #include "base/Global.h"
 
 #include "volumes/PlacedVolume.h"
@@ -28,9 +32,9 @@
 #include <utility> // for std::pair
 
 #if defined(VECGEOM_VTUNE)
-#include "ittnotify.h"
+#include <ittnotify.h>
 #else
-#define __itt_resumme()
+#define __itt_resume()
 #define __itt_start()
 #endif
 
@@ -307,6 +311,11 @@ private:
     Precision *distances, Precision *safeties);
   void GetVolumePointers( std::list<cxx::DevicePtr<cuda::VPlacedVolume> > &volumesGpu );
 #endif
+#ifdef OFFLOAD_MODE
+  void RunInsideOffload(bool *contains, Inside_t *inside);
+  void RunToInOffload(Precision *distances, Precision *safeties);
+  void RunToOutOffload(Precision *distances, Precision *safeties);
+#endif
 
   template <typename Type>
   Type* AllocateAligned() const;
@@ -333,6 +342,9 @@ private:
 #ifdef VECGEOM_CUDA
     Precision const *const cuda,
 #endif
+#ifdef OFFLOAD_MODE
+    Precision const *const offload,
+#endif
     char const *const method);
 
   int CompareSafeties(
@@ -353,10 +365,17 @@ private:
 #ifdef VECGEOM_CUDA
     Precision const *const cuda,
 #endif
+#ifdef OFFLOAD_MODE
+    Precision const *const offload,
+#endif
     char const *const method) const;
   
 };
 
 } // End namespace vecgeom
+
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(pop)
+#endif
 
 #endif // VECGEOM_BENCHMARKING_BENCHMARKER_H_

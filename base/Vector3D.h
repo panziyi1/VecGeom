@@ -14,9 +14,15 @@
 #endif
 #include "base/AlignedBase.h"
 
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(push,target(mic))
+#endif
 #include <cstdlib>
 #include <ostream>
 #include <string>
+#ifdef OFFLOAD_MODE
+  #pragma offload_attribute(pop)
+#endif
 
 namespace vecgeom {
 
@@ -234,7 +240,15 @@ public:
   VECGEOM_CUDA_HEADER_BOTH
   VECGEOM_INLINE
   Vector3D<Type> Normalized() const {
-    return Vector3D<Type>(*this) * (1. / Length());
+
+  Precision norm = 1./Length();
+  Vector3D<Type> v;
+  v[0] = (*this)[0]*norm;
+  v[1] = (*this)[1]*norm;
+  v[2] = (*this)[2]*norm;
+  return v;
+
+  //  return Vector3D<Type>(*this) * (1. / Length());
   }
 
   // checks if vector is normalized
@@ -433,23 +447,19 @@ public:
 
   // Performance issue in Vc with: mem = a;
   VECGEOM_INLINE
-  Vector3D(const Precision a) : Vector3D(a, a, a) {}
+  Vector3D(const Precision a) : Vector3D(a, a, a) {
+  }
 
   VECGEOM_INLINE
-  Vector3D() : Vector3D(0, 0, 0) {}
+  Vector3D() : Vector3D(0, 0, 0) {
+  }
 
   VECGEOM_INLINE
     Vector3D(Vector3D const &other) : mem() {
-    //for( int i=0; i < 1 + 3/Base_t::Size; i++ )
-//      {
-         //Base_t v1 = other.mem.vector(i);
-         //this->mem.vector(i)=v1;
-       //}
      mem[0]=other.mem[0];
      mem[1]=other.mem[1];
      mem[2]=other.mem[2];
   }
-
   VECGEOM_INLINE
   Vector3D & operator=( Vector3D const & rhs )
    {
@@ -845,11 +855,17 @@ VECTOR3D_VC_BOOLEAN_LOGICAL_OP(||)
 
 
 #ifdef VECGEOM_VC_ACCELERATION
-
 Vector3D<Precision> Vector3D<Precision>::Normalized() const {
-  return Vector3D<Precision>(*this) * (1. / Length());
-}
 
+  Precision norm = 1./Length();
+  Vector3D<Precision> v;
+  v[0] = (*this)[0]*norm;
+  v[1] = (*this)[1]*norm;
+  v[2] = (*this)[2]*norm;
+  return v;
+ 
+ // return Vector3D<Precision> (*this) * (1. / Length());
+}
 Vector3D<Precision> Vector3D<Precision>::MultiplyByComponents(
     VecType const &other) const {
   return (*this) * other;

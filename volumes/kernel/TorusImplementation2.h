@@ -3,6 +3,10 @@
 #ifndef VECGEOM_VOLUMES_KERNEL_TORUSIMPLEMENTATION2_H_
 #define VECGEOM_VOLUMES_KERNEL_TORUSIMPLEMENTATION2_H_
 
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(push, target(mic))
+#endif
+
 #include "base/Global.h"
 #include "base/Transformation3D.h"
 #include "volumes/kernel/GenericKernels.h"
@@ -753,5 +757,8 @@ static T DistSqrToTorusR(UnplacedTorus2 const &torus, Vector3D<T> const &point, 
 
 } } // end namespace
 
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(pop)
+#endif
 
 #endif // VECGEOM_VOLUMES_KERNEL_TORUSIMPLEMENTATION_H_

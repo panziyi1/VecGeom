@@ -1,4 +1,3 @@
-
 cmake_minimum_required(VERSION 2.8.8)
 project(VecGeom)
 
@@ -12,7 +11,6 @@ if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
 endif()
 string(TOUPPER ${CMAKE_BUILD_TYPE} _build_type)
-
 
 # Setting the C++ compiler to use
 set("${CMAKE_CXX_COMPILER_ID}" TRUE CACHE STRING "C++ Compiler")
@@ -34,6 +32,8 @@ option(CUDA_VOLUME_SPECIALIZATION "Use specialized volumes for CUDA." ON)
 option(ROOT "Include ROOT." OFF)
 
 option(USOLIDS "Include USolids." OFF)
+
+option(CMSGEOM "Include CMSGeom." ON)
 
 option(GEANT4 "Include Geant4." OFF)
 
@@ -59,21 +59,21 @@ option(DATA_DOWNLOAD "Enable downloading of data for tests" OFF)
 
 option(GENERATE_MATERIALS_DB "Include materials and particle declarations in library" OFF)
 
-set(VECGEOM_ARCH native sse2 sse3 ssse3 sse4.1 sse4.2 avx avx2 mic avx512)
+set(_vector native sse2 sse3 ssse3 sse4.1 sse4.2 avx avx2 mic avx512)
 
 enum_option(VECGEOM_VECTOR
       DOC "Vector instruction set to be used"
       TYPE STRING
-      VALUES ${VECGEOM_ARCH}
+      VALUES ${_vector}
       CASE_INSENSITIVE
     )
 
-set(VECGEOM_BACKEND default Scalar Vc Cilk)
+set(_backend default Scalar Vc Cilk micvec)
 
 enum_option(BACKEND
             DOC "Backend infrastructure to be used"
             TYPE STRING
-            VALUES ${VECGEOM_BACKEND}
+            VALUES ${_backend}
             CASE_INSENSITIVE
            )
 
@@ -81,25 +81,17 @@ option(VC_ACCELERATION "Internal vectorization using Vc." OFF)
 
 option(VTUNE "Enable the use of profiler Vtune" OFF)
 
+option(OFFLOAD_MODE "Enable offload mode for Intel Xeon Phi." OFF)
 
-set(INSTALL_LIB_DIR lib CACHE PATH "Installation directory for libraries.")
-set(INSTALL_INCLUDE_DIR include CACHE PATH
-    "Installation directory for header files.")
-set(INSTALL_CMAKE_DIR lib/CMake/VecGeom CACHE PATH
-    "Installation directory for CMake files.")
-
-# Make relative paths absolute
-foreach(p LIB BIN INCLUDE CMAKE)
-  set(var INSTALL_${p}_DIR)
-  if(NOT IS_ABSOLUTE "${${var}}")
-    set(${var} "${CMAKE_INSTALL_PREFIX}/${${var}}")
-  endif()
-endforeach()
+option(OPENMP "Enable use of openMP" OFF)
 
 if (USOLIDS)
   set(USolids ON)
 endif()
 
+if (CMSGEOM)
+  set(CMSGeom ON)
+endif()
 
 if (GEANT4)
 #  if (BENCHMARK)
@@ -113,12 +105,117 @@ if (GEANT4)
    set(Geant4 ON)
 endif()
 
-if (VC_ACCELERATION)
-  set (Vc ON)
-endif()
-
 if (CTEST)
   set (DATA_DOWNLOAD ON)
+endif()
+
+################################################################################
+
+# Set default C++ compiler flags for each build type
+# C++ standard set to c++11 by default
+# some compilers do not default to C++11 standard yet
+if (NOT CUDA)
+  set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -std=c++11")
+endif()
+
+if (GNU)
+  set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -Wall -fPIC")
+  if (CMAKE_BUILD_TYPE MATCHES Debug)
+    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -Weffc++ -ggdb -O0")
+  else()
+    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -finline-limit=10000000 -ffast-math -ftree-vectorize")
+    if (OPENMP)
+      set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -fopenmp")
+    endif()
+  endif()
+elseif(Intel)
+  set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -fPIC")
+  if (CMAKE_BUILD_TYPE MATCHES Debug)
+    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -g -O0")
+  else()
+    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -g -O3 -fno-alias -fimf-domain-exclusion=31")
+    if (OPENMP)
+      set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -parallel-source-info=2 -qopenmp")
+    endif()
+  endif()
+else(Clang)
+  set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -Wall -fPIC")
+  if (CMAKE_BUILD_TYPE MATCHES Debug)
+    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -Weffc++ -ggdb -O0")
+  else()
+    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -ffast-math -ftree-vectorize")
+  endif()
+endif()
+
+if (CUDA)
+if (CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
+  set(VECGEOM_NVCC_COMPILATION_FLAGS -g -G ${VECGEOM_NVCC_COMPILATION_FLAGS})
+endif()
+if (CMAKE_BUILD_TYPE MATCHES MinSizeRel)
+  set(VECGEOM_NVCC_COMPILATION_FLAGS -use_fast_math ${VECGEOM_NVCC_COMPILATION_FLAGS})
+endif()
+endif()
+
+string(TOLOWER ${VECGEOM_VECTOR} _arch_lo)
+string(TOUPPER ${VECGEOM_VECTOR} _arch_up)
+
+# Set C++ SIMD compiler flags.
+
+if (${_arch_lo} MATCHES mic)
+  if (Intel)
+    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -m${_arch_lo}")
+    set(MIC TRUE)
+  else()
+    message(FATAL_ERROR "MIC native or offload compilation requires Intel Compiler.")
+  endif()
+elseif (${_arch_lo} MATCHES native)
+  if (Intel)
+    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -xHost")
+  else()
+    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -march=${_arch_lo}")
+  endif()
+  set(VECGEOM_NVCC_COMPILATION_FLAGS -g -G ${VECGEOM_NVCC_COMPILATION_FLAGS})
+else()
+  if (Intel)
+    if (${_arch_lo} MATCHES avx2)
+      set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -xCORE-${_arch_up}")
+    else()
+      set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -x${_arch_up}")
+    endif()
+  else()
+    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -m${_arch_lo}")
+  endif()
+endif()
+message(STATUS "Compiling for ${_arch_up} SIMD achitecture")
+
+# Set C++ compiler definition flags. Will also be forwarded by CUDA when compiling C++.
+
+if ((NOT PLANESHELL))
+  message(STATUS "Disabling PlaneShell class")
+  set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_PLANESHELL_DISABLE")
+endif()
+
+
+if (CUDA)
+  set(CUDA_ARCH 20 CACHE STRING "CUDA device architecture.")
+  set(CUDA_ARCH "-arch=sm_${CUDA_ARCH}")
+  set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_CUDA")
+  if (CUDA_VOLUME_SPECIALIZATION)
+    set(VECGEOM_DEFINITION_FLAGS
+        "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_CUDA_VOLUME_SPECIALIZATION")
+  else()
+    set(VECGEOM_DEFINITION_FLAGS
+        "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_CUDA_NO_VOLUME_SPECIALIZATION")
+  endif()
+  set(VECGEOM_NVCC_COMPILATION_FLAGS ${VECGEOM_NVCC_COMPILATION_FLAGS} 
+      -std=c++11
+      -Xcudafe "--diag_suppress=code_is_unreachable"
+      -Xcudafe "--diag_suppress=initialization_not_reachable")
+  set(VECGEOM_NVCC_CONFIGS
+        DEBUG -g -G
+        RELEASE  -O3 -use_fast_math
+        RELWITHDEBINFO -g -G -O3 -use_fast_math
+        MINSIZEREL -use_fast_math )
 endif()
 
 ################################################################################
@@ -139,6 +236,12 @@ elseif (_backend_up MATCHES CILK)
   endif()
   set(Cilk ON)
   message(STATUS "Configuring with \"Cilk+\" vector backend")
+elseif (_backend_up MATCHES MICVEC)
+  if (NOT Intel OR NOT MIC)
+    message(FATAL_ERROR "Must use Intel C++ compiler (icpc) with MIC SIMD for MICVEC backend.")
+  endif()
+  set(MICVEC ON)
+  message(STATUS "Configuring with \"Micvec\" vector backend")
 elseif (_backend_up MATCHES DEFAULT)
   set(Vc ON)
   message(WARNING "Backend not specified. Defaulting to Vc.")
@@ -146,125 +249,28 @@ else()
   message(FATAL_ERROR "Value '${BACKEND}' for variable BACKEND is not allowed. ")
 endif()
 
-################################################################################
+# Backend specific
+if (Scalar)
+  set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_SCALAR")
+endif()
+if (Vc)
+  set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_VC")
+endif()
+if (Cilk)
+  set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_CILK")
+endif()
+if (MICVEC)
+  set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_MICVEC")
+endif()
 
-# Set Default compiler flags for each build type
-
-# some compilers do not default to C++11 standard yet
-if (NOT CUDA)
-  set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -std=c++11")
+if (VC_ACCELERATION AND NOT Vc)
+  message(FATAL_ERROR "VC_ACCELERATION only available with Vc backend." )
 endif()
 
 if (GNU)
-  set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -Wall -fPIC")
-  if (CMAKE_BUILD_TYPE MATCHES Debug)
-    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -ggdb -O0")
-
-  else()
-    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -finline-limit=10000000 -ffast-math -ftree-vectorize")
-  endif()
   if (Vc)
     set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -fabi-version=6")
   endif()
-elseif(Intel)
-  set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -Wall -fPIC -diag-disable 3438")
-  if (CMAKE_BUILD_TYPE MATCHES Debug)
-    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -g -O0")
-  else()
-    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -fno-alias")
-  endif()
-else(Clang)
-  set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -Wall -fPIC")
-  if (CMAKE_BUILD_TYPE MATCHES Debug)
-    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS}  -ggdb -O0")
-  else()
-    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -ffast-math -ftree-vectorize")
-  endif()
-endif()
-
-if (CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
-  set(VECGEOM_NVCC_COMPILATION_FLAGS -g -G ${VECGEOM_NVCC_COMPILATION_FLAGS})
-endif()
-if (CMAKE_BUILD_TYPE MATCHES MinSizeRel)
-  set(VECGEOM_NVCC_COMPILATION_FLAGS -use_fast_math ${VECGEOM_NVCC_COMPILATION_FLAGS})
-endif()
-
-string(TOLOWER ${VECGEOM_VECTOR} _arch_lo)
-string(TOUPPER ${VECGEOM_VECTOR} _arch_up)
-
-if (${_arch_lo} MATCHES mic)
-  if (Intel)
-    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -m${_arch_lo}")
-    set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -m${_arch_lo}")
-    set(MIC TRUE)
-  else()
-    message(FATAL_ERROR "MIC native of offload compilation requires Intel Compiler.")
-  endif()
-elseif (${_arch_lo} MATCHES native)
-  if (Intel)
-    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -xHost")
-    set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -xHost")
-  else()
-    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -march=${_arch_lo}")
-    set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -march=${_arch_lo}")
-  endif()
-  set(VECGEOM_NVCC_COMPILATION_FLAGS -g -G ${VECGEOM_NVCC_COMPILATION_FLAGS})
-else()
-  if (Intel)
-    if (${_arch_lo} MATCHES avx2)
-      set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -xCORE-${_arch_up}")
-      set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -xCORE-${_arch_up}")
-    else()
-      set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -x${_arch_up}")
-      set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -x${_arch_up}")
-    endif()
-  else()
-    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -m${_arch_lo}")
-    set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -m${_arch_lo}")
-  endif()
-endif()
-message(STATUS "Compiling for ${_arch_up} SIMD achitecture")
-
-################################################################################
-
-# Set C++ compiler flags. Will also be forwarded by CUDA when compiling C++.
-
-if ((NOT PLANESHELL))
-  message(STATUS "Disabling PlaneShell class")
-  set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_PLANESHELL_DISABLE")
-endif()
-
-# Backend specific
-if (Scalar)
-  set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_SCALAR")
-endif()
-if (Vc)
-  set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_VC")
-endif()
-if (Cilk)
-  set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_CILK")
-endif()
-
-if (CUDA)
-  set(CUDA_ARCH 20 CACHE STRING "CUDA device architecture.")
-  set(CUDA_ARCH "-arch=sm_${CUDA_ARCH}")
-  set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_CUDA")
-  if (CUDA_VOLUME_SPECIALIZATION)
-    set(VECGEOM_COMPILATION_FLAGS
-        "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_CUDA_VOLUME_SPECIALIZATION")
-  else()
-    set(VECGEOM_COMPILATION_FLAGS
-        "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_CUDA_NO_VOLUME_SPECIALIZATION")
-  endif()
-  set(VECGEOM_NVCC_COMPILATION_FLAGS ${VECGEOM_NVCC_COMPILATION_FLAGS} 
-      -std=c++11
-      -Xcudafe "--diag_suppress=code_is_unreachable"
-      -Xcudafe "--diag_suppress=initialization_not_reachable")
-  set(VECGEOM_NVCC_CONFIGS
-        DEBUG -g -G
-        RELEASE  -O3 -use_fast_math
-        RELWITHDEBINFO -g -G -O3 -use_fast_math
-        MINSIZEREL -use_fast_math )
 endif()
 
 # Enable pretty diagnostics coloring if gcc 4.9+ is being used
@@ -299,33 +305,43 @@ endif()
 
 # Forward CMake options
 if (VC_ACCELERATION)
-  set(VECGEOM_COMPILATION_FLAGS
-      "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_VC_ACCELERATION")
+  set(VECGEOM_DEFINITION_FLAGS
+      "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_VC_ACCELERATION")
 endif()
 if (BENCHMARK)
-  set(VECGEOM_COMPILATION_FLAGS
-      "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_BENCHMARK")
+  set(VECGEOM_DEFINITION_FLAGS
+      "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_BENCHMARK")
 endif()
 if (NO_SPECIALIZATION)
-  set(VECGEOM_COMPILATION_FLAGS
-      "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_NO_SPECIALIZATION")
+  set(VECGEOM_DEFINITION_FLAGS
+      "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_NO_SPECIALIZATION")
 endif()
 if (ROOT)
-  set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_ROOT")
+  set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_ROOT")
 endif()
 if (USolids)
-  set(VECGEOM_COMPILATION_FLAGS
-      "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_USOLIDS")
+  set(VECGEOM_DEFINITION_FLAGS
+      "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_USOLIDS")
 endif()
 if (Geant4)
-  set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_GEANT4")
+  set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_GEANT4")
 endif()
 if (DISTANCE_DEBUG)
-  set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_DISTANCE_DEBUG")
+  set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_DISTANCE_DEBUG")
+endif()
+if (OFFLOAD_MODE)
+  if (NOT Intel)
+    message(FATAL_ERROR "Must use Intel C++ compiler (icc) for Xeon Phi Offload Mode.")
+  endif()
+  set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DOFFLOAD_MODE")
+  message(STATUS "Preparing for a offload compiler mode.")
+  set(MICVEC ON)
+  set(VTUNE OFF)
 endif()
 if (VTUNE)
-  set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_VTUNE")
+  set(VECGEOM_DEFINITION_FLAGS "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_VTUNE")
 endif()
+
 if (INPLACE_TRANSFORMATIONS)
   set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_INPLACE_TRANSFORMATIONS")
 endif()
@@ -336,8 +352,14 @@ if (GENERATE_MATERIALS_DB)
   set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_GENERATE_MATERIALS_DB")
 endif()
 
+if (OPENMP)
+  message(STATUS "Using OpenMP")
+  set(VECGEOM_DEFINITION_FLAGS
+      "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_OPENMP")
+endif()
+#################################################################################
 
-################################################################################
+include_directories(AFTER ${CMAKE_SOURCE_DIR})
 
 # Backend configuration
 
@@ -349,12 +371,16 @@ if (VC_ACCELERATION OR Vc)
   else()
     set(VECGEOM_LIBRARIES_EXTERNAL ${VECGEOM_LIBRARIES_EXTERNAL} ${Vc_LIBRARIES})
   endif()
-  include_directories(AFTER SYSTEM ${Vc_INCLUDE_DIR})
+  include_directories(AFTER ${Vc_INCLUDE_DIR})
 
   if (Vc)
     set(SRC_EXTERNAL ${SRC_EXTERNAL} source/backend/vc/Backend.cpp)
   endif()
 
+endif()
+
+if (MICVEC)
+  set(SRC_EXTERNAL ${SRC_EXTERNAL} source/backend/mic/Backend.cpp)
 endif()
 
 if (Cilk)
@@ -375,32 +401,12 @@ if (CUDA)
   set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${VECGEOM_NVCC_COMPILATION_FLAGS})
 endif()
 
-### CXXFLAGS needs to be set early, so that VECGEOM_GEANT4, VECGEOM_ROOT,
-### and VECGEOM_USOLIDS are already defined when compiling USolids, or it breaks
-
-# Pass flags to compilers
-# We may have addition in compiler flags from the above included packages
-# We don't want to have trailing CMAKE_CXX_FLAGS_"BUILD_TYPE" options on the command line
-# but rather have it as first set of argument.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_build_type}} ${VECGEOM_CXX_FLAGS} ${VECGEOM_COMPILATION_FLAGS}")
-#set(VECGEOM_CXX_FLAGS ${CMAKE_CXX_FLAGS_${_build_type}})
-#unset(CMAKE_CXX_FLAGS_${_build_type} CACHE)
-
-message(STATUS "Compiling with C++ flags: ${CMAKE_CXX_FLAGS}")
-if (CUDA)
-  message(STATUS "Compiling with NVCC flags: ${CUDA_NVCC_FLAGS}")
-endif()
-
-# until VecCore is separated from VecGeom (then it become something
-# ${VecCore_DIR}/include
-# include_directories(${CMAKE_SOURCE_DIR}/VecCore/inc )
-# include_directories(${CMAKE_INSTALL_PREFIX}/VecCore)
 
 if (ROOT)
 
   find_package(ROOT REQUIRED)
 
-  include_directories(AFTER SYSTEM ${ROOT_INCLUDE_DIR})
+  include_directories(AFTER ${ROOT_INCLUDE_DIR})
   link_directories(${ROOT_LIBRARY_DIR})
   set(VECGEOM_LIBRARIES_EXTERNAL ${VECGEOM_LIBRARIES_EXTERNAL}
       ${ROOT_LIBRARIES} Geom)
@@ -414,31 +420,23 @@ endif()
 
 if (USolids)
 
-  if (NOT USOLIDS_DIR AND (NOT USOLIDS_INCLUDE_DIRS OR NOT USOLIDS_LIBRARIES_DIR))
-    message(STATUS "Building with shipped USolids.")
-    add_subdirectory(USolids)
-    include_directories(${CMAKE_SOURCE_DIR}/USolids/include)
-    link_directories(${CMAKE_BINARY_DIR}/USolids)
-  endif()
-  if (USOLIDS_INCLUDE_DIRS)
-    include_directories(${USOLIDS_INCLUDE_DIRS})
-  elseif (USOLIDS_DIR)
-    include_directories(${USOLIDS_DIR}/include)
-  endif()
-  if (USOLIDS_LIBRARIES_DIR)
-    link_directories(${USOLIDS_LIBRARIES_DIR})
-  elseif (USOLIDS_DIR)
-    link_directories(${USOLIDS_DIR}/lib)
-  endif()
+  find_package(USolids REQUIRED)
+  include_directories(AFTER ${USOLIDS_INCLUDE_DIR})
 
-  set(VECGEOM_LIBRARIES ${VECGEOM_LIBRARIES} usolids)
+  set(VECGEOM_LIBRARIES_EXTERNAL ${VECGEOM_LIBRARIES_EXTERNAL} ${USOLIDS_LIBRARIES})
+
+endif()
+
+if (CMSGeom)
+
+  find_package(CMSGeom REQUIRED)
 
 endif()
 
 if (Geant4)
 
   find_package(Geant4 REQUIRED)
-  include_directories(AFTER SYSTEM ${Geant4_INCLUDE_DIRS})
+  include_directories(AFTER ${Geant4_INCLUDE_DIRS})
   set(VECGEOM_LIBRARIES_EXTERNAL ${VECGEOM_LIBRARIES_EXTERNAL}
       ${Geant4_LIBRARIES})
   message(STATUS "Geant4 found in: ${Geant4_INCLUDE_DIRS}")
@@ -446,14 +444,28 @@ if (Geant4)
 endif()
 
 if (VTUNE)
+
   find_package(VTUNE REQUIRED)
-  include_directories(AFTER SYSTEM ${VTUNE_INCLUDE_DIR})
+  include_directories(AFTER ${VTUNE_INCLUDE_DIR})
   set(VECGEOM_LIBRARIES_EXTERNAL ${VECGEOM_LIBRARIES_EXTERNAL} ${VTUNE_LIBRARIES} -lpthread -ldl)
+
 endif()
 
-################################################################################
 
-include_directories(BEFORE ${CMAKE_SOURCE_DIR})
+# Pass flags to compilers
+# We may have addition in compiler flags from the above included packages
+# We don't want to have trailing CMAKE_CXX_FLAGS_"BUILD_TYPE" options on the command line
+# but rather have it as first set of argument.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_build_type}} ${VECGEOM_CXX_FLAGS} ${VECGEOM_DEFINITION_FLAGS}")
+set(CMAKE_CXX_FLAGS_${_build_type} "")
+
+message(STATUS "Compiling with C++ flags: ${CMAKE_CXX_FLAGS}")
+if (CUDA)
+  message(STATUS "Compiling with NVCC flags: ${CUDA_NVCC_FLAGS}")
+endif()
+
+
+################################################################################
 
 set(SRC_CPP_RELATIVE
   source/RNG.cpp
@@ -545,8 +557,7 @@ if (CUDA)
 
     get_filename_component(SRC_FILENAME ${SRC_FILE} NAME_WE)
 
-    list(FIND NOT_FOR_CUDA ${SRC_FILENAME} _index)
-    if(${_index} EQUAL -1)
+    if (NOT "${SRC_FILENAME}" STREQUAL "ABBoxManager")
       ADD_CUSTOM_COMMAND(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cuda_src/${SRC_FILENAME}.cu
         COMMAND ${CMAKE_COMMAND} -E copy ${SRC_FILE}
@@ -567,7 +578,7 @@ endif()
 
 # Add files that won't be compiled for CUDA
 
-if (USOLIDS)
+if (USolids)
   set(SRC_CPP ${SRC_CPP}
     test/shape_tester/ShapeTester.cpp
   )
@@ -586,8 +597,8 @@ endif()
 set(SRC_CPP ${SRC_CPP} ${SRC_EXTERNAL}
   source/GeoManager.cpp
   source/ShapeDebugger.cpp
-  source/CppExporter.cpp
   source/benchmarking/NavigationBenchmarker.cpp
+  source/CppExporter.cpp
 )
 
 # some CUDA kernel code in "userspace"
@@ -597,7 +608,6 @@ if (CUDA)
     )
 endif()
 
-
 # Compile cpp-files for C++11
 
 if (CUDA)
@@ -605,12 +615,30 @@ if (CUDA)
 endif()
 
 ################################################################################
-
 # Build libraries
+################################################################################
 
-add_library(vecgeom ${SRC_CPP})
+set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+
+# Uncomment line below for building/installing VecCore
+# add_subdirectory(VecCore)
+
+if (USolids)
+  if (USOLIDS_EMBEDDED)
+    add_subdirectory(${USOLIDS_DIR})
+  endif()
+endif()
+
+if (CMSGeom)
+  if (CMSGEOM_EMBEDDED)
+    add_subdirectory(${CMSGEOM_DIR})
+  endif()
+endif()
+
+add_library(vecgeom STATIC ${SRC_CPP})
 target_link_libraries(vecgeom ${VECGEOM_LIBRARIES}
                       ${VECGEOM_LIBRARIES_EXTERNAL})
+
 set(VECGEOM_LIBRARIES ${VECGEOM_LIBRARIES} vecgeom)
 if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   set(VECGEOM_LIBRARIES_EXTERNAL ${VECGEOM_LIBRARIES_EXTERNAL} rt)
@@ -652,6 +680,8 @@ endif()
 # Define executables
 
 set(TEST_EXECUTABLES_CORE
+    ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/XRayBenchmark.cpp
+    ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/CompareDistancesNoROOT.cpp
   ${CMAKE_SOURCE_DIR}/test/core/ContainerTest.cpp
   ${CMAKE_SOURCE_DIR}/test/core/create_geometry.cpp
   ${CMAKE_SOURCE_DIR}/test/core/testVectorSafety.cpp
@@ -803,38 +833,27 @@ if (CTEST)
   enable_testing()
 endif()
 
-set(VECGEOM_EXECUTABLES)
-
 macro(build_executables EXECUTABLES)
-  foreach(EXECUTABLE ${EXECUTABLES})
-    get_filename_component(TARGET_NAME ${EXECUTABLE} NAME_WE)
-    add_executable(${TARGET_NAME} ${EXECUTABLE})
-    target_link_libraries(${TARGET_NAME} ${VECGEOM_LIBRARIES}
+  foreach(_exec ${EXECUTABLES})
+    get_filename_component(_target ${_exec} NAME_WE)
+    add_executable(${_target} ${_exec})
+    set_target_properties(${_target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    target_link_libraries(${_target} ${VECGEOM_LIBRARIES}
                           ${VECGEOM_LIBRARIES_EXTERNAL}
                           ${USERKERNELLIB})
-    set(VECGEOM_EXECUTABLES ${VECGEOM_EXECUTABLES} ${TARGET_NAME})
-    if (MIC)
-      get_target_property(current_property ${TARGET_NAME} LINK_FLAGS)
-      if(NOT current_property)
-        set_target_properties(${TARGET_NAME} PROPERTIES LINK_FLAGS "-B/usr/linux-k1om-4.7/linux-k1om/usr/lib64/k1om-mpss-linux/4.7.4 -B/usr/linux-k1om-4.7/linux-k1om/lib64/4.7.4")
-      else()
-        set_target_properties(${TARGET_NAME} PROPERTIES LINK_FLAGS "${current_property} -B/usr/linux-k1om-4.7/linux-k1om/usr/lib64/k1om-mpss-linux/4.7.4 -B/usr/linux-k1om-4.7/linux-k1om/lib64/4.7.4")
-      endif()
-    endif()
   endforeach()
 endmacro()
 
-function(add_to_ctest EXECUTABLES)
-  foreach(EXECUTABLE ${EXECUTABLES})
-    if (CTEST)
-      get_filename_component(TARGET_NAME ${EXECUTABLE} NAME_WE)
-      add_test(${TARGET_NAME} ${TARGET_NAME})
-    endif()
+macro(add_to_ctest EXECUTABLES)
+  foreach(_exec ${EXECUTABLES})
+    get_filename_component(_target ${_exec} NAME_WE)
+    add_test(NAME ${_target} COMMAND ${_target})
   endforeach()
-endfunction()
+endmacro()
 
 build_executables("${TEST_EXECUTABLES_CORE}")
 add_to_ctest("${TEST_EXECUTABLES_CORE}")
+
 if (BENCHMARK)
   build_executables("${TEST_EXECUTABLES_BENCHMARK}")
 endif()
@@ -843,26 +862,6 @@ if (ROOT)
   build_executables("${TEST_EXECUTABLES_ROOT}")
   build_executables("${TEST_EXECUTABLES_VISUALIZATION}")
   add_to_ctest("${TEST_UNITTESTEXECUTABLES_ROOT}")
-
-  if (VALIDATION)
-    macro(add_cmsshapevalidation_test TESTNAME SHAPEFILE)
-      add_test(NAME ${TESTNAME} COMMAND bash -c "${CMAKE_SOURCE_DIR}/test/scripts/RunRandomValidation ${CMAKE_BINARY_DIR}/BenchmarkShapeFromROOTFile  ${CMAKE_SOURCE_DIR}/test/cmstestdata/cms2015.root  ${CMAKE_SOURCE_DIR}/test/cmstestdata/${SHAPEFILE}" )
-    endmacro()
-
-    # Adding various shapes tests for nightlies
-    add_cmsshapevalidation_test( tubevalidation cmstubes.txt )
-    add_cmsshapevalidation_test( trapvalidation cmstraps.txt )
-    add_cmsshapevalidation_test( polyconevalidation cmspolycones.txt )
-    add_cmsshapevalidation_test( polyhedravalidation cmspolyhedra.txt )
-    add_cmsshapevalidation_test( conevalidation cmscones.txt )
-    add_cmsshapevalidation_test( boxvalidation cmsboxes.txt )
-    #taken out due to problems: add_cmsshapevalidation_test( booleanvalidation cmsbooleans.txt )
-    #taken out due to Issue-133: add_cmsshapevalidation_test( torusvalidation cmstori.txt )
-  endif()
-else()
-  if (VALIDATION)
-    message(WARNING "Validation tests depend on ROOT being enabled")
-  endif()
 endif()
 
 if (USolids)
@@ -876,12 +875,31 @@ if (USolids)
   add_test(NAME VecGeomBox COMMAND TestBox --vecgeom)
   add_test(NAME USolidTube COMMAND TestTube --usolids)
   add_test(NAME VecTube COMMAND TestTube --vecgeom)
+
 endif()
 
 if (CUDA)
   build_executables("${TEST_EXECUTABLES_CUDA}")
 #  add_to_ctest("${TEST_EXECUTABLES_CUDA}")
 endif()
+
+if (CTEST AND VALIDATION AND ROOT)
+  macro(add_cmsshapevalidation_test TESTNAME SHAPEFILE)
+    add_test(NAME ${TESTNAME} COMMAND bash -c "${CMAKE_SOURCE_DIR}/test/scripts/RunRandomValidation ${CMAKE_BINARY_DIR}/BenchmarkShapeFromROOTFile  ${CMAKE_SOURCE_DIR}/test/cmstestdata/cms2015.root  ${CMAKE_SOURCE_DIR}/test/cmstestdata/${SHAPEFILE}" )
+  endmacro()
+
+  # Adding various shapes tests for nightlies
+  add_cmsshapevalidation_test( tubevalidation cmstubes.txt )
+  add_cmsshapevalidation_test( trapvalidation cmstraps.txt )
+  add_cmsshapevalidation_test( polyconevalidation cmspolycones.txt )
+  add_cmsshapevalidation_test( polyhedravalidation cmspolyhedra.txt )
+  add_cmsshapevalidation_test( conevalidation cmscones.txt )
+  add_cmsshapevalidation_test( boxvalidation cmsboxes.txt )
+  #taken out due to problems: add_cmsshapevalidation_test( booleanvalidation cmsbooleans.txt )
+  #taken out due to Issue-133: add_cmsshapevalidation_test( torusvalidation cmstori.txt )
+endif()
+
+
 
 #---------------------------------------------------------------------------
 # Include creation and submission to dashboard cdash.cern.ch
@@ -973,58 +991,24 @@ endif()
 
 export(PACKAGE VecGeom)
 
-file(RELATIVE_PATH INSTALL_INCLUDE_DIR_RELATIVE
-     "${INSTALL_CMAKE_DIR}" "${INSTALL_INCLUDE_DIR}/.")
-file(RELATIVE_PATH INSTALL_LIB_DIR_RELATIVE
-     "${INSTALL_CMAKE_DIR}" "${INSTALL_LIB_DIR}/.")
 # Build
 set(CONF_TYPE "build")
-set(CONF_INCLUDE_DIR "${CMAKE_SOURCE_DIR}")
-set(CONF_LIBRARY_DIR "${CMAKE_BINARY_DIR}")
-set(CONF_LIBRARIES ${VECGEOM_LIBRARIES_EXTERNAL}
-    "${CONF_LIBRARY_DIR}/libvecgeom.a")
-if (USolids)
-  set(CONF_LIBRARIES ${CONF_LIBRARIES}
-      "${CONF_LIBRARY_DIR}/USolids/libusolids.a")
-endif()
-configure_file(VecGeomConfig.cmake.in
-               "${PROJECT_BINARY_DIR}/VecGeomConfig.cmake" @ONLY)
+configure_file(VecGeomConfig.cmake.in "${CMAKE_BINARY_DIR}/VecGeomConfig.cmake" @ONLY)
 # Installation
 set(CONF_TYPE "install")
-set(CONF_INCLUDE_DIR "\${THIS_DIR}/${INSTALL_INCLUDE_DIR_RELATIVE}" "\${THIS_DIR}/${INSTALL_INCLUDE_DIR_RELATIVE}/VecCore/")
-set(CONF_LIBRARY_DIR "\${THIS_DIR}/${INSTALL_LIB_DIR_RELATIVE}")
-set(CONF_LIBRARIES ${VECGEOM_LIBRARIES_EXTERNAL}
-    "${CONF_LIBRARY_DIR}/libvecgeom.a")
 if (CUDA)
    set(CONF_LIBRARIES "${CONF_LIBRARY_DIR}/libvecgeomcuda.a" ${CONF_LIBRARIES}  "${CONF_LIBRARY_DIR}/libvecgeomcuda.a")
 endif()
-if (USolids)
-  set(CONF_LIBRARIES ${CONF_LIBRARIES} "${CONF_LIBRARY_DIR}/libusolids.a")
-  configure_file(VecGeomConfig.cmake.in
-    "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/USolidsConfig.cmake" @ONLY)
-endif()
-configure_file(VecGeomConfig.cmake.in
-  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/VecGeomConfig.cmake" @ONLY)
+configure_file(VecGeomConfig.cmake.in "${CMAKE_BINARY_DIR}/lib/cmake/${CMAKE_PROJECT_NAME}/${CMAKE_PROJECT_NAME}Config.cmake" @ONLY)
 
 # Install the VecGeomConfig.cmake
-install(FILES
-  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/VecGeomConfig.cmake"
-  DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
-if (USolids)
-  install(FILES
-    "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/USolidsConfig.cmake"
-    DESTINATION "${INSTALL_CMAKE_DIR}/../USolids" COMPONENT dev)
-endif()
+install(FILES "${CMAKE_BINARY_DIR}/lib/cmake/${CMAKE_PROJECT_NAME}/${CMAKE_PROJECT_NAME}Config.cmake" DESTINATION "lib/cmake/${CMAKE_PROJECT_NAME}/" COMPONENT dev)
 
 # Install headers and libraries
-foreach(FOLDER base benchmarking management navigation volumes materials backend)
-  install(DIRECTORY ${FOLDER} DESTINATION ${INSTALL_INCLUDE_DIR})
+foreach(_folder base benchmarking management navigation volumes materials backend)
+  install(DIRECTORY ${_folder} DESTINATION include)
 endforeach()
-install(TARGETS vecgeom DESTINATION ${INSTALL_LIB_DIR})
+install(TARGETS vecgeom DESTINATION lib)
 if (CUDA)
-  install(TARGETS vecgeomcuda DESTINATION ${INSTALL_LIB_DIR})
+  install(TARGETS vecgeomcuda DESTINATION lib)
 endif()
-
-
-# Not yet a proper project.
-add_subdirectory (VecCore)

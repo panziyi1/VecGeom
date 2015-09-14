@@ -27,10 +27,16 @@
 #ifdef VECGEOM_GEANT4
 #endif
 
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(push, target(mic))
+#endif
 #include <cassert>
 #include <random>
 #include <sstream>
 #include <utility>
+#ifdef OFFLOAD_MODE
+#pragma offload_attribute(pop)
+#endif
 
 namespace vecgeom {
 
@@ -149,6 +155,9 @@ int Benchmarker::CompareDistances(
 #ifdef VECGEOM_CUDA
     Precision const *const cuda,
 #endif
+#ifdef OFFLOAD_MODE
+    Precision const *const offload,
+#endif
     char const *const method) {
 
    fProblematicRays.clear();
@@ -167,6 +176,9 @@ int Benchmarker::CompareDistances(
  #endif
  #ifdef VECGEOM_CUDA
      outputLabelsStream << " / CUDA";
+ #endif
+ #ifdef OFFLOAD_MODE
+     outputLabelsStream << " / Offload to Xeon Phi";
  #endif
 
   if (fPoolMultiplier == 1 && fVerbosity > 0) {
@@ -229,6 +241,13 @@ int Benchmarker::CompareDistances(
       }
       if (fVerbosity > 2) mismatchOutput << " / " << cuda[i];
 #endif
+#ifdef OFFLOAD_MODE
+      if (std::fabs(specialized[i] - offload[i]) > fTolerance
+          && !(specialized[i] == kInfinity && offload[i] == kInfinity)) {
+        mismatch = true;
+      }
+      if (fVerbosity > 2) mismatchOutput << " / " << offload[i];
+#endif
       mismatches += mismatch;
 
       if( mismatch )
@@ -238,7 +257,7 @@ int Benchmarker::CompareDistances(
       }
 
       if ((mismatch && fVerbosity > 2) || fVerbosity > 4) {
-        printf("Point (%.30f, %.30f, %.30f)", points->x(i), points->y(i),
+        printf("(%d) Point (%.30f, %.30f, %.30f)", i, points->x(i), points->y(i),
                points->z(i));
         if (directions != NULL) {
           printf(", Direction (%.30f, %.30f, %.30f)", directions->x(i), directions->y(i),
@@ -275,6 +294,9 @@ int Benchmarker::CompareSafeties(
 #ifdef VECGEOM_CUDA
     Precision const *const cuda,
 #endif
+#ifdef OFFLOAD_MODE
+    Precision const *const offload,
+#endif
     char const *const method) const {
 
     int mismatches = 0;
@@ -293,6 +315,9 @@ int Benchmarker::CompareSafeties(
 #endif
 #ifdef VECGEOM_CUDA
     outputLabelsStream << " / CUDA";
+#endif
+#ifdef OFFLOAD_MODE
+    outputLabelsStream << " / Offload to Xeon Phi";
 #endif
   if (fPoolMultiplier == 1 && fVerbosity > 0) {
 
@@ -359,11 +384,19 @@ int Benchmarker::CompareSafeties(
       }
       if (fVerbosity > 2) mismatchOutput << " / " << cuda[i];
 #endif
+#ifdef OFFLOAD_MODE
+      if (std::fabs(specialized[i] - offload[i]) > kTolerance
+          && !(specialized[i] == kInfinity && offload[i] == kInfinity)) {
+        mismatch = true;
+        better &= specialized[i] >= offload[i];
+      }
+      if (fVerbosity > 2) mismatchOutput << " / " << offload[i];
+#endif
       mismatches += mismatch;
       worse += !better;
 
       if ((!better && fVerbosity > 2) || fVerbosity > 4) {
-        printf("Point (%f, %f, %f)", points->x(i), points->y(i),
+        printf("(%d) Point (%f, %f, %f)", i, points->x(i), points->y(i),
                points->z(i));
         if (directions != NULL) {
           printf(", Direction (%f, %f, %f)", directions->x(i), directions->y(i),
@@ -403,11 +436,9 @@ int Benchmarker::RunInsideBenchmark() {
     printf("Running Contains and Inside benchmark for %i points for "
            "%i repetitions.\n", fPointCount, fRepetitions);
   }
-#ifndef VECGEOM_SCALAR
   if (fVerbosity > 1) {
-    printf("Vector instruction size is %i doubles.\n", kVectorSize);
+    printf("Vector instruction size is %i double(s).\n", kVectorSize);
   }
-#endif
 
   if (fPointPool) delete fPointPool;
   fPointPool = new SOA3D<Precision>(fPointCount*fPoolMultiplier);
@@ -449,6 +480,12 @@ int Benchmarker::RunInsideBenchmark() {
   outputLabelsContains << " - CUDA";
   outputLabelsInside << " - CUDA";
 #endif
+#ifdef OFFLOAD_MODE
+  bool *containsOffload = AllocateAligned<bool>();
+  Inside_t *insideOffload = AllocateAligned<Inside_t>();
+  outputLabelsContains << " - Offload to Xeon Phi";
+  outputLabelsInside << " - Offload to Xeon Phi";
+#endif
 
   // Run all benchmarks
   for(unsigned int i=0; i<fMeasurementCount; ++i) {
@@ -486,6 +523,9 @@ int Benchmarker::RunInsideBenchmark() {
     RunInsideCuda(fPointPool->x(), fPointPool->y(), fPointPool->z(),
                   containsCuda, insideCuda);
 #endif
+#ifdef OFFLOAD_MODE
+    RunInsideOffload(containsOffload, insideOffload);
+#endif
   }
 
   if (fPoolMultiplier == 1 && fVerbosity > 0) {
@@ -517,9 +557,13 @@ int Benchmarker::RunInsideBenchmark() {
       if (containsSpecialized[i] != containsCuda[i]) mismatch = true;
       if (fVerbosity > 2) mismatchOutput << " / " << containsCuda[i];
 #endif
+#ifdef OFFLOAD_MODE
+      if (containsSpecialized[i] != containsOffload[i]) mismatch = true;
+      if (fVerbosity > 2) mismatchOutput << " / " << containsOffload[i];
+#endif
       mismatches += mismatch;
       if ((mismatch && fVerbosity > 2) || fVerbosity > 4) {
-        printf("Point (%f, %f, %f): ", fPointPool->x(i),
+        printf("(%d) Point (%f, %f, %f): ", i, fPointPool->x(i),
                fPointPool->y(i), fPointPool->z(i));
 
         // store point for later inspection
@@ -573,9 +617,13 @@ int Benchmarker::RunInsideBenchmark() {
       if (insideSpecialized[i] != insideCuda[i]) mismatch = true;
       if (fVerbosity > 2) mismatchOutput << " / " << insideCuda[i];
 #endif
+#ifdef OFFLOAD_MODE
+      if (insideSpecialized[i] != insideOffload[i]) mismatch = true;
+      if (fVerbosity > 2) mismatchOutput << " / " << insideOffload[i];
+#endif
       insidemismatches += mismatch;
       if ((mismatch && fVerbosity > 2) || fVerbosity > 4) {
-        printf("Point (%f, %f, %f): ", *(fPointPool->x()+i),
+        printf("(%d) Point (%f, %f, %f): ", i, *(fPointPool->x()+i),
                *(fPointPool->y()+i), fPointPool->z(i));
       }
       if ((mismatch && fVerbosity > 2) || fVerbosity > 3) {
@@ -610,6 +658,10 @@ int Benchmarker::RunInsideBenchmark() {
 #ifdef VECGEOM_CUDA
   FreeAligned(containsCuda);
   FreeAligned(insideCuda);
+#endif
+#ifdef OFFLOAD
+  FreeAligned(containsOffload);
+  FreeAligned(insideOffload);
 #endif
   return mismatches + insidemismatches;
 }
@@ -660,9 +712,7 @@ int Benchmarker::RunToInBenchmark() {
            "%i repetitions.\n", fPointCount, fRepetitions);
   }
   if (fVerbosity > 1) {
-#ifndef VECGEOM_SCALAR
-    printf("Vector instruction size is %i doubles.\n", kVectorSize);
-#endif
+    printf("Vector instruction size is %i double(s).\n", kVectorSize);
   }
 
   // Allocate memory
@@ -722,6 +772,11 @@ int Benchmarker::RunToInBenchmark() {
   Precision *const safetiesCuda = AllocateAligned<Precision>();
   outputLabels << " - CUDA";
 #endif
+#ifdef OFFLOAD_MODE
+  Precision *const distancesOffload = AllocateAligned<Precision>();
+  Precision *const safetiesOffload = AllocateAligned<Precision>();
+  outputLabels << " - Offload to Xeon Phi";
+#endif
 
   // Run all benchmarks
   for(unsigned int i=0; i<fMeasurementCount; ++i) {
@@ -760,6 +815,9 @@ int Benchmarker::RunToInBenchmark() {
                 fDirectionPool->x(), fDirectionPool->y(), fDirectionPool->z(),
                 distancesCuda, safetiesCuda);
 #endif
+#ifdef OFFLOAD_MODE
+    RunToInOffload(distancesOffload, safetiesOffload);
+#endif
   }
   int errorcode = CompareDistances(
     fPointPool,
@@ -779,6 +837,9 @@ int Benchmarker::RunToInBenchmark() {
 #ifdef VECGEOM_CUDA
     distancesCuda,
 #endif
+#ifdef OFFLOAD_MODE
+    distancesOffload,
+#endif
     "DistanceToIn");
 
   // Clean up memory
@@ -796,6 +857,9 @@ int Benchmarker::RunToInBenchmark() {
 #endif
 #ifdef VECGEOM_CUDA
   FreeAligned(distancesCuda);
+#endif
+#ifdef OFFLOAD_MODE
+  FreeAligned(distancesOffload);
 #endif
 
   // for the moment; do not consider safety for errorcodes
@@ -818,6 +882,9 @@ int Benchmarker::RunToInBenchmark() {
 #ifdef VECGEOM_CUDA
     safetiesCuda,
 #endif
+#ifdef OFFLOAD_MODE
+    safetiesOffload,
+#endif
     "SafetyToIn");
 
   FreeAligned(safetiesSpecialized);
@@ -835,6 +902,9 @@ int Benchmarker::RunToInBenchmark() {
 #ifdef VECGEOM_CUDA
   FreeAligned(safetiesCuda);
 #endif
+#ifdef OFFLOAD_MODE
+  FreeAligned(safetiesOffload);
+#endif
   return (errorcode)? 1 : 0;
 }
 
@@ -847,9 +917,7 @@ int Benchmarker::RunToOutBenchmark() {
            "%i repetitions.\n", fPointCount, fRepetitions);
   }
   if (fVerbosity > 1) {
-#ifndef VECGEOM_SCALAR
-    printf("Vector instruction size is %i doubles.\n", kVectorSize);
-#endif
+    printf("Vector instruction size is %i double(s).\n", kVectorSize);
   }
 
   // Allocate memory
@@ -906,6 +974,11 @@ int Benchmarker::RunToOutBenchmark() {
   Precision *const safetiesCuda = AllocateAligned<Precision>();
   outputLabels << " - CUDA";
 #endif
+#ifdef OFFLOAD_MODE
+  Precision *const distancesOffload = AllocateAligned<Precision>();
+  Precision *const safetiesOffload = AllocateAligned<Precision>();
+  outputLabels << " - Offload to Xeon Phi";
+#endif
 
   // Run all benchmarks
   for(unsigned int i=0; i<fMeasurementCount; ++i) {
@@ -945,6 +1018,9 @@ int Benchmarker::RunToOutBenchmark() {
                  distancesCuda, safetiesCuda);
 #endif
   }
+#ifdef OFFLOAD_MODE
+    RunToOutOffload(distancesOffload, safetiesOffload);
+#endif
 
   int errorcode = CompareDistances(
     fPointPool,
@@ -964,6 +1040,9 @@ int Benchmarker::RunToOutBenchmark() {
 #ifdef VECGEOM_CUDA
     distancesCuda,
 #endif
+#ifdef OFFLOAD_MODE
+    distancesOffload,
+#endif
     "DistanceToOut");
 
   // Clean up memory
@@ -981,6 +1060,9 @@ int Benchmarker::RunToOutBenchmark() {
 #endif
 #ifdef VECGEOM_CUDA
   FreeAligned(distancesCuda);
+#endif
+#ifdef OFFLOAD_MODE
+  FreeAligned(distancesOffload);
 #endif
 
   //errorcode += CompareSafeties(
@@ -1002,6 +1084,9 @@ int Benchmarker::RunToOutBenchmark() {
 #ifdef VECGEOM_CUDA
     safetiesCuda,
 #endif
+#ifdef OFFLOAD_MODE
+    safetiesOffload,
+#endif
     "SafetyToOut");
 
   FreeAligned(safetiesSpecialized);
@@ -1018,6 +1103,9 @@ int Benchmarker::RunToOutBenchmark() {
 #endif
 #ifdef VECGEOM_CUDA
   FreeAligned(safetiesCuda);
+#endif
+#ifdef OFFLOAD_MODE
+  FreeAligned(safetiesOffload);
 #endif
   return ( errorcode ) ? 1 : 0 ;
 }
@@ -1765,6 +1853,235 @@ void Benchmarker::RunToOutRoot(
   fResults.push_back( GenerateBenchmarkResult( elapsedDistance, kBenchmarkDistanceToOut, kBenchmarkRoot, 1) );
   fResults.push_back( GenerateBenchmarkResult( elapsedSafety, kBenchmarkSafetyToOut, kBenchmarkRoot, 1)  );
 }
+#endif
+
+#ifdef OFFLOAD_MODE
+
+#define ALLOC  alloc_if(1)
+#define FREE   free_if(1)
+#define RETAIN free_if(0)
+#define REUSE  alloc_if(0)
+
+void Benchmarker::RunInsideOffload(bool *contains, Inside_t *inside) {
+  if (fVerbosity > 0) {
+    printf("Offload       - ");
+  }
+  Stopwatch timer;
+
+  timer.Start();
+  auto _s_fpp = fPointPool->size();
+  auto _fpp_x = fPointPool->x();
+  auto _fpp_y = fPointPool->y();
+  auto _fpp_z = fPointPool->z();
+#pragma offload_transfer target(mic) in(_fpp_x,_fpp_y,_fpp_z : length(_s_fpp) align(64) ALLOC RETAIN)
+  std::list<size_t> fVolumes;
+  for (auto v = this->fVolumes.begin(), vEnd = this->fVolumes.end(); v != vEnd; ++v) {
+    fVolumes.push_back(v->Specialized()->CopyToXeonPhi());
+  }
+#pragma offload_transfer target(mic) nocopy(contains,inside : length(fPointCount) align(64) ALLOC RETAIN)
+  Precision transferIn = timer.Stop();
+
+  timer.Start();
+  for (unsigned r = 0; r < fRepetitions; ++r) {
+    int index = (rand() % fPoolMultiplier) * fPointCount;
+    for (auto v = fVolumes.begin(), vEnd = fVolumes.end(); v != vEnd; ++v) {
+      size_t addr = (*v);
+#pragma offload target(mic) in(addr,index,fPointCount) nocopy(contains,_fpp_x,_fpp_y,_fpp_z)
+{
+      SOA3D<Precision> points(_fpp_x+index,_fpp_y+index,_fpp_z+index,fPointCount);
+      ((VPlacedVolume*)addr)->Contains(points, contains);
+}
+    }
+  }
+  Precision elapsedContains = timer.Stop();
+  timer.Start();
+  for (unsigned r = 0; r < fRepetitions; ++r) {
+    int index = (rand() % fPoolMultiplier) * fPointCount;
+    for (auto v = fVolumes.begin(), v_end = fVolumes.end(); v != v_end; ++v) {
+      size_t addr = (*v);
+#pragma offload target(mic) in(addr,index,fPointCount) nocopy(inside,_fpp_x,_fpp_y,_fpp_z)
+{
+      SOA3D<Precision> points(_fpp_x+index,_fpp_y+index,_fpp_z+index,fPointCount);
+      ((VPlacedVolume*)addr)->Inside(points, inside);
+}
+    }
+  }
+  Precision elapsedInside = timer.Stop();
+
+  // Freeing the Xeon Phi memory
+  timer.Start();
+#pragma offload_transfer target(mic) nocopy(_fpp_x,_fpp_y,_fpp_z : REUSE FREE)
+#pragma offload_transfer target(mic) out(contains,inside : length(fPointCount) REUSE FREE)
+  Precision transferOut = timer.Stop();
+
+  if (fVerbosity > 0 && fMeasurementCount==1) {
+    printf("Inside: %.6fs (%.6fs), Contains: %.6fs (%.6fs), "
+           "Inside/Contains: %.2f, TransferIn/Out: %.2fs/%.2fs\n",
+           elapsedInside, elapsedInside/fVolumes.size(),
+           elapsedContains, elapsedContains/fVolumes.size(),
+           elapsedInside/elapsedContains, transferIn, transferOut);
+  }
+  fResults.push_back(GenerateBenchmarkResult(elapsedContains, kBenchmarkContains, kBenchmarkVectorized,fInsideBias));
+  fResults.push_back( GenerateBenchmarkResult( elapsedInside, kBenchmarkInside, kBenchmarkVectorized, fInsideBias) );
+}
+
+void Benchmarker::RunToInOffload(Precision *distances, Precision *safeties) {
+  if (fVerbosity > 0) {
+    printf("Offload       - ");
+  }
+  Stopwatch timer;
+
+  timer.Start();
+  auto _s_fpp = fPointPool->size();
+  auto _fpp_x = fPointPool->x();
+  auto _fpp_y = fPointPool->y();
+  auto _fpp_z = fPointPool->z();
+#pragma offload_transfer target(mic) in(_fpp_x,_fpp_y,_fpp_z : length(_s_fpp) align(64) ALLOC RETAIN)
+  auto _s_fdp = fDirectionPool->size();
+  auto _fdp_x = fDirectionPool->x();
+  auto _fdp_y = fDirectionPool->y();
+  auto _fdp_z = fDirectionPool->z();
+#pragma offload_transfer target(mic) in(_fdp_x,_fdp_y,_fdp_z : length(_s_fdp) align(64) ALLOC RETAIN)
+  std::list<size_t> fVolumes;
+  for (auto v = this->fVolumes.begin(), vEnd = this->fVolumes.end(); v != vEnd; ++v) {
+    fVolumes.push_back(v->Specialized()->CopyToXeonPhi());
+  }
+  auto _fsm = fStepMax; // this line somehow trick the compiler and transfer the data in
+#pragma offload_transfer target(mic) in(_fsm : length(fPointCount) align(64) ALLOC RETAIN)
+#pragma offload_transfer target(mic) nocopy(distances,safeties : length(fPointCount) align(64) ALLOC RETAIN)
+  Precision transferIn = timer.Stop();
+
+  timer.Start();
+  for (unsigned r = 0; r < fRepetitions; ++r) {
+    int index = (rand() % fPoolMultiplier) * fPointCount;
+    for (auto v = fVolumes.begin(), vEnd = fVolumes.end(); v != vEnd; ++v) {
+      size_t addr = (*v);
+#pragma offload target(mic) in(addr,index,fPointCount) nocopy(_fpp_x,_fpp_y,_fpp_z,_fdp_x,_fdp_y,_fdp_z,_fsm,distances)
+{
+      SOA3D<Precision> points(_fpp_x+index, _fpp_y+index,_fpp_z+index, fPointCount);
+      SOA3D<Precision> directions(_fdp_x+index,_fdp_y+index,_fdp_z+index, fPointCount);
+      ((VPlacedVolume*)addr)->DistanceToIn(points, directions, _fsm, distances);
+}
+    }
+  }
+  Precision elapsedDistance = timer.Stop();
+
+  timer.Start();
+  for (unsigned r = 0; r < fRepetitions; ++r) {
+    int index = (rand() % fPoolMultiplier) * fPointCount;
+    for (auto v = fVolumes.begin(), vEnd = fVolumes.end(); v != vEnd; ++v) {
+      size_t addr = (*v);
+#pragma offload target(mic) in(addr,index,fPointCount) nocopy(_fpp_x,_fpp_y,_fpp_z,safeties)
+{
+      SOA3D<Precision> points(_fpp_x+index, _fpp_y+index, _fpp_z+index, fPointCount);
+      ((VPlacedVolume*)addr)->SafetyToIn(points, safeties);
+}
+    }
+  }
+  Precision elapsedSafety = timer.Stop();
+
+  // Freeing the Xeon Phi memory
+  timer.Start();
+#pragma offload_transfer target(mic) nocopy(_fpp_x,_fpp_y,_fpp_z : REUSE FREE)
+#pragma offload_transfer target(mic) nocopy(_fdp_x,_fdp_y,_fdp_z : REUSE FREE)
+#pragma offload_transfer target(mic) nocopy(_fsm : REUSE FREE)
+#pragma offload_transfer target(mic) out(distances,safeties : length(fPointCount) REUSE FREE)
+  Precision transferOut = timer.Stop();
+
+  if (fVerbosity > 0 && fMeasurementCount==1) {
+    printf("DistanceToIn: %.6fs (%.6fs), SafetyToIn: %.6fs (%.6fs), "
+           "DistanceToIn/SafetyToIn: %.2f, TransferIn/Out: %.2fs/%.2fs\n",
+           elapsedDistance, elapsedDistance/fVolumes.size(),
+           elapsedSafety, elapsedSafety/fVolumes.size(),
+           elapsedDistance/elapsedSafety, transferIn, transferOut);
+  }
+  fResults.push_back(
+    GenerateBenchmarkResult( elapsedDistance, kBenchmarkDistanceToIn, kBenchmarkVectorized, fToInBias)
+  );
+  fResults.push_back(
+    GenerateBenchmarkResult( elapsedSafety, kBenchmarkSafetyToIn, kBenchmarkVectorized, fToInBias)
+  );
+}
+
+void Benchmarker::RunToOutOffload(Precision *distances, Precision *safeties) {
+  if (fVerbosity > 0) {
+    printf("Offload       - ");
+  }
+  Stopwatch timer;
+
+  timer.Start();
+  auto _s_fpp = fPointPool->size();
+  auto _fpp_x = fPointPool->x();
+  auto _fpp_y = fPointPool->y();
+  auto _fpp_z = fPointPool->z();
+#pragma offload_transfer target(mic) in(_fpp_x,_fpp_y,_fpp_z : length(_s_fpp) align(64) ALLOC RETAIN)
+  auto _s_fdp = fDirectionPool->size();
+  auto _fdp_x = fDirectionPool->x();
+  auto _fdp_y = fDirectionPool->y();
+  auto _fdp_z = fDirectionPool->z();
+#pragma offload_transfer target(mic) in(_fdp_x,_fdp_y,_fdp_z : length(_s_fdp) align(64) ALLOC RETAIN)
+  std::list<size_t> fVolumes;
+  for (auto v = this->fVolumes.begin(), vEnd = this->fVolumes.end(); v != vEnd; ++v) {
+    fVolumes.push_back(v->Specialized()->CopyToXeonPhi());
+  }
+  auto _fsm = fStepMax; // this line somehow trick the compiler and transfer the data in
+#pragma offload_transfer target(mic) in(_fsm : length(fPointCount) align(64) ALLOC RETAIN)
+#pragma offload_transfer target(mic) nocopy(distances,safeties : length(fPointCount) align(64) ALLOC RETAIN)
+  Precision transferIn = timer.Stop();
+
+  timer.Start();
+  for (unsigned r = 0; r < fRepetitions; ++r) {
+    int index = (rand() % fPoolMultiplier) * fPointCount;
+    for (auto v = fVolumes.begin(), vEnd = fVolumes.end(); v != vEnd; ++v) {
+      size_t addr = (*v);
+#pragma offload target(mic) in(addr,index,fPointCount) nocopy(_fpp_x,_fpp_y,_fpp_z,_fdp_x,_fdp_y,_fdp_z,_fsm,distances)
+{
+      SOA3D<Precision> points(_fpp_x+index, _fpp_y+index,_fpp_z+index, fPointCount);
+      SOA3D<Precision> directions(_fdp_x+index,_fdp_y+index,_fdp_z+index, fPointCount);
+      ((VPlacedVolume*)addr)->DistanceToOut(points, directions, _fsm, distances);
+}
+    }
+  }
+  Precision elapsedDistance = timer.Stop();
+
+  timer.Start();
+  for (unsigned r = 0; r < fRepetitions; ++r) {
+    int index = (rand() % fPoolMultiplier) * fPointCount;
+    for (auto v = fVolumes.begin(), vEnd = fVolumes.end(); v != vEnd; ++v) {
+      size_t addr = (*v);
+#pragma offload target(mic) in(addr,index,fPointCount) nocopy(_fpp_x,_fpp_y,_fpp_z,safeties)
+{
+      SOA3D<Precision> points(_fpp_x+index, _fpp_y+index, _fpp_z+index, fPointCount);
+      ((VPlacedVolume*)addr)->SafetyToOut(points, safeties);
+}
+    }
+  }
+  Precision elapsedSafety = timer.Stop();
+
+  // Freeing the Xeon Phi memory
+  timer.Start();
+#pragma offload_transfer target(mic) nocopy(_fpp_x,_fpp_y,_fpp_z : REUSE FREE)
+#pragma offload_transfer target(mic) nocopy(_fdp_x,_fdp_y,_fdp_z : REUSE FREE)
+#pragma offload_transfer target(mic) nocopy(_fsm : REUSE FREE)
+#pragma offload_transfer target(mic) out(distances,safeties : length(fPointCount) REUSE FREE)
+  Precision transferOut = timer.Stop();
+
+  if (fVerbosity > 0 && fMeasurementCount==1) {
+    printf("DistanceToOut: %.6fs (%.6fs), SafetyToOut: %.6fs (%.6fs), "
+           "DistanceToOut/SafetyToOut: %.2f, TransferIn/Out: %.2fs/%.2fs\n",
+           elapsedDistance, elapsedDistance/fVolumes.size(),
+           elapsedSafety, elapsedSafety/fVolumes.size(),
+           elapsedDistance/elapsedSafety, transferIn, transferOut);
+  }
+  fResults.push_back( GenerateBenchmarkResult( elapsedDistance, kBenchmarkDistanceToOut, kBenchmarkVectorized, 1) );
+  fResults.push_back( GenerateBenchmarkResult( elapsedSafety, kBenchmarkSafetyToOut, kBenchmarkVectorized, 1) );
+}
+
+#undef ALLOC
+#undef FREE
+#undef RETAIN
+#undef REUSE
+
 #endif
 
 template <typename Type>
