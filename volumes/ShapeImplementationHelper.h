@@ -297,7 +297,7 @@ public:
         PlacedShape_t::Normal( hitpoint, normal );
         // we could make this something like
         // convex = PlacedShape_t::IsConvex;
-        convex = false; // the only possible safe choice
+        convex = true;
         return d;
   }
 #endif
@@ -607,13 +607,6 @@ public:
       safeties[i] = (result < safeties[i]) ? result : safeties[i];
 #endif
     }
-    unsigned tailsize = points.size() - safesize;
-    for (unsigned int i=0; i < tailsize; ++i){
-        unsigned int track = safesize + i;
-        Precision result = kInfinity;
-        Specialization::template SafetyToIn<kScalar>(*this->GetUnplacedVolume(), *this->GetTransformation(), points[track], result);
-        safeties[track] = (result < safeties[track])? result : safeties[track];
-    }
   }
 
   virtual void SafetyToOut(SOA3D<Precision> const &points,
@@ -637,14 +630,6 @@ public:
 #elif VECGEOM_SCALAR
       output[i] = result;
 #endif
-    }
-    // tail treatment
-    unsigned tailsize = points.size() - safesize;
-    for (unsigned int i = 0; i < tailsize; ++i) {
-        Precision result = kInfinity;
-        unsigned int track = safesize + i;
-        Specialization::template SafetyToOut<kScalar>(*this->GetUnplacedVolume(), points[track], result);
-        output[track] = result;
     }
   }
 
