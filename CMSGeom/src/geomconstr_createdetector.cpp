@@ -30,14 +30,3 @@ CreateLogicalVolumes();
 VPlacedVolume const * world = lvol0->Place( idtrans ); 
 return world;
 }
-int main(){
-// function could be used like this 
- GeoManager & geom = GeoManager::Instance();
- Stopwatch timer;
- timer.Start();
- geom.SetWorld( generateDetector() );
- geom.CloseGeometry();
- timer.Stop();
- std::cerr << "loading took  " << timer.Elapsed() << " s " << std::endl;
- std::cerr << "loaded geometry has " << geom.getMaxDepth() << " levels " << std::endl;
- return 0;}
