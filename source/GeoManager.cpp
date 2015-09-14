@@ -128,7 +128,7 @@ void GeoManager::CompactifyMemory() {
    // fix pointers to placed volumes referenced in all logical volumes
     for( auto v : fLogicalVolumesMap ){
         LogicalVolume * lvol = v.second;
-        for( unsigned int i = 0; i < lvol->GetDaughtersp()->size(); ++i){
+        for(int i = 0; i < lvol->GetDaughtersp()->size(); ++i){
             lvol->GetDaughtersp()->operator[](i) = ConvertOldToNew( lvol->GetDaughtersp()->operator[](i) );
         }
     }
