@@ -5,7 +5,8 @@
  *      Author: swenzel
  */
 
-#pragma once
+#ifndef ABBOXNAVIGATOR_H_
+#define ABBOXNAVIGATOR_H_
 
 #ifdef OFFLOAD_MODE
 #pragma offload_attribute(push, target(mic))
