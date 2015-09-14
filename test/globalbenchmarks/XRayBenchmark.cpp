@@ -117,7 +117,7 @@ if(VERBOSE){
 
     
   #ifdef VECGEOM_OPENMP 
-   int Nthreads = omp_get_max_threads();
+   size_t Nthreads = omp_get_max_threads();
    NavigationState * newnavstateArray[Nthreads];
    NavigationState * curnavstateArray[Nthreads];
    for(size_t index=0;index<Nthreads;++index){
@@ -127,7 +127,9 @@ if(VERBOSE){
    }
    #endif 
 
+#ifdef VECGEOM_OPENMP
 #pragma omp parallel for collapse(2) schedule(dynamic)
+#endif
     for( int pixel_count_2 = 0; pixel_count_2 < data_size_y; ++pixel_count_2 ){
         for( int pixel_count_1 = 0; pixel_count_1 < data_size_x; ++pixel_count_1 )
         {
