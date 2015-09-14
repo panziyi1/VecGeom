@@ -140,7 +140,6 @@ Type Sqrt(const Type val) {
   return std::sqrt(val);
 }
 
-#if 0
 template <typename Type>
 VECGEOM_CUDA_HEADER_BOTH
 VECGEOM_INLINE
@@ -168,7 +167,6 @@ VECGEOM_INLINE
 Type Pow(const Type val1, const Type val2) {
   return std::pow(val1, val2);
 }
-#endif
 
 template <typename Type>
 VECGEOM_CUDA_HEADER_BOTH
