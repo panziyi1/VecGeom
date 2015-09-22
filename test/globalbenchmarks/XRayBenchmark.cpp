@@ -115,63 +115,49 @@ if(VERBOSE){
         std::cout << pixel_width_2 << "\n";
     }
 
-    
-  #ifdef VECGEOM_OPENMP 
-   int Nthreads = omp_get_max_threads();
-   NavigationState * newnavstateArray[Nthreads];
-   NavigationState * curnavstateArray[Nthreads];
-   for(size_t index=0;index<Nthreads;++index){
-     std::cerr << "allocating for thread " << index << "\n";
-     newnavstateArray[index]=NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
-     curnavstateArray[index]=NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
-   }
-   #endif 
+    #pragma omp parallel
+    {
+      NavigationState * newnavstate_i = NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
+      NavigationState * curnavstate_i = NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
 
-#pragma omp parallel for collapse(2) schedule(dynamic)
-    for( int pixel_count_2 = 0; pixel_count_2 < data_size_y; ++pixel_count_2 ){
+      #pragma omp for collapse(2) schedule(dynamic) nowait
+      for( int pixel_count_2 = 0; pixel_count_2 < data_size_y; ++pixel_count_2 ){
         for( int pixel_count_1 = 0; pixel_count_1 < data_size_x; ++pixel_count_1 )
         {
 
+     	  NavigationState * newnavstate = newnavstate_i;
+	  NavigationState * curnavstate = curnavstate_i;
 
-
-             #ifdef VECGEOM_OPENMP 
-	         size_t threadid=omp_get_thread_num();
-	  	 NavigationState * newnavstate = newnavstateArray[threadid];
-	  	 NavigationState * curnavstate = curnavstateArray[threadid];
-             #else	
-     	         NavigationState * newnavstate = NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
-		 NavigationState * curnavstate = NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
-	     #endif
 	  double axis2_count = axis2_start + pixel_count_2 * pixel_width_2 + 1E-6;
-            double axis1_count = axis1_start + pixel_count_1 * pixel_width_1 + 1E-6;
+          double axis1_count = axis1_start + pixel_count_1 * pixel_width_1 + 1E-6;
 
-            if(VERBOSE) {
+          if(VERBOSE) {
                 std::cout << "\n OutputPoint("<< axis1_count<< ", "<< axis2_count<< ")\n";
-            }
+          }
 
-            // set start point of XRay
-            Vector3D<Precision> p;
-            if( axis== 1 )
+          // set start point of XRay
+          Vector3D<Precision> p;
+          if( axis== 1 )
               p.Set( origin[0]-bbox[0], axis1_count, axis2_count);
-            else if( axis== 2)
+          else if( axis== 2)
               p.Set( axis1_count, origin[1]-bbox[1], axis2_count);
-            else if( axis== 3)
+          else if( axis== 3)
               p.Set( axis1_count, axis2_count, origin[2]-bbox[2]);
 
-            SimpleNavigator nav;
-            curnavstate->Clear();
-            nav.LocatePoint( GeoManager::Instance().GetWorld(), p, *curnavstate, true );
+          SimpleNavigator nav;
+          curnavstate->Clear();
+          nav.LocatePoint( GeoManager::Instance().GetWorld(), p, *curnavstate, true );
 
 
-            double distancetravelled=0.;
-            int crossedvolumecount=0;
+          double distancetravelled=0.;
+          int crossedvolumecount=0;
 
-            if(VERBOSE) {
+          if(VERBOSE) {
               std::cout << " StartPoint(" << p[0] << ", " << p[1] << ", " << p[2] << ")";
               std::cout << " Direction <" << dir[0] << ", " << dir[1] << ", " << dir[2] << ">"<< std::endl;
-            }
+          }
 
-            while( ! curnavstate->IsOutside() ) {
+          while( ! curnavstate->IsOutside() ) {
                 double step = 0;
                 newnavstate->Clear();
                 Nav_t navigator;
@@ -194,25 +180,16 @@ if(VERBOSE){
                 // TODO: correct counting of travel in "world" bounding box
                 if(step>0) crossedvolumecount++;
 
-             } // end while
+          } // end while
 
-             ///////////////////////////////////
-             // Store the number of passed volume at 'volume_result'
-             *(image+pixel_count_2*data_size_x+pixel_count_1) = crossedvolumecount;
-             #ifndef VECGEOM_OPENMP 
-	         NavigationState::ReleaseInstance( curnavstate );
-	         NavigationState::ReleaseInstance( newnavstate );
-             #endif  
+          ///////////////////////////////////
+          // Store the number of passed volume at 'volume_result'
+          *(image+pixel_count_2*data_size_x+pixel_count_1) = crossedvolumecount;
 
-      } // end inner loop
-    } // end outer loop
+        } // end inner loop
+      } // end outer loop
+    } // end parallel region
 
-  #ifdef VECGEOM_OPENMP 
-    for(size_t index=0;index<Nthreads;++index){
-      NavigationState::ReleaseInstance( curnavstateArray[index] );
-      NavigationState::ReleaseInstance( newnavstateArray[index] );
-    }
-  #endif
 } // end XRayWithVecGeom
 
 
