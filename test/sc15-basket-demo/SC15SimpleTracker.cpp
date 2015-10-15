@@ -5,6 +5,8 @@
 #include "volumes/LogicalVolume.h"
 #include "management/GeoManager.h"
 #include "SC15Navigators.h"
+#include "navigation/SimpleNavigator.h"
+#include "base/Vector3D.h"
 #include <iostream>
 using namespace vecgeom;
 
@@ -16,6 +18,10 @@ using namespace vecgeom;
 
 #define SETWORLDNAV(depth) \
   if(layer==0) vol->SetUserExtensionPtr( (void*) WorldNavigator<true>::Instance() );
+
+static VNavigator const* GetNavigator(LogicalVolume const*lvol){
+  return (VNavigator const*)lvol->GetUserExtensionPtr();
+}
 
 void AssignNavigatorToVolume( LogicalVolume *vol, int layer, int maxlayers ){
   assert( maxlayers <= 10 ); // we are only listing 10 template specializations up to depth 10 here
@@ -56,7 +62,7 @@ VPlacedVolume *CreateSimpleTracker(int nlayers) {
   const double world_size = 50.;
 
   // Top volume
-  UnplacedBox *uTop = new UnplacedBox(world_size, world_size, world_size);
+  UnplacedBox *uTop = new UnplacedBox(world_size + 2, world_size + 2, world_size + 2);
   LogicalVolume *top = new LogicalVolume("world", uTop);
   top->SetUserExtensionPtr( (void *) WorldNavigator<true>::Instance() );
   
@@ -85,6 +91,59 @@ VPlacedVolume *CreateSimpleTracker(int nlayers) {
   return world;
 }
 
+// a test function to verify correct functioning of the navigators
+// for a simple test case
+void TestScalarNavigation() {
+  // setup point and direction in world
+  Vector3D<Precision> p(-51.,0,0);
+  Vector3D<Precision> dir(1.,0,0);
+
+  // init navstates
+  NavigationState * curnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
+  NavigationState * newnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
+  
+  SimpleNavigator nav;
+  nav.LocatePoint( GeoManager::Instance().GetWorld(), p, *curnavstate, true );
+
+  while( ! curnavstate->IsOutside() ) {
+    // get navigator object and move point
+VNavigator const* specialnav = GetNavigator( curnavstate->Top()->GetLogicalVolume() );
+    double step = specialnav->ComputeStepAndPropagatedState( p,
+							     dir, kInfinity,
+                        
+							     *curnavstate,
+                        *newnavstate
+                        );
+    std::cout << "step " << step << "\n";
+    p = p + dir*(step + 1E-6);
+    
+    // pointer swap is enough
+    auto *tmp=curnavstate;
+    curnavstate = newnavstate;
+    newnavstate = tmp;
+  }
+
+}
+
+void TestVectorNavigation() {
+  // to be filled in
+
+}
+
+// reproducing the pixel-by-pixel XRayBenchmark
+// target: show speed gain from specialized navigators
+// in comparision to current XRay-Benchmark
+void XRayBenchmark() {
+  // Sofia?
+
+}
+
+void BasketBasedXRayBenchmark() {
+  // to be filled in by Andrei
+
+}
+
+
 int main(int argc, char* argv[]) {
   int nlayers = 10;
   if (argc > 1) {
@@ -101,4 +160,7 @@ int main(int argc, char* argv[]) {
     std::cerr << v->GetName() << " has navigator " << nav->GetName() << "\n";
   }
 
+
+  // test tracking
+  TestScalarNavigation();
 }
