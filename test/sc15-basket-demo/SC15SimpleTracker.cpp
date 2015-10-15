@@ -121,11 +121,52 @@ void TestScalarNavigation() {
     curnavstate = newnavstate;
     newnavstate = tmp;
   }
+
+  // now test the vector progression (of coherent rays)
+  // this is just testing the interface and makes sure that no trivial things go wrong
+  NavigationState::ReleaseInstance(curnavstate);
+  NavigationState::ReleaseInstance(newnavstate);
 }
 
 void TestVectorNavigation() {
-  // to be filled in
+  // use vector navigation
+  // choose 11 particles to also make sure we have tail treatment
+  auto np=11;
+  SOA3D<Precision> points(np);
+  SOA3D<Precision> dirs(np);
+  for(auto i=0;i<np;++i){
+      points.set(i, -51,0,0);
+      dirs.set(i, 1,0,0);
+  }
 
+  NavStatePool curnavstates(np, GeoManager::Instance().getMaxDepth());
+  NavStatePool newnavstates(np, GeoManager::Instance().getMaxDepth());
+  for(auto i=0;i<np;++i){
+    SimpleNavigator nav;
+    nav.LocatePoint( GeoManager::Instance().GetWorld(), points[i], *curnavstates[i], true );
+  }
+
+  double *steps    = (double*) _mm_malloc(np*sizeof(double),64);
+  double *psteps    = (double*) _mm_malloc(np*sizeof(double),64);
+  while(!curnavstates[0]->IsOutside()) {
+      //
+      std::cout << "tracking in " << curnavstates[0]->Top()->GetLogicalVolume()->GetName() << "\n";
+        // get navigator object and move point
+      VNavigator const *specialnav = GetNavigator(curnavstates[0]->Top()->GetLogicalVolume());
+      specialnav->ComputeStepsAndPropagatedStates(points, dirs, psteps, curnavstates, newnavstates, steps);
+
+      // transport + crosschecks + pointerswap
+      for(auto i=0; i<np; ++i){
+        assert(steps[i]==steps[0]);
+        assert(newnavstates[i]->Top()==newnavstates[i]->Top());
+
+        points.set(i, points[i] + dirs[i]*(steps[i] + 1E-6));
+
+        // we still need to update curnavstates
+        // doing it slow here just to get started ( a  pointer swap would be preferred )
+        newnavstates[i]->CopyTo(curnavstates[i]);
+      }
+  }
 }
 
 // reproducing the pixel-by-pixel XRayBenchmark
@@ -161,4 +202,5 @@ int main(int argc, char* argv[]) {
 
   // test tracking
   TestScalarNavigation();
+  TestVectorNavigation();
 }

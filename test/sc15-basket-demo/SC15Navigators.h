@@ -29,7 +29,7 @@
 
 #define BOILERPLATE(name)     \
     CLASSNAME(name)
-//    INSTANCE(name) \
+//    INSTANCE(name)
 
 
 
