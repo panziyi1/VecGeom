@@ -112,11 +112,10 @@ public:
 
     // a templated kernel to be used for scalar and vector interface
     template <typename Backend>
-    static void LayerNavKernel(UnplacedTube const &mother, UnplacedTube const &daughter, 
-                               Vector3D<typename Backend::precision_v> const &pos, 
-			       Vector3D<typename Backend::precision_v> const &dir,
-			       typename Backend::precision_v & distance,
-			       typename Backend::precision_v & distance1) {
+    static void LayerNavKernel(UnplacedTube const &mother, UnplacedTube const &daughter,
+                               Vector3D<typename Backend::precision_v> const &pos,
+                               Vector3D<typename Backend::precision_v> const &dir,
+                               typename Backend::precision_v &distance, typename Backend::precision_v &distance1) {
       TubeImplementation<translation::kIdentity, rotation::kIdentity, TubeTypes::UniversalTube>::DistanceToOut<Backend>(
           mother, pos, dir, kInfinity, distance);
 
@@ -124,11 +123,9 @@ public:
           daughter, Transformation3D::kIdentity, pos, dir, kInfinity, distance1);
     }
 
-    virtual double ComputeStepAndPropagatedState(Vector3D<double> const & globalpoint,
-					         Vector3D<double> const & globaldir,
-                                                 double pstep,
-                                                 NavigationState const & in_state,
-                                                 NavigationState & out_state) const override {
+    virtual double ComputeStepAndPropagatedState(Vector3D<double> const &globalpoint, Vector3D<double> const &globaldir,
+                                                 double pstep, NavigationState const &in_state,
+                                                 NavigationState &out_state) const override {
       // NO NEED TO TRANSFORM HERE
 
       // DISTANCETOOUT
@@ -144,12 +141,10 @@ public:
 
       if(Depth<0) /* depth is unknown */
       {
-        // we could speed this up if we knew the depth of this volume
         in_state.CopyTo(&out_state);
-      }
-      else {
+      } else {
         // do a very fast copy using the precomputed size of a NavigationState at this depth
-          in_state.CopyToFixedSize<NavigationState::SizeOf(Depth)>(&out_state);
+        in_state.CopyToFixedSize<NavigationState::SizeOf(Depth)>(&out_state);
       }
 
       // do a very efficient relocation depending on distance
@@ -218,35 +213,36 @@ static VNavigator *Instance() {
      for(auto i=0; i<offset; i+=Real_v::Size){
        Real_v distance;
        Vector3D<Real_v> p(Real_v( globalpoints.x() + i ), Real_v( globalpoints.y() + i ), Real_v( globalpoints.z() + i ) ); 
-       Vector3D<Real_v> d(Real_v( globaldirs.x() + i ), Real_v( globaldirs.y() + i ), Real_v( globaldirs.z() + i ) ); 
-       TubeImplementation<translation::kIdentity, rotation::kIdentity, TubeTypes::UniversalTube>::DistanceToOut<Backend>(
-					 *(UnplacedTube *)(unplaced), p, d, kInfinity, distance);
+       Vector3D<Real_v> d(Real_v( globaldirs.x() + i ), Real_v( globaldirs.y() + i ), Real_v( globaldirs.z() + i ) );
+       TubeImplementation<translation::kIdentity, rotation::kIdentity,
+                          TubeTypes::UniversalTube>::DistanceToOut<Backend>(*(UnplacedTube *)(unplaced), p, d,
+                                                                            kInfinity, distance);
 
        // relocation here ( or in separate loop ? )
-       if(Depth<0){
-	 in_states[i]->CopyTo(out_states[i]);
+       if (Depth < 0) {
+         in_states[i]->CopyTo(out_states[i]);
+       } else {
+         in_states[i]->CopyToFixedSize<NavigationState::SizeOf(Depth)>(out_states[i]);
        }
-       else {
-	 in_states[i]->CopyToFixedSize<NavigationState::SizeOf(Depth)>(out_states[i]);
-       }
-       distance.store( out_steps + i);
+       distance.store(out_steps + i);
      }
      // tail part
      for( auto i=offset; offset < globalpoints.size(); ++i ){
        double distance;
-       TubeImplementation<translation::kIdentity, rotation::kIdentity, TubeTypes::UniversalTube>::DistanceToOut<kScalar>(
-					 *(UnplacedTube *)(unplaced), globalpoints[i], globaldirs[i], kInfinity, distance);
+       TubeImplementation<translation::kIdentity, rotation::kIdentity,
+                          TubeTypes::UniversalTube>::DistanceToOut<kScalar>(*(UnplacedTube *)(unplaced),
+                                                                            globalpoints[i], globaldirs[i], kInfinity,
+                                                                            distance);
 
        // relocation here ( or in separate loop ? )
-       if(Depth<0){
-	 in_states[i]->CopyTo(out_states[i]);
+       if (Depth < 0) {
+         in_states[i]->CopyTo(out_states[i]);
+       } else {
+         in_states[i]->CopyToFixedSize<NavigationState::SizeOf(Depth)>(out_states[i]);
        }
-       else {
-	 in_states[i]->CopyToFixedSize<NavigationState::SizeOf(Depth)>(out_states[i]);
-       }
-       out_steps[i]=i;
+       out_steps[i] = i;
      }
-}
+   }
 };
 
 
