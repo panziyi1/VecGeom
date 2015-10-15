@@ -11,10 +11,10 @@
 using namespace vecgeom;
 
 #define SETINNERNAV(depth) \
-  if(layer==depth) vol->SetUserExtensionPtr( (void*) InnerMostTubeNavigator<depth>::Instance() );
+  if(layer==depth) vol->SetUserExtensionPtr( (void*) InnerMostTubeNavigator<depth+1>::Instance() );
 
 #define SETLAYERNAV(depth) \
-  if(layer==depth) vol->SetUserExtensionPtr( (void*) LayerNavigator<depth>::Instance() );
+  if(layer==depth) vol->SetUserExtensionPtr( (void*) LayerNavigator<depth+1>::Instance() );
 
 #define SETWORLDNAV(depth) \
   if(layer==0) vol->SetUserExtensionPtr( (void*) WorldNavigator<true>::Instance() );
@@ -83,6 +83,8 @@ VPlacedVolume *CreateSimpleTracker(int nlayers) {
 
     // Place in mother
     mother->PlaceDaughter(layerName.str().c_str(), layerVol, &Transformation3D::kIdentity);
+    // change mother to current lvol (to make a real hierarchy)
+    mother = layerVol;
   }  
 
   VPlacedVolume *world = top->Place();
@@ -106,23 +108,19 @@ void TestScalarNavigation() {
   nav.LocatePoint( GeoManager::Instance().GetWorld(), p, *curnavstate, true );
 
   while( ! curnavstate->IsOutside() ) {
-    // get navigator object and move point
-VNavigator const* specialnav = GetNavigator( curnavstate->Top()->GetLogicalVolume() );
-    double step = specialnav->ComputeStepAndPropagatedState( p,
-							     dir, kInfinity,
-                        
-							     *curnavstate,
-                        *newnavstate
-                        );
+    //
+    std::cout << "tracking in " << curnavstate->Top()->GetLogicalVolume()->GetName() << "\n";
+      // get navigator object and move point
+    VNavigator const *specialnav = GetNavigator(curnavstate->Top()->GetLogicalVolume());
+    double step = specialnav->ComputeStepAndPropagatedState(p, dir, kInfinity, *curnavstate, *newnavstate);
     std::cout << "step " << step << "\n";
-    p = p + dir*(step + 1E-6);
-    
+    p = p + dir * (step + 1E-6);
+
     // pointer swap is enough
-    auto *tmp=curnavstate;
+    auto *tmp = curnavstate;
     curnavstate = newnavstate;
     newnavstate = tmp;
   }
-
 }
 
 void TestVectorNavigation() {
