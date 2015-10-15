@@ -73,16 +73,14 @@ public:
         // actually this could be lazily done after distance to daughter because we are convex
         auto unplaced = in_state.Top()->GetUnplacedVolume();
         double distance;
-        BoxImplementation<translation::kIdentity, rotation::kIdentity>::DistanceToOut<kScalar>(
-            *(UnplacedBox *)(unplaced), globalpoint, globaldir, kInfinity, distance);
 
         // DISTANCETODAUGHTER
         // daughter is a very specific tube:
         auto daughters= in_state.Top()->GetLogicalVolume()->GetDaughtersp();
         auto daughter = (*daughters)[0];
         double distance1;
-        TubeImplementation<translation::kIdentity, rotation::kIdentity, TubeTypes::UniversalTube>::DistanceToIn<kScalar>(
-            *(UnplacedTube *)(daughter->GetUnplacedVolume()), Transformation3D::kIdentity, globalpoint, globaldir, kInfinity, distance1);
+        WorldNavKernel<kScalar>(*static_cast<UnplacedBox const*>(unplaced),
+                *static_cast<UnplacedTube const*>(daughter->GetUnplacedVolume()), globalpoint,globaldir,distance,distance1);
 
         // we could speed this up if we knew the depth of this volume
         if(!fastcopy)
@@ -106,6 +104,67 @@ public:
             return distance;
         }
     }
+
+    // vector interface
+  virtual void ComputeStepsAndPropagatedStates(SOA3D<double> const & globalpoints,
+                                                 SOA3D<double> const & globaldirs,
+                                                 double const *psteps,
+                                                 NavStatePool const & in_states,
+                                                 NavStatePool & out_states, double *out_steps) const override {
+    using Backend = kVc;
+    using Real_v = Backend::precision_v;
+    int offset = globalpoints.size() - globalpoints.size() % Real_v::Size;
+    auto unplaced = in_states[0]->Top()->GetUnplacedVolume();
+    auto daughters= in_states[0]->Top()->GetLogicalVolume()->GetDaughtersp();
+    auto daughter = (*daughters)[0];
+
+    // vector part
+    for (auto i = 0; i < offset; i += Real_v::Size) {
+      Real_v distance, distance1;
+      Vector3D<Real_v> p(Real_v(globalpoints.x() + i), Real_v(globalpoints.y() + i), Real_v(globalpoints.z() + i));
+      Vector3D<Real_v> d(Real_v(globaldirs.x() + i), Real_v(globaldirs.y() + i), Real_v(globaldirs.z() + i));
+
+      WorldNavKernel<Backend>(*static_cast<UnplacedBox const *>(unplaced),
+                              *static_cast<UnplacedTube const *>(daughter->GetUnplacedVolume()), p, d,
+                              distance, distance1);
+
+      Min(distance,distance1).store(out_steps + i);
+      for(auto j=0;j<Real_v::Size;++j){
+        // relocation here ( or in separate loop ? )
+        if (!fastcopy) {
+          in_states[i+j]->CopyTo(out_states[i+j]);
+        } else {
+          in_states[i+j]->CopyToFixedSize<NavigationState::SizeOf(1)>(out_states[i+j]);
+        }
+
+        // take a decision where to go
+        if(distance1[j]<distance[j]) out_states[i+j]->Push(daughter);
+        else
+            out_states[i+j]->Pop();
+
+      }
+    }
+    // tail part
+    for (auto i = offset; i < globalpoints.size(); ++i) {
+      double distance, distance1;
+      WorldNavKernel<kScalar>(*static_cast<UnplacedBox const *>(unplaced),
+                              *static_cast<UnplacedTube const *>(daughter->GetUnplacedVolume()), globalpoints[i], globaldirs[i],
+                              distance, distance1);
+
+      // relocation here ( or in separate loop ? )
+      if (!fastcopy) {
+        in_states[i]->CopyTo(out_states[i]);
+      } else {
+        in_states[i]->CopyToFixedSize<NavigationState::SizeOf(1)>(out_states[i]);
+      }
+      // take a decision where to go
+      if(distance1<distance) out_states[i]->Push(daughter);
+            else
+                out_states[i]->Pop();
+
+      out_steps[i] = Min(distance1,distance);
+    }
+  }
 
 };
 
@@ -174,10 +233,10 @@ public:
 
     // vector interface
   virtual void ComputeStepsAndPropagatedStates(SOA3D<double> const & globalpoints,
-                                                 SOA3D<double> const & globaldirs,
-                                                 double const *psteps,
-                                                 NavStatePool const & in_states,
-                                                 NavStatePool & out_states, double *out_steps) const override {
+                                               SOA3D<double> const & globaldirs,
+                                               double const *psteps,
+                                               NavStatePool const & in_states,
+                                               NavStatePool & out_states, double *out_steps) const override {
     using Backend = kVc;
     using Real_v = Backend::precision_v;
     int offset = globalpoints.size() - globalpoints.size() % Real_v::Size;
@@ -212,8 +271,9 @@ public:
       }
     }
     // tail part
-    for (auto i = offset; offset < globalpoints.size(); ++i) {
-      double distance, distance1;
+    for (auto i = offset; i < globalpoints.size(); ++i) {
+      std::cerr << " tail index i " << i << "\n";
+        double distance, distance1;
       LayerNavKernel<kScalar>(*static_cast<UnplacedTube const *>(unplaced),
                               *static_cast<UnplacedTube const *>(daughter->GetUnplacedVolume()), globalpoints[i], globaldirs[i],
                               distance, distance1);
@@ -301,7 +361,7 @@ static VNavigator *Instance() {
        }
      }
      // tail part
-     for( auto i=offset; offset < globalpoints.size(); ++i ){
+     for( auto i=offset; i < globalpoints.size(); ++i ){
        double distance;
        TubeImplementation<translation::kIdentity, rotation::kIdentity,
                           TubeTypes::UniversalTube>::DistanceToOut<kScalar>(*(UnplacedTube *)(unplaced),

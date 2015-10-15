@@ -158,8 +158,8 @@ void TestVectorNavigation() {
 
       // transport + crosschecks + pointerswap
       for(auto i=0; i<np; ++i){
-        assert(steps[i]==steps[0]);
-        assert(newnavstates[i]->Top()==newnavstates[i]->Top());
+        //assert(steps[i]==steps[0]);
+        assert(newnavstates[i]->Top()==newnavstates[0]->Top());
 
         points.set(i, points[i] + dirs[i]*(steps[i] + 1E-6));
 
@@ -203,5 +203,6 @@ int main(int argc, char* argv[]) {
 
   // test tracking
   TestScalarNavigation();
+  std::cout << "start vector test\n";
   TestVectorNavigation();
 }
