@@ -67,16 +67,17 @@ VPlacedVolume *CreateSimpleTracker(int nlayers) {
   top->SetUserExtensionPtr( (void *) WorldNavigator<true>::Instance() );
   
 // Cylindrical layers
-  double rmax;
+  double rmax, dz;
   std::string layerBase = "layer_";
   double deltaR = world_size/nlayers;
 
   LogicalVolume *mother = top;
   for (auto layer=0; layer<nlayers; ++layer) {
     rmax = world_size - layer * deltaR;
+    dz = world_size - 0.1*layer*deltaR;
     std::ostringstream layerName;
     layerName << layerBase << layer;
-    UnplacedTube *uLayer = new UnplacedTube(0, rmax, world_size, 0, kTwoPi);
+    UnplacedTube *uLayer = new UnplacedTube(0, rmax, dz, 0, kTwoPi);
     LogicalVolume *layerVol = new LogicalVolume(layerName.str().c_str(), uLayer);
     
     AssignNavigatorToVolume(layerVol, layer, nlayers);
