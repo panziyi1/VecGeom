@@ -272,11 +272,10 @@ public:
     }
     // tail part
     for (auto i = offset; i < globalpoints.size(); ++i) {
-      std::cerr << " tail index i " << i << "\n";
-        double distance, distance1;
+      double distance, distance1;
       LayerNavKernel<kScalar>(*static_cast<UnplacedTube const *>(unplaced),
-                              *static_cast<UnplacedTube const *>(daughter->GetUnplacedVolume()), globalpoints[i], globaldirs[i],
-                              distance, distance1);
+                              *static_cast<UnplacedTube const *>(daughter->GetUnplacedVolume()), globalpoints[i],
+                              globaldirs[i], distance, distance1);
 
       // relocation here ( or in separate loop ? )
       if (Depth < 0) {

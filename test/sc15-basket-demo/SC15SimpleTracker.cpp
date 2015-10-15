@@ -140,34 +140,39 @@ void TestVectorNavigation() {
       dirs.set(i, 1,0,0);
   }
 
-  NavStatePool curnavstates(np, GeoManager::Instance().getMaxDepth());
-  NavStatePool newnavstates(np, GeoManager::Instance().getMaxDepth());
+  NavStatePool *curnavstates = new NavStatePool(np, GeoManager::Instance().getMaxDepth());
+  NavStatePool *newnavstates = new NavStatePool(np, GeoManager::Instance().getMaxDepth());
   for(auto i=0;i<np;++i){
     SimpleNavigator nav;
-    nav.LocatePoint( GeoManager::Instance().GetWorld(), points[i], *curnavstates[i], true );
+    nav.LocatePoint( GeoManager::Instance().GetWorld(), points[i], *(*curnavstates)[i], true );
   }
 
   double *steps    = (double*) _mm_malloc(np*sizeof(double),64);
   double *psteps    = (double*) _mm_malloc(np*sizeof(double),64);
-  while(!curnavstates[0]->IsOutside()) {
+  while(!(*curnavstates)[0]->IsOutside()) {
       //
-      std::cout << "tracking in " << curnavstates[0]->Top()->GetLogicalVolume()->GetName() << "\n";
+      std::cout << "tracking in " << (*curnavstates)[0]->Top()->GetLogicalVolume()->GetName() << "\n";
         // get navigator object and move point
-      VNavigator const *specialnav = GetNavigator(curnavstates[0]->Top()->GetLogicalVolume());
-      specialnav->ComputeStepsAndPropagatedStates(points, dirs, psteps, curnavstates, newnavstates, steps);
+      VNavigator const *specialnav = GetNavigator((*curnavstates)[0]->Top()->GetLogicalVolume());
+      specialnav->ComputeStepsAndPropagatedStates(points, dirs, psteps, *curnavstates, *newnavstates, steps);
 
       // transport + crosschecks + pointerswap
+      // We should vectorize this transport !!
       for(auto i=0; i<np; ++i){
         //assert(steps[i]==steps[0]);
-        assert(newnavstates[i]->Top()==newnavstates[0]->Top());
+        assert((*newnavstates)[i]->Top()==(*newnavstates)[0]->Top());
 
         points.set(i, points[i] + dirs[i]*(steps[i] + 1E-6));
 
-        // we still need to update curnavstates
-        // doing it slow here just to get started ( a  pointer swap would be preferred )
-        newnavstates[i]->CopyTo(curnavstates[i]);
       }
+      // pointer swap to update navstates
+      auto tmp=curnavstates;
+      curnavstates = newnavstates;
+      newnavstates = tmp;
   }
+
+    delete curnavstates;
+    delete newnavstates;
 }
 
 // reproducing the pixel-by-pixel XRayBenchmark
