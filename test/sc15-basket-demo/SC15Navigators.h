@@ -48,6 +48,19 @@ public:
 //      return &instance;}
     INSTANCE(WorldNavigator)
 
+    // a templated kernel to be used for scalar and vector interface
+    template <typename Backend>
+    static void WorldNavKernel(UnplacedBox const &mother, UnplacedTube const &daughter,
+                               Vector3D<typename Backend::precision_v> const &pos,
+                               Vector3D<typename Backend::precision_v> const &dir,
+                               typename Backend::precision_v &distance, typename Backend::precision_v &distance1) {
+          BoxImplementation<translation::kIdentity, rotation::kIdentity>::DistanceToOut<Backend>(
+              mother, pos, dir, kInfinity, distance);
+
+          TubeImplementation<translation::kIdentity, rotation::kIdentity, TubeTypes::UniversalTube>::DistanceToIn<Backend>(
+              daughter, Transformation3D::kIdentity, pos, dir, kInfinity, distance1);
+    }
+
 
     virtual double ComputeStepAndPropagatedState(Vector3D<double> const & globalpoint,
                                                  Vector3D<double> const & globaldir,
@@ -159,9 +172,67 @@ public:
       }
   }
 
+    // vector interface
+  virtual void ComputeStepsAndPropagatedStates(SOA3D<double> const & globalpoints,
+                                                 SOA3D<double> const & globaldirs,
+                                                 double const *psteps,
+                                                 NavStatePool const & in_states,
+                                                 NavStatePool & out_states, double *out_steps) const override {
+    using Backend = kVc;
+    using Real_v = Backend::precision_v;
+    int offset = globalpoints.size() - globalpoints.size() % Real_v::Size;
+    auto unplaced = in_states[0]->Top()->GetUnplacedVolume();
+    auto daughters= in_states[0]->Top()->GetLogicalVolume()->GetDaughtersp();
+    auto daughter = (*daughters)[0];
 
+    // vector part
+    for (auto i = 0; i < offset; i += Real_v::Size) {
+      Real_v distance, distance1;
+      Vector3D<Real_v> p(Real_v(globalpoints.x() + i), Real_v(globalpoints.y() + i), Real_v(globalpoints.z() + i));
+      Vector3D<Real_v> d(Real_v(globaldirs.x() + i), Real_v(globaldirs.y() + i), Real_v(globaldirs.z() + i));
+
+      LayerNavKernel<Backend>(*static_cast<UnplacedTube const *>(unplaced),
+                              *static_cast<UnplacedTube const *>(daughter->GetUnplacedVolume()), p, d,
+                              distance, distance1);
+
+      Min(distance,distance1).store(out_steps + i);
+      for(auto j=0;j<Real_v::Size;++j){
+        // relocation here ( or in separate loop ? )
+        if (Depth < 0) {
+          in_states[i+j]->CopyTo(out_states[i+j]);
+        } else {
+          in_states[i+j]->CopyToFixedSize<NavigationState::SizeOf(Depth)>(out_states[i+j]);
+        }
+
+        // take a decision where to go
+        if(distance1[j]<distance[j]) out_states[i+j]->Push(daughter);
+        else
+            out_states[i+j]->Pop();
+
+      }
+    }
+    // tail part
+    for (auto i = offset; offset < globalpoints.size(); ++i) {
+      double distance, distance1;
+      LayerNavKernel<kScalar>(*static_cast<UnplacedTube const *>(unplaced),
+                              *static_cast<UnplacedTube const *>(daughter->GetUnplacedVolume()), globalpoints[i], globaldirs[i],
+                              distance, distance1);
+
+      // relocation here ( or in separate loop ? )
+      if (Depth < 0) {
+        in_states[i]->CopyTo(out_states[i]);
+      } else {
+        in_states[i]->CopyToFixedSize<NavigationState::SizeOf(Depth)>(out_states[i]);
+      }
+      // take a decision where to go
+      if(distance1<distance) out_states[i]->Push(daughter);
+            else
+                out_states[i]->Pop();
+
+      out_steps[i] = Min(distance1,distance);
+    }
+  }
 };
-
 
 // a navigator for the final tube ( no more daughters )
 // this navigator knows that it is in a tube and that it has no further daughters
@@ -179,25 +250,24 @@ static VNavigator *Instance() {
                                        double pstep,
                                        NavigationState const & in_state,
                                        NavigationState & out_state) const override {
-    // NO NEED TO TRANSFORM HERE
+      // NO NEED TO TRANSFORM HERE
 
-    // DISTANCETOOUT
-    auto unplaced = in_state.Top()->GetUnplacedVolume();
-    double distance;
-    TubeImplementation<translation::kIdentity, rotation::kIdentity, TubeTypes::UniversalTube>::DistanceToOut<kScalar>(
-        *(UnplacedTube *)(unplaced), globalpoint, globaldir, kInfinity, distance);
-    
-    if(Depth<0){
-      in_state.CopyTo(&out_state);
-    }
-    else {
-      in_state.CopyToFixedSize<NavigationState::SizeOf(Depth)>(&out_state);
-    }
+      // DISTANCETOOUT
+      auto unplaced = in_state.Top()->GetUnplacedVolume();
+      double distance;
+      TubeImplementation<translation::kIdentity, rotation::kIdentity, TubeTypes::UniversalTube>::DistanceToOut<kScalar>(
+          *(UnplacedTube *)(unplaced), globalpoint, globaldir, kInfinity, distance);
 
-    // always leaving mother ( have to be careful - we could actually leave the world volume )
-    out_state.Pop();
+      if (Depth < 0) {
+        in_state.CopyTo(&out_state);
+      } else {
+        in_state.CopyToFixedSize<NavigationState::SizeOf(Depth)>(&out_state);
+      }
 
-    return distance;
+      // always leaving mother ( have to be careful - we could actually leave the world volume )
+      out_state.Pop();
+
+      return distance;
     }
 
    virtual void ComputeStepsAndPropagatedStates(SOA3D<double> const & globalpoints,
@@ -218,13 +288,17 @@ static VNavigator *Instance() {
                           TubeTypes::UniversalTube>::DistanceToOut<Backend>(*(UnplacedTube *)(unplaced), p, d,
                                                                             kInfinity, distance);
 
-       // relocation here ( or in separate loop ? )
-       if (Depth < 0) {
-         in_states[i]->CopyTo(out_states[i]);
-       } else {
-         in_states[i]->CopyToFixedSize<NavigationState::SizeOf(Depth)>(out_states[i]);
-       }
        distance.store(out_steps + i);
+
+       for (auto j = 0; j < Real_v::Size; ++j) {
+         // relocation here ( or in separate loop ? )
+         if (Depth < 0) {
+           in_states[i+j]->CopyTo(out_states[i+j]);
+         } else {
+           in_states[i+j]->CopyToFixedSize<NavigationState::SizeOf(Depth)>(out_states[i+j]);
+         }
+         out_states[i + j]->Pop();
+       }
      }
      // tail part
      for( auto i=offset; offset < globalpoints.size(); ++i ){
@@ -241,6 +315,9 @@ static VNavigator *Instance() {
          in_states[i]->CopyToFixedSize<NavigationState::SizeOf(Depth)>(out_states[i]);
        }
        out_steps[i] = i;
+
+        // compute outstates
+        out_states[i]->Pop();
      }
    }
 };
