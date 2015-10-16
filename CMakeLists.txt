@@ -683,6 +683,7 @@ set(TEST_EXECUTABLES_CORE
   ${CMAKE_SOURCE_DIR}/test/core/PhiWedgeTest.cpp
   ${CMAKE_SOURCE_DIR}/test/core/ThetaConeTest.cpp
   ${CMAKE_SOURCE_DIR}/test/unit_tests/TestVecGeomPolycone.cpp
+  ${CMAKE_SOURCE_DIR}/test/sc15-basket-demo/SC15SimpleTracker.cpp
 )
 
 
@@ -710,7 +711,6 @@ if(NOT USolids)
     ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/NavigationBenchmark.cpp
     ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/TraceTrack.cpp
     ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/XRayBenchmarkFromROOTFile.cpp
-    ${CMAKE_SOURCE_DIR}/test/sc15-basket-demo/SC15SimpleTracker.cpp
   )
 endif()
 

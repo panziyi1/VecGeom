@@ -19,9 +19,262 @@ using namespace vecgeom;
 #define SETWORLDNAV(depth) \
   if(layer==0) vol->SetUserExtensionPtr( (void*) WorldNavigator<true>::Instance() );
 
+#define WRITE_FILE_NAME "volumeImage.bmp" // output image name
+
 static VNavigator const* GetNavigator(LogicalVolume const*lvol){
   return (VNavigator const*)lvol->GetUserExtensionPtr();
 }
+
+
+typedef struct tFILE_HEADER
+{
+  unsigned short bfType;
+  unsigned long bfSize;
+  unsigned short bfReserved1;
+  unsigned short bfReserved2;
+  unsigned long bfOffBits;
+} FILE_HEADER;
+
+
+typedef struct tINFO_HEADER
+{
+   unsigned long biSize;
+   unsigned long biWidth;
+   unsigned long biHeight;
+   unsigned short biPlanes;
+   unsigned short biBitCount;
+   unsigned long biCompression;
+   unsigned long biSizeImage;
+   unsigned long biXPelsPerMeter;
+   unsigned long biYPelsPerMeter;
+   unsigned long biClrUsed;
+   unsigned long biClrImportant;
+} INFO_HEADER;
+
+typedef struct tMY_BITMAP
+{
+  FILE_HEADER  bmpFileHeader;
+  INFO_HEADER  bmpInfoHeader;
+  unsigned char* bmpPalette;
+  unsigned char* bmpRawData;
+} MY_BITMAP;
+
+
+// produce a bmp image out of pixel information given in volume_results
+void make_bmp_header(MY_BITMAP * pBitmap, unsigned char * bmpBuf, int sizex, int sizey)
+{
+  int width_4= (sizex+ 3)&~3;
+  unsigned int len= 0;
+
+  // bitmap file header
+  pBitmap->bmpFileHeader.bfType=0x4d42;
+  pBitmap->bmpFileHeader.bfSize=sizey* width_4* 3+ 54;
+  pBitmap->bmpFileHeader.bfReserved1= 0;
+  pBitmap->bmpFileHeader.bfReserved2= 0;
+  pBitmap->bmpFileHeader.bfOffBits= 54;
+
+  memcpy(bmpBuf + len, &pBitmap->bmpFileHeader.bfType, 2);
+  len+= 2;
+  memcpy(bmpBuf + len, &pBitmap->bmpFileHeader.bfSize, 4);
+  len+= 4;
+  memcpy(bmpBuf + len, &pBitmap->bmpFileHeader.bfReserved1, 2);
+  len+= 2;
+  memcpy(bmpBuf + len, &pBitmap->bmpFileHeader.bfReserved2, 2);
+  len+= 2;
+  memcpy(bmpBuf + len, &pBitmap->bmpFileHeader.bfOffBits, 4);
+  len+= 4;
+
+  // bitmap information header
+  pBitmap->bmpInfoHeader.biSize= 40;
+  pBitmap->bmpInfoHeader.biWidth= width_4;
+  pBitmap->bmpInfoHeader.biHeight= sizey;
+  pBitmap->bmpInfoHeader.biPlanes= 1;
+  pBitmap->bmpInfoHeader.biBitCount= 24;
+  pBitmap->bmpInfoHeader.biCompression= 0;
+  pBitmap->bmpInfoHeader.biSizeImage= sizey* width_4* 3;
+  pBitmap->bmpInfoHeader.biXPelsPerMeter= 0;
+  pBitmap->bmpInfoHeader.biYPelsPerMeter= 0;
+  pBitmap->bmpInfoHeader.biClrUsed= 0;
+  pBitmap->bmpInfoHeader.biClrImportant=0;
+
+
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biSize, 4);
+  len+= 4;
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biWidth, 4);
+  len+= 4;
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biHeight, 4);
+  len+= 4;
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biPlanes, 2);
+  len+= 2;
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biBitCount, 2);
+  len+= 2;
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biCompression, 4);
+  len+= 4;
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biSizeImage, 4);
+  len+= 4;
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biXPelsPerMeter, 4);
+  len+= 4;
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biYPelsPerMeter, 4);
+  len+= 4;
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biClrUsed, 4);
+  len+= 4;
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biClrImportant, 4);
+  len+= 4;
+}
+
+
+
+
+
+void make_bmp(int const * volume_result, char const *name, int data_size_x, int data_size_y, bool linear = true)
+{
+
+  MY_BITMAP* pBitmap= new MY_BITMAP;
+  FILE *pBitmapFile;
+  int width_4= (data_size_x+ 3)&~3;
+  unsigned char* bmpBuf;
+
+  bmpBuf = (unsigned char*) new unsigned char[data_size_y* width_4* 3+ 54];
+  printf("\n Write bitmap...\n");
+
+  unsigned int len= 0;
+
+  // bitmap file header
+  pBitmap->bmpFileHeader.bfType=0x4d42;
+  pBitmap->bmpFileHeader.bfSize=data_size_y* width_4* 3+ 54;
+  pBitmap->bmpFileHeader.bfReserved1= 0;
+  pBitmap->bmpFileHeader.bfReserved2= 0;
+  pBitmap->bmpFileHeader.bfOffBits= 54;
+
+  memcpy(bmpBuf + len, &pBitmap->bmpFileHeader.bfType, 2);
+  len+= 2;
+  memcpy(bmpBuf + len, &pBitmap->bmpFileHeader.bfSize, 4);
+  len+= 4;
+  memcpy(bmpBuf + len, &pBitmap->bmpFileHeader.bfReserved1, 2);
+  len+= 2;
+  memcpy(bmpBuf + len, &pBitmap->bmpFileHeader.bfReserved2, 2);
+  len+= 2;
+  memcpy(bmpBuf + len, &pBitmap->bmpFileHeader.bfOffBits, 4);
+  len+= 4;
+
+  // bitmap information header
+  pBitmap->bmpInfoHeader.biSize= 40;
+  pBitmap->bmpInfoHeader.biWidth= width_4;
+  pBitmap->bmpInfoHeader.biHeight= data_size_y;
+  pBitmap->bmpInfoHeader.biPlanes= 1;
+  pBitmap->bmpInfoHeader.biBitCount= 24;
+  pBitmap->bmpInfoHeader.biCompression= 0;
+  pBitmap->bmpInfoHeader.biSizeImage= data_size_y* width_4* 3;
+  pBitmap->bmpInfoHeader.biXPelsPerMeter= 0;
+  pBitmap->bmpInfoHeader.biYPelsPerMeter= 0;
+  pBitmap->bmpInfoHeader.biClrUsed= 0;
+  pBitmap->bmpInfoHeader.biClrImportant=0;
+
+    memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biSize, 4);
+  len+= 4;
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biWidth, 4);
+  len+= 4;
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biHeight, 4);
+  len+= 4;
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biPlanes, 2);
+  len+= 2;
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biBitCount, 2);
+  len+= 2;
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biCompression, 4);
+  len+= 4;
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biSizeImage, 4);
+  len+= 4;
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biXPelsPerMeter, 4);
+  len+= 4;
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biYPelsPerMeter, 4);
+  len+= 4;
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biClrUsed, 4);
+  len+= 4;
+  memcpy(bmpBuf+len, &pBitmap->bmpInfoHeader.biClrImportant, 4);
+  len+= 4;
+  // find out maxcount before doing the picture
+  int maxcount = 0;
+  int x=0,y=0,origin_x=0;
+  while( y< data_size_y )
+  {
+     while( origin_x< data_size_x )
+     {
+       int value = *(volume_result+y*data_size_x+origin_x);
+       maxcount = ( value > maxcount )? value : maxcount;
+
+       x++;
+       origin_x++;
+     }
+     y++;
+     x = 0;
+     origin_x = 0;
+  }
+//  maxcount = std::log(maxcount + 1);
+
+  x= 0;
+  y= 0;
+  origin_x= 0;
+
+  int padding= width_4- data_size_x;
+  int padding_idx= padding;
+  unsigned char *imgdata= (unsigned char*) new unsigned char[data_size_y*width_4*3];
+
+  int totalcount = 0;
+
+  while( y< data_size_y )
+  {
+    while( origin_x< data_size_x )
+    {
+      int value = *(volume_result+y*data_size_x+origin_x);
+      totalcount += value;
+      if( linear ){
+         *(imgdata+y*width_4*3+x*3+0)= (value/(1.*maxcount)) * 256;
+         *(imgdata+y*width_4*3+x*3+1)= (value/(1.*maxcount)) * 256;
+         *(imgdata+y*width_4*3+x*3+2)= (value/(1.*maxcount)) * 256;
+      }
+      else {
+         *(imgdata+y*width_4*3+x*3+0)= (log(value+1))/(1.*(log(1+maxcount))) * 256;
+         *(imgdata+y*width_4*3+x*3+1)= (log(value+1))/(1.*(log(1+maxcount))) * 256;
+         *(imgdata+y*width_4*3+x*3+2)= (log(value+1))/(1.*(log(1+maxcount))) * 256;
+      }
+      x++;
+      origin_x++;
+
+      while( origin_x== data_size_x && padding_idx)
+      {
+      // padding 4-byte at bitmap image
+        *(imgdata+y*width_4*3+x*3+0)= 0;
+        *(imgdata+y*width_4*3+x*3+1)= 0;
+        *(imgdata+y*width_4*3+x*3+2)= 0;
+        x++;
+        padding_idx--;
+      }
+      padding_idx= padding;
+    }
+    y++;
+    x= 0;
+    origin_x= 0;
+  }
+
+  memcpy(bmpBuf + 54, imgdata, width_4* data_size_y* 3);
+
+  pBitmapFile = fopen(name, "wb");
+  fwrite(bmpBuf, sizeof(char), width_4*data_size_y*3+54, pBitmapFile);
+
+
+  fclose(pBitmapFile);
+  delete[] imgdata;
+  delete[] bmpBuf;
+  delete pBitmap;
+
+  std::cout << " wrote image file " << name <<  "\n";
+  std::cout << " total count " << totalcount << "\n";
+  std::cout << " max count " << maxcount << "\n";
+}
+
+
+
+
 
 void AssignNavigatorToVolume( LogicalVolume *vol, int layer, int maxlayers ){
   assert( maxlayers <= 10 ); // we are only listing 10 template specializations up to depth 10 here
@@ -59,7 +312,7 @@ VPlacedVolume *CreateSimpleTracker(int nlayers) {
   std::cout << "Creating SimpleTracker geometry having " << nlayers << " layers"
             << std::endl;
   // World size
-  const double world_size = 50.;
+  const double world_size = 500.;
 
   // Top volume
   UnplacedBox *uTop = new UnplacedBox(world_size + 2, world_size + 2, world_size + 2);
@@ -94,13 +347,8 @@ VPlacedVolume *CreateSimpleTracker(int nlayers) {
   return world;
 }
 
-// a test function to verify correct functioning of the navigators
-// for a simple test case
-void TestScalarNavigation() {
-  // setup point and direction in world
-  Vector3D<Precision> p(-51.,0,0);
-  Vector3D<Precision> dir(1.,0,0);
 
+int ScalarNavigation(Vector3D<Precision> p, Vector3D<Precision> dir) {
   // init navstates
   NavigationState * curnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
   NavigationState * newnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
@@ -108,6 +356,7 @@ void TestScalarNavigation() {
   SimpleNavigator nav;
   nav.LocatePoint( GeoManager::Instance().GetWorld(), p, *curnavstate, true );
 
+  int crossedvolumecount=0;
   while( ! curnavstate->IsOutside() ) {
     //
     std::cout << "tracking in " << curnavstate->Top()->GetLogicalVolume()->GetName() << "\n";
@@ -121,12 +370,23 @@ void TestScalarNavigation() {
     auto *tmp = curnavstate;
     curnavstate = newnavstate;
     newnavstate = tmp;
+    if (step>0.0) crossedvolumecount++;
   }
 
   // now test the vector progression (of coherent rays)
   // this is just testing the interface and makes sure that no trivial things go wrong
   NavigationState::ReleaseInstance(curnavstate);
   NavigationState::ReleaseInstance(newnavstate);
+  return crossedvolumecount;
+}
+
+// a test function to verify correct functioning of the navigators
+// for a simple test case
+void TestScalarNavigation() {
+  // setup point and direction in world
+  Vector3D<Precision> p(-51.,0,0);
+  Vector3D<Precision> dir(1.,0,0);
+  std::cout<<"crossedvolumecount "<<ScalarNavigation(p,dir)<<std::endl;
 }
 
 void TestVectorNavigation() {
@@ -178,8 +438,97 @@ void TestVectorNavigation() {
 // reproducing the pixel-by-pixel XRayBenchmark
 // target: show speed gain from specialized navigators
 // in comparision to current XRay-Benchmark
-void XRayBenchmark() {
-  // Sofia?
+void XRayBenchmark(int axis, int pixel_width) {
+
+  std::stringstream imagenamebase;
+  imagenamebase << "simpleTrackerImage_";
+  if(axis==1) imagenamebase << "x";
+  if(axis==2) imagenamebase << "y";
+  if(axis==3) imagenamebase << "z";
+
+  Vector3D<Precision> minExtent,maxExtent;
+  GeoManager::Instance().GetWorld()->Extent(minExtent,maxExtent);
+  
+  double dx = (maxExtent - minExtent).x(); 
+  double dy = (maxExtent - minExtent).y(); 
+  double dz = (maxExtent - minExtent).z(); 
+
+  Vector3D<Precision> orig = (maxExtent + minExtent)/2.;
+
+  double axis1_start= 0.;
+  double axis1_end= 0.;
+
+  double axis2_start= 0.;
+  double axis2_end= 0.;
+
+  double pixel_axis= 1.;
+
+
+    if(axis== 1)
+    {
+
+      axis1_start= orig.y()-dy;
+      axis1_end= orig.y() + dy;
+      axis2_start= orig.z()-dz;
+      axis2_end= orig.z()+ dz;
+      pixel_axis= (dy*2)/pixel_width;
+    }
+    else if(axis== 2)
+    {
+      axis1_start= orig.x()-dx;
+      axis1_end= orig.x()+ dx;
+      axis2_start= orig.z()-dz;
+      axis2_end= orig.z()+ dz;
+      pixel_axis= (dx*2)/pixel_width;
+    }
+    else if(axis== 3)
+    {
+      axis1_start= orig.x() -dx;
+      axis1_end= orig.x()+ dx;
+      axis2_start= orig.y()-dy;
+      axis2_end= orig.y()+ dy;
+      pixel_axis= (dx*2)/pixel_width;
+    }
+
+    // init data for image
+    int data_size_x= (axis1_end-axis1_start)/pixel_axis;
+    int data_size_y= (axis2_end-axis2_start)/pixel_axis;
+    double pixel_width_1 = (axis1_end-axis1_start)/data_size_x;
+    double pixel_width_2 = (axis2_end-axis2_start)/data_size_y;
+
+    std::cout << "data_size_x = " << data_size_x << std::endl;
+    std::cout << "data_size_y = " << data_size_y << std::endl;
+
+    int *volume_result= (int*) new int[data_size_y * data_size_x*3];
+   
+    for( int pixel_count_2 = 0; pixel_count_2 < data_size_y; ++pixel_count_2 ) {
+       for( int pixel_count_1 = 0; pixel_count_1 < data_size_x; ++pixel_count_1 ) {
+          double axis2_count = axis2_start + pixel_count_2 * pixel_width_2 + 1E-6;
+          double axis1_count = axis1_start + pixel_count_1 * pixel_width_1 + 1E-6;
+
+          Vector3D<Precision> p;
+          Vector3D<Precision> dir;
+          if( axis== 1 ) {
+              dir.Set(1., 0., 0.);
+              p.Set( orig.x(), axis1_count, axis2_count);
+          } 
+          else if( axis== 2) {
+              dir.Set(0., 1., 0.);
+              p.Set( axis1_count, orig.y(), axis2_count);
+          }
+          else if( axis== 3) {
+              dir.Set(0., 0., 1.);
+              p.Set( axis1_count, axis2_count, orig.z());
+          } 
+
+          *(volume_result+pixel_count_2*data_size_x+pixel_count_1) = ScalarNavigation(p,dir);
+      } // end inner loop
+    } // end outer loop
+
+    std::stringstream VecGeomimage;
+    VecGeomimage << imagenamebase.str();
+    VecGeomimage << "_VecGeom.bmp";
+    make_bmp(volume_result, VecGeomimage.str().c_str(), data_size_x, data_size_y);
 
 }
 
@@ -196,6 +545,29 @@ int main(int argc, char* argv[]) {
   }
   CreateSimpleTracker(nlayers);
 
+  int axis= 0;
+
+  if( strcmp(argv[2], "x")==0 )
+    axis= 1;
+  else if( strcmp(argv[2], "y")==0 )
+    axis= 2;
+  else if( strcmp(argv[2], "z")==0 )
+    axis= 3;
+  else
+  {
+    std::cerr<< "Incorrect axis"<< std::endl<< std::endl;
+    return 1;
+  }
+
+  double pixel_width= atof(argv[3]);
+ 
+  XRayBenchmark(axis, pixel_width);
+  //XRayBenchmark(orig, axis, axis1_start,axis2_start,pixel_width_1,pixel_width_2,data_size_x,data_size_y,volume_result);
+
+
+
+
+/*
   // loop over all logical volumes and print navigator
   std::vector<LogicalVolume *> lvols;
   GeoManager::Instance().GetAllLogicalVolumes(lvols);
@@ -208,6 +580,9 @@ int main(int argc, char* argv[]) {
 
   // test tracking
   TestScalarNavigation();
+<<<<<<< HEAD
   std::cout << "start vector test\n";
   TestVectorNavigation();
+=======
+*/
 }
