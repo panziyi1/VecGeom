@@ -360,7 +360,7 @@ VPlacedVolume *CreateSimpleTracker(int nlayers) {
 }
 
 
-int ScalarNavigation(Vector3D<Precision> &p, Vector3D<Precision> const &dir, NavigationState *curnavstate, NavigationState *newnavstate) {
+int ScalarNavigation(Vector3D<Precision> &p, Vector3D<Precision> const &dir, NavigationState *&curnavstate, NavigationState *&newnavstate) {
 
   int crossedvolumecount=0;
   while( ! curnavstate->IsOutside() ) {
@@ -384,9 +384,33 @@ int ScalarNavigation(Vector3D<Precision> &p, Vector3D<Precision> const &dir, Nav
   return crossedvolumecount;
 }
 
+int ScalarNavigation_NonSpecialized(Vector3D<Precision> &p, Vector3D<Precision> const &dir, NavigationState *&curnavstate, NavigationState *&newnavstate) {
+  SimpleNavigator nav;
+  int crossedvolumecount=0;
+  while( ! curnavstate->IsOutside() ) {
+    //
+    double step;
+    nav.FindNextBoundaryAndStep(p, dir, *curnavstate, *newnavstate, kInfinity, step);
+    //std::cout << "step " << step << "\n";
+    p = p + dir * (step + 1E-6);
+
+    // pointer swap is enough
+    auto *tmp = curnavstate;
+    curnavstate = newnavstate;
+    newnavstate = tmp;
+    if (step>0.0) crossedvolumecount++;
+  }
+
+  // now test the vector progression (of coherent rays)
+  // this is just testing the interface and makes sure that no trivial things go wrong
+  return crossedvolumecount;
+}
+
+
+
 ////////////////// VECTOR NAVIGATION
 
-int VectorNavigation (SOA3D<Precision> &points, SOA3D<Precision> const &dirs, int np, NavStatePool *curnavstates, NavStatePool *newnavstates, double *psteps, double *steps) {
+int VectorNavigation (SOA3D<Precision> &points, SOA3D<Precision> const &dirs, int np, NavStatePool *&curnavstates, NavStatePool *&newnavstates, double *psteps, double *steps) {
 // we assume that that curnavstates are already initialized correctly
 
   int crossedvolumecount=0;
@@ -573,7 +597,8 @@ void XRayBenchmark(int axis, int pixel_width) {
           // for now init the state here
           nav.LocatePoint( GeoManager::Instance().GetWorld(), p,  *curnavstate, true );
           *(volume_result+pixel_count_2*data_size_x+pixel_count_1) = ScalarNavigation(p,dir,curnavstate, newnavstate);
-      } // end inner loop
+         // *(volume_result+pixel_count_2*data_size_x+pixel_count_1) = ScalarNavigation_NonSpecialized(p,dir,curnavstate, newnavstate);
+       } // end inner loop
     } // end outer loop
 
    timer.Stop();
