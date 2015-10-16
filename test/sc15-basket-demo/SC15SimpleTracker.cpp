@@ -492,7 +492,7 @@ int ScalarNavigation_NonSpecialized(Vector3D<Precision> &p, Vector3D<Precision> 
   int crossedvolumecount=0;
   while( ! curnavstate->IsOutside() ) {
     //
-    double step;
+    double step = 0;
     nav.FindNextBoundaryAndStep(p, dir, *curnavstate, *newnavstate, kInfinity, step);
     //std::cout << "step " << step << "\n";
     p = p + dir * (step + 1E-6);
