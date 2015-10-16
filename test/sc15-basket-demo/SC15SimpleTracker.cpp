@@ -359,11 +359,7 @@ VPlacedVolume *CreateSimpleTracker(int nlayers) {
 }
 
 
-int ScalarNavigation(Vector3D<Precision> p, Vector3D<Precision> dir) {
-  // init navstates
-  NavigationState * curnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
-  NavigationState * newnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
-  
+int ScalarNavigation(Vector3D<Precision> p, Vector3D<Precision> dir, NavigationState *curnavstate, NavigationState *newnavstate) {
   SimpleNavigator nav;
   nav.LocatePoint( GeoManager::Instance().GetWorld(), p, *curnavstate, true );
 
@@ -386,24 +382,18 @@ int ScalarNavigation(Vector3D<Precision> p, Vector3D<Precision> dir) {
 
   // now test the vector progression (of coherent rays)
   // this is just testing the interface and makes sure that no trivial things go wrong
-  NavigationState::ReleaseInstance(curnavstate);
-  NavigationState::ReleaseInstance(newnavstate);
   return crossedvolumecount;
 }
 
 ////////////////// VECTOR NAVIGATION
 
-int VectorNavigation (SOA3D<Precision> points, SOA3D<Precision>dirs, int np) {
+int VectorNavigation (SOA3D<Precision> points, SOA3D<Precision>dirs, int np, NavStatePool *curnavstates, NavStatePool *newnavstates, double *psteps, double *steps) {
 
-  NavStatePool *curnavstates = new NavStatePool(np, GeoManager::Instance().getMaxDepth());
-  NavStatePool *newnavstates = new NavStatePool(np, GeoManager::Instance().getMaxDepth());
   for(auto i=0;i<np;++i){
     SimpleNavigator nav;
     nav.LocatePoint( GeoManager::Instance().GetWorld(), points[i], *(*curnavstates)[i], true );
   }
 
-  double *steps    = (double*) _mm_malloc(np*sizeof(double),64);
-  double *psteps    = (double*) _mm_malloc(np*sizeof(double),64);
   int crossedvolumecount=0;
   while(!(*curnavstates)[0]->IsOutside()) {
       //
@@ -428,8 +418,6 @@ int VectorNavigation (SOA3D<Precision> points, SOA3D<Precision>dirs, int np) {
       if (steps[0]>0.0) crossedvolumecount++;
   }
 
-    delete curnavstates;
-    delete newnavstates;
     return crossedvolumecount;
 }
 
@@ -439,7 +427,14 @@ void TestScalarNavigation() {
   // setup point and direction in world
   Vector3D<Precision> p(-51.,0,0);
   Vector3D<Precision> dir(1.,0,0);
-  std::cout<<"crossedvolumecount "<<ScalarNavigation(p,dir)<<std::endl;
+  // init navstates
+  NavigationState * curnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
+  NavigationState * newnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
+
+  std::cout<<"crossedvolumecount "<<ScalarNavigation(p,dir,curnavstate, newnavstate)<<std::endl;
+
+  NavigationState::ReleaseInstance(curnavstate);
+  NavigationState::ReleaseInstance(newnavstate);
 }
 
 void TestVectorNavigation() {
@@ -452,7 +447,17 @@ void TestVectorNavigation() {
       points.set(i, -51,0,0);
       dirs.set(i, 1,0,0);
   }
-  std::cout<<VectorNavigation(points, dirs,np)<<std::endl; 
+  NavStatePool *curnavstates = new NavStatePool(np, GeoManager::Instance().getMaxDepth());
+  NavStatePool *newnavstates = new NavStatePool(np, GeoManager::Instance().getMaxDepth());
+  double *steps    = (double*) _mm_malloc(np*sizeof(double),64);
+  double *psteps    = (double*) _mm_malloc(np*sizeof(double),64);
+
+  std::cout<<VectorNavigation(points, dirs,np, curnavstates, newnavstates,psteps,steps)<<std::endl;
+
+  _mm_free(steps);
+  _mm_free(psteps);
+  delete curnavstates;
+  delete newnavstates;
 }
 // reproducing the pixel-by-pixel XRayBenchmark
 // target: show speed gain from specialized navigators
@@ -523,7 +528,10 @@ void XRayBenchmark(int axis, int pixel_width) {
     std::cout << "data_size_y = " << data_size_y << std::endl;
 
     int *volume_result= (int*) new int[data_size_y * data_size_x*3];
-   
+    // init navstates
+    NavigationState * curnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
+    NavigationState * newnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
+
     Stopwatch timer;
     timer.Start();
 
@@ -540,18 +548,20 @@ void XRayBenchmark(int axis, int pixel_width) {
           else if( axis== 3)
               p.Set( axis1_count, axis2_count, orig.z());
 
-          *(volume_result+pixel_count_2*data_size_x+pixel_count_1) = ScalarNavigation(p,dir);
+          *(volume_result+pixel_count_2*data_size_x+pixel_count_1) = ScalarNavigation(p,dir,curnavstate, newnavstate);
       } // end inner loop
     } // end outer loop
 
    timer.Stop();
    std::cout << " XRay Elapsed time : "<< timer.Elapsed() << std::endl;
 
-    std::stringstream VecGeomimage;
-    VecGeomimage << imagenamebase.str();
-    VecGeomimage << "_VecGeom.bmp";
-    make_bmp(volume_result, VecGeomimage.str().c_str(), data_size_x, data_size_y);
+  std::stringstream VecGeomimage;
+  VecGeomimage << imagenamebase.str();
+  VecGeomimage << "_VecGeom.bmp";
+  make_bmp(volume_result, VecGeomimage.str().c_str(), data_size_x, data_size_y);
 
+  NavigationState::ReleaseInstance(curnavstate);
+  NavigationState::ReleaseInstance(newnavstate);
 }
 
 
@@ -631,6 +641,12 @@ void XRayBenchmarkVecNav(int axis, int pixel_width) {
       dirs.set(i, dir.x(), dir.y(),dir.z());
   }
 
+  NavStatePool *curnavstates = new NavStatePool(N, GeoManager::Instance().getMaxDepth());
+  NavStatePool *newnavstates = new NavStatePool(N, GeoManager::Instance().getMaxDepth());
+  double *steps    = (double*) _mm_malloc(N*sizeof(double),64);
+  double *psteps    = (double*) _mm_malloc(N*sizeof(double),64);
+
+
   Stopwatch timer;
   timer.Start();
 
@@ -649,16 +665,21 @@ void XRayBenchmarkVecNav(int axis, int pixel_width) {
                 points.set( i, axis1_count, axis2_count, orig.z() );
           }
 
-          *(volume_result+pixel_count_2*data_size_x+pixel_count_1) = VectorNavigation(points,dirs,N);
+          *(volume_result+pixel_count_2*data_size_x+pixel_count_1) = VectorNavigation(points,dirs,N,curnavstates,newnavstates,psteps,steps);
       } // end inner loop
-   } // end outer loop 
+   } // end outer loop 
    timer.Stop();
    std::cout << " XRayVecNav Elapsed time : "<< timer.Elapsed() << std::endl;
 
     std::stringstream VecGeomimage;
     VecGeomimage << imagenamebase.str();
-    VecGeomimage << "_VecGeom.bmp";
+    VecGeomimage << "_Vector_VecGeom.bmp";
     make_bmp(volume_result, VecGeomimage.str().c_str(), data_size_x, data_size_y);
+
+    _mm_free(steps);
+    _mm_free(psteps);
+    delete curnavstates;
+    delete newnavstates;
 
 }
 
