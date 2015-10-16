@@ -11,6 +11,8 @@
 #include "backend/cuda/Interface.h"
 #endif
 
+#include "backend/Backend.h"
+
 namespace vecgeom {
 
 VECGEOM_DEVICE_FORWARD_DECLARE( template <typename Type> class SOA3D; )
@@ -153,6 +155,24 @@ public:
   DevicePtr< cuda::SOA3D<T> > CopyToGpu(DevicePtr<T> xGpu, DevicePtr<T> yGpu, DevicePtr<T> zGpu, size_t size) const;
 #endif // VECGEOM_CUDA
 
+  // vectorized transport
+  // moves p tp p+steps*d;
+  // tail treatment missing
+  static void SOA_vector_transport(SOA3D<T> & p, SOA3D<T> const &d, T * steps){
+      using Real_v = kVc::precision_v;
+      for(int i=0;i<p.size();i+=Real_v::Size){
+      Real_v px_v(p.x()+i);
+      Real_v py_v(p.y()+i);
+      Real_v pz_v(p.z()+i);
+      Real_v dx_v(d.x()+i);
+      Real_v dy_v(d.y()+i);
+      Real_v dz_v(d.z()+i);
+      Real_v s_v(steps+i);
+      (px_v + dx_v*s_v).store(p.x()+i);
+      (py_v + dy_v*s_v).store(p.y()+i);
+      (pz_v + dz_v*s_v).store(p.z()+i);
+    }
+  }
 private:
 
   VECGEOM_CUDA_HEADER_BOTH
