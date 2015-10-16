@@ -59,6 +59,16 @@ typedef struct tMY_BITMAP
   unsigned char* bmpRawData;
 } MY_BITMAP;
 
+typedef struct tBasket
+{
+  unsigned int pixel;        // pixel X/Y coordinates encoded in a single long
+} Basket;
+
+inline unsigned int EncodePixel(unsigned int ix, unsigned int iy) { return ( (iy << 16) | ix); }
+inline void DecodePixel(unsigned int const pixel, unsigned int &ix, unsigned int &iy) { 
+  ix = pixel & 0xFFFF; iy = pixel >> 16;
+}  
+
 
 // produce a bmp image out of pixel information given in volume_results
 void make_bmp_header(MY_BITMAP * pBitmap, unsigned char * bmpBuf, int sizex, int sizey)

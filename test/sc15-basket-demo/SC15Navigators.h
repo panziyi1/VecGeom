@@ -129,7 +129,7 @@ public:
                               distance, distance1);
 
       Min(distance,distance1).store(out_steps + i);
-      for(auto j=0;j<Real_v::Size;++j){
+      for(unsigned int j=0;j<Real_v::Size;++j){
         // relocation here ( or in separate loop ? )
         if (!fastcopy) {
           in_states[i+j]->CopyTo(out_states[i+j]);
@@ -145,7 +145,7 @@ public:
       }
     }
     // tail part
-    for (auto i = offset; i < globalpoints.size(); ++i) {
+    for (unsigned int i = offset; i < globalpoints.size(); ++i) {
       double distance, distance1;
       WorldNavKernel<kScalar>(*static_cast<UnplacedBox const *>(unplaced),
                               *static_cast<UnplacedTube const *>(daughter->GetUnplacedVolume()), globalpoints[i], globaldirs[i],
@@ -271,7 +271,7 @@ public:
       }
     }
     // tail part
-    for (auto i = offset; i < globalpoints.size(); ++i) {
+    for (unsigned int i = offset; i < globalpoints.size(); ++i) {
       double distance, distance1;
       LayerNavKernel<kScalar>(*static_cast<UnplacedTube const *>(unplaced),
                               *static_cast<UnplacedTube const *>(daughter->GetUnplacedVolume()), globalpoints[i],
@@ -360,7 +360,7 @@ static VNavigator *Instance() {
        }
      }
      // tail part
-     for( auto i=offset; i < globalpoints.size(); ++i ){
+     for( unsigned int i=offset; i < globalpoints.size(); ++i ){
        double distance;
        TubeImplementation<translation::kIdentity, rotation::kIdentity,
                           TubeTypes::UniversalTube>::DistanceToOut<kScalar>(*(UnplacedTube *)(unplaced),
