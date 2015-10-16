@@ -646,6 +646,7 @@ void XRayBenchmarkVecNav(int axis, int pixel_width) {
   double *steps    = (double*) _mm_malloc(N*sizeof(double),64);
   double *psteps    = (double*) _mm_malloc(N*sizeof(double),64);
 
+  SOA3D<Precision> points(N);
 
   Stopwatch timer;
   timer.Start();
@@ -655,7 +656,6 @@ void XRayBenchmarkVecNav(int axis, int pixel_width) {
           double axis2_count = axis2_start + pixel_count_2 * pixel_width_2 + 1E-6;
           double axis1_count = axis1_start + pixel_count_1 * pixel_width_1 + 1E-6;
 
-          SOA3D<Precision> points(N);
           for(auto i=0;i<N;++i){
              if( axis== 1 )
                 points.set( i, orig.x(), axis1_count, axis2_count );
