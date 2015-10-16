@@ -4,6 +4,7 @@
 #include "volumes/Tube.h"
 #include "volumes/LogicalVolume.h"
 #include "management/GeoManager.h"
+#include "base/Stopwatch.h"
 #include "SC15Navigators.h"
 #include "navigation/SimpleNavigator.h"
 #include "base/Vector3D.h"
@@ -369,11 +370,11 @@ int ScalarNavigation(Vector3D<Precision> p, Vector3D<Precision> dir) {
   int crossedvolumecount=0;
   while( ! curnavstate->IsOutside() ) {
     //
-    std::cout << "tracking in " << curnavstate->Top()->GetLogicalVolume()->GetName() << "\n";
+    //std::cout << "tracking in " << curnavstate->Top()->GetLogicalVolume()->GetName() << "\n";
       // get navigator object and move point
     VNavigator const *specialnav = GetNavigator(curnavstate->Top()->GetLogicalVolume());
     double step = specialnav->ComputeStepAndPropagatedState(p, dir, kInfinity, *curnavstate, *newnavstate);
-    std::cout << "step " << step << "\n";
+    //std::cout << "step " << step << "\n";
     p = p + dir * (step + 1E-6);
 
     // pointer swap is enough
@@ -388,6 +389,48 @@ int ScalarNavigation(Vector3D<Precision> p, Vector3D<Precision> dir) {
   NavigationState::ReleaseInstance(curnavstate);
   NavigationState::ReleaseInstance(newnavstate);
   return crossedvolumecount;
+}
+
+////////////////// VECTOR NAVIGATION
+
+int VectorNavigation (SOA3D<Precision> points, SOA3D<Precision>dirs, int np) {
+
+  NavStatePool *curnavstates = new NavStatePool(np, GeoManager::Instance().getMaxDepth());
+  NavStatePool *newnavstates = new NavStatePool(np, GeoManager::Instance().getMaxDepth());
+  for(auto i=0;i<np;++i){
+    SimpleNavigator nav;
+    nav.LocatePoint( GeoManager::Instance().GetWorld(), points[i], *(*curnavstates)[i], true );
+  }
+
+  double *steps    = (double*) _mm_malloc(np*sizeof(double),64);
+  double *psteps    = (double*) _mm_malloc(np*sizeof(double),64);
+  int crossedvolumecount=0;
+  while(!(*curnavstates)[0]->IsOutside()) {
+      //
+     // std::cout << "tracking in " << (*curnavstates)[0]->Top()->GetLogicalVolume()->GetName() << "\n";
+        // get navigator object and move point
+      VNavigator const *specialnav = GetNavigator((*curnavstates)[0]->Top()->GetLogicalVolume());
+      specialnav->ComputeStepsAndPropagatedStates(points, dirs, psteps, *curnavstates, *newnavstates, steps);
+
+      // transport + crosschecks + pointerswap
+      // We should vectorize this transport !!
+      for(auto i=0; i<np; ++i){
+        //assert(steps[i]==steps[0]);
+        assert((*newnavstates)[i]->Top()==(*newnavstates)[0]->Top());
+
+        points.set(i, points[i] + dirs[i]*(steps[i] + 1E-6));
+
+      }
+      // pointer swap to update navstates
+      auto tmp=curnavstates;
+      curnavstates = newnavstates;
+      newnavstates = tmp;
+      if (steps[0]>0.0) crossedvolumecount++;
+  }
+
+    delete curnavstates;
+    delete newnavstates;
+    return crossedvolumecount;
 }
 
 // a test function to verify correct functioning of the navigators
@@ -409,42 +452,8 @@ void TestVectorNavigation() {
       points.set(i, -51,0,0);
       dirs.set(i, 1,0,0);
   }
-
-  NavStatePool *curnavstates = new NavStatePool(np, GeoManager::Instance().getMaxDepth());
-  NavStatePool *newnavstates = new NavStatePool(np, GeoManager::Instance().getMaxDepth());
-  for(auto i=0;i<np;++i){
-    SimpleNavigator nav;
-    nav.LocatePoint( GeoManager::Instance().GetWorld(), points[i], *(*curnavstates)[i], true );
-  }
-
-  double *steps    = (double*) _mm_malloc(np*sizeof(double),64);
-  double *psteps    = (double*) _mm_malloc(np*sizeof(double),64);
-  while(!(*curnavstates)[0]->IsOutside()) {
-      //
-      std::cout << "tracking in " << (*curnavstates)[0]->Top()->GetLogicalVolume()->GetName() << "\n";
-        // get navigator object and move point
-      VNavigator const *specialnav = GetNavigator((*curnavstates)[0]->Top()->GetLogicalVolume());
-      specialnav->ComputeStepsAndPropagatedStates(points, dirs, psteps, *curnavstates, *newnavstates, steps);
-
-      // transport + crosschecks + pointerswap
-      // We should vectorize this transport !!
-      for(auto i=0; i<np; ++i){
-        //assert(steps[i]==steps[0]);
-        assert((*newnavstates)[i]->Top()==(*newnavstates)[0]->Top());
-
-        points.set(i, points[i] + dirs[i]*(steps[i] + 1E-6));
-
-      }
-      // pointer swap to update navstates
-      auto tmp=curnavstates;
-      curnavstates = newnavstates;
-      newnavstates = tmp;
-  }
-
-    delete curnavstates;
-    delete newnavstates;
+  std::cout<<VectorNavigation(points, dirs,np)<<std::endl; 
 }
-
 // reproducing the pixel-by-pixel XRayBenchmark
 // target: show speed gain from specialized navigators
 // in comparision to current XRay-Benchmark
@@ -457,7 +466,8 @@ void XRayBenchmark(int axis, int pixel_width) {
   if(axis==3) imagenamebase << "z";
 
   Vector3D<Precision> minExtent,maxExtent;
-  GeoManager::Instance().GetWorld()->Extent(minExtent,maxExtent);
+  GeoManager::Instance().FindPlacedVolume(2)->Extent(minExtent,maxExtent);
+  //GeoManager::Instance().GetWorld()->Extent(minExtent,maxExtent);
   
   double dx = (maxExtent - minExtent).x(); 
   double dy = (maxExtent - minExtent).y(); 
@@ -474,9 +484,10 @@ void XRayBenchmark(int axis, int pixel_width) {
   double pixel_axis= 1.;
 
 
+  Vector3D<Precision> dir;
     if(axis== 1)
     {
-
+      dir.Set(1., 0., 0.);
       axis1_start= orig.y()-dy;
       axis1_end= orig.y() + dy;
       axis2_start= orig.z()-dz;
@@ -485,6 +496,7 @@ void XRayBenchmark(int axis, int pixel_width) {
     }
     else if(axis== 2)
     {
+      dir.Set(0., 1., 0.);
       axis1_start= orig.x()-dx;
       axis1_end= orig.x()+ dx;
       axis2_start= orig.z()-dz;
@@ -493,6 +505,7 @@ void XRayBenchmark(int axis, int pixel_width) {
     }
     else if(axis== 3)
     {
+      dir.Set(0., 0., 1.);
       axis1_start= orig.x() -dx;
       axis1_end= orig.x()+ dx;
       axis2_start= orig.y()-dy;
@@ -511,29 +524,28 @@ void XRayBenchmark(int axis, int pixel_width) {
 
     int *volume_result= (int*) new int[data_size_y * data_size_x*3];
    
+    Stopwatch timer;
+    timer.Start();
+
     for( int pixel_count_2 = 0; pixel_count_2 < data_size_y; ++pixel_count_2 ) {
        for( int pixel_count_1 = 0; pixel_count_1 < data_size_x; ++pixel_count_1 ) {
           double axis2_count = axis2_start + pixel_count_2 * pixel_width_2 + 1E-6;
           double axis1_count = axis1_start + pixel_count_1 * pixel_width_1 + 1E-6;
 
           Vector3D<Precision> p;
-          Vector3D<Precision> dir;
-          if( axis== 1 ) {
-              dir.Set(1., 0., 0.);
+          if( axis== 1 )
               p.Set( orig.x(), axis1_count, axis2_count);
-          } 
-          else if( axis== 2) {
-              dir.Set(0., 1., 0.);
+          else if( axis== 2)
               p.Set( axis1_count, orig.y(), axis2_count);
-          }
-          else if( axis== 3) {
-              dir.Set(0., 0., 1.);
+          else if( axis== 3)
               p.Set( axis1_count, axis2_count, orig.z());
-          } 
 
           *(volume_result+pixel_count_2*data_size_x+pixel_count_1) = ScalarNavigation(p,dir);
       } // end inner loop
     } // end outer loop
+
+   timer.Stop();
+   std::cout << " XRay Elapsed time : "<< timer.Elapsed() << std::endl;
 
     std::stringstream VecGeomimage;
     VecGeomimage << imagenamebase.str();
@@ -541,6 +553,116 @@ void XRayBenchmark(int axis, int pixel_width) {
     make_bmp(volume_result, VecGeomimage.str().c_str(), data_size_x, data_size_y);
 
 }
+
+
+
+void XRayBenchmarkVecNav(int axis, int pixel_width) {
+
+  auto N=64;
+  std::stringstream imagenamebase;
+  imagenamebase << "simpleTrackerimage_";
+  if(axis==1) imagenamebase << "x";
+  if(axis==2) imagenamebase << "y";
+  if(axis==3) imagenamebase << "z";
+
+  Vector3D<Precision> minExtent,maxExtent;
+  GeoManager::Instance().FindPlacedVolume(2)->Extent(minExtent,maxExtent);
+  //GeoManager::Instance().GetWorld()->Extent(minExtent,maxExtent);
+  
+  double dx = (maxExtent - minExtent).x(); 
+  double dy = (maxExtent - minExtent).y(); 
+  double dz = (maxExtent - minExtent).z(); 
+
+  Vector3D<Precision> orig = (maxExtent + minExtent)/2.;
+
+  double axis1_start= 0.;
+  double axis1_end= 0.;
+
+  double axis2_start= 0.;
+  double axis2_end= 0.;
+
+  double pixel_axis= 1.;
+
+
+  Vector3D<Precision> dir;
+    if(axis== 1)
+    {
+      dir.Set(1., 0., 0.);
+      axis1_start= orig.y()-dy;
+      axis1_end= orig.y() + dy;
+      axis2_start= orig.z()-dz;
+      axis2_end= orig.z()+ dz;
+      pixel_axis= (dy*2)/pixel_width;
+    }
+    else if(axis== 2)
+    {
+      dir.Set(0., 1., 0.);
+      axis1_start= orig.x()-dx;
+      axis1_end= orig.x()+ dx;
+      axis2_start= orig.z()-dz;
+      axis2_end= orig.z()+ dz;
+      pixel_axis= (dx*2)/pixel_width;
+    }
+    else if(axis== 3)
+    {
+      dir.Set(0., 0., 1.);
+      axis1_start= orig.x() -dx;
+      axis1_end= orig.x()+ dx;
+      axis2_start= orig.y()-dy;
+      axis2_end= orig.y()+ dy;
+      pixel_axis= (dx*2)/pixel_width;
+    }
+
+    // init data for image
+    int data_size_x= (axis1_end-axis1_start)/pixel_axis;
+    int data_size_y= (axis2_end-axis2_start)/pixel_axis;
+    double pixel_width_1 = (axis1_end-axis1_start)/data_size_x;
+    double pixel_width_2 = (axis2_end-axis2_start)/data_size_y;
+
+    std::cout << "data_size_x = " << data_size_x << std::endl;
+    std::cout << "data_size_y = " << data_size_y << std::endl;
+
+    int *volume_result= (int*) new int[data_size_y * data_size_x*3];
+   
+
+
+  SOA3D<Precision> dirs(N);
+  for(auto i=0;i<N;++i){
+      dirs.set(i, dir.x(), dir.y(),dir.z());
+  }
+
+  Stopwatch timer;
+  timer.Start();
+
+    for( int pixel_count_2 = 0; pixel_count_2 < data_size_y; ++pixel_count_2 ) {
+       for( int pixel_count_1 = 0; pixel_count_1 < data_size_x; ++pixel_count_1 ) {
+          double axis2_count = axis2_start + pixel_count_2 * pixel_width_2 + 1E-6;
+          double axis1_count = axis1_start + pixel_count_1 * pixel_width_1 + 1E-6;
+
+          SOA3D<Precision> points(N);
+          for(auto i=0;i<N;++i){
+             if( axis== 1 )
+                points.set( i, orig.x(), axis1_count, axis2_count );
+             else if( axis== 2)
+                points.set( i, axis1_count, orig.y(), axis2_count );
+             else if( axis== 3)
+                points.set( i, axis1_count, axis2_count, orig.z() );
+          }
+
+          *(volume_result+pixel_count_2*data_size_x+pixel_count_1) = VectorNavigation(points,dirs,N);
+      } // end inner loop
+   } // end outer loop 
+   timer.Stop();
+   std::cout << " XRayVecNav Elapsed time : "<< timer.Elapsed() << std::endl;
+
+    std::stringstream VecGeomimage;
+    VecGeomimage << imagenamebase.str();
+    VecGeomimage << "_VecGeom.bmp";
+    make_bmp(volume_result, VecGeomimage.str().c_str(), data_size_x, data_size_y);
+
+}
+
+
 
 void BasketBasedXRayBenchmark() {
   // to be filled in by Andrei
@@ -572,7 +694,7 @@ int main(int argc, char* argv[]) {
   double pixel_width= atof(argv[3]);
  
   XRayBenchmark(axis, pixel_width);
-  //XRayBenchmark(orig, axis, axis1_start,axis2_start,pixel_width_1,pixel_width_2,data_size_x,data_size_y,volume_result);
+  XRayBenchmarkVecNav(axis, pixel_width);
 
 
 
@@ -591,8 +713,11 @@ int main(int argc, char* argv[]) {
   // test tracking
   TestScalarNavigation();
 <<<<<<< HEAD
+<<<<<<< HEAD
   std::cout << "start vector test\n";
   TestVectorNavigation();
 =======
+  std::cout << "start vector test\n";
+  TestVectorNavigation();
 */
 }
