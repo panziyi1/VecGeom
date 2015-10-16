@@ -61,15 +61,117 @@ typedef struct tMY_BITMAP
   unsigned char* bmpRawData;
 } MY_BITMAP;
 
-typedef struct tBasket
-{
-  unsigned int pixel;        // pixel X/Y coordinates encoded in a single long
-} Basket;
+constexpr unsigned int kMaxVec = 256;
+constexpr unsigned int kMaxDepth = 20;
 
 inline unsigned int EncodePixel(unsigned int ix, unsigned int iy) { return ( (iy << 16) | ix); }
 inline void DecodePixel(unsigned int const pixel, unsigned int &ix, unsigned int &iy) { 
   ix = pixel & 0xFFFF; iy = pixel >> 16;
 }  
+
+// Each stepper will create an array of baskets (one per volume)
+class Basket
+{
+public:
+  unsigned int     pixel_;            // pixel X/Y coordinates encoded in a single long
+  int              size_;             // current size of the basket
+  int              threshold_;        // threshold to start transport
+  bool             ready_;            // signal that basket is ready for transport
+  Precision        xp[kMaxVec];       // current coordinates for tracks in the basket
+  Precision        yp[kMaxVec];       //
+  Precision        zp[kMaxVec];       //
+  Precision        xdir[kMaxVec];     // current directions - now all the same for all baskets
+  Precision        ydir[kMaxVec];     //
+  Precision        zdir[kMaxVec];     //
+  NavStatePool    *navstates_;        // navigation states for tracks - now all the same for the same basket
+  VNavigator const *specialnav_;      // Special navigator for this basket(volume)
+  
+  Basket(int thres) : pixel_(0), size_(0), threshold_(thres), ready_(false) {
+     memset(xp, 0, 6*thres*sizeof(Precision));  // Should work for all arrays in one go
+     navstates_ = new NavStatePool(thres, GeoManager::Instance().getMaxDepth());
+     specialnav_ = nullptr;
+  }
+  
+  ~Basket() {
+    delete navstates_;
+  }
+  
+  void SetDirection(const Vector3D<Precision> &dir) { 
+    for (auto i=0; i<size_; ++i) {
+      xdir[i] = dir.x(); ydir[i] = dir.y(), zdir[i] = dir.z();
+    }
+  }
+  
+  void SetNavStates(const NavigationState *state) {
+    specialnav_ = GetNavigator(state->Top()->GetLogicalVolume());
+    for (auto i=0; i<threshold_; ++i) state->CopyTo((*navstates_)[i]);
+  }
+  
+  inline int VolIndex(const NavigationState *state) { return state->GetCurrentLevel(); }
+  
+  void Step(Precision *psteps, Precision *steps, NavStatePool *newnavstates) {
+    /// Perform a single step 
+    VNavigator const *specialnav = GetNavigator((*navstates_)[0]->Top()->GetLogicalVolume());
+    specialnav->ComputeStepsAndPropagatedStates(SOA3D<Precision>(xp,yp,zp,size_), SOA3D<Precision>(xdir,ydir,zdir,size_), 
+        psteps, *navstates_, *newnavstates, steps);
+    
+    // Update position for all tracks
+    for(auto i=0; i<size_; ++i) {
+      xp[i] += xdir[i]*steps[i] + 1E-6;
+      yp[i] += ydir[i]*steps[i] + 1E-6;
+      zp[i] += zdir[i]*steps[i] + 1E-6;
+    }  
+  }
+  
+};
+
+/// Each thread will create a stepper
+class Stepper
+{
+public:
+  int              vecsize_;          // Vector size (most baskets will get transported with this vector size)
+  int              nvolumes_;         // number of geometry volumes
+  Precision        psteps_[kMaxVec];  // proposed steps
+  Precision        steps_[kMaxVec];   // current steps
+  Basket          *baskets_[kMaxDepth];  // Array of baskets (one per volume)
+  NavStatePool    *outstates_;        // navigation states for crossing tracks
+  
+  Stepper(int vsize, const Vector3D<Precision> &dir) : vecsize_(vsize) {
+    NavigationState *state = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
+    VPlacedVolume const *node = GeoManager::Instance().GetWorld();
+    nvolumes_ = 0;
+    while (node) {
+      // Update path to match current level
+      state->Push(node);
+      baskets_[nvolumes_] = new Basket(vsize);
+      // Synchronize all states with state
+      baskets_[nvolumes_]->SetNavStates(state);
+      // Synchronize all directions with dir
+      baskets_[nvolumes_]->SetDirection(dir);
+      nvolumes_++;
+      // Go to next level
+      LogicalVolume const* lvol = node->GetLogicalVolume();
+      Vector<VPlacedVolume const*> const &daughters = lvol->GetDaughters();
+      int nd = daughters.size();
+      assert(nd <= 1); // yeah, for now...
+      if (nd==0) {node = nullptr; continue;}
+      node = daughters[0];      
+    }
+    // Setup arrays of proposed steps and returned ones
+    for (auto i=0; i<vsize; ++i) {
+      psteps_[i] = kInfinity;
+      steps_[i] = 0;
+    }
+    // Setup output states
+    outstates_ =  new NavStatePool(vsize, GeoManager::Instance().getMaxDepth());
+  }
+  
+  ~Stepper() {
+    for (auto i=0; i<nvolumes_; ++i) delete baskets_[i];
+    delete outstates_;
+  }
+  
+};
 
 
 // produce a bmp image out of pixel information given in volume_results
@@ -323,6 +425,7 @@ void AssignNavigatorToVolume( LogicalVolume *vol, int layer, int maxlayers ){
 VPlacedVolume *CreateSimpleTracker(int nlayers) {
   std::cout << "Creating SimpleTracker geometry having " << nlayers << " layers"
             << std::endl;
+  assert(nlayers < kMaxDepth-1);          
   // World size
   const double world_size = 500.;
 
