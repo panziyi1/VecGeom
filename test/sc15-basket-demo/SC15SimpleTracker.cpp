@@ -8,6 +8,7 @@
 #include "SC15Navigators.h"
 #include "navigation/SimpleNavigator.h"
 #include "base/Vector3D.h"
+#include "base/SOA3D.h"
 #include <iostream>
 using namespace vecgeom;
 
@@ -360,8 +361,6 @@ VPlacedVolume *CreateSimpleTracker(int nlayers) {
 
 
 int ScalarNavigation(Vector3D<Precision> &p, Vector3D<Precision> const &dir, NavigationState *curnavstate, NavigationState *newnavstate) {
-  SimpleNavigator nav;
-  nav.LocatePoint( GeoManager::Instance().GetWorld(), p, *curnavstate, true );
 
   int crossedvolumecount=0;
   while( ! curnavstate->IsOutside() ) {
@@ -388,11 +387,7 @@ int ScalarNavigation(Vector3D<Precision> &p, Vector3D<Precision> const &dir, Nav
 ////////////////// VECTOR NAVIGATION
 
 int VectorNavigation (SOA3D<Precision> &points, SOA3D<Precision> const &dirs, int np, NavStatePool *curnavstates, NavStatePool *newnavstates, double *psteps, double *steps) {
-
-  for(auto i=0;i<np;++i){
-    SimpleNavigator nav;
-    nav.LocatePoint( GeoManager::Instance().GetWorld(), points[i], *(*curnavstates)[i], true );
-  }
+// we assume that that curnavstates are already initialized correctly
 
   int crossedvolumecount=0;
   while(!(*curnavstates)[0]->IsOutside()) {
@@ -404,6 +399,7 @@ int VectorNavigation (SOA3D<Precision> &points, SOA3D<Precision> const &dirs, in
 
       // transport + crosschecks + pointerswap
       // We should vectorize this transport !!
+
       for(auto i=0; i<np; ++i){
         //assert(steps[i]==steps[0]);
         assert((*newnavstates)[i]->Top()==(*newnavstates)[0]->Top());
@@ -411,6 +407,9 @@ int VectorNavigation (SOA3D<Precision> &points, SOA3D<Precision> const &dirs, in
         points.set(i, points[i] + dirs[i]*(steps[i] + 1E-6));
 
       }
+
+     // SOA3D<Precision>::SOA_vector_transport(points,dirs,steps);
+
       // pointer swap to update navstates
       auto tmp=curnavstates;
       curnavstates = newnavstates;
@@ -425,11 +424,15 @@ int VectorNavigation (SOA3D<Precision> &points, SOA3D<Precision> const &dirs, in
 // for a simple test case
 void TestScalarNavigation() {
   // setup point and direction in world
-  Vector3D<Precision> p(-51.,0,0);
+  Vector3D<Precision> p(-500.,0,0);
   Vector3D<Precision> dir(1.,0,0);
   // init navstates
   NavigationState * curnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
   NavigationState * newnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
+  NavigationState * worldnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
+  SimpleNavigator nav;
+  nav.LocatePoint( GeoManager::Instance().GetWorld(), Vector3D<Precision>(-500,-500,-500), *worldnavstate, true );
+  worldnavstate->CopyToFixedSize<NavigationState::SizeOf(1)>(curnavstate);
 
   std::cout<<"crossedvolumecount "<<ScalarNavigation(p,dir,curnavstate, newnavstate)<<std::endl;
 
@@ -447,12 +450,21 @@ void TestVectorNavigation() {
       points.set(i, -51,0,0);
       dirs.set(i, 1,0,0);
   }
+
+
   NavStatePool *curnavstates = new NavStatePool(np, GeoManager::Instance().getMaxDepth());
   NavStatePool *newnavstates = new NavStatePool(np, GeoManager::Instance().getMaxDepth());
   double *steps    = (double*) _mm_malloc(np*sizeof(double),64);
   double *psteps    = (double*) _mm_malloc(np*sizeof(double),64);
+  SimpleNavigator nav;
+  nav.LocatePoint( GeoManager::Instance().GetWorld(), points[0], *(*curnavstates)[0], true );
+  for(auto i=1;i<np;++i){
+      (*curnavstates)[0]->CopyTo((*curnavstates)[i]);
+      assert(curnavstates->operator[](i)->Top() == curnavstates->operator[](0)->Top());
+  }
 
-  std::cout<<VectorNavigation(points, dirs,np, curnavstates, newnavstates,psteps,steps)<<std::endl;
+  std::cout << "VecNav crossedvolumecount "
+            << VectorNavigation(points, dirs, np, curnavstates, newnavstates, psteps, steps) << std::endl;
 
   _mm_free(steps);
   _mm_free(psteps);
@@ -532,6 +544,11 @@ void XRayBenchmark(int axis, int pixel_width) {
     NavigationState * curnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
     NavigationState * newnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
 
+    NavigationState *worldnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
+    SimpleNavigator nav;
+    nav.LocatePoint( GeoManager::Instance().GetWorld(), Vector3D<Precision>(-500,-500,-500), *worldnavstate, true );
+    assert( worldnavstate->Top() == GeoManager::Instance().GetWorld());
+
     Stopwatch timer;
     timer.Start();
 
@@ -548,6 +565,13 @@ void XRayBenchmark(int axis, int pixel_width) {
           else if( axis== 3)
               p.Set( axis1_count, axis2_count, orig.z());
 
+          // what I want to do is the following:
+          //worldnavstate->CopyToFixedSize<NavigationState::SizeOf(1)>(curnavstate);
+          //nav.LocatePoint( GeoManager::Instance().GetWorld(), p,  *newnavstate, true );
+          //assert(newnavstate->Top()==curnavstate->Top());
+
+          // for now init the state here
+          nav.LocatePoint( GeoManager::Instance().GetWorld(), p,  *curnavstate, true );
           *(volume_result+pixel_count_2*data_size_x+pixel_count_1) = ScalarNavigation(p,dir,curnavstate, newnavstate);
       } // end inner loop
     } // end outer loop
@@ -568,7 +592,7 @@ void XRayBenchmark(int axis, int pixel_width) {
 
 void XRayBenchmarkVecNav(int axis, int pixel_width) {
 
-  auto N=64;
+  const auto N=64;
   std::stringstream imagenamebase;
   imagenamebase << "simpleTrackerimage_";
   if(axis==1) imagenamebase << "x";
@@ -648,6 +672,11 @@ void XRayBenchmarkVecNav(int axis, int pixel_width) {
 
   SOA3D<Precision> points(N);
 
+  NavigationState *worldnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
+  SimpleNavigator nav;
+  nav.LocatePoint( GeoManager::Instance().GetWorld(), Vector3D<Precision>(-500,-500,-500), *worldnavstate, true );
+  assert( worldnavstate->Top() == GeoManager::Instance().GetWorld());
+
   Stopwatch timer;
   timer.Start();
 
@@ -664,6 +693,15 @@ void XRayBenchmarkVecNav(int axis, int pixel_width) {
              else if( axis== 3)
                 points.set( i, axis1_count, axis2_count, orig.z() );
           }
+          // init initial nav state (from a reference navstate that we know )
+          nav.LocatePoint( GeoManager::Instance().GetWorld(), points[0],  *(curnavstates->operator[](0)), true );
+          for(auto i=1;i<N;++i){
+              curnavstates->operator[](0)->CopyTo(curnavstates->operator[](i));
+          }
+          // what I want to do is more like this worldnavstate->CopyToFixedSize<NavigationState::SizeOf(1)>(curnavstates->operator[](i));
+          //for(auto i=0;i<N;++i){
+          //    worldnavstate->CopyToFixedSize<NavigationState::SizeOf(1)>(curnavstates->operator[](i));
+          //}
 
           *(volume_result+pixel_count_2*data_size_x+pixel_count_1) = VectorNavigation(points,dirs,N,curnavstates,newnavstates,psteps,steps);
       } // end inner loop
@@ -713,7 +751,8 @@ int main(int argc, char* argv[]) {
   }
 
   double pixel_width= atof(argv[3]);
- 
+  TestScalarNavigation();
+  TestVectorNavigation();
   XRayBenchmark(axis, pixel_width);
   XRayBenchmarkVecNav(axis, pixel_width);
 
