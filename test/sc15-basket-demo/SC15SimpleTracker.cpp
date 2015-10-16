@@ -359,7 +359,7 @@ VPlacedVolume *CreateSimpleTracker(int nlayers) {
 }
 
 
-int ScalarNavigation(Vector3D<Precision> p, Vector3D<Precision> dir, NavigationState *curnavstate, NavigationState *newnavstate) {
+int ScalarNavigation(Vector3D<Precision> &p, Vector3D<Precision> const &dir, NavigationState *curnavstate, NavigationState *newnavstate) {
   SimpleNavigator nav;
   nav.LocatePoint( GeoManager::Instance().GetWorld(), p, *curnavstate, true );
 
@@ -387,7 +387,7 @@ int ScalarNavigation(Vector3D<Precision> p, Vector3D<Precision> dir, NavigationS
 
 ////////////////// VECTOR NAVIGATION
 
-int VectorNavigation (SOA3D<Precision> points, SOA3D<Precision>dirs, int np, NavStatePool *curnavstates, NavStatePool *newnavstates, double *psteps, double *steps) {
+int VectorNavigation (SOA3D<Precision> &points, SOA3D<Precision> const &dirs, int np, NavStatePool *curnavstates, NavStatePool *newnavstates, double *psteps, double *steps) {
 
   for(auto i=0;i<np;++i){
     SimpleNavigator nav;
