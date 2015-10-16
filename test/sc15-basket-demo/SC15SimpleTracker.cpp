@@ -83,17 +83,41 @@ public:
   Precision        xdir[kMaxVec];     // current directions - now all the same for all baskets
   Precision        ydir[kMaxVec];     //
   Precision        zdir[kMaxVec];     //
+  unsigned int     nbound[kMaxVec];   // Number of crossed boundaries
   NavStatePool    *navstates_;        // navigation states for tracks - now all the same for the same basket
   VNavigator const *specialnav_;      // Special navigator for this basket(volume)
   
   Basket(int thres) : pixel_(0), size_(0), threshold_(thres), ready_(false) {
-     memset(xp, 0, 6*thres*sizeof(Precision));  // Should work for all arrays in one go
+     memset(xp, 0, thres*sizeof(Precision));
+     memset(yp, 0, thres*sizeof(Precision));
+     memset(zp, 0, thres*sizeof(Precision));
+     memset(xdir, 0, thres*sizeof(Precision));
+     memset(ydir, 0, thres*sizeof(Precision));
+     memset(zdir, 0, thres*sizeof(Precision));
+     memset(nbound, 0, thres*sizeof(unsigned int));
      navstates_ = new NavStatePool(thres, GeoManager::Instance().getMaxDepth());
      specialnav_ = nullptr;
   }
   
   ~Basket() {
     delete navstates_;
+  }
+  
+  bool AddTrack(Basket const *other, int itr) {
+    assert (!ready_);
+    pixel_ = other->pixel_;
+    xp[size_] = other->xp[itr];
+    yp[size_] = other->yp[itr];
+    zp[size_] = other->zp[itr];
+    // No need to copy direction
+    /*
+    xdir[size_] = other->xdir[itr];
+    ydir[size_] = other->ydir[itr];
+    zdir[size_] = other->zdir[itr];
+    */
+    size_++;
+    if (size_ == threshold_) ready_ = true;
+    return ready_;
   }
   
   void SetDirection(const Vector3D<Precision> &dir) { 
@@ -107,10 +131,8 @@ public:
     for (auto i=0; i<threshold_; ++i) state->CopyTo((*navstates_)[i]);
   }
   
-  inline int VolIndex(const NavigationState *state) { return state->GetCurrentLevel(); }
-  
   void Step(Precision *psteps, Precision *steps, NavStatePool *newnavstates) {
-    /// Perform a single step 
+    // Perform a single step 
     VNavigator const *specialnav = GetNavigator((*navstates_)[0]->Top()->GetLogicalVolume());
     specialnav->ComputeStepsAndPropagatedStates(SOA3D<Precision>(xp,yp,zp,size_), SOA3D<Precision>(xdir,ydir,zdir,size_), 
         psteps, *navstates_, *newnavstates, steps);
@@ -120,9 +142,10 @@ public:
       xp[i] += xdir[i]*steps[i] + 1E-6;
       yp[i] += ydir[i]*steps[i] + 1E-6;
       zp[i] += zdir[i]*steps[i] + 1E-6;
-    }  
-  }
-  
+      nbound[i]++;
+    }
+    ready_ = false;
+  }  
 };
 
 /// Each thread will create a stepper
@@ -170,6 +193,34 @@ public:
     for (auto i=0; i<nvolumes_; ++i) delete baskets_[i];
     delete outstates_;
   }
+
+  inline int VolIndex(const NavigationState *state) { return (state->GetCurrentLevel() - 1); }
+  
+  void FillPixmap(unsigned int ix, unsigned int iy, unsigned int nbound) {
+    // Fill a pixel
+  }
+
+  void FlushTrack(Basket *basket, int itr) {
+    // Track fully transported - collect its "signal" in the output
+    unsigned int px, py;
+    DecodePixel(basket->pixel_, px, py);
+    FillPixmap(px, py, basket->nbound[itr]);
+    basket->size_--;
+  }
+
+  void BasketTransport(Basket *basket) {
+    // Main iterative transport loop. Won't do tails.
+    basket->Step(psteps_, steps_, outstates_);
+    Basket *next_one;
+    for (auto itr=0; itr<vecsize_; ++itr) {
+      NavigationState *state = (*outstates_)[itr];
+      if (state->IsOutside()) FlushTrack(basket, itr);
+      next_one = baskets_[VolIndex(state)];
+      bool ready = next_one->AddTrack(basket, itr);
+      if (ready) BasketTransport(next_one);
+    }
+  }
+  
   
 };
 
