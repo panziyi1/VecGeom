@@ -74,6 +74,94 @@ inline void DecodePixel(unsigned int const pixel, unsigned int &ix, unsigned int
   ix = pixel & 0xFFFF; iy = pixel >> 16;
 }  
 
+// This structure handles a pixel window and handles inline conversions between pixel and world
+// coordinates.
+struct Window
+{
+  int              pixel_width;    // Number of pixels on each axis
+  int              axis_;          // Shooting axis along which the window is seen (1,2 or 3)
+  int              nslices;        // Number of sub-window slices
+  Vector3D<Precision> dir_;        // Shooting direction
+  Precision        offset;         // Offset on the shooting axis
+  Precision        axis1_start;    // Start coordinate on first axis
+  Precision        axis1_end;      // End coordinate on first axis
+  Precision        axis2_start;    // Start coordinate on second axis
+  Precision        axis2_end;      // End coordinate on second axis
+  
+  int              data_size_x;    // Size of image in x (pixels)
+  int              data_size_y;    // Size of image in y (pixels)
+  Precision        pixel_width_1;  // Width of one pixel on first axis
+  Precision        pixel_width_2;  // Width of one pixel on second axis
+  int              dslice;         // Width in pixels of a slice window
+  
+  Window(VPlacedVolume const *vol, int axis, int width, int nsw) : pixel_width(width), axis_(axis-1), nslices(nsw), dir_(),
+      offset(0), axis1_start(0), axis1_end(0), axis2_start(0), axis2_end(0), 
+      data_size_x(0), data_size_y(0), pixel_width_1(0), pixel_width_2(0), dslice(0) {
+    assert(pixel_width > nslices);
+    dslice = pixel_width/nslices;
+    Vector3D<Precision> minExtent,maxExtent;
+    vol->Extent(minExtent,maxExtent);
+  
+    Precision dx = (maxExtent - minExtent).x(); 
+    Precision dy = (maxExtent - minExtent).y(); 
+    Precision dz = (maxExtent - minExtent).z(); 
+  
+    Vector3D<Precision> orig = (maxExtent + minExtent)/2.;
+
+    Precision pixel_axis= 1.;
+    switch (axis) {
+      case (0):
+        dir_.Set(1., 0., 0.);
+	offset = orig.x()-dx;
+        axis1_start= orig.y()-dy;
+        axis1_end= orig.y() + dy;
+        axis2_start= orig.z()-dz;
+        axis2_end= orig.z()+ dz;
+        pixel_axis= (dy*2)/pixel_width;
+        break;
+      case (1):
+        dir_.Set(0., 1., 0.);
+	offset = orig.y()-dy;
+        axis1_start= orig.z()-dz;
+        axis1_end= orig.z()+ dz;
+        axis2_start= orig.x()-dx;
+        axis2_end= orig.x()+ dx;
+        pixel_axis= (dz*2)/pixel_width;
+        break;
+      case (2):
+        dir_.Set(0., 0., 1.);
+	offset = orig.z()-dz;
+        axis1_start= orig.x() -dx;
+        axis1_end= orig.x()+ dx;
+        axis2_start= orig.y()-dy;
+        axis2_end= orig.y()+ dy;
+        pixel_axis= (dx*2)/pixel_width;
+        break;
+      default:
+        std::cout << "Unknown axis" << std::endl;  
+    }
+    // init data for image
+    data_size_x= (axis1_end-axis1_start)/pixel_axis;
+    data_size_y= (axis2_end-axis2_start)/pixel_axis;
+    pixel_width_1 = (axis1_end-axis1_start)/data_size_x;
+    pixel_width_2 = (axis2_end-axis2_start)/data_size_y;    
+  }
+  
+  void GetSubwindow(int islice, int &i0, int &ni) {
+    // Get sub-window coordinates and widths
+    assert(islice < nslices);
+    i0 = islice*dslice;
+    ni = dslice;
+    if ( i0+ni > pixel_width) ni = pixel_width - i0;
+  }
+  
+  inline void GetCoordinates(int i, int j, Vector3D<Precision> &point) {
+    point[axis_] = offset;
+    point[(axis_+1)%3] = axis1_start + i * pixel_width_1 + 1E-6;
+    point[(axis_+2)%3] = axis2_start + j * pixel_width_2 + 1E-6;
+  }
+};
+
 // This structure contains track data propagated after one step
 struct TrackState
 {
