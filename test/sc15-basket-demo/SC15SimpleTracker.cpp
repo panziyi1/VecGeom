@@ -17,7 +17,7 @@
 
 using namespace vecgeom;
 
-#define ALIGN_PADDING 32
+#define ALIGN_PADDING 64
 
 #define SETINNERNAV(depth) \
   if(layer==depth) vol->SetUserExtensionPtr( (void*) InnerMostTubeNavigator<depth+1>::Instance() );
