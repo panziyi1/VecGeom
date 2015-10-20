@@ -285,7 +285,7 @@ public:
   }
   
   void SetDirection(const Vector3D<Precision> &dir) { 
-    for (auto i=0; i<size_; ++i) {
+    for (auto i=0; i<threshold_; ++i) {
       xdir[i] = dir.x(); ydir[i] = dir.y(), zdir[i] = dir.z();
     }
   }
@@ -297,8 +297,8 @@ public:
   
   void Step(Precision *psteps, Precision *steps, NavStatePool *newnavstates, Stack &stack) {
     // Perform a single step and pushes the new states to the stack, flushing exiting tracks
-    VNavigator const *specialnav = GetNavigator((*navstates_)[0]->Top()->GetLogicalVolume());
-    specialnav->ComputeStepsAndPropagatedStates(SOA3D<Precision>(xp,yp,zp,size_), SOA3D<Precision>(xdir,ydir,zdir,size_), 
+//    VNavigator const *specialnav = GetNavigator((*navstates_)[0]->Top()->GetLogicalVolume());
+    specialnav_->ComputeStepsAndPropagatedStates(SOA3D<Precision>(xp,yp,zp,size_), SOA3D<Precision>(xdir,ydir,zdir,size_), 
         psteps, *navstates_, *newnavstates, steps);
 
     // Push all tracks to stack using construct in place
@@ -424,7 +424,7 @@ public:
 
 
 void AssignNavigatorToVolume( LogicalVolume *vol, int layer, int maxlayers ){
-  assert( maxlayers <= 10 ); // we are only listing 10 template specializations up to depth 10 here
+  assert( maxlayers <= 20 ); // we are only listing 10 template specializations up to depth 10 here
   if( layer == maxlayers - 1 ) // it is the last layer
   {
     SETINNERNAV(0);
@@ -438,6 +438,16 @@ void AssignNavigatorToVolume( LogicalVolume *vol, int layer, int maxlayers ){
     SETINNERNAV(8);
     SETINNERNAV(9);
     SETINNERNAV(10);
+    SETINNERNAV(11);
+    SETINNERNAV(12);
+    SETINNERNAV(13);
+    SETINNERNAV(14);
+    SETINNERNAV(15);
+    SETINNERNAV(16);
+    SETINNERNAV(17);
+    SETINNERNAV(18);
+    SETINNERNAV(19);
+    SETINNERNAV(20);
   }
   if( layer < maxlayers - 1 ){
     SETLAYERNAV(0);
@@ -451,6 +461,16 @@ void AssignNavigatorToVolume( LogicalVolume *vol, int layer, int maxlayers ){
     SETLAYERNAV(8);
     SETLAYERNAV(9);
     SETLAYERNAV(10);
+    SETLAYERNAV(11);
+    SETLAYERNAV(12);
+    SETLAYERNAV(13);
+    SETLAYERNAV(14);
+    SETLAYERNAV(15);
+    SETLAYERNAV(16);
+    SETLAYERNAV(17);
+    SETLAYERNAV(18);
+    SETLAYERNAV(18);
+    SETLAYERNAV(20);
   }
 }
 
@@ -733,7 +753,7 @@ void XRayBenchmarkVecNav(int axis, int pixel_width) {
       } // end inner loop
    } // end outer loop 
    timer.Stop();
-   std::cout << " XRayVecNav Elapsed time : "<< timer.Elapsed() << std::endl;
+   std::cout << " XRayVecNav Elapsed time /Nrep : "<< timer.Elapsed()/N << std::endl;
 
     std::stringstream VecGeomimage;
     VecGeomimage << imagenamebase.str();
@@ -751,7 +771,7 @@ void XRayBenchmarkVecNav(int axis, int pixel_width) {
 
 void XRayBenchmarkBasketized(int axis, int pixel_width, int nthreads) {
   // to be filled in by Andrei
-  const auto vecsize=64;
+  const auto vecsize=32;
   //const auto nslices = 1; // Number of slices the image is split on the first axis - now equal to nthreads
   
   std::stringstream imagenamebase;
@@ -1025,7 +1045,7 @@ int main(int argc, char* argv[]) {
   TestVectorNavigation();
   XRayBenchmark(axis, pixel_width);
   XRayBenchmarkVecNav(axis, pixel_width);
-//  XRayBenchmarkBasketized(axis, pixel_width, 1);
+  XRayBenchmarkBasketized(axis, pixel_width, 1);
 
 
 
