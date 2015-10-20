@@ -11,6 +11,10 @@
 #include "base/SOA3D.h"
 #include <iostream>
 
+#ifdef VECGEOM_OPENMP
+ #include "omp.h"
+#endif
+
 using namespace vecgeom;
 
 #define ALIGN_PADDING 32
@@ -30,6 +34,7 @@ static VNavigator const* GetNavigator(LogicalVolume const*lvol){
   return (VNavigator const*)lvol->GetUserExtensionPtr();
 }
 
+#pragma pack(push, 1)
 
 typedef struct tFILE_HEADER
 {
@@ -40,6 +45,7 @@ typedef struct tFILE_HEADER
   unsigned long bfOffBits;
 } FILE_HEADER;
 
+#pragma pack(pop)
 
 typedef struct tINFO_HEADER
 {
@@ -795,10 +801,13 @@ void XRayBenchmarkBasketized(int axis, int pixel_width, int nthreads) {
   Stopwatch timer;
   timer.Start();
 
-  for (auto i=0; i<nthreads; ++i) {
-    steppers[i]->TransportTask(window, i, vecsize, volume_result);
-  }    
-
+  #pragma omp parallel
+  {
+    #pragma omp for schedule(dynamic) nowait
+    for (auto i=0; i<nthreads; ++i) {
+      steppers[i]->TransportTask(window, i, vecsize, volume_result);
+    }    
+  }
   timer.Stop();
   std::cout << " XRayBasketized Elapsed time : "<< timer.Elapsed() << std::endl;
 
@@ -1045,7 +1054,7 @@ int main(int argc, char* argv[]) {
   TestVectorNavigation();
   XRayBenchmark(axis, pixel_width);
   XRayBenchmarkVecNav(axis, pixel_width);
-  XRayBenchmarkBasketized(axis, pixel_width, 1);
+  XRayBenchmarkBasketized(axis, pixel_width, 4);
 
 
 
