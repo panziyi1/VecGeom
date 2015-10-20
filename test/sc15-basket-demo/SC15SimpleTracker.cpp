@@ -801,9 +801,13 @@ void XRayBenchmarkBasketized(int axis, int pixel_width, int nthreads) {
   Stopwatch timer;
   timer.Start();
 
+#ifdef VECGEOM_OPENMP
   #pragma omp parallel
+#endif  
   {
+#ifdef VECGEOM_OPENMP
     #pragma omp for schedule(dynamic)
+#endif
     for (auto i=0; i<nthreads; ++i) {
       steppers[i]->TransportTask(window, i, vecsize, volume_result);
     }    
