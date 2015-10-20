@@ -158,7 +158,7 @@ struct Window
     data_size_y= (axis2_end-axis2_start)/pixel_axis;
     pixel_width_1 = (axis1_end-axis1_start)/data_size_x;
     pixel_width_2 = (axis2_end-axis2_start)/data_size_y;    
-    assert(pixel_width_1 > nslices);
+    assert(data_size_x > nslices);
     dslice = data_size_x/nslices;
     std::cout << "pixel_width= " << pixel_width << std::endl;
     std::cout << "direction= " << dir_ << std::endl;
@@ -413,7 +413,7 @@ public:
     TrackState state(0, 0, 0, 0, 0, 0);
     Vector3D<Precision> startpos;
     for( int pixel_count_2 = 0; pixel_count_2 < window.data_size_y; ++pixel_count_2 ) {
-      for (int pixel_count_1 = istart1; pixel_count_1<npix1; ++pixel_count_1) {
+      for (int pixel_count_1 = istart1; pixel_count_1<istart1+npix1; ++pixel_count_1) {
         window.GetCoordinates(pixel_count_1, pixel_count_2, startpos);
         // Encode pixel coordinates
         state.xp = startpos[0];
@@ -803,7 +803,7 @@ void XRayBenchmarkBasketized(int axis, int pixel_width, int nthreads) {
 
   #pragma omp parallel
   {
-    #pragma omp for schedule(dynamic) nowait
+    #pragma omp for schedule(dynamic)
     for (auto i=0; i<nthreads; ++i) {
       steppers[i]->TransportTask(window, i, vecsize, volume_result);
     }    
@@ -1054,7 +1054,7 @@ int main(int argc, char* argv[]) {
   TestVectorNavigation();
   XRayBenchmark(axis, pixel_width);
   XRayBenchmarkVecNav(axis, pixel_width);
-  XRayBenchmarkBasketized(axis, pixel_width, 4);
+  XRayBenchmarkBasketized(axis, pixel_width, 1);
 
 
 
