@@ -406,6 +406,7 @@ public:
   {
     // Transport thread entry point
     int istart1, npix1;
+    std::cout << "Thread " << islice << std::endl;
     window.GetSubwindow(islice, istart1, npix1);
 
     // The stepper variable should be using TLS
@@ -708,9 +709,9 @@ void XRayBenchmark(int axis, int pixel_width) {
 
 
 
-void XRayBenchmarkVecNav(int axis, int pixel_width) {
+void XRayBenchmarkVecNav(int axis, int pixel_width, int vecsize) {
 
-  const auto N=64;
+  const int N=vecsize;
   std::stringstream imagenamebase;
   imagenamebase << "simpleTrackerimage_";
   if(axis==1) imagenamebase << "x";
@@ -775,11 +776,8 @@ void XRayBenchmarkVecNav(int axis, int pixel_width) {
 
 
 
-void XRayBenchmarkBasketized(int axis, int pixel_width, int nthreads) {
-  // to be filled in by Andrei
-  const auto vecsize=32;
-  //const auto nslices = 1; // Number of slices the image is split on the first axis - now equal to nthreads
-  
+void XRayBenchmarkBasketized(int axis, int pixel_width, int vecsize, int nthreads) {
+  // to be filled in by Andrei  
   std::stringstream imagenamebase;
   imagenamebase << "simpleTrackerimage_";
   if(axis==1) imagenamebase << "x";
@@ -801,13 +799,13 @@ void XRayBenchmarkBasketized(int axis, int pixel_width, int nthreads) {
   Stopwatch timer;
   timer.Start();
 
-#ifdef VECGEOM_OPENMP
+//#ifdef VECGEOM_OPENMP
   #pragma omp parallel
-#endif  
+//#endif  
   {
-#ifdef VECGEOM_OPENMP
-    #pragma omp for schedule(dynamic)
-#endif
+//#ifdef VECGEOM_OPENMP
+    #pragma omp for schedule(dynamic) nowait
+//#endif
     for (auto i=0; i<nthreads; ++i) {
       steppers[i]->TransportTask(window, i, vecsize, volume_result);
     }    
@@ -1051,36 +1049,20 @@ int main(int argc, char* argv[]) {
   else if( strcmp(argv[2], "y")==0 )
     axis= 2;
   else if( strcmp(argv[2], "z")==0 )
-    axis= 3;
+    axis= 3;  
 
-  double pixel_width= atof(argv[3]);
-  TestScalarNavigation();
-  TestVectorNavigation();
+  int pixel_width = 500;
+  if (argc > 3) pixel_width = atoi(argv[3]);
+  int vecsize = 32;
+  if (argc > 4) vecsize = atoi(argv[4]);
+  
+  int nthreads = 1;
+  if (argc > 5) nthreads = atoi(argv[5]);
+  
+//  TestScalarNavigation();
+//  TestVectorNavigation();
+  std::cout << "Running with: img. width=" << pixel_width << " vecsize=" << vecsize << " nthreads=" << nthreads << " on axis " << argv[2] << std::endl;
   XRayBenchmark(axis, pixel_width);
-  XRayBenchmarkVecNav(axis, pixel_width);
-  XRayBenchmarkBasketized(axis, pixel_width, 1);
-
-
-
-/*
-  // loop over all logical volumes and print navigator
-  std::vector<LogicalVolume *> lvols;
-  GeoManager::Instance().GetAllLogicalVolumes(lvols);
-
-  for( auto v : lvols ){
-    auto nav = (VNavigator*) v->GetUserExtensionPtr();
-    std::cerr << v->GetName() << " has navigator " << nav->GetName() << "\n";
-  }
-
-
-  // test tracking
-  TestScalarNavigation();
-<<<<<<< HEAD
-<<<<<<< HEAD
-  std::cout << "start vector test\n";
-  TestVectorNavigation();
-=======
-  std::cout << "start vector test\n";
-  TestVectorNavigation();
-*/
+  XRayBenchmarkVecNav(axis, pixel_width, vecsize);
+  XRayBenchmarkBasketized(axis, pixel_width, vecsize, nthreads);
 }
