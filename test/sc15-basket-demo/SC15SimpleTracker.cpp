@@ -10,6 +10,7 @@
 #include "base/Vector3D.h"
 #include "base/SOA3D.h"
 #include <iostream>
+#include <mutex>
 
 #ifdef VECGEOM_OPENMP
  #include "omp.h"
@@ -272,6 +273,7 @@ public:
 
   void FlushTrack(int itr) {
     // Track fully transported - collect its "signal" in the output
+    if (!pixmap_) return;
     unsigned int px, py;
     DecodePixel(pixel[itr], px, py);
     FillPixmap(px, py, nbound[itr]+1);
@@ -402,13 +404,15 @@ public:
   }
   
 
-  void TransportTask(Window const &window, int islice, int vecsize, int* volume_result)
+  void TransportTask(Window const &window, int islice, int vecsize, int tid)
   {
     // Transport thread entry point
+    static std::mutex mtx_;
+    mtx_.lock();
+    std::cout << "Thread " << tid << std::endl;
+    mtx_.unlock();
     int istart1, npix1;
-    std::cout << "Thread " << islice << std::endl;
     window.GetSubwindow(islice, istart1, npix1);
-
     // The stepper variable should be using TLS
     Basket *top = baskets_[0];
     TrackState state(0, 0, 0, 0, 0, 0);
@@ -760,7 +764,7 @@ void XRayBenchmarkVecNav(int axis, int pixel_width, int vecsize) {
       } // end inner loop
    } // end outer loop 
    timer.Stop();
-   std::cout << " XRayVecNav Elapsed time /Nrep : "<< timer.Elapsed()/N << std::endl;
+   std::cout << " XRayVecNav Elapsed time /Nimages : "<< timer.Elapsed()/N << std::endl;
 
     std::stringstream VecGeomimage;
     VecGeomimage << imagenamebase.str();
@@ -783,42 +787,37 @@ void XRayBenchmarkBasketized(int axis, int pixel_width, int vecsize, int nthread
   if(axis==1) imagenamebase << "x";
   if(axis==2) imagenamebase << "y";
   if(axis==3) imagenamebase << "z";
-
+  
   VPlacedVolume *vol = GeoManager::Instance().FindPlacedVolume(2);
-  Window window(vol, axis, pixel_width, nthreads);
-
+  Window window(vol, axis, pixel_width, 1);
   // Create the pixmap
   int *volume_result= (int*) new int[window.data_size_y * window.data_size_x*3];
-
-  // Create steppers for each slice. This is not best for NUMA - there should be rather the thread code doing this
-  // Another policy would be to have as many steppers as threads, making sure that the same thread picks the same stepper
   Stepper **steppers = new Stepper*[nthreads];
-  for (auto i=0; i<nthreads; ++i) steppers[i] = new Stepper(vecsize, &window, volume_result);
-
-  // This is the main parallelizable loop
+  for (auto tid=0; tid<nthreads; ++tid) {
+    if (tid==0) steppers[0] = new Stepper(vecsize, &window, volume_result);
+    else steppers[tid] = new Stepper(vecsize, &window, nullptr);
+  }  
+  
   Stopwatch timer;
   timer.Start();
-
-//#ifdef VECGEOM_OPENMP
-  #pragma omp parallel
-//#endif  
+//  #pragma omp parallel
   {
-//#ifdef VECGEOM_OPENMP
-    #pragma omp for schedule(dynamic) nowait
-//#endif
-    for (auto i=0; i<nthreads; ++i) {
-      steppers[i]->TransportTask(window, i, vecsize, volume_result);
-    }    
+    #pragma omp parallel for schedule(dynamic)
+    for (auto tid=0; tid<nthreads; ++tid) {
+      // Create steppers for each slice. This is not best for NUMA - there should be rather the thread code doing this
+      // Another policy would be to have as many steppers as threads, making sure that the same thread picks the same stepper
+      steppers[tid]->TransportTask(window, 0, vecsize, tid);
+    }
   }
   timer.Stop();
-  std::cout << " XRayBasketized Elapsed time : "<< timer.Elapsed() << std::endl;
+  std::cout << " XRayBasketized Elapsed time/Nimages : "<< timer.Elapsed()/nthreads << std::endl;
 
   std::stringstream VecGeomimage;
   VecGeomimage << imagenamebase.str();
   VecGeomimage << "_basket_VecGeom.bmp";
   make_bmp(volume_result, VecGeomimage.str().c_str(), window.data_size_x, window.data_size_y);
-  
-  for (auto i=0; i<nthreads; ++i) delete steppers[i];
+  delete [] volume_result;
+  for (auto tid=0; tid<nthreads; ++tid) delete steppers[tid];
   delete [] steppers;
 }
 
@@ -1061,8 +1060,8 @@ int main(int argc, char* argv[]) {
   
 //  TestScalarNavigation();
 //  TestVectorNavigation();
-  std::cout << "Running with: img. width=" << pixel_width << " vecsize=" << vecsize << " nthreads=" << nthreads << " on axis " << argv[2] << std::endl;
   XRayBenchmark(axis, pixel_width);
-  XRayBenchmarkVecNav(axis, pixel_width, vecsize);
+  XRayBenchmarkVecNav(axis, pixel_width, vecsize);  
   XRayBenchmarkBasketized(axis, pixel_width, vecsize, nthreads);
+  std::cout << "Finished run: img. width=" << pixel_width << " vecsize=" << vecsize << " nthreads=" << nthreads << " on axis " << argv[2] << std::endl;
 }
