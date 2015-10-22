@@ -32,16 +32,19 @@ public:
                                                             Vector3D<double> const & /*globaldir*/,
                                                             double /*(physics) step limit */,
                                                             NavigationState const & /*in_state*/,
-                                                            NavigationState & /*out_state*/) const {};
+                                                            NavigationState & /*out_state*/) const
+  {
+    return 0.0;
+  }
 
   // for vector navigation
   //! this methods transforms the global coordinates into local ones usually calls more specialized methods
   //! like the hit detection on local coordinates
   virtual void ComputeStepsAndPropagatedStates(SOA3D<double> const & /*globalpoints*/,
                                              SOA3D<double> const & /*globaldirs*/,
-                                             double const */*(physics) step limits */,
+                                             double const * /*(physics) step limits */,
                                              NavStatePool const & /*in_states*/,
-                                             NavStatePool & /*out_states*/, double */*out_steps*/) const {};
+                                             NavStatePool & /*out_states*/, double * /*out_steps*/) const {};
 
 protected:
   // a common relocate method ( to calculate propagated states after the boundary )
@@ -100,6 +103,7 @@ public:
       ((Impl*)this)->Impl::Relocate( MovePointAfterBoundary( localpoint, localdir, step ), in_state, out_state);
       return step;
     */
+      return 0.0;
     }
 
 protected:
