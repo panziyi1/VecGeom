@@ -15,17 +15,17 @@
 #include "volumes/UnplacedVolume.h"
 #include "volumes/UnplacedCone.h"
 #include "base/Vector.h"
-
+#include <vector>
 namespace vecgeom {
 
 VECGEOM_DEVICE_FORWARD_DECLARE(class UnplacedPolycone;)
-VECGEOM_DEVICE_DECLARE_CONV(UnplacedPolycone);
+VECGEOM_DEVICE_DECLARE_CONV(UnplacedPolycone)
 
 VECGEOM_DEVICE_FORWARD_DECLARE(struct PolyconeSection;)
 #if !defined(VECGEOM_NVCC)
-VECGEOM_DEVICE_DECLARESTRUCT_CONV(PolyconeSection);
+VECGEOM_DEVICE_DECLARESTRUCT_CONV(PolyconeSection)
 #else
-VECGEOM_DEVICE_DECLARE_CONV(PolyconeSection);
+VECGEOM_DEVICE_DECLARE_CONV(PolyconeSection)
 #endif
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
@@ -58,9 +58,8 @@ public:
     // for the phi section --> will be replaced by a wedge
     Precision fStartPhi;
     Precision fDeltaPhi;
-    Precision fEndPhi;
 
-    unsigned int fNz;
+    unsigned int fNz;  // number of planes the polycone was constructed with; It should not be modified
     //Precision * fRmin;
     //Precision * fRmax;
     //Precision * fZ;
@@ -68,6 +67,16 @@ public:
     // actual internal storage
     Vector<PolyconeSection> fSections;
     Vector<double> fZs;
+
+
+//These private data member and member functions are added for convexity detection
+private:
+        bool fEqualRmax;
+        bool fContinuityOverAll;
+        bool fConvexityPossible;
+        bool CheckContinuityInZPlane(const double rOuter[],const double zPlane[]);
+        bool CheckContinuityInRmax(const std::vector<Precision> &rOuter);
+        bool CheckContinuityInSlope(const std::vector<Precision> &rOuter, const std::vector<Precision> &zPlane);
 
 public:
     VECGEOM_CUDA_HEADER_BOTH
@@ -79,6 +88,7 @@ public:
          const double rInner[],  // tangent distance to inner surface
          const double rOuter[]);
 
+
     // the constructor
     VECGEOM_CUDA_HEADER_BOTH
     UnplacedPolycone( Precision phistart, Precision deltaphi,
@@ -87,15 +97,25 @@ public:
             Precision * rmin,
             Precision * rmax
             ) :
-                fStartPhi(phistart),
+	            fStartPhi(phistart),
                 fDeltaPhi(deltaphi),
                 fNz(Nz),
                 fSections(),
-                fZs(Nz)
+                fZs(Nz),
+				fEqualRmax(true),
+				fContinuityOverAll(true),
+				fConvexityPossible(true)
+
+
+
     {
         // init internal members
         Init(phistart, deltaphi, Nz, z, rmin, rmax);
     }
+
+    //Function to check the convexity
+    VECGEOM_CUDA_HEADER_BOTH
+    virtual bool IsConvex() const override;
 
     VECGEOM_CUDA_HEADER_BOTH
     unsigned int GetNz() const { return fNz; }
@@ -112,19 +132,17 @@ public:
 
     VECGEOM_CUDA_HEADER_BOTH
     int GetSectionIndex( Precision zposition ) const {
-     //TODO: consider bindary search
-     if( zposition < fZs[0] ) return -1;
-     for(int i=0;i<GetNSections();++i)
-       {
-           if( zposition >= fZs[i] && zposition <= fZs[i+1] )
-                return i;
-       }
-     return -2;
+      //TODO: consider binary search
+      if( zposition < fZs[0] ) return -1;
+      for( int i=0; i<GetNSections(); ++i ) {
+        if( zposition >= fZs[i] && zposition <= fZs[i+1] ) return i;
+      }
+      return -2;
     }
 
     VECGEOM_CUDA_HEADER_BOTH
     PolyconeSection const & GetSection( Precision zposition ) const {
-        //TODO: consider bindary search
+        // TODO: consider binary search
         int i = GetSectionIndex(zposition);
         return fSections[i];
     }
@@ -133,6 +151,25 @@ public:
     // GetSection if index is known
     PolyconeSection const & GetSection( int index ) const {
       return fSections[index];
+    }
+
+    Precision GetRminAtPlane( int index ) const {
+      int nsect = GetNSections();
+      assert(index>=0 && index<=nsect);
+      if(index==nsect) return fSections[index-1].fSolid->GetRmin2();
+      else             return fSections[index].fSolid->GetRmin1();
+    }
+
+    Precision GetRmaxAtPlane( int index ) const {
+      int nsect = GetNSections();
+      assert(index>=0 || index<=nsect);
+      if(index==nsect) return fSections[index-1].fSolid->GetRmax2();
+      else             return fSections[index].fSolid->GetRmax1();
+    }
+
+    Precision GetZAtPlane( int index ) const {
+      assert(index>=0 || index<=GetNSections());
+      return fZs[index];
     }
 
 #if !defined(VECGEOM_NVCC)
@@ -205,6 +242,10 @@ public:
       virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu() const;
       virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const gpu_ptr) const;
     #endif
+
+#if defined(VECGEOM_USOLIDS)
+  std::ostream& StreamInfo(std::ostream &os) const;
+#endif
 
     private:
 
