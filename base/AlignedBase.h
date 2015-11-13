@@ -20,14 +20,14 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
   // unfortunately the version macros have changed in Vc over time
   // so I am checking which one exist
 #ifdef Vc_VERSION_NUMBER
-#if Vc_VERSION_NUMBER >= Vc_VERSION_CHECK(0,99,71) & Vc_VERSION_NUMBER < Vc_VERSION_CHECK(1,0,79)
+#if Vc_VERSION_NUMBER >= Vc_VERSION_CHECK(0,99,72) & Vc_VERSION_NUMBER < Vc_VERSION_CHECK(1,0,79)
     class AlignedBase : public Vc::VectorAlignedBase<Vc::Vector<double> > {
 #else
     class AlignedBase : public Vc::VectorAlignedBase {
 #endif
 #endif
 #ifdef VC_VERSION_NUMBER
-#if VC_VERSION_NUMBER >= VC_VERSION_CHECK(0,99,71)
+#if VC_VERSION_NUMBER >= VC_VERSION_CHECK(0,99,72)
     class AlignedBase : public Vc::VectorAlignedBase<Vc::Vector<double> > {
 #else
     class AlignedBase : public Vc::VectorAlignedBase {
