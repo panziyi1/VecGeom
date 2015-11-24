@@ -1,8 +1,8 @@
 // File:    test/unit_test/TestFPExceptionControl.cpp
 // Purpose: test an uniform mechanism to enable/disable Floating Point exceptions
 
-#include <cstdio>  // printf
-#include <bits/fenv.h>
+#include <cstdio>   // printf
+#include <cstdlib>  // exit()
 #include "base/fp_exception_glibc_extension.h"
 
 int main (int argc, char **argv) {
