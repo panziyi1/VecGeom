@@ -575,8 +575,8 @@ endforeach()
 set(NOT_FOR_CUDA
    ABBoxManager
    ABBoxNavigator
-   CreateParticles
-   Particle
+  # CreateParticles
+  # Particle
    Medium
    Nucleus
    CreateNuclei
