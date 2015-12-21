@@ -311,6 +311,7 @@ void FillUncontainedPoints(VPlacedVolume const &volume,
   volume.Extent(lower,upper);
   offset = 0.5*(upper+lower);
   const Vector3D<Precision> dim = 0.5*(upper-lower);
+//Vector3D<Precision> point = SamplePoint(dim);
 
   int tries = 0;
   for (int i = 0; i < size; ++i) {
@@ -327,6 +328,7 @@ void FillUncontainedPoints(VPlacedVolume const &volume,
         }
 
         point = offset + SamplePoint(dim);
+        //point += kTolerance*SampleDirection();
       } while (!volume.UnplacedContains(point));
       points.set(i, point);
 

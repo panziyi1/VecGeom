@@ -722,6 +722,7 @@ set(TEST_EXECUTABLES_ROOT
   ${CMAKE_SOURCE_DIR}/test/core/TestNavigationStatePool.cpp
   ${CMAKE_SOURCE_DIR}/test/root/root_geometry.cpp
   ${CMAKE_SOURCE_DIR}/test/root/complex_test1.cpp
+  ${CMAKE_SOURCE_DIR}/test/root/myCompTest.cpp
   ${CMAKE_SOURCE_DIR}/test/root/E03Test.cpp
   ${CMAKE_SOURCE_DIR}/test/root/ImportFromRootFileTest.cpp
   ${CMAKE_SOURCE_DIR}/test/root/ImportTGeoPgon.cpp
@@ -751,6 +752,7 @@ endif()
 # separate list for ROOT UNIT tests
 set(TEST_UNITTESTEXECUTABLES_ROOT
   ${CMAKE_SOURCE_DIR}/test/root/complex_test1.cpp
+
   ${CMAKE_SOURCE_DIR}/test/root/E03Test.cpp
   ${CMAKE_SOURCE_DIR}/test/root/TestExportToROOT.cpp
   ${CMAKE_SOURCE_DIR}/test/root/ImportTGeoPgon.cpp
