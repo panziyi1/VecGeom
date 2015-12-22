@@ -149,6 +149,8 @@ for (auto i : (*myWorld).GetDaughters())
     for(int i=0; i<np ;i++){
        
        visualizer.AddPoint(Vector3D<Precision>(globalpoints.x(i),globalpoints.y(i),globalpoints.z(i)));
+       //visualizer.Show();
+       //sleep(0.5);
     }
     visualizer.Show();
 }
