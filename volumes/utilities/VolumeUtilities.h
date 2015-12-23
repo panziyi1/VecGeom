@@ -26,6 +26,8 @@
 #include "TGeoShape.h"
 #endif
 
+#include "base/Stopwatch.h"
+
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 namespace volumeUtilities {
@@ -354,6 +356,143 @@ void FillUncontainedPoints(LogicalVolume const &volume,
   delete placed;
 }
 
+VECGEOM_INLINE
+bool IntersectionExist(Vector3D<Precision> const lowercornerFirstBox, Vector3D<Precision> const uppercornerFirstBox,
+                       Vector3D<Precision> const lowercornerSecondBox, Vector3D<Precision> const uppercornerSecondBox) {
+
+  // Simplest algorithm
+  // Needs to handle a total of 6 cases
+
+  // Case 1: First Box is on left of Second Box
+  if (uppercornerFirstBox.x() < lowercornerSecondBox.x())
+    return false;
+
+  // Case 2: First Box is on right of Second Box
+  if (lowercornerFirstBox.x() > uppercornerSecondBox.x())
+    return false;
+
+  // Case 3: First Box is back side
+  if (uppercornerFirstBox.y() < lowercornerSecondBox.y())
+    return false;
+
+  // Case 4: First Box is front side
+  if (lowercornerFirstBox.y() > uppercornerSecondBox.y())
+    return false;
+
+  // Case 5: First Box is below the Second Box
+  if (uppercornerFirstBox.z() < lowercornerSecondBox.z())
+    return false;
+
+  // Case 6: First Box is above the Second Box
+  if (lowercornerFirstBox.z() > uppercornerSecondBox.z())
+    return false;
+
+  return true; // boxes overlap
+}
+
+
+//New algorithm for Unplaced contains
+template<typename TrackContainer>
+VECGEOM_INLINE
+void FillUncontainedPoints2(VPlacedVolume const &volume,
+                           TrackContainer &points) {
+  static double lastUncontCap = 0.0;
+  double uncontainedCapacity = UncontainedCapacity(volume);
+  if(uncontainedCapacity != lastUncontCap) {
+    printf("Uncontained capacity for %s: %g units\n", volume.GetLabel().c_str(), uncontainedCapacity);
+    lastUncontCap = uncontainedCapacity;
+  }
+  if( uncontainedCapacity <= 1000*kTolerance ) {
+    std::cout<<"\nVolUtil: FillUncontPts: ERROR: Volume provided <"
+             << volume.GetLabel() <<"> does not have uncontained capacity!  Aborting.\n";
+    Assert(false);
+  }
+
+  const int size = points.capacity();
+  points.resize(points.capacity());
+
+  Vector3D<Precision> lower, upper, offset;
+  volume.Extent(lower,upper);
+  offset = 0.5*(upper+lower);
+  const Vector3D<Precision> dim = 0.5*(upper-lower);
+//Vector3D<Precision> point = SamplePoint(dim);
+
+  int tries = 0;
+  int intersectCounter = 0;
+
+  //Transformation3D const *trans = volume.GetDaughters()[0]->GetTransformation();
+  //std::vector <Transformation3D const * >  trans;
+  Vector3D<Precision>   lowercornerSecondBox;
+  Vector3D<Precision>   uppercornerSecondBox;
+  std::vector<Vector3D<Precision> >  lowerCorner;
+  std::vector<Vector3D<Precision> >  upperCorner;
+  
+  //volume.GetDaughters()[0]->Extent(lowercornerSecondBox,uppercornerSecondBox);
+  //Vector3D<Precision> lowerCorner = (*trans).InverseTransform(lowercornerSecondBox);
+  //Vector3D<Precision> upperCorner = (*trans).InverseTransform(uppercornerSecondBox);
+
+  for (Vector<Daughter>::const_iterator j = volume.GetDaughters().cbegin(),
+             jEnd = volume.GetDaughters().cend(); j != jEnd; ++j) {
+      Transformation3D const *trans = (*j)->GetTransformation();
+      (*j)->Extent(lowercornerSecondBox,uppercornerSecondBox);
+      lowerCorner.push_back((*trans).InverseTransform(lowercornerSecondBox));  
+      upperCorner.push_back((*trans).InverseTransform(uppercornerSecondBox));
+  }
+
+  for (int i = 0; i < size; ++i) {
+    bool contained;
+    Vector3D<Precision> point;
+    tries = 0;
+    do {
+      // ensure that point is contained in mother volume
+      do {
+        ++tries;
+        if(tries%1000000 == 0) {
+          printf("%s line %i: Warning: %i tries to find uncontained points... volume=%s.  Please check.\n",
+                 __FILE__, __LINE__, tries, volume.GetLabel().c_str());
+        }
+
+        point = offset + SamplePoint(dim);
+        //point += kTolerance*SampleDirection();
+      } while (!volume.UnplacedContains(point));
+      points.set(i, point);
+      Precision eps = 0.0005;
+      Vector3D<Precision>  lowercornerFirstBox = (points[i] - eps);  
+      Vector3D<Precision>  uppercornerFirstBox = (points[i] + eps);
+      contained = false;
+      int kk=0;
+
+      int dghtCounter=0;
+      for (Vector<Daughter>::const_iterator j = volume.GetDaughters().cbegin(),
+             jEnd = volume.GetDaughters().cend(); j != jEnd; ++j, ++kk) {
+        // Vector3D<Precision>  lowercornerSecondBox;
+        // Vector3D<Precision>  uppercornerSecondBox;
+        // (*j)->Extent(lowercornerSecondBox,uppercornerSecondBox);
+        
+        // //Transformation3D const *trans = (*j)->GetTransformation();
+        
+        // //std::cout<<"Daughter Transformation Matrix : "<< (*trans) <<std::endl;
+        // Vector3D<Precision> lowerCorner = (*trans).InverseTransform(lowercornerSecondBox);
+        // Vector3D<Precision> upperCorner = (*trans).InverseTransform(uppercornerSecondBox);
+
+        //std::cout<<"lowercornerSecondBox : "<<lowerCorner<<"  :: uppercornerSecondBox : "<<upperCorner<<std::endl;
+        bool IntExist = IntersectionExist(lowercornerFirstBox,uppercornerFirstBox,lowerCorner[dghtCounter],upperCorner[dghtCounter]);
+        dghtCounter++;
+        //std::cout<<" i : "<<i<<"  :: IntExist : "<<IntExist<<std::endl;
+        if(IntExist)
+        {
+        intersectCounter++;
+        if ((*j)->Contains( points[i] )) {
+          contained = true;
+          break;
+        }
+        }
+      }
+    } while (contained);
+  }
+
+  std::cout<<"IntersectCounter : "<<intersectCounter<<std::endl;
+}
 
 /**
  * @brief Fills the volume with 3D points which are to be contained in
@@ -574,7 +713,18 @@ void FillGlobalPointsAndDirectionsForLogicalVolume(
         VPlacedVolume const * pvol = allpaths.front()->Top();
 
         // generate points which are in lvol but not in its daughters
+        Stopwatch timer;
+        timer.Start();
         FillUncontainedPoints( *pvol, localpoints );
+        Precision elapsedTime = timer.Stop();
+        std::cout<<"Time Elapse in FillUncontainedPoints : "<<elapsedTime<<std::endl;
+
+        //Stopwatch timer;
+        timer.Start();
+        FillUncontainedPoints2( *pvol, localpoints );
+        elapsedTime = timer.Stop();
+        std::cout<<"Time Elapse in FillUncontainedPoints-2 : "<<elapsedTime<<std::endl;
+
 
         // now have the points in the local reference frame of the logical volume
         FillBiasedDirections( *lvol, localpoints, fraction, directions );
@@ -690,39 +840,6 @@ inline Precision GetRadiusInRing(Precision rmin, Precision rmax) {
  *  output :  Return a boolean, true if intersection exists, otherwise false.
  *
  */
-VECGEOM_INLINE
-bool IntersectionExist(Vector3D<Precision> const lowercornerFirstBox, Vector3D<Precision> const uppercornerFirstBox,
-                       Vector3D<Precision> const lowercornerSecondBox, Vector3D<Precision> const uppercornerSecondBox) {
-
-  // Simplest algorithm
-  // Needs to handle a total of 6 cases
-
-  // Case 1: First Box is on left of Second Box
-  if (uppercornerFirstBox.x() < lowercornerSecondBox.x())
-    return false;
-
-  // Case 2: First Box is on right of Second Box
-  if (lowercornerFirstBox.x() > uppercornerSecondBox.x())
-    return false;
-
-  // Case 3: First Box is back side
-  if (uppercornerFirstBox.y() < lowercornerSecondBox.y())
-    return false;
-
-  // Case 4: First Box is front side
-  if (lowercornerFirstBox.y() > uppercornerSecondBox.y())
-    return false;
-
-  // Case 5: First Box is below the Second Box
-  if (uppercornerFirstBox.z() < lowercornerSecondBox.z())
-    return false;
-
-  // Case 6: First Box is above the Second Box
-  if (lowercornerFirstBox.z() > uppercornerSecondBox.z())
-    return false;
-
-  return true; // boxes overlap
-}
 
 /** This function will detect whether two boxes in arbitrary orientation intersects or not.
  *  returns a boolean, true if intersection exist, else false

@@ -60,12 +60,14 @@ void CreateSimpleRootGeom()
    TGeoVolume * world =  ::gGeoManager->MakeBox("worldl",0, L, L, Lz );
    // TGeoVolume * boxlevel2 = ::gGeoManager->MakeBox("b2l",0, Sqrt2*L/2./2., Sqrt2*L/2./2., Lz );
    // TGeoVolume * boxlevel3 = ::gGeoManager->MakeBox("b3l",0, L/2./2., L/2./2., Lz);
-   TGeoVolume * boxlevel1 = ::gGeoManager->MakeBox("b1l",0, L/4., L, Lz );
-
+   TGeoVolume * boxlevel1 = ::gGeoManager->MakeBox("b1l",0, L/4., L , Lz);
+   TGeoVolume * spherelevel1 = ::gGeoManager->MakeSphere("b1l",0, L/4., L/2. , 0, 60. , 120. , 300. );
+   //TGeoVolume * boxlevel1 = ::gGeoManager->MakeTube("b1l",0, 2., 3. , 8.);
+   //TGeoVolume *orblevel1 = ::gGeoManager->MakeOrb("orb1l",5.);
    // boxlevel2->AddNode( boxlevel3, 0, new TGeoRotation("rot1",0,0,45));
    // boxlevel1->AddNode( boxlevel2, 0, new TGeoRotation("rot2",0,0,-45));
-   world->AddNode(boxlevel1, 0, new TGeoTranslation(-3*L/4.,0.,0.));
-   //world->AddNode(boxlevel1, 1, new TGeoTranslation(+L/2.,0,0));
+   world->AddNode(spherelevel1, 0, new TGeoTranslation(-3*L/4.,0.,0.));
+   world->AddNode(spherelevel1, 1, new TGeoTranslation(3*L/4.,0.,0.));
    ::gGeoManager->SetTopVolume(world);
    ::gGeoManager->CloseGeometry();
 
@@ -119,17 +121,10 @@ void Visualize(){
     VPlacedVolume const *myWorld = RootGeoManager::Instance().world();
 	Visualizer visualizer;
 
-	// for (Vector<Daughter>::const_iterator j = (*myWorld).GetDaughters().cbegin(),
- //             jEnd = (*myWorld).GetDaughters().cend(); j != jEnd; ++j) {
-             
- //             visualizer.AddVolume(j.G);
- //             std::cout<< (*j)->GetLabel()<<std::endl;
-
-	// }
-int count=0;
-for (auto i : (*myWorld).GetDaughters())
-{   
-	Transformation3D  const *trans = (*i).GetTransformation();
+  int count=0;
+  for (auto i : (*myWorld).GetDaughters())
+  {   
+  Transformation3D  const *trans = (*i).GetTransformation();
 	std::cout<<*trans<<std::endl;
 	//visualizer.AddVolume((*i).GetLogicalVolume()->Place(trans));
     //visualizer.AddVolume(*((*i).GetLogicalVolume())->Place(trans));
