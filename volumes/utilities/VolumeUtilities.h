@@ -456,7 +456,7 @@ void FillUncontainedPoints2(VPlacedVolume const &volume,
         //point += kTolerance*SampleDirection();
       } while (!volume.UnplacedContains(point));
       points.set(i, point);
-      Precision eps = 0.0005;
+      Precision eps = 0.0000000005;
       Vector3D<Precision>  lowercornerFirstBox = (points[i] - eps);  
       Vector3D<Precision>  uppercornerFirstBox = (points[i] + eps);
       contained = false;
@@ -465,17 +465,7 @@ void FillUncontainedPoints2(VPlacedVolume const &volume,
       int dghtCounter=0;
       for (Vector<Daughter>::const_iterator j = volume.GetDaughters().cbegin(),
              jEnd = volume.GetDaughters().cend(); j != jEnd; ++j, ++kk) {
-        // Vector3D<Precision>  lowercornerSecondBox;
-        // Vector3D<Precision>  uppercornerSecondBox;
-        // (*j)->Extent(lowercornerSecondBox,uppercornerSecondBox);
-        
-        // //Transformation3D const *trans = (*j)->GetTransformation();
-        
-        // //std::cout<<"Daughter Transformation Matrix : "<< (*trans) <<std::endl;
-        // Vector3D<Precision> lowerCorner = (*trans).InverseTransform(lowercornerSecondBox);
-        // Vector3D<Precision> upperCorner = (*trans).InverseTransform(uppercornerSecondBox);
-
-        //std::cout<<"lowercornerSecondBox : "<<lowerCorner<<"  :: uppercornerSecondBox : "<<upperCorner<<std::endl;
+  
         bool IntExist = IntersectionExist(lowercornerFirstBox,uppercornerFirstBox,lowerCorner[dghtCounter],upperCorner[dghtCounter]);
         dghtCounter++;
         //std::cout<<" i : "<<i<<"  :: IntExist : "<<IntExist<<std::endl;
@@ -491,7 +481,7 @@ void FillUncontainedPoints2(VPlacedVolume const &volume,
     } while (contained);
   }
 
-  std::cout<<"IntersectCounter : "<<intersectCounter<<std::endl;
+  //std::cout<<"IntersectCounter : "<<intersectCounter<<std::endl;
 }
 
 /**
@@ -502,6 +492,7 @@ void FillUncontainedPoints2(VPlacedVolume const &volume,
  * @param points is the output container, provided by the caller.
  */
 template<typename TrackContainer>
+
 VECGEOM_INLINE
 void FillContainedPoints(VPlacedVolume const &volume,
                          const double bias,
@@ -689,6 +680,8 @@ void FillRandomPoints(Vector3D<Precision> const & dim,
  *
  */
 template <typename TrackContainer>
+//template<bool Mod=false>
+
 inline
 void FillGlobalPointsAndDirectionsForLogicalVolume(
         LogicalVolume const * lvol,
@@ -713,19 +706,31 @@ void FillGlobalPointsAndDirectionsForLogicalVolume(
         VPlacedVolume const * pvol = allpaths.front()->Top();
 
         // generate points which are in lvol but not in its daughters
+        Precision elapsedTime;
         Stopwatch timer;
+        
+        int numOfRep = 10000;
+        {
         timer.Start();
-        FillUncontainedPoints( *pvol, localpoints );
-        Precision elapsedTime = timer.Stop();
-        std::cout<<"Time Elapse in FillUncontainedPoints : "<<elapsedTime<<std::endl;
-
-        //Stopwatch timer;
-        timer.Start();
+        for (int i=0 ; i< numOfRep ;i++){
         FillUncontainedPoints2( *pvol, localpoints );
-        elapsedTime = timer.Stop();
+        }
+        elapsedTime = timer.Stop()/numOfRep;
         std::cout<<"Time Elapse in FillUncontainedPoints-2 : "<<elapsedTime<<std::endl;
+        }
 
 
+        //if(!Mod)
+        {
+        timer.Start();
+        for (int i=0 ; i< numOfRep ;i++){
+        FillUncontainedPoints( *pvol, localpoints );
+        }
+        elapsedTime = timer.Stop()/numOfRep;
+        std::cout<<"Time Elapse in FillUncontainedPoints : "<<elapsedTime<<std::endl;
+        }
+        //else
+        
         // now have the points in the local reference frame of the logical volume
         FillBiasedDirections( *lvol, localpoints, fraction, directions );
 

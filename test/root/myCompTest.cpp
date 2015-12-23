@@ -34,23 +34,23 @@ using namespace VECGEOM_NAMESPACE;
 
 // creates a four level box detector
 // this modifies the global gGeoManager instance ( so no need for any return )
-// void CreateRootGeom()
-// {
-//    double L = 10.;
-//    double Lz = 10.;
-//    const double Sqrt2 = sqrt(2.);
-//    TGeoVolume * world =  ::gGeoManager->MakeBox("worldl",0, L, L, Lz );
-//    TGeoVolume * boxlevel2 = ::gGeoManager->MakeBox("b2l",0, Sqrt2*L/2./2., Sqrt2*L/2./2., Lz );
-//    TGeoVolume * boxlevel3 = ::gGeoManager->MakeBox("b3l",0, L/2./2., L/2./2., Lz);
-//    TGeoVolume * boxlevel1 = ::gGeoManager->MakeBox("b1l",0, L/2., L/2., Lz );
+void CreateRootGeom()
+{
+   double L = 10.;
+   double Lz = 10.;
+   const double Sqrt2 = sqrt(2.);
+   TGeoVolume * world =  ::gGeoManager->MakeBox("worldl",0, L, L, Lz );
+   TGeoVolume * boxlevel2 = ::gGeoManager->MakeBox("b2l",0, Sqrt2*L/2./2., Sqrt2*L/2./2., Lz );
+   TGeoVolume * boxlevel3 = ::gGeoManager->MakeBox("b3l",0, L/2./2., L/2./2., Lz);
+   TGeoVolume * boxlevel1 = ::gGeoManager->MakeBox("b1l",0, L/2., L/2., Lz );
 
-//    boxlevel2->AddNode( boxlevel3, 0, new TGeoRotation("rot1",0,0,45));
-//    boxlevel1->AddNode( boxlevel2, 0, new TGeoRotation("rot2",0,0,-45));
-//    world->AddNode(boxlevel1, 0, new TGeoTranslation(-L/2.,0,0));
-//    world->AddNode(boxlevel1, 1, new TGeoTranslation(+L/2.,0,0));
-//    ::gGeoManager->SetTopVolume(world);
-//    ::gGeoManager->CloseGeometry();
-// }
+   boxlevel2->AddNode( boxlevel3, 0, new TGeoRotation("rot1",0,0,45));
+   boxlevel1->AddNode( boxlevel2, 0, new TGeoRotation("rot2",0,0,-45));
+   world->AddNode(boxlevel1, 0, new TGeoTranslation(-L/2.,0,0));
+   world->AddNode(boxlevel1, 1, new TGeoTranslation(+L/2.,0,0));
+   ::gGeoManager->SetTopVolume(world);
+   ::gGeoManager->CloseGeometry();
+}
 
 void CreateSimpleRootGeom()
 {
@@ -62,12 +62,19 @@ void CreateSimpleRootGeom()
    // TGeoVolume * boxlevel3 = ::gGeoManager->MakeBox("b3l",0, L/2./2., L/2./2., Lz);
    TGeoVolume * boxlevel1 = ::gGeoManager->MakeBox("b1l",0, L/4., L , Lz);
    TGeoVolume * spherelevel1 = ::gGeoManager->MakeSphere("b1l",0, L/4., L/2. , 0, 60. , 120. , 300. );
+   TGeoVolume * centredboxlevel1 = ::gGeoManager->MakeBox("b1l",0, L/8., L , Lz/8.);
    //TGeoVolume * boxlevel1 = ::gGeoManager->MakeTube("b1l",0, 2., 3. , 8.);
    //TGeoVolume *orblevel1 = ::gGeoManager->MakeOrb("orb1l",5.);
    // boxlevel2->AddNode( boxlevel3, 0, new TGeoRotation("rot1",0,0,45));
    // boxlevel1->AddNode( boxlevel2, 0, new TGeoRotation("rot2",0,0,-45));
+
+
+   //TGeoVolume * pconlevel1 = ::gGeoManager->MakePcon("pcon1l",0, 20, 120,5);
    world->AddNode(spherelevel1, 0, new TGeoTranslation(-3*L/4.,0.,0.));
    world->AddNode(spherelevel1, 1, new TGeoTranslation(3*L/4.,0.,0.));
+   world->AddNode(spherelevel1, 2, new TGeoTranslation(3*L/4.,0.,-3*L/4.));
+   world->AddNode(boxlevel1, 2, new TGeoTranslation(-3*L/4.,0.,-3*L/4.));
+   world->AddNode(centredboxlevel1,3);
    ::gGeoManager->SetTopVolume(world);
    ::gGeoManager->CloseGeometry();
 
@@ -151,7 +158,8 @@ void Visualize(){
 }
 int main()
 {
-    CreateSimpleRootGeom();
+    //CreateSimpleRootGeom();
+    CreateRootGeom();
     //ßRootGeoManager::Instance().LoadRootGeometry();
 //    RootGeoManager::Instance().world()->PrintContent();
     RootGeoManager::Instance().PrintNodeTable();
