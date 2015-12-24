@@ -32,6 +32,10 @@ namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 namespace volumeUtilities {
 
+VECGEOM_INLINE
+bool IntersectionExist(Vector3D<Precision> const lowercornerFirstBox, Vector3D<Precision> const uppercornerFirstBox,
+                       Vector3D<Precision> const lowercornerSecondBox, Vector3D<Precision> const uppercornerSecondBox);
+
 /**
  * @brief Is the trajectory through a point along a direction hitting a volume?
  * @details If ROOT is available and VECGEOM_BENCHMARK is set, use
@@ -356,45 +360,11 @@ void FillUncontainedPoints(LogicalVolume const &volume,
   delete placed;
 }
 
-VECGEOM_INLINE
-bool IntersectionExist(Vector3D<Precision> const lowercornerFirstBox, Vector3D<Precision> const uppercornerFirstBox,
-                       Vector3D<Precision> const lowercornerSecondBox, Vector3D<Precision> const uppercornerSecondBox) {
-
-  // Simplest algorithm
-  // Needs to handle a total of 6 cases
-
-  // Case 1: First Box is on left of Second Box
-  if (uppercornerFirstBox.x() < lowercornerSecondBox.x())
-    return false;
-
-  // Case 2: First Box is on right of Second Box
-  if (lowercornerFirstBox.x() > uppercornerSecondBox.x())
-    return false;
-
-  // Case 3: First Box is back side
-  if (uppercornerFirstBox.y() < lowercornerSecondBox.y())
-    return false;
-
-  // Case 4: First Box is front side
-  if (lowercornerFirstBox.y() > uppercornerSecondBox.y())
-    return false;
-
-  // Case 5: First Box is below the Second Box
-  if (uppercornerFirstBox.z() < lowercornerSecondBox.z())
-    return false;
-
-  // Case 6: First Box is above the Second Box
-  if (lowercornerFirstBox.z() > uppercornerSecondBox.z())
-    return false;
-
-  return true; // boxes overlap
-}
-
 
 //New algorithm for Unplaced contains
 template<typename TrackContainer>
 VECGEOM_INLINE
-void FillUncontainedPoints2(VPlacedVolume const &volume,
+void FillUncontainedPointsV2(VPlacedVolume const &volume,
                            TrackContainer &points) {
   static double lastUncontCap = 0.0;
   double uncontainedCapacity = UncontainedCapacity(volume);
@@ -456,7 +426,7 @@ void FillUncontainedPoints2(VPlacedVolume const &volume,
         //point += kTolerance*SampleDirection();
       } while (!volume.UnplacedContains(point));
       points.set(i, point);
-      Precision eps = 0.0000000005;
+      Precision eps = 0.00000005;
       Vector3D<Precision>  lowercornerFirstBox = (points[i] - eps);  
       Vector3D<Precision>  uppercornerFirstBox = (points[i] + eps);
       contained = false;
@@ -706,17 +676,22 @@ void FillGlobalPointsAndDirectionsForLogicalVolume(
         VPlacedVolume const * pvol = allpaths.front()->Top();
 
         // generate points which are in lvol but not in its daughters
-        Precision elapsedTime;
-        Stopwatch timer;
+        //Precision elapsedTime = 0.;
         
+        
+        // Below two blocks are just to compare performance of two different version of "FillUncontainedPoints"
+        // These should be remove once the algo. is thoroghly tested and finalized
+        //-----------------------------------------------------------------------------------------------------
+        Precision t1 = 0. , t2 = 0.;
+        Stopwatch timer;
         int numOfRep = 10000;
         {
         timer.Start();
         for (int i=0 ; i< numOfRep ;i++){
-        FillUncontainedPoints2( *pvol, localpoints );
+        FillUncontainedPointsV2( *pvol, localpoints );
         }
-        elapsedTime = timer.Stop()/numOfRep;
-        std::cout<<"Time Elapse in FillUncontainedPoints-2 : "<<elapsedTime<<std::endl;
+        t2 = timer.Stop()/numOfRep;
+        std::cout<<"Time Elapse in FillUncontainedPoints-2 : "<< t2 <<std::endl;
         }
 
 
@@ -726,11 +701,15 @@ void FillGlobalPointsAndDirectionsForLogicalVolume(
         for (int i=0 ; i< numOfRep ;i++){
         FillUncontainedPoints( *pvol, localpoints );
         }
-        elapsedTime = timer.Stop()/numOfRep;
-        std::cout<<"Time Elapse in FillUncontainedPoints : "<<elapsedTime<<std::endl;
+        t1 = timer.Stop()/numOfRep;
+        std::cout<<"Time Elapse in FillUncontainedPoints : "<< t1 <<std::endl;
         }
-        //else
+
+        std::cout<<"Speed up : "<< (t1/t2) <<std::endl;
+        //-----------------------------------------------------------------------------------------------------
         
+                
+        FillUncontainedPointsV2( *pvol, localpoints );
         // now have the points in the local reference frame of the logical volume
         FillBiasedDirections( *lvol, localpoints, fraction, directions );
 
@@ -845,6 +824,39 @@ inline Precision GetRadiusInRing(Precision rmin, Precision rmax) {
  *  output :  Return a boolean, true if intersection exists, otherwise false.
  *
  */
+VECGEOM_INLINE
+bool IntersectionExist(Vector3D<Precision> const lowercornerFirstBox, Vector3D<Precision> const uppercornerFirstBox,
+                       Vector3D<Precision> const lowercornerSecondBox, Vector3D<Precision> const uppercornerSecondBox) {
+
+  // Simplest algorithm
+  // Needs to handle a total of 6 cases
+
+  // Case 1: First Box is on left of Second Box
+  if (uppercornerFirstBox.x() < lowercornerSecondBox.x())
+    return false;
+
+  // Case 2: First Box is on right of Second Box
+  if (lowercornerFirstBox.x() > uppercornerSecondBox.x())
+    return false;
+
+  // Case 3: First Box is back side
+  if (uppercornerFirstBox.y() < lowercornerSecondBox.y())
+    return false;
+
+  // Case 4: First Box is front side
+  if (lowercornerFirstBox.y() > uppercornerSecondBox.y())
+    return false;
+
+  // Case 5: First Box is below the Second Box
+  if (uppercornerFirstBox.z() < lowercornerSecondBox.z())
+    return false;
+
+  // Case 6: First Box is above the Second Box
+  if (lowercornerFirstBox.z() > uppercornerSecondBox.z())
+    return false;
+
+  return true; // boxes overlap
+}
 
 /** This function will detect whether two boxes in arbitrary orientation intersects or not.
  *  returns a boolean, true if intersection exist, else false

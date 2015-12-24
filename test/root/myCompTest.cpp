@@ -158,8 +158,8 @@ void Visualize(){
 }
 int main()
 {
-    //CreateSimpleRootGeom();
-    CreateRootGeom();
+    CreateSimpleRootGeom();
+    //CreateRootGeom();
     //ßRootGeoManager::Instance().LoadRootGeometry();
 //    RootGeoManager::Instance().world()->PrintContent();
     RootGeoManager::Instance().PrintNodeTable();
