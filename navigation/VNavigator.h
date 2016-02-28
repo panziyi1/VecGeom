@@ -17,6 +17,7 @@
 #include "volumes/PlacedVolume.h"
 #include "volumes/LogicalVolume.h"
 #include "navigation/VSafetyEstimator.h"
+#include "navigation/SimpleSafetyEstimator.h"
 #ifdef VECGEOM_VC
 #include <Vc/Vc>
 #endif
@@ -36,7 +37,7 @@ class VPlacedVolume;
 class VNavigator {
 
 public:
-  VNavigator() : fSafetyEstimator(nullptr) {}
+  VNavigator() : fSafetyEstimator(SimpleSafetyEstimator::Instance()) {}
   VSafetyEstimator const * GetSafetyEstimator() const { return fSafetyEstimator; }
 
   //! computes the step (distance) to the next object in the geometry hierarchy obtained
@@ -641,6 +642,7 @@ public :
       safety_out = 0.;
       if (calcsafety) {
         // call the appropriate safety Estimator
+        assert(fSafetyEstimator != nullptr && "fSafetyEstimator not set correctly");
         safety_out = ((SafetyE_t *)fSafetyEstimator)->SafetyE_t::ComputeSafetyForLocalPoint(localpoint, in_state.Top());
       }
 
