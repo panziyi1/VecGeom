@@ -436,6 +436,7 @@ void NavigationSpecializer::DumpClassOpening(std::ostream &outstream) {
 
 void NavigationSpecializer::DumpConstructor(std::ostream &outstream) const {
   // need a constructor only in case we rely on a basic navigator
+  // TODO: this has to be made more general since we also need to init a SafetyEstimator properly !!!
   if (fUseBaseNavigator) {
     // declaration of base navigator
     std::string basenavtype(fBaseNavigator + "<>");
@@ -465,6 +466,9 @@ void NavigationSpecializer::DumpIncludeFiles(std::ostream &outstream) {
   outstream << "#include \"volumes/Trd.h\"\n";
   outstream << "#include \"volumes/Cone.h\"\n";
   outstream << "#include \"volumes/BooleanVolume.h\"\n";
+
+  // we need some other stuff, too
+  outstream << "#include \"navigation/SimpleSafetyEstimator.h\"\n";
 }
 
 void NavigationSpecializer::DumpNamespaceOpening(std::ostream &outstream) {
@@ -589,8 +593,8 @@ void NavigationSpecializer::ProduceSpecializedNavigator(LogicalVolume const *lvo
 
   // dump C++ code
   fLogicalVolumeName = lvol->GetLabel();
-  //fClassName = fLogicalVolumeName + "Navigator";
-  fClassName = "GeneratedNavigator";
+  fClassName = fLogicalVolumeName + "Navigator";
+  //fClassName = "GeneratedNavigator";
 
   AnalyseLogicalVolume();
 
@@ -1005,7 +1009,7 @@ void NavigationSpecializer::AnalyseTargetPaths(NavStatePool const &inpool, NavSt
     auto *navstate = outpool[j];
     navstate->printValueSequence(pathstringstream2);
     pset.insert(navstate->Top());
-    lset.insert(navstate->Top()->GetLogicalVolume());
+    if(navstate->Top()!=nullptr) lset.insert(navstate->Top()->GetLogicalVolume());
     pathset.insert(pathstringstream2.str());
 
     std::stringstream pathstringstream1;
@@ -1024,6 +1028,7 @@ void NavigationSpecializer::AnalyseTargetPaths(NavStatePool const &inpool, NavSt
 
       // shape-type
       std::stringstream type;
+      // TODO: at the moment we are missing a treatment when this state is outside the detector --> fixit asap !!
       navstate->Top()->PrintType(type);
       transitionindex = fTransitionTargetTypes.size();
       fTransitionTargetTypes.push_back(FinalDepthShapeType_t(navstate->GetCurrentLevel(), type.str()));
@@ -1116,7 +1121,7 @@ void NavigationSpecializer::AnalyseTargetPaths(NavStatePool const &inpool, NavSt
       fStaticArraysInitStream << ",";
   }
   fStaticArraysInitStream << "};\n";
-  fStaticArraysDefinitions << "constexpr short GeneratedNavigator::deltamatrixmapping[" << fNumberOfPossiblePaths
+  fStaticArraysDefinitions << "constexpr short " << fClassName << "::deltamatrixmapping[" << fNumberOfPossiblePaths
                            << "][" << fTransitionStrings.size() << "];\n";
   //
 
