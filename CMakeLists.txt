@@ -745,6 +745,7 @@ if(NOT USolids)
     ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/TraceTrack.cpp
     ${CMAKE_SOURCE_DIR}/test/globalbenchmarks/XRayBenchmarkFromROOTFile.cpp
     ${CMAKE_SOURCE_DIR}/services/NavigationSpecializerTest.cpp
+    ${CMAKE_SOURCE_DIR}/services/LibraryGenerator.cpp
   )
 endif()
 
