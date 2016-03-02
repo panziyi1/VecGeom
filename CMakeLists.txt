@@ -646,6 +646,7 @@ if (CUDA)
    )
   set(SRC_CUDA ${SRC_CUDA}
         test/cuda/MapTest.cu
+        test/cuda/MapTestClass.cu
    )
  endif()
 
@@ -666,7 +667,7 @@ if (CUDA)
   cuda_add_library(
     vecgeomcuda
     ${SRC_CUDA}
-    OPTIONS ${CUDA_ARCH}
+    OPTIONS ${CUDA_ARCH} -O0 -g -G -lineinfo
     ${VECGEOM_NVCC_CONFIGS}
   )
   target_link_libraries(vecgeomcuda ${VECGEOM_LIBRARIES}
@@ -825,6 +826,7 @@ set(TEST_EXECUTABLES_BENCHMARK
 set(TEST_EXECUTABLES_CUDA
   # Files go here
   ${CMAKE_SOURCE_DIR}/test/cuda/MapTest.cpp
+  ${CMAKE_SOURCE_DIR}/test/cuda/MapTestClass.cpp
 )
 set(TEST_EXECUTABLES_SHAPETESTER
   ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testBox.cpp
@@ -1065,6 +1067,7 @@ set(CONF_LIBRARIES ${VECGEOM_LIBRARIES_EXTERNAL}
     "${CONF_LIBRARY_DIR}/libvecgeom.a")
 if (CUDA)
    set(CONF_LIBRARIES "${CONF_LIBRARY_DIR}/libvecgeomcuda.a" ${CONF_LIBRARIES}  "${CONF_LIBRARY_DIR}/libvecgeomcuda.a")
+   set(CONF_LIBRARIES "${CONF_LIBRARY_DIR}/librawvecgeomcuda.a" ${CONF_LIBRARIES}  "${CONF_LIBRARY_DIR}/librawvecgeomcuda.a")
 endif()
 if (USolids)
   set(CONF_LIBRARIES ${CONF_LIBRARIES} "${CONF_LIBRARY_DIR}/libusolids.a")
