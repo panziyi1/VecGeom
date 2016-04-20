@@ -458,7 +458,8 @@ struct TorusImplementation2 {
       Real_v delta = s * s * s * s + a * s * s * s + b * s * s + c * s + d;
       Real_v eps0  = -delta / (4. * s * s * s + 3. * a * s * s + 2. * b * s + c);
       int ntry     = 0;
-      while (Abs(eps) > vecgeom::kTolerance) {
+      while (Abs(eps) > 2. * vecgeom::kTolerance) {
+        // std::cout<<" i="<< i <<", s="<< s <<", eps="<< eps <<", eps0="<< eps0 <<"\n";
         if (Abs(eps0) > 100) break;
         s += eps0;
         if (Abs(s + eps0) < vecgeom::kTolerance) break;
@@ -485,12 +486,13 @@ struct TorusImplementation2 {
                            Vector3D<typename Backend::precision_v> const &direction,
                            typename Backend::precision_v const &stepMax, typename Backend::precision_v &distance)
   {
-
     typedef typename Backend::precision_v Float_t;
     typedef typename Backend::bool_v Bool_t;
+    // std::cout<<" torus D2I(): point="<< point <<", dir="<< direction <<"\n";
 
     Vector3D<Float_t> localPoint     = transformation.Transform<transCodeT, rotCodeT>(point);
     Vector3D<Float_t> localDirection = transformation.TransformDirection<rotCodeT>(direction);
+    // std::cout<<" torus D2I(): localpoint="<< localPoint <<", localDir="<< localDirection <<"\n";
 
     ////////First naive implementation
     distance = kInfLength;
