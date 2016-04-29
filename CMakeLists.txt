@@ -63,6 +63,9 @@ option(DATA_DOWNLOAD "Enable downloading of data for tests" OFF)
 
 option(GENERATE_MATERIALS_DB "Include materials and particle declarations in library" OFF)
 
+option(OPENMP "Enable use of openMP" ON)
+
+
 set(VECGEOM_ARCH native sse2 sse3 ssse3 sse4.1 sse4.2 avx avx2 mic avx512)
 
 enum_option(VECGEOM_VECTOR
@@ -178,6 +181,9 @@ if (GNU)
   if (Vc)
     set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -fabi-version=6")
   endif()
+    if (OPENMP)
+      set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -fopenmp")
+  endif()
 elseif(Intel)
   # CMake fails to add -std option for icc, so add it manually
   if(CMAKE_CXX_STANDARD STREQUAL 11)
@@ -193,6 +199,10 @@ elseif(Intel)
   else()
     set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -fno-alias")
   endif()
+    if (OPENMP)
+    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -parallel-source-info=2 -qopenmp")
+  endif()
+
 elseif(Clang)
   if (APPLE)
     # prefer LLVM's standard C++ library on Mac OS X
@@ -502,6 +512,11 @@ if (VTUNE)
   set(VECGEOM_LIBRARIES_EXTERNAL ${VECGEOM_LIBRARIES_EXTERNAL} ${VTUNE_LIBRARIES} -lpthread -ldl)
 endif()
 
+if (OPENMP)
+  message(STATUS "Using OpenMP")
+  set(VECGEOM_DEFINITION_FLAGS
+      "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_OPENMP")
+endif()
 ################################################################################
 
 include_directories(BEFORE ${CMAKE_SOURCE_DIR})
@@ -740,6 +755,7 @@ set(TEST_EXECUTABLES_CORE
   ${CMAKE_SOURCE_DIR}/test/core/TestConvexity.cpp
   ${CMAKE_SOURCE_DIR}/test/core/BooleanConvexityTest.cpp
   ${CMAKE_SOURCE_DIR}/test/unit_tests/TestVecGeomPolycone.cpp
+  ${CMAKE_SOURCE_DIR}/test/sc16-basket-demo/SC16SimpleTracker.cpp
 
 
 #  ${CMAKE_SOURCE_DIR}/services/CompNavStatePools.cpp
