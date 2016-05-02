@@ -47,11 +47,11 @@ private:
     fRmax2 = fRmax * fRmax;
     fRtor2 = fRtor * fRtor;
 
-    fTolOrmin2 = (fRmin - kTolerance) * (fRmin - kTolerance);
-    fTolIrmin2 = (fRmin + kTolerance) * (fRmin + kTolerance);
+    fTolOrmin2 = (fRmin - kHalfTolerance) * (fRmin - kHalfTolerance);
+    fTolIrmin2 = (fRmin + kHalfTolerance) * (fRmin + kHalfTolerance);
 
-    fTolOrmax2 = (fRmax + kTolerance) * (fRmax + kTolerance);
-    fTolIrmax2 = (fRmax - kTolerance) * (fRmax - kTolerance);
+    fTolOrmax2 = (fRmax + kHalfTolerance) * (fRmax + kHalfTolerance);
+    fTolIrmax2 = (fRmax - kHalfTolerance) * (fRmax - kHalfTolerance);
 
     GetAlongVectorToPhiSector(fSphi, fAlongPhi1x, fAlongPhi1y);
     GetAlongVectorToPhiSector(fSphi + fDphi, fAlongPhi2x, fAlongPhi2y);
