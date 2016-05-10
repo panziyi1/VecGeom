@@ -309,11 +309,17 @@ public:
   void Step(Precision *psteps, Precision *steps, NavStatePool *newnavstates, Stack &stack) {
     // Perform a single step and pushes the new states to the stack, flushing exiting tracks
 //    VToyNavigator const *specialnav = GetNavigator((*navstates_)[0]->Top()->GetLogicalVolume());
+    static size_t icount = 0;
+    icount++;
+    if (icount == 1975) {
+      icount++;
+    }  
     specialnav_->ComputeStepsAndPropagatedStates(SOA3D<Precision>(xp,yp,zp,size_), SOA3D<Precision>(xdir,ydir,zdir,size_), 
         psteps, *navstates_, *newnavstates, steps);
 
     // Push all tracks to stack using construct in place
     for(auto itr=0; itr<size_; ++itr) {
+      assert(steps[itr]>=0);
       NavigationState *state = (*newnavstates)[itr];
       if (state->IsOutside()) FlushTrack(itr);
       else stack.Push(VolIndex(state), pixel[itr], nbound[itr]+1, 
@@ -497,7 +503,7 @@ VPlacedVolume *CreateSimpleTracker(unsigned int nlayers) {
   const double world_size = 500.;
 
   // Top volume
-  UnplacedBox *uTop = new UnplacedBox(world_size + 2, world_size + 2, world_size + 2);
+  UnplacedBox *uTop = new UnplacedBox(4*world_size, 4*world_size, 4*world_size);
   LogicalVolume *top = new LogicalVolume("world", uTop);
   top->SetUserExtensionPtr( (void *) WorldNavigator<true>::Instance() );
   
@@ -525,7 +531,7 @@ VPlacedVolume *CreateSimpleTracker(unsigned int nlayers) {
 
   VPlacedVolume *world = top->Place();
   GeoManager::Instance().SetWorld(world);
-  //world->PrintContent();
+//  world->PrintContent();
   GeoManager::Instance().CloseGeometry();
   return world;
 }
@@ -676,7 +682,7 @@ void XRayBenchmark(int axis, int pixel_width) {
   if(axis==2) imagenamebase << "y";
   if(axis==3) imagenamebase << "z";
 
-  VPlacedVolume *vol = GeoManager::Instance().FindPlacedVolume(2);
+  VPlacedVolume *vol = GeoManager::Instance().FindPlacedVolume(0);
   Window window(vol, axis, pixel_width, 1);
 
   int *volume_result= (int*) new int[window.data_size_y * window.data_size_x*3];
@@ -726,7 +732,7 @@ void XRayBenchmarkVecNav(int axis, int pixel_width, int vecsize) {
   if(axis==2) imagenamebase << "y";
   if(axis==3) imagenamebase << "z";
   
-  VPlacedVolume *vol = GeoManager::Instance().FindPlacedVolume(2);
+  VPlacedVolume *vol = GeoManager::Instance().FindPlacedVolume(0);
   Window window(vol, axis, pixel_width, 1);
 
   int *volume_result= (int*) new int[window.data_size_y * window.data_size_x*3];
@@ -792,7 +798,7 @@ void XRayBenchmarkBasketized(int axis, int pixel_width, int vecsize, int nthread
   if(axis==2) imagenamebase << "y";
   if(axis==3) imagenamebase << "z";
   
-  VPlacedVolume *vol = GeoManager::Instance().FindPlacedVolume(2);
+  VPlacedVolume *vol = GeoManager::Instance().FindPlacedVolume(0);
   Window window(vol, axis, pixel_width, 1);
   // Create the pixmap
   int *volume_result= (int*) new int[window.data_size_y * window.data_size_x*3];
@@ -1039,7 +1045,7 @@ void make_bmp(int const * volume_result, char const *name, int data_size_x, int 
 
 
 int main(int argc, char* argv[]) {
-  int nlayers = 10;
+  int nlayers = 1;
   if (argc > 1) {
     nlayers = std::atoi(argv[1]);
   }
@@ -1047,12 +1053,14 @@ int main(int argc, char* argv[]) {
 
   int axis= 1;
 
-  if( strcmp(argv[2], "x")==0 )
-    axis= 1;
-  else if( strcmp(argv[2], "y")==0 )
-    axis= 2;
-  else if( strcmp(argv[2], "z")==0 )
-    axis= 3;  
+  if (argc > 2) {
+    if( strcmp(argv[2], "x")==0 )
+      axis= 1;
+    else if( strcmp(argv[2], "y")==0 )
+      axis= 2;
+    else if( strcmp(argv[2], "z")==0 )
+      axis= 3;  
+  }    
 
   int pixel_width = 500;
   if (argc > 3) pixel_width = atoi(argv[3]);
@@ -1064,8 +1072,8 @@ int main(int argc, char* argv[]) {
   
 //  TestScalarNavigation();
 //  TestVectorNavigation();
-  XRayBenchmark(axis, pixel_width);
-  XRayBenchmarkVecNav(axis, pixel_width, vecsize);  
-  //XRayBenchmarkBasketized(axis, pixel_width, vecsize, nthreads);
-  std::cout << "Finished run: img. width=" << pixel_width << " vecsize=" << vecsize << " nthreads=" << nthreads << " on axis " << argv[2] << std::endl;
+  //XRayBenchmark(axis, pixel_width);
+  //XRayBenchmarkVecNav(axis, pixel_width, vecsize);  
+  XRayBenchmarkBasketized(axis, pixel_width, vecsize, nthreads);
+  std::cout << "Finished run: img. width=" << pixel_width << " vecsize=" << vecsize << " nthreads=" << nthreads << " on axis " << axis << std::endl;
 }

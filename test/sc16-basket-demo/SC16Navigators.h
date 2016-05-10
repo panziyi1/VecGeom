@@ -59,6 +59,7 @@ public:
 
           TubeImplementation<translation::kIdentity, rotation::kIdentity, TubeTypes::UniversalTube>::DistanceToIn<Backend>(
               daughter, Transformation3D::kIdentity, pos, dir, kInfinity, distance1);
+          MaskedAssign(distance1 < 0., kInfinity, &distance1);
     }
 
 
@@ -193,9 +194,11 @@ public:
                                typename Backend::precision_v &distance, typename Backend::precision_v &distance1) {
       TubeImplementation<translation::kIdentity, rotation::kIdentity, TubeTypes::UniversalTube>::DistanceToOut<Backend>(
           mother, pos, dir, kInfinity, distance);
+      MaskedAssign(distance<0, 1.e-3, &distance);
 
       TubeImplementation<translation::kIdentity, rotation::kIdentity, TubeTypes::UniversalTube>::DistanceToIn<Backend>(
           daughter, Transformation3D::kIdentity, pos, dir, kInfinity, distance1);
+      MaskedAssign(distance1 < 0., kInfinity, &distance1);
     }
 
     virtual double ComputeStepAndPropagatedState(Vector3D<double> const &globalpoint, Vector3D<double> const &globaldir,
@@ -323,6 +326,7 @@ static VToyNavigator *Instance() {
       TubeImplementation<translation::kIdentity, rotation::kIdentity, TubeTypes::UniversalTube>::DistanceToOut<kScalar>(
           *(UnplacedTube *)(unplaced), globalpoint, globaldir, kInfinity, distance);
 
+      if (distance<0) distance = 1.e-3;
       if (Depth < 0) {
         in_state.CopyTo(&out_state);
       } else {
@@ -357,6 +361,7 @@ static VToyNavigator *Instance() {
                           TubeTypes::UniversalTube>::DistanceToOut<Backend>(*(UnplacedTube *)(unplaced), p, d,
                                                                             kInfinity, distance);
 
+       MaskedAssign(distance<0, 1.e-3, &distance);
        distance.store(out_steps + i);
 
        for (auto j = 0; j < Real_v::Size; ++j) {
