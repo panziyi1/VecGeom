@@ -1045,7 +1045,7 @@ void make_bmp(int const * volume_result, char const *name, int data_size_x, int 
 
 
 int main(int argc, char* argv[]) {
-  int nlayers = 1;
+  int nlayers = 10;
   if (argc > 1) {
     nlayers = std::atoi(argv[1]);
   }
@@ -1072,8 +1072,8 @@ int main(int argc, char* argv[]) {
   
 //  TestScalarNavigation();
 //  TestVectorNavigation();
-  //XRayBenchmark(axis, pixel_width);
-  //XRayBenchmarkVecNav(axis, pixel_width, vecsize);  
+  XRayBenchmark(axis, pixel_width);
+  XRayBenchmarkVecNav(axis, pixel_width, vecsize);  
   XRayBenchmarkBasketized(axis, pixel_width, vecsize, nthreads);
   std::cout << "Finished run: img. width=" << pixel_width << " vecsize=" << vecsize << " nthreads=" << nthreads << " on axis " << axis << std::endl;
 }

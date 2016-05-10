@@ -25,7 +25,7 @@
       return &instance;}
 
 #define CLASSNAME(name)\
-        static constexpr char *gClassNameString = #name;
+        static constexpr const char *gClassNameString = #name;
 
 #define BOILERPLATE(name)     \
     CLASSNAME(name)
@@ -264,7 +264,7 @@ public:
                               distance, distance1);
 
       Min(distance,distance1).store(out_steps + i);
-      for(auto j=0;j<Real_v::Size;++j){
+      for(unsigned int j=0;j<Real_v::Size;++j){
         // relocation here ( or in separate loop ? )
         if (Depth < 0) {
           in_states[i+j]->CopyTo(out_states[i+j]);
@@ -364,7 +364,7 @@ static VToyNavigator *Instance() {
        MaskedAssign(distance<0, 1.e-3, &distance);
        distance.store(out_steps + i);
 
-       for (auto j = 0; j < Real_v::Size; ++j) {
+       for (unsigned int j = 0; j < Real_v::Size; ++j) {
          // relocation here ( or in separate loop ? )
          if (Depth < 0) {
            in_states[i+j]->CopyTo(out_states[i+j]);
