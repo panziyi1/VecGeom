@@ -64,6 +64,7 @@ private:
 public:
 
   VECGEOM_CUDA_HEADER_BOTH
+  VECGEOM_INLINE
   UnplacedTube(Precision const& _rmin, Precision const& _rmax, Precision const& _z,
                Precision const& _sphi, Precision const& _dphi)
     : fRmin(_rmin<0.0?0.0:_rmin), fRmax(_rmax), fZ(_z), fSphi(_sphi), fDphi(_dphi),
@@ -85,6 +86,7 @@ fPhiWedge(_dphi,_sphi)
 }
 
   VECGEOM_CUDA_HEADER_BOTH
+  VECGEOM_INLINE
      UnplacedTube(UnplacedTube const &other) : fRmin(other.fRmin), fRmax(other.fRmax), fZ(other.fZ), fSphi(other.fSphi), fDphi(other.fDphi),
 fRmin2(other.fRmin2),
 fRmax2(other.fRmax2),

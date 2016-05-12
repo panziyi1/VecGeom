@@ -77,6 +77,9 @@ public:
     return *this;
   }
 
+  VECGEOM_CUDA_HEADER_BOTH
+  VECGEOM_INLINE
+  ~Vector3D () {}
 
   /**
    * Constructs a vector from an std::string of the same format as output by the

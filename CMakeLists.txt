@@ -197,10 +197,10 @@ elseif(Intel)
   if (CMAKE_BUILD_TYPE MATCHES Debug)
     set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -g -O0")
   else()
-    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -fno-alias")
+    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -finline-limit=10000000 -fno-alias")
   endif()
     if (OPENMP)
-    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -parallel-source-info=2 -qopenmp")
+    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -qopenmp")
   endif()
 
 elseif(Clang)
@@ -226,7 +226,15 @@ endif()
 string(TOLOWER ${VECGEOM_VECTOR} _arch_lo)
 string(TOUPPER ${VECGEOM_VECTOR} _arch_up)
 
-if (${_arch_lo} MATCHES mic)
+if (${_arch_lo} MATCHES avx512)
+  if (Intel)
+    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -xMIC-AVX512")
+    set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -xMIC-AVX512")
+  else()
+    set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -mavx512f -mavx512cd -mavx512er")
+    set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -mavx512f -mavx512cd -mavx512er")
+  endif()
+elseif (${_arch_lo} MATCHES mic)
   if (Intel)
     set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -m${_arch_lo}")
     set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -m${_arch_lo}")
@@ -756,6 +764,7 @@ set(TEST_EXECUTABLES_CORE
   ${CMAKE_SOURCE_DIR}/test/core/BooleanConvexityTest.cpp
   ${CMAKE_SOURCE_DIR}/test/unit_tests/TestVecGeomPolycone.cpp
   ${CMAKE_SOURCE_DIR}/test/sc16-basket-demo/SC16SimpleTracker.cpp
+  ${CMAKE_SOURCE_DIR}/test/sc16-basket-demo/LittleEx.cpp
 
 
 #  ${CMAKE_SOURCE_DIR}/services/CompNavStatePools.cpp

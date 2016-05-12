@@ -17,7 +17,8 @@
 #ifdef __INTEL_COMPILER
   // Compiling with icc
   #define VECGEOM_INTEL
-  #define VECGEOM_INLINE inline
+  #define VECGEOM_INLINE inline __attribute__((always_inline))
+  //#define VECGEOM_INLINE inline
   #ifndef VECGEOM_NVCC
     #define VECGEOM_ALIGNED __attribute__((aligned(64)))
   #endif
