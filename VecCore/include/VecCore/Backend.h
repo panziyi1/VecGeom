@@ -42,6 +42,18 @@ void MaskedAssign(T& dest, bool mask, const T &src);
 template <class T, class Mask>
 T Blend(const Mask mask, const T& tval, const T& fval);
 
+template <typename T>
+typename std::enable_if<!std::is_scalar<T>::value,T>::type
+Gather(typename TypeTraits<T>::ScalarType const* ptr,
+       typename TypeTraits<T>::IndexType  const& idx)
+{ return T(ptr, idx); }
+
+template <typename T>
+typename std::enable_if<std::is_scalar<T>::value,T>::type
+Gather(typename TypeTraits<T>::ScalarType const* ptr,
+       typename TypeTraits<T>::IndexType  const& idx)
+{ return *(ptr + idx); }
+
 // construct a type from a pointer - generic impl for vector types
 // may be template specialized in backends
 template <typename T>

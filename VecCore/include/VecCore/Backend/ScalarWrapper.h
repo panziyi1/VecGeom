@@ -136,6 +136,9 @@ public:
   WrappedScalar(const T* const val_ptr) : fVal(*val_ptr) {}
 
   VECCORE_CUDA_HOST_DEVICE
+  WrappedScalar(const T* const val_ptr, const size_t& idx) : fVal(val_ptr[idx]) {}
+
+  VECCORE_CUDA_HOST_DEVICE
   WrappedScalar(const WrappedScalar* const s) : fVal(s->val_ptr) {}
 
   /* allow type conversion from other scalar types at initialization */
@@ -172,10 +175,10 @@ public:
   void load(T const *const src) { fVal = *src; }
 
   VECCORE_CUDA_HOST_DEVICE
-  void store(T &dest) { dest = fVal; }
+  void store(T &dest) const { dest = fVal; }
 
   VECCORE_CUDA_HOST_DEVICE
-  void store(T *dest) { *dest = fVal; }
+  void store(T *dest) const { *dest = fVal; }
 
 #define SCALAR_WRAPPER_OPERATOR(OP)                                            \
   VECCORE_FORCE_INLINE                                                         \

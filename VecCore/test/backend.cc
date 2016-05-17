@@ -244,8 +244,52 @@ TYPED_TEST_P(VectorInterfaceTest, MaskLaneRead) {
     EXPECT_EQ(input[i] > Scalar_t(0), vecCore::MaskLaneAt(mask, i));
 }
 
+TYPED_TEST_P(VectorInterfaceTest, Gather) {
+  using Vector_t = typename TestFixture::Vector_t;
+  using Scalar_t = typename TestFixture::Scalar_t;
+  using Index_v = typename vecCore::Index_v<Vector_t>;
+  using Index_t = typename vecCore::ScalarType<Index_v>::Type;
+
+  size_t N = vecCore::VectorSize<Vector_t>();
+
+  Scalar_t input[16 * N];
+  Index_t  index[16 * N];
+
+  for (vecCore::UInt_s i = 0; i < 16*N; ++i) {
+    input[i] = (i % 2 == 0) ? 0 : 1, index[i] = i;
+  }
+
+  Vector_t x, y;
+  Index_v idx1(vecCore::FromPtr<Index_v>(&index[0]));
+  Index_v idx2(vecCore::FromPtr<Index_v>(&index[N]));
+
+  x = vecCore::FromPtr<Vector_t>(&input[0]);
+  y = vecCore::Gather<Vector_t>(&input[0], idx1);
+
+  EXPECT_TRUE(vecCore::MaskFull(x == y));
+
+  x = vecCore::FromPtr<Vector_t>(&input[N]);
+  y = vecCore::Gather<Vector_t>(&input[0], idx2);
+
+  EXPECT_TRUE(vecCore::MaskFull(x == y));
+  x = Vector_t(0);
+  y = vecCore::Gather<Vector_t>(&input[0], 2*idx1);
+
+  EXPECT_TRUE(vecCore::MaskFull(x == y));
+
+  idx2 = 2*idx1+1;
+  y = vecCore::Gather<Vector_t>(&input[0], idx2);
+
+  EXPECT_TRUE(vecCore::MaskFull(x < y));
+
+  idx2 = 8*idx1+1;
+  y = vecCore::Gather<Vector_t>(&input[0], idx2);
+
+  EXPECT_TRUE(vecCore::MaskFull(x < y));
+}
+
 REGISTER_TYPED_TEST_CASE_P(VectorInterfaceTest, VectorSize, VectorSizeVariable, StoreToPtr, VectorLaneRead,
-                           MaskLaneRead);
+                           MaskLaneRead, Gather);
 
 ///////////////////////////////////////////////////////////////////////////////
 
