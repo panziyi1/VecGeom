@@ -147,6 +147,7 @@ constexpr Bool_s EarlyReturnAllowed()
 
 #include "Backend/Scalar.h"
 #include "Backend/ScalarWrapper.h"
+#include "Backend/SIMD.h"
 
 #if !defined(VECCORE_NVCC)
 #include "Backend/VcScalar.h"

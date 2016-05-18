@@ -68,6 +68,7 @@ int main(int argc, char *argv[])
 {
   Test<backend::Scalar>("Scalar");
   Test<backend::ScalarWrapper>("ScalarWrapper");
+  Test<backend::SIMD<16>>("SIMD");
 
 #ifdef VECCORE_ENABLE_VC
   Test<backend::VcScalar>("VcScalar");

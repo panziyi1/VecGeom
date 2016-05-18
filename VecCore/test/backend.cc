@@ -238,7 +238,7 @@ TYPED_TEST_P(VectorInterfaceTest, MaskLaneRead) {
 
   Vector_t tmp(vecCore::FromPtr<Vector_t>(&input[0]));
 
-  auto mask = tmp > Scalar_t(0);
+  auto mask = tmp > Vector_t(0);
 
   for (vecCore::UInt_s i = 0; i < kVS; ++i)
     EXPECT_EQ(input[i] > Scalar_t(0), vecCore::MaskLaneAt(mask, i));
@@ -381,6 +381,7 @@ REGISTER_TYPED_TEST_CASE_P(VectorMaskTest, Constructor, MaskFull, MaskEmpty, Mas
 
 TEST_BACKEND(Scalar);
 TEST_BACKEND(ScalarWrapper);
+TEST_BACKEND_P(SIMD, SIMD<16>);
 
 #ifdef VECCORE_ENABLE_VC
 TEST_BACKEND(VcScalar);
