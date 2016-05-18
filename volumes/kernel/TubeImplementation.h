@@ -480,7 +480,7 @@ struct TubeImplementation {
 
 
     //=== Next, check all dimensions of the tube, whether points are inside --> return -1
-    MaskedAssign( !done, -1.0, &distance );
+    MaskedAssign( !done, 0., &distance );
 
     // For points inside z-range, return -1
     Bool_t inside = distz < -kHalfTolerance;
@@ -613,7 +613,7 @@ struct TubeImplementation {
     typedef typename Backend::precision_v Float_t;
     typedef typename Backend::bool_v Bool_t;
 
-    distance = -1;
+    distance = 0.;
     Bool_t done = Backend::kFalse;
 
     //=== First we check all dimensions of the tube, whether points are outside --> return -1
@@ -629,13 +629,13 @@ struct TubeImplementation {
     Float_t crmin = rsq;
 
     // if outside of Rmax, return -1
-    done |= crmax > kTolerance*tube.rmax();
+    done |= rsq > tube.tolOrmax2();
     if( Backend::early_returns && IsFull(done) ) return;
 
     if(checkRminTreatment<tubeTypeT>(tube)) {
       // if point is within inner-hole of a hollow tube, it is outside of the tube --> return -1
       crmin -= tube.rmin2();  // avoid a division for now
-      done |=  crmin < -kTolerance*tube.rmin();
+      done |=  rsq < tube.tolOrmin2();
       if( Backend::early_returns && IsFull(done) ) return;
     }
 

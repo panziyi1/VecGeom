@@ -126,7 +126,7 @@ struct Window
     switch (axis_) {
       case (0):
         dir_.Set(1., 0., 0.);
-	offset = minExtent.x();
+	offset = minExtent.x()-1.e-3;
 	//offset = orig.x()-dx;
         axis1_start= orig.y()-dy;
         axis1_end= orig.y() + dy;
@@ -137,7 +137,7 @@ struct Window
       case (1):
         dir_.Set(0., 1., 0.);
 	    // offset = orig.y()-dy;
-	offset = minExtent.y();
+	offset = minExtent.y()-1.e-3;
         axis1_start= orig.z()-dz;
         axis1_end= orig.z()+ dz;
         axis2_start= orig.x()-dx;
@@ -147,7 +147,7 @@ struct Window
       case (2):
         dir_.Set(0., 0., 1.);
 	     //offset = orig.z()-dz;
-	offset = minExtent.z();
+	offset = minExtent.z()-1.e-3;
         axis1_start= orig.x() -dx;
         axis1_end= orig.x()+ dx;
         axis2_start= orig.y()-dy;
@@ -1067,7 +1067,7 @@ int main(int argc, char* argv[]) {
 //  TestScalarNavigation();
 //  TestVectorNavigation();
 //  XRayBenchmark(axis, pixel_width);
-//  XRayBenchmarkVecNav(axis, pixel_width, vecsize);  
+  XRayBenchmarkVecNav(axis, pixel_width, vecsize);  
   XRayBenchmarkBasketized(axis, pixel_width, vecsize, nthreads);
   std::cout << "Finished run: img. width=" << pixel_width << " vecsize=" << vecsize << " nthreads=" << nthreads << " on axis " << axis << std::endl;
 }
