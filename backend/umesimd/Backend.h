@@ -69,74 +69,81 @@ struct kUmeSimd {
 #ifdef VECGEOM_FLOAT_PRECISION
 class UmeSimdMask : public UME::SIMD::SIMDVecMask<kVectorSize> {
 public:
-    UmeSimdMask() : UME::SIMD::SIMDVecMask<kVectorSize> () {}
-    UmeSimdMask(int mm) : UME::SIMD::SIMDVecMask<kVectorSize>(bool(mm)) {}
-    UmeSimdMask(UME::SIMD::SIMDVecMask<kVectorSize> const & m) : UME::SIMD::SIMDVecMask<kVectorSize>(m) {}
-    
+    VECGEOM_INLINE UmeSimdMask() : UME::SIMD::SIMDVecMask<kVectorSize> () {}
+    VECGEOM_INLINE UmeSimdMask(int mm) : UME::SIMD::SIMDVecMask<kVectorSize>(bool(mm)) {}
+    VECGEOM_INLINE UmeSimdMask(UME::SIMD::SIMDVecMask<kVectorSize> const & m) : UME::SIMD::SIMDVecMask<kVectorSize>(m) {}
+    VECGEOM_INLINE ~UmeSimdMask() {}
+
     const static int Size = kVectorSize;
 };
 
 class UmeSimdIntegerVector : public UME::SIMD::SIMDVec_i<int32_t, kVectorSize> {
 public:
-    UmeSimdIntegerVector() : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>() {}
-    UmeSimdIntegerVector(const int i) : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>(i) {}
-    UmeSimdIntegerVector(const int i[kVectorSize]) : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>(&i[0]) {}
-    UmeSimdIntegerVector(UME::SIMD::SIMDVec_i<int32_t, kVectorSize> const & mm) : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>(mm) {}
-    
+    VECGEOM_INLINE UmeSimdIntegerVector() : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>() {}
+    VECGEOM_INLINE UmeSimdIntegerVector(const int i) : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>(i) {}
+    VECGEOM_INLINE UmeSimdIntegerVector(const int i[kVectorSize]) : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>(&i[0]) {}
+    VECGEOM_INLINE UmeSimdIntegerVector(UME::SIMD::SIMDVec_i<int32_t, kVectorSize> const & mm) : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>(mm) {}
+    VECGEOM_INLINE ~UmeSimdIntegerVector() {}
+
     const static int Size = kVectorSize;
 };
 
 class UmeSimdInsideVector : public UME::SIMD::SIMDVec_i<int32_t, kVectorSize> {
 public:
-    UmeSimdInsideVector() : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>() {}
-    UmeSimdInsideVector(const int32_t i) : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>(i) {}
-    UmeSimdInsideVector(const int32_t i[kVectorSize]) : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>(&i[0]) {}
-    UmeSimdInsideVector(UME::SIMD::SIMDVec_i<int32_t, kVectorSize> const & mm) : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>(mm) {}
+    VECGEOM_INLINE UmeSimdInsideVector() : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>() {}
+    VECGEOM_INLINE UmeSimdInsideVector(const int32_t i) : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>(i) {}
+    VECGEOM_INLINE UmeSimdInsideVector(const int32_t i[kVectorSize]) : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>(&i[0]) {}
+    VECGEOM_INLINE UmeSimdInsideVector(UME::SIMD::SIMDVec_i<int32_t, kVectorSize> const & mm) : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>(mm) {}
+    VECGEOM_INLINE ~UmeSimdInsideVector() {}
     
     const static int Size = kVectorSize;
 };
 
 class UmeSimdPrecisionVector : public UME::SIMD::SIMDVec_f<float, kVectorSize> {
 public:
-    UmeSimdPrecisionVector() : UME::SIMD::SIMDVec_f<float, kVectorSize>() {}
-    UmeSimdPrecisionVector(const float d) : UME::SIMD::SIMDVec_f<float, kVectorSize>(d) {}
-    UmeSimdPrecisionVector(const int i) : UME::SIMD::SIMDVec_f<float, kVectorSize>(float(i)) {}
-    UmeSimdPrecisionVector(const float d[kVectorSize]) : UME::SIMD::SIMDVec_f<float, kVectorSize>(&d[0]) {}
-    UmeSimdPrecisionVector(UME::SIMD::SIMDVec_f<float, kVectorSize> const & m) : UME::SIMD::SIMDVec_f<float, kVectorSize>(m) {}
-    
+    VECGEOM_INLINE UmeSimdPrecisionVector() : UME::SIMD::SIMDVec_f<float, kVectorSize>() {}
+    VECGEOM_INLINE UmeSimdPrecisionVector(const float d) : UME::SIMD::SIMDVec_f<float, kVectorSize>(d) {}
+    VECGEOM_INLINE UmeSimdPrecisionVector(const int i) : UME::SIMD::SIMDVec_f<float, kVectorSize>(float(i)) {}
+    VECGEOM_INLINE UmeSimdPrecisionVector(const float d[kVectorSize]) : UME::SIMD::SIMDVec_f<float, kVectorSize>(&d[0]) {}
+    VECGEOM_INLINE UmeSimdPrecisionVector(UME::SIMD::SIMDVec_f<float, kVectorSize> const & m) : UME::SIMD::SIMDVec_f<float, kVectorSize>(m) {}
+    VECGEOM_INLINE ~UmeSimdPrecisionVector() {}
+
     const static int Size = kVectorSize;
     
-    inline UmeSimdPrecisionVector operator * (UmeSimdPrecisionVector const & val) const { return mul(val); } 
-    inline UmeSimdPrecisionVector operator * (Precision const val) const { return mul(val); }
+    VECGEOM_INLINE UmeSimdPrecisionVector operator * (UmeSimdPrecisionVector const & val) const { return mul(val); } 
+    VECGEOM_INLINE UmeSimdPrecisionVector operator * (Precision const val) const { return mul(val); }
 };
 
 #else
 class UmeSimdMask : public UME::SIMD::SIMDVecMask<kVectorSize> {
 public:
-    UmeSimdMask() : UME::SIMD::SIMDVecMask<kVectorSize> () {}
-    UmeSimdMask(int mm) : UME::SIMD::SIMDVecMask<kVectorSize>(bool(mm)) {}
-    UmeSimdMask(UME::SIMD::SIMDVecMask<kVectorSize> const & m) : UME::SIMD::SIMDVecMask<kVectorSize>(m) {}
-    
+    VECGEOM_INLINE UmeSimdMask() : UME::SIMD::SIMDVecMask<kVectorSize> () {}
+    VECGEOM_INLINE UmeSimdMask(int mm) : UME::SIMD::SIMDVecMask<kVectorSize>(bool(mm)) {}
+    VECGEOM_INLINE UmeSimdMask(UME::SIMD::SIMDVecMask<kVectorSize> const & m) : UME::SIMD::SIMDVecMask<kVectorSize>(m) {}
+    VECGEOM_INLINE ~UmeSimdMask() {}
+
     const static int Size = kVectorSize;
 };
 
 class UmeSimdIntegerVector : public UME::SIMD::SIMDVec_i<int64_t, kVectorSize> {
 public:
-    UmeSimdIntegerVector() : UME::SIMD::SIMDVec_i<int64_t, kVectorSize>() {}
-    UmeSimdIntegerVector(const long int i) : UME::SIMD::SIMDVec_i<int64_t, kVectorSize>(i) {}
-    UmeSimdIntegerVector(const long int i[kVectorSize]) : UME::SIMD::SIMDVec_i<int64_t, kVectorSize>(&i[0]) {}
-    UmeSimdIntegerVector(UME::SIMD::SIMDVec_i<int64_t, kVectorSize> const & mm) : UME::SIMD::SIMDVec_i<int64_t, kVectorSize>(mm) {}
+    VECGEOM_INLINE UmeSimdIntegerVector() : UME::SIMD::SIMDVec_i<int64_t, kVectorSize>() {}
+    VECGEOM_INLINE UmeSimdIntegerVector(const long int i) : UME::SIMD::SIMDVec_i<int64_t, kVectorSize>(i) {}
+    VECGEOM_INLINE UmeSimdIntegerVector(const long int i[kVectorSize]) : UME::SIMD::SIMDVec_i<int64_t, kVectorSize>(&i[0]) {}
+    VECGEOM_INLINE UmeSimdIntegerVector(UME::SIMD::SIMDVec_i<int64_t, kVectorSize> const & mm) : UME::SIMD::SIMDVec_i<int64_t, kVectorSize>(mm) {}
+    VECGEOM_INLINE ~UmeSimdIntegerVector() {}
 
     const static int Size = kVectorSize;
 };
 
 class UmeSimdInsideVector : public UME::SIMD::SIMDVec_i<int32_t, kVectorSize> {
 public:
-    UmeSimdInsideVector() : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>() {}
-    UmeSimdInsideVector(const int i) : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>(i) {}
-    UmeSimdInsideVector(const int i[kVectorSize]) : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>(&i[0]) {}
-    UmeSimdInsideVector(UME::SIMD::SIMDVec_i<int32_t, kVectorSize> const & mm) : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>(mm) {}
-
+    VECGEOM_INLINE UmeSimdInsideVector() : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>() {}
+    VECGEOM_INLINE UmeSimdInsideVector(const int i) : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>(i) {}
+    VECGEOM_INLINE UmeSimdInsideVector(const int i[kVectorSize]) : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>(&i[0]) {}
+    VECGEOM_INLINE UmeSimdInsideVector(UME::SIMD::SIMDVec_i<int32_t, kVectorSize> const & mm) : UME::SIMD::SIMDVec_i<int32_t, kVectorSize>(mm) {}
+    VECGEOM_INLINE ~UmeSimdInsideVector() {}
+    
     const static int Size = kVectorSize;
 };
 
@@ -404,19 +411,19 @@ UmeSimdPrecisionVector ATan2( UmeSimdPrecisionVector const & val1, UmeSimdPrecis
 VECGEOM_INLINE
 UmeSimdPrecisionVector NonZeroAbs(UmeSimdPrecisionVector const & x) {
 #ifdef VECGEOM_FLOAT_PRECISION
-  return (x.abs()).add(std::numeric_limits<float>::lowest());
+  return (x.abs()).add(std::numeric_limits<float>::min());
 #else
-  return (x.abs()).add(std::numeric_limits<double>::lowest());
+  return (x.abs()).add(std::numeric_limits<double>::min());
 #endif
 }
 
 VECGEOM_INLINE
 UmeSimdPrecisionVector NonZero(UmeSimdPrecisionVector const & x) {
 #ifdef VECGEOM_FLOAT_PRECISION
-  UmeSimdPrecisionVector t0(std::numeric_limits<float>::lowest());
+  UmeSimdPrecisionVector t0(std::numeric_limits<float>::min());
   UmeSimdMask mask = x < 0.0f;
 #else
-  UmeSimdPrecisionVector t0(std::numeric_limits<double>::lowest());
+  UmeSimdPrecisionVector t0(std::numeric_limits<double>::min());
   UmeSimdMask mask = x < 0.0;
 #endif
   return x.add(t0.neg(mask));
