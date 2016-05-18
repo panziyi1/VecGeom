@@ -309,17 +309,11 @@ public:
   void Step(Precision *psteps, Precision *steps, NavStatePool *newnavstates, Stack &stack) {
     // Perform a single step and pushes the new states to the stack, flushing exiting tracks
 //    VToyNavigator const *specialnav = GetNavigator((*navstates_)[0]->Top()->GetLogicalVolume());
-    static size_t icount = 0;
-    icount++;
-    if (icount == 1975) {
-      icount++;
-    }  
     specialnav_->ComputeStepsAndPropagatedStates(SOA3D<Precision>(xp,yp,zp,size_), SOA3D<Precision>(xdir,ydir,zdir,size_), 
         psteps, *navstates_, *newnavstates, steps);
 
     // Push all tracks to stack using construct in place
     for(auto itr=0; itr<size_; ++itr) {
-      assert(steps[itr]>=0);
       NavigationState *state = (*newnavstates)[itr];
       if (state->IsOutside()) FlushTrack(itr);
       else stack.Push(VolIndex(state), pixel[itr], nbound[itr]+1, 
@@ -1072,8 +1066,8 @@ int main(int argc, char* argv[]) {
   
 //  TestScalarNavigation();
 //  TestVectorNavigation();
-  XRayBenchmark(axis, pixel_width);
-  XRayBenchmarkVecNav(axis, pixel_width, vecsize);  
+//  XRayBenchmark(axis, pixel_width);
+//  XRayBenchmarkVecNav(axis, pixel_width, vecsize);  
   XRayBenchmarkBasketized(axis, pixel_width, vecsize, nthreads);
   std::cout << "Finished run: img. width=" << pixel_width << " vecsize=" << vecsize << " nthreads=" << nthreads << " on axis " << axis << std::endl;
 }
