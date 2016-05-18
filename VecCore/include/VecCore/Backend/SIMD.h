@@ -177,55 +177,55 @@ namespace simd {
       }
     };
 
-  #define UNARY_OPERATOR(OP)                                  \
-  template<typename T, size_t N> __force_inline__             \
-  array<T, N> operator OP(const array<T, N>& a)               \
-  {                                                           \
-    array<T, N> result;                                       \
-    for (size_t i = 0; i < N; i++)                            \
-      result[i] = OP a[i];                                    \
-    return result;                                            \
+  #define UNARY_OPERATOR(OP)                                                   \
+  template<typename T, size_t N> __force_inline__                              \
+  array<T, N> operator OP(const array<T, N>& a)                                \
+  {                                                                            \
+    array<T, N> result;                                                        \
+    for (size_t i = 0; i < N; i++)                                             \
+      result[i] = OP a[i];                                                     \
+    return result;                                                             \
   }
 
-  #define BINARY_OPERATOR(OP)                                 \
-  template<typename T, size_t N> __force_inline__             \
-  array<T, N> operator OP(const array<T, N>& a,               \
-                          const array<T, N>& b)               \
-  {                                                           \
-    array<T, N> result;                                       \
-    for (size_t i = 0; i < N; i++)                            \
-      result[i] = a[i] OP b[i];                               \
-    return result;                                            \
-  }                                                           \
-                                                              \
-  template<typename T, size_t N> __force_inline__             \
-  array<T, N> operator OP(const T& a, const array<T, N>& b)   \
-  { return array<T, N>(array<T, N>(a) OP b); }                \
-                                                              \
-  template<typename T, size_t N> __force_inline__             \
-  array<T, N> operator OP(const array<T, N>& a, const T& b)   \
-  { return array<T, N>(a OP array<T, N>(b)); }                \
-                                                              \
-  template<typename T1, typename T2, typename R = T2, size_t N>    \
-  __force_inline__                                            \
-  array<R, N> operator OP(const array<T1, N>& a,              \
-                          const array<T2, N>& b)              \
-  {                                                           \
-    array<R, N> result;                                       \
-    for (size_t i = 0; i < N; i++)                            \
-      result[i] = a[i] OP b[i];                               \
-    return result;                                            \
-  }                                                           \
-                                                              \
-  template<typename T1, typename T2, typename R = T2, size_t N>    \
-  __force_inline__                                            \
-  array<R, N> operator OP(const T1& a, const array<T2, N>& b) \
-  { return array<R, N>(array<T2, N>(a) OP b); }               \
-                                                              \
-  template<typename T1, typename T2, typename R = T2, size_t N>    \
-  __force_inline__                                            \
-  array<R, N> operator OP(const array<T1, N>& a, const T2& b) \
-  { return array<R, N>(a OP array<T1, N>(b)); }               \
+  #define BINARY_OPERATOR(OP)                                                  \
+  template<typename T, size_t N> __force_inline__                              \
+  array<T, N> operator OP(const array<T, N>& a,                                \
+                          const array<T, N>& b)                                \
+  {                                                                            \
+    array<T, N> result;                                                        \
+    for (size_t i = 0; i < N; i++)                                             \
+      result[i] = a[i] OP b[i];                                                \
+    return result;                                                             \
+  }                                                                            \
+                                                                               \
+  template<typename T, size_t N> __force_inline__                              \
+  array<T, N> operator OP(const T& a, const array<T, N>& b)                    \
+  { return array<T, N>(array<T, N>(a) OP b); }                                 \
+                                                                               \
+  template<typename T, size_t N> __force_inline__                              \
+  array<T, N> operator OP(const array<T, N>& a, const T& b)                    \
+  { return array<T, N>(a OP array<T, N>(b)); }                                 \
+                                                                               \
+  template<typename T1, typename T2, typename R = T2, size_t N>                \
+  __force_inline__                                                             \
+  array<R, N> operator OP(const array<T1, N>& a,                               \
+                          const array<T2, N>& b)                               \
+  {                                                                            \
+    array<R, N> result;                                                        \
+    for (size_t i = 0; i < N; i++)                                             \
+      result[i] = a[i] OP b[i];                                                \
+    return result;                                                             \
+  }                                                                            \
+                                                                               \
+  template<typename T1, typename T2, typename R = T2, size_t N>                \
+  __force_inline__                                                             \
+  array<R, N> operator OP(const T1& a, const array<T2, N>& b)                  \
+  { return array<R, N>(array<T2, N>(a) OP b); }                                \
+                                                                               \
+  template<typename T1, typename T2, typename R = T2, size_t N>                \
+  __force_inline__                                                             \
+  array<R, N> operator OP(const array<T1, N>& a, const T2& b)                  \
+  { return array<R, N>(a OP array<T1, N>(b)); }                                \
 
   // arithmetic
   UNARY_OPERATOR(+)
@@ -320,27 +320,26 @@ void MaskedAssign(simd::array<T, N>& dest,
 
 namespace math {
 
-#define SIMD_FUNCTION(function, f)      \
-  template<typename T, size_t N>        \
-  simd::array<T, N>                     \
-  function(const simd::array<T, N>& x)  \
-  {                                     \
-    simd::array<T, N> result;           \
-    for (size_t i = 0; i < N; ++i)      \
-      result[i] = f(x[i]);              \
-    return result;                      \
+#define SIMD_FUNCTION(function, f)                                             \
+  template<typename T, size_t N>                                               \
+  simd::array<T, N>                                                            \
+  function(const simd::array<T, N>& x)                                         \
+  {                                                                            \
+    simd::array<T, N> result;                                                  \
+    for (size_t i = 0; i < N; ++i)                                             \
+      result[i] = f(x[i]);                                                     \
+    return result;                                                             \
   }
 
-#define SIMD_FUNCTION_2(function, f)    \
-  template<typename T, size_t N>        \
-  simd::array<T, N>                     \
-  function (const simd::array<T, N>& x, \
-            const simd::array<T, N>& y) \
-  {                                     \
-    simd::array<T, N> result;           \
-    for (size_t i = 0; i < N; i++)      \
-      result[i] = f(x[i], y[i]);        \
-    return result;                      \
+#define SIMD_FUNCTION_2(function, f)                                           \
+  template<typename T, size_t N>                                               \
+  simd::array<T, N>                                                            \
+  function (const simd::array<T, N>& x, const simd::array<T, N>& y)            \
+  {                                                                            \
+    simd::array<T, N> result;                                                  \
+    for (size_t i = 0; i < N; i++)                                             \
+      result[i] = f(x[i], y[i]);                                               \
+    return result;                                                             \
   }
 
 SIMD_FUNCTION(Abs, std::abs)
@@ -373,6 +372,9 @@ SIMD_FUNCTION(Log10, std::log10)
 SIMD_FUNCTION(Sqrt, std::sqrt)
 
 SIMD_FUNCTION_2(Pow, std::pow)
+
+#undef SIMD_FUNCTION
+#undef SIMD_FUNCTION_2
 
 template<typename T, size_t N>
 void SinCos(const simd::array<T, N>& x,
