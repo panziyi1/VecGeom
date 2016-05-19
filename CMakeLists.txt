@@ -390,6 +390,11 @@ endif()
 if (GENERATE_MATERIALS_DB)
   set(VECGEOM_DEFINITIONS "${VECGEOM_DEFINITIONS} -DVECGEOM_GENERATE_MATERIALS_DB")
 endif()
+if (OPENMP)
+  message(STATUS "Using OpenMP")
+  set(VECGEOM_DEFINITIONS
+      "${VECGEOM_DEFINITIONS} -DVECGEOM_OPENMP")
+endif()
 
 ################################################################################
 
@@ -520,11 +525,6 @@ if (VTUNE)
   set(VECGEOM_LIBRARIES_EXTERNAL ${VECGEOM_LIBRARIES_EXTERNAL} ${VTUNE_LIBRARIES} -lpthread -ldl)
 endif()
 
-if (OPENMP)
-  message(STATUS "Using OpenMP")
-  set(VECGEOM_DEFINITION_FLAGS
-      "${VECGEOM_DEFINITION_FLAGS} -DVECGEOM_OPENMP")
-endif()
 ################################################################################
 
 include_directories(BEFORE ${CMAKE_SOURCE_DIR})

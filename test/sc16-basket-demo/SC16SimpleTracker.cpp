@@ -12,7 +12,6 @@
 #include <iostream>
 #include <mutex>
 
-#define VECGEOM_OPENMP
 #ifdef VECGEOM_OPENMP
  #include "omp.h"
 #endif
