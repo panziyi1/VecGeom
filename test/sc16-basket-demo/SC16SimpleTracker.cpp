@@ -12,6 +12,7 @@
 #include <iostream>
 #include <mutex>
 
+#define VECGEOM_OPENMP
 #ifdef VECGEOM_OPENMP
  #include "omp.h"
 #endif
@@ -668,7 +669,7 @@ void TestVectorNavigation() {
 // reproducing the pixel-by-pixel XRayBenchmark
 // target: show speed gain from specialized navigators
 // in comparision to current XRay-Benchmark
-void XRayBenchmark(int axis, int pixel_width) {
+void XRayBenchmark(int axis, int pixel_width, int Nthreads) {
 
   std::stringstream imagenamebase;
   imagenamebase << "simpleTrackerImage_";
@@ -680,10 +681,27 @@ void XRayBenchmark(int axis, int pixel_width) {
   Window window(vol, axis, pixel_width, 1);
 
   int *volume_result= (int*) new int[window.data_size_y * window.data_size_x*3];
+
     // init navstates
+#ifdef VECGEOM_OPENMP
+#pragma omp parallel
+    {
+      std::cout<<"OMP scalarNav nthreads: "<<Nthreads<<std::endl;
+    }
+    std::cout<<"OMP scalarNav nthreads: "<<Nthreads<<std::endl;
+    NavigationState * newnavstateArray[Nthreads];
+    NavigationState * curnavstateArray[Nthreads];
+
+    for(size_t index=0;index<Nthreads;++index){
+     newnavstateArray[index]=NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
+     curnavstateArray[index]=NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
+    }    
+
+#else
+    std::cout<<"no OMP scalarNav"<<std::endl;
     NavigationState * curnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
     NavigationState * newnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
-
+#endif
     NavigationState *worldnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
     worldnavstate->Push(GeoManager::Instance().GetWorld());
     assert( worldnavstate->Top() == GeoManager::Instance().GetWorld());
@@ -692,13 +710,20 @@ void XRayBenchmark(int axis, int pixel_width) {
     Vector3D<Precision> cpoint;
     Stopwatch timer;
     timer.Start();
- 
+   #pragma omp parallel for schedule(dynamic)
+   //#pragma omp parallel for collapse(2) schedule(dynamic)
+
     for( int pixel_count_2 = 0; pixel_count_2 < window.data_size_y; ++pixel_count_2 ) {
        for( int pixel_count_1 = 0; pixel_count_1 < window.data_size_x; ++pixel_count_1 ) {
-          window.GetCoordinates(pixel_count_1, pixel_count_2, cpoint);
+#ifdef VECGEOM_OPENMP
+          int threadid = omp_get_thread_num();
+          NavigationState * newnavstate = newnavstateArray[threadid];
+          NavigationState * curnavstate = curnavstateArray[threadid];
+#endif
+           window.GetCoordinates(pixel_count_1, pixel_count_2, cpoint);
           // Start is always in the top volume
-          worldnavstate->CopyToFixedSize<NavigationState::SizeOf(1)>(curnavstate);
-          *(volume_result+pixel_count_2*window.data_size_x+pixel_count_1) = ScalarNavigation(cpoint,window.dir_,curnavstate, newnavstate);
+           worldnavstate->CopyToFixedSize<NavigationState::SizeOf(1)>(curnavstate);
+           *(volume_result+pixel_count_2*window.data_size_x+pixel_count_1) = ScalarNavigation(cpoint,window.dir_,curnavstate, newnavstate);
           // *(volume_result+pixel_count_2*data_size_x+pixel_count_1) = ScalarNavigation_NonSpecialized(p,dir,curnavstate, newnavstate);
        } // end inner loop
     } // end outer loop
@@ -710,14 +735,22 @@ void XRayBenchmark(int axis, int pixel_width) {
   VecGeomimage << imagenamebase.str();
   VecGeomimage << "_VecGeom.bmp";
   make_bmp(volume_result, VecGeomimage.str().c_str(), window.data_size_x, window.data_size_y);
+#ifdef VECGEOM_OPENMP 
+  for(size_t index=0;index<Nthreads;++index) {
+     NavigationState::ReleaseInstance( curnavstateArray[index] );
+     NavigationState::ReleaseInstance( newnavstateArray[index] );
+  }
 
+
+#else
   NavigationState::ReleaseInstance(curnavstate);
   NavigationState::ReleaseInstance(newnavstate);
+#endif
 }
 
 
 
-void XRayBenchmarkVecNav(int axis, int pixel_width, int vecsize) {
+void XRayBenchmarkVecNav(int axis, int pixel_width, int vecsize, int Nthreads) {
 
   const int N=vecsize;
   std::stringstream imagenamebase;
@@ -731,30 +764,64 @@ void XRayBenchmarkVecNav(int axis, int pixel_width, int vecsize) {
 
   int *volume_result= (int*) new int[window.data_size_y * window.data_size_x*3];
    
+#ifdef VECGEOM_OPENMP
+  NavStatePool * newnavstatesArray[Nthreads];
+  NavStatePool * curnavstatesArray[Nthreads];
 
+  for(size_t index=0;index<Nthreads;++index){
+     newnavstatesArray[index]= new NavStatePool(N, GeoManager::Instance().getMaxDepth());
+     curnavstatesArray[index]= new NavStatePool(N, GeoManager::Instance().getMaxDepth());
+  }
+#pragma omp parallel
+  {
+   std::cout<<Nthreads<<std::endl;
+  }
+#else
+
+  NavStatePool *curnavstates = new NavStatePool(N, GeoManager::Instance().getMaxDepth());
+  NavStatePool *newnavstates = new NavStatePool(N, GeoManager::Instance().getMaxDepth());
 
   SOA3D<Precision> dirs(N);
+  Vector3D<Precision> cpoint;
+  SOA3D<Precision> points(N);
   for(auto i=0;i<N;++i){
       dirs.set(i, window.dir_.x(), window.dir_.y(),window.dir_.z());
   }
 
-  NavStatePool *curnavstates = new NavStatePool(N, GeoManager::Instance().getMaxDepth());
-  NavStatePool *newnavstates = new NavStatePool(N, GeoManager::Instance().getMaxDepth());
   double *steps    = (double*) _mm_malloc(N*sizeof(double),ALIGN_PADDING);
   double *psteps    = (double*) _mm_malloc(N*sizeof(double),ALIGN_PADDING);
 
-  SOA3D<Precision> points(N);
-
+#endif
   NavigationState *worldnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
   worldnavstate->Push(GeoManager::Instance().GetWorld());
   assert( worldnavstate->Top() == GeoManager::Instance().GetWorld());
 
-  Vector3D<Precision> cpoint;
   Stopwatch timer;
   timer.Start();
+#pragma omp parallel for schedule(dynamic)
+//#pragma omp parallel for collapse(2) schedule(dynamic)
 
     for( int pixel_count_2 = 0; pixel_count_2 < window.data_size_y; ++pixel_count_2 ) {
        for( int pixel_count_1 = 0; pixel_count_1 < window.data_size_x; ++pixel_count_1 ) {
+
+#ifdef VECGEOM_OPENMP
+          SOA3D<Precision> points(N);
+          Vector3D<Precision> cpoint;
+          SOA3D<Precision> dirs(N);
+          for(auto i=0;i<N;++i){
+             dirs.set(i, window.dir_.x(), window.dir_.y(),window.dir_.z());
+          }
+
+          double *steps    = (double*) _mm_malloc(N*sizeof(double),64);
+          double *psteps    = (double*) _mm_malloc(N*sizeof(double),64);
+          size_t threadid=omp_get_thread_num();
+          NavStatePool *curnavstates = newnavstatesArray[threadid];
+          NavStatePool *newnavstates = curnavstatesArray[threadid];
+#endif 
+
+
+
+
           window.GetCoordinates(pixel_count_1, pixel_count_2, cpoint);
           for(auto i=0;i<N;++i){
              points.set(i, cpoint[0], cpoint[1], cpoint[2]);
@@ -765,6 +832,10 @@ void XRayBenchmarkVecNav(int axis, int pixel_width, int vecsize) {
           }
 
           *(volume_result+pixel_count_2*window.data_size_x+pixel_count_1) = VectorNavigation(points,dirs,N,curnavstates,newnavstates,psteps,steps);
+#ifdef VECGEOM_OPENMP
+         _mm_free(steps);
+         _mm_free(psteps);
+#endif
       } // end inner loop
    } // end outer loop 
    timer.Stop();
@@ -774,12 +845,17 @@ void XRayBenchmarkVecNav(int axis, int pixel_width, int vecsize) {
     VecGeomimage << imagenamebase.str();
     VecGeomimage << "_Vector_VecGeom.bmp";
     make_bmp(volume_result, VecGeomimage.str().c_str(), window.data_size_x, window.data_size_y);
-
+#ifdef VECGEOM_OPENMP
+    for(size_t index=0;index<Nthreads;++index){
+       delete curnavstatesArray[index];
+       delete newnavstatesArray[index];
+    }
+#else
     _mm_free(steps);
     _mm_free(psteps);
     delete curnavstates;
     delete newnavstates;
-
+#endif
 }
 
 
@@ -801,6 +877,10 @@ void XRayBenchmarkBasketized(int axis, int pixel_width, int vecsize, int nthread
     if (tid==0) steppers[0] = new Stepper(vecsize, &window, volume_result);
     else steppers[tid] = new Stepper(vecsize, &window, nullptr);
   }  
+
+#pragma omp parallel
+  std::cout<<"run nthreads"<<nthreads<<std::endl;
+
   
   Stopwatch timer;
   timer.Start();
@@ -1066,8 +1146,8 @@ int main(int argc, char* argv[]) {
   
 //  TestScalarNavigation();
 //  TestVectorNavigation();
-//  XRayBenchmark(axis, pixel_width);
-  XRayBenchmarkVecNav(axis, pixel_width, vecsize);  
+  XRayBenchmark(axis, pixel_width, nthreads);
+  XRayBenchmarkVecNav(axis, pixel_width, vecsize,nthreads);  
   XRayBenchmarkBasketized(axis, pixel_width, vecsize, nthreads);
   std::cout << "Finished run: img. width=" << pixel_width << " vecsize=" << vecsize << " nthreads=" << nthreads << " on axis " << axis << std::endl;
 }
