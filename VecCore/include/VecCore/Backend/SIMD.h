@@ -38,6 +38,10 @@ namespace simd {
       { for (size_t i = 0; i < N; i++) (*this)[i] = static_cast<T>(ptr[i]); }
 
       template<typename _T>
+      array(const _T* __restrict__ ptr, const array<uint32_t, N>& idx)
+      { for (size_t i = 0; i < N; i++) (*this)[i] = static_cast<T>(ptr[idx[i]]); }
+
+      template<typename _T>
       array(const array<_T, N>& a)
       { for (size_t i = 0; i < N; i++) (*this)[i] = T(a[i]); }
 
