@@ -266,7 +266,7 @@ namespace vecCore {
 template<typename T, size_t N>
 struct TypeTraits<simd::array<T, N>> {
   using ScalarType = T;
-  using MaskType   = simd::array<uint32_t, N>;
+  using MaskType   = simd::array<T, N>;
   using IndexType  = simd::array<uint32_t, N>;
 };
 
@@ -305,7 +305,7 @@ bool MaskFull(const simd::array<T, N>& mask)
 template <typename T, size_t N>
 VECCORE_FORCE_INLINE
 VECCORE_CUDA_HOST_DEVICE
-simd::array<T, N> Blend(const simd::array<uint32_t, N>& mask,
+simd::array<T, N> Blend(const simd::array<T, N>& mask,
                         const simd::array<T, N>& tval,
                         const simd::array<T, N>& fval)
 { return simd::array<T, N>::blend(mask, tval, fval); }
@@ -314,7 +314,7 @@ template <typename T, size_t N>
 VECCORE_FORCE_INLINE
 VECCORE_CUDA_HOST_DEVICE
 void MaskedAssign(simd::array<T, N>& dest,
-                  const simd::array<uint32_t, N>& mask,
+                  const simd::array<T, N>& mask,
                   const simd::array<T, N>& src)
 { dest.assign(mask, src); }
 
