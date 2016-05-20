@@ -46,7 +46,7 @@ namespace simd {
       { for (size_t i = 0; i < N; i++) (*this)[i] = ptr[i]; }
 
       void
-      store(value_type* __restrict__ ptr) noexcept
+      store(value_type* __restrict__ ptr) const noexcept
       { for (size_t i = 0; i < N; i++) ptr[i] = (*this)[i]; }
 
       void
