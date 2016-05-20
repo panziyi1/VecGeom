@@ -6,7 +6,7 @@
 #    define VECCORE_ENABLE_SIMD
 #  endif
 #else
-#  define VECCORE_ALIGNED
+#  define VECCORE_SIMD_ALIGN 16
 #endif
 
 #if defined(VECCORE_ENABLE_SIMD)
@@ -21,7 +21,8 @@
 #    define VECCORE_SIMD_SSE
 #    define VECCORE_SIMD_ALIGN 16
 #  endif
-#  define VECCORE_ALIGNED alignas(VECCORE_SIMD_ALIGN)
 #endif
+
+#define VECCORE_ALIGNED alignas(VECCORE_SIMD_ALIGN)
 
 #endif
