@@ -319,7 +319,7 @@ VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE_2v(GenTrapImplementation, TranslationCode, 
   }
 
   //______________________________________________________________________________
-  template <bool IsSIMD, class Backend> struct FillPlaneDataHelper {
+  template <typename bool_v, class Backend> struct FillPlaneDataHelper {
     VECGEOM_CUDA_HEADER_BOTH
     VECGEOM_INLINE
     static void FillPlaneData(UnplacedGenTrap const &unplaced, typename Backend::precision_v &cornerx,
@@ -343,7 +343,7 @@ VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE_2v(GenTrapImplementation, TranslationCode, 
 
   //______________________________________________________________________________
   /** @brief A partial template specialization for nonSIMD cases (scalar, cuda, ... ) */
-  template <class Backend> struct FillPlaneDataHelper<false, Backend> {
+  template <class Backend> struct FillPlaneDataHelper<bool, Backend> {
     VECGEOM_CUDA_HEADER_BOTH
     static void FillPlaneData(UnplacedGenTrap const &unplaced, typename Backend::precision_v &cornerx,
                               typename Backend::precision_v &cornery, typename Backend::precision_v &deltax,
@@ -382,7 +382,7 @@ VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE_2v(GenTrapImplementation, TranslationCode, 
 
       // thats the only place where scalar and vector code diverge
       // IsSIMD misses...replaced with early_returns
-      FillPlaneDataHelper<!Backend::early_returns, Backend>::FillPlaneData(unplaced, cornerX, cornerY, deltaX, deltaY,
+      FillPlaneDataHelper<Bool_t, Backend>::FillPlaneData(unplaced, cornerX, cornerY, deltaX, deltaY,
                                                                            top, i);
 
       // std::cerr << i << " CORNERS " << cornerX << " " << cornerY << " " << deltaX << " " << deltaY << "\n";

@@ -79,13 +79,10 @@ inline int round_up_align(int num) {
   if (remainder == 0) return num;
   return (num + ALIGN_PADDING - remainder);
 }
-inline int VolIndex(const NavigationState *state) { return (state->GetCurrentLevel() - 1); }
+VECGEOM_INLINE int VolIndex(const NavigationState *state) { return (state->GetCurrentLevel() - 1); }
 // Decode pixels into coordinates
-inline void PixelToCoord(unsigned int ix, unsigned int iy, Precision start[3]) {
-// to implement
-}
-inline unsigned int EncodePixel(unsigned int ix, unsigned int iy) { return ( (iy << 16) | ix); }
-inline void DecodePixel(unsigned int const pixel, unsigned int &ix, unsigned int &iy) { 
+VECGEOM_INLINE unsigned int EncodePixel(unsigned int ix, unsigned int iy) { return ( (iy << 16) | ix); }
+VECGEOM_INLINE void DecodePixel(unsigned int const pixel, unsigned int &ix, unsigned int &iy) { 
   ix = pixel & 0xFFFF; iy = pixel >> 16;
 }  
 void make_bmp(int const *, char const *, int, int, bool linear = true);
@@ -181,7 +178,7 @@ struct Window
     if ( i0+ni > data_size_x) ni = data_size_x - i0;
   }
   
-  inline void GetCoordinates(int i, int j, Vector3D<Precision> &point) const {
+  VECGEOM_INLINE void GetCoordinates(int i, int j, Vector3D<Precision> &point) const {
     point[axis_] = offset;
     point[(axis_+1)%3] = axis1_start + i * pixel_width_1 + 1E-6;
     point[(axis_+2)%3] = axis2_start + j * pixel_width_2 + 1E-6;
@@ -198,7 +195,7 @@ struct TrackState
   Precision        yp;
   Precision        zp;
   
-  inline TrackState(unsigned int b, unsigned int pix, unsigned int nb, Precision x, Precision y, Precision z) {
+  VECGEOM_INLINE TrackState(unsigned int b, unsigned int pix, unsigned int nb, Precision x, Precision y, Precision z) {
     bindex = b; pixel = pix; nbound = nb; xp = x; yp = y; zp = z; }
 };  
 
@@ -207,11 +204,11 @@ public:
   std::vector<TrackState> states_;
   Stack(int size) : states_() { states_.reserve(size); }
   
-  inline bool empty() const { return states_.empty(); }
-  inline void Push(unsigned int b, unsigned int pixel, unsigned int nbound, Precision xp, Precision yp, Precision zp) {
+  VECGEOM_INLINE bool empty() const { return states_.empty(); }
+  VECGEOM_INLINE void Push(unsigned int b, unsigned int pixel, unsigned int nbound, Precision xp, Precision yp, Precision zp) {
     states_.emplace_back(b, pixel, nbound, xp, yp, zp);
   }  
-  inline TrackState &Pop() { TrackState &tmp = states_.back(); states_.pop_back(); return tmp;}
+  VECGEOM_INLINE TrackState &Pop() { TrackState &tmp = states_.back(); states_.pop_back(); return tmp;}
 };
   
 // Each stepper will create an array of baskets (one per volume)
@@ -269,12 +266,12 @@ public:
     delete navstates_;
   }
   
-  inline void FillPixmap(int ix, int iy, int nbound) {
+  VECGEOM_INLINE void FillPixmap(int ix, int iy, int nbound) {
     // Fill a pixel
     *(pixmap_+iy*window_->data_size_x+ix) = nbound;
   }
 
-  void FlushTrack(int itr) {
+  VECGEOM_INLINE void FlushTrack(int itr) {
     // Track fully transported - collect its "signal" in the output
     if (!pixmap_) return;
     unsigned int px, py;
@@ -282,8 +279,8 @@ public:
     FillPixmap(px, py, nbound[itr]+1);
   }
 
-  bool AddTrack(TrackState const &state) {
-    assert (!ready_);
+  VECGEOM_INLINE bool AddTrack(TrackState const &state) {
+    //assert (!ready_);
     pixel[size_] = state.pixel;
     xp[size_] = state.xp;
     yp[size_] = state.yp;
@@ -295,20 +292,20 @@ public:
     return ready_;
   }
   
-  void SetDirection(const Vector3D<Precision> &dir) { 
+  VECGEOM_INLINE void SetDirection(const Vector3D<Precision> &dir) { 
     for (auto i=0; i<threshold_; ++i) {
       xdir[i] = dir.x(); ydir[i] = dir.y(), zdir[i] = dir.z();
     }
   }
   
-  void SetNavStates(const NavigationState *state) {
-    specialnav_ = GetNavigator(state->Top()->GetLogicalVolume());
+  VECGEOM_INLINE void SetNavStates(const NavigationState *state) {
+    //specialnav_ = GetNavigator(state->Top()->GetLogicalVolume());
     for (auto i=0; i<threshold_; ++i) state->CopyTo((*navstates_)[i]);
   }
   
   void Step(Precision *psteps, Precision *steps, NavStatePool *newnavstates, Stack &stack) {
     // Perform a single step and pushes the new states to the stack, flushing exiting tracks
-//    VToyNavigator const *specialnav = GetNavigator((*navstates_)[0]->Top()->GetLogicalVolume());
+    VToyNavigator const *specialnav_ = GetNavigator((*navstates_)[0]->Top()->GetLogicalVolume());
     specialnav_->ComputeStepsAndPropagatedStates(SOA3D<Precision>(xp,yp,zp,size_), SOA3D<Precision>(xdir,ydir,zdir,size_), 
         psteps, *navstates_, *newnavstates, steps);
 
@@ -411,9 +408,9 @@ public:
   {
     // Transport thread entry point
     static std::mutex mtx_;
-    mtx_.lock();
-    std::cout << "Thread " << tid << std::endl;
-    mtx_.unlock();
+    //mtx_.lock();
+    //std::cout << "Thread " << tid << std::endl;
+    //mtx_.unlock();
     int istart1, npix1;
     window.GetSubwindow(islice, istart1, npix1);
     // The stepper variable should be using TLS
@@ -668,7 +665,7 @@ void TestVectorNavigation() {
 // reproducing the pixel-by-pixel XRayBenchmark
 // target: show speed gain from specialized navigators
 // in comparision to current XRay-Benchmark
-void XRayBenchmark(int axis, int pixel_width, int Nthreads) {
+void XRayBenchmark(int axis, int pixel_width, unsigned int Nthreads) {
 
   std::stringstream imagenamebase;
   imagenamebase << "simpleTrackerImage_";
@@ -683,21 +680,16 @@ void XRayBenchmark(int axis, int pixel_width, int Nthreads) {
 
     // init navstates
 #ifdef VECGEOM_OPENMP
-#pragma omp parallel
-    {
-      std::cout<<"OMP scalarNav nthreads: "<<Nthreads<<std::endl;
-    }
-    std::cout<<"OMP scalarNav nthreads: "<<Nthreads<<std::endl;
     NavigationState * newnavstateArray[Nthreads];
     NavigationState * curnavstateArray[Nthreads];
 
+#pragma omp parallel
     for(size_t index=0;index<Nthreads;++index){
      newnavstateArray[index]=NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
      curnavstateArray[index]=NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
     }    
 
 #else
-    std::cout<<"no OMP scalarNav"<<std::endl;
     NavigationState * curnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
     NavigationState * newnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
 #endif
@@ -727,8 +719,8 @@ void XRayBenchmark(int axis, int pixel_width, int Nthreads) {
        } // end inner loop
     } // end outer loop
 
-   timer.Stop();
-   std::cout << " XRay Elapsed time : "<< timer.Elapsed() << std::endl;
+  timer.Stop();
+  std::cout << " XRay Elapsed time/Nimages: "<< timer.Elapsed() << std::endl;
 
   std::stringstream VecGeomimage;
   VecGeomimage << imagenamebase.str();
@@ -749,7 +741,7 @@ void XRayBenchmark(int axis, int pixel_width, int Nthreads) {
 
 
 
-void XRayBenchmarkVecNav(int axis, int pixel_width, int vecsize, int Nthreads) {
+void XRayBenchmarkVecNav(int axis, int pixel_width, int vecsize, unsigned int Nthreads) {
 
   const int N=vecsize;
   std::stringstream imagenamebase;
@@ -767,13 +759,10 @@ void XRayBenchmarkVecNav(int axis, int pixel_width, int vecsize, int Nthreads) {
   NavStatePool * newnavstatesArray[Nthreads];
   NavStatePool * curnavstatesArray[Nthreads];
 
+#pragma omp parallel
   for(size_t index=0;index<Nthreads;++index){
      newnavstatesArray[index]= new NavStatePool(N, GeoManager::Instance().getMaxDepth());
      curnavstatesArray[index]= new NavStatePool(N, GeoManager::Instance().getMaxDepth());
-  }
-#pragma omp parallel
-  {
-   std::cout<<Nthreads<<std::endl;
   }
 #else
 
@@ -877,15 +866,13 @@ void XRayBenchmarkBasketized(int axis, int pixel_width, int vecsize, int nthread
     else steppers[tid] = new Stepper(vecsize, &window, nullptr);
   }  
 
-#pragma omp parallel
-  std::cout<<"run nthreads"<<nthreads<<std::endl;
-
-  
   Stopwatch timer;
   timer.Start();
 //  #pragma omp parallel
   {
+#ifdef VECGEOM_OPENMP
     #pragma omp parallel for schedule(dynamic)
+#endif
     for (auto tid=0; tid<nthreads; ++tid) {
       // Create steppers for each slice. This is not best for NUMA - there should be rather the thread code doing this
       // Another policy would be to have as many steppers as threads, making sure that the same thread picks the same stepper
@@ -1142,11 +1129,15 @@ int main(int argc, char* argv[]) {
   
   int nthreads = 1;
   if (argc > 5) nthreads = atoi(argv[5]);
+#ifdef VECGEOM_OPENMP
+  omp_set_num_threads(nthreads);
+  std::cout << "### Running benchmarks with " << nthreads << " threads.\n";
+#endif
   
 //  TestScalarNavigation();
 //  TestVectorNavigation();
   XRayBenchmark(axis, pixel_width, nthreads);
   XRayBenchmarkVecNav(axis, pixel_width, vecsize,nthreads);  
   XRayBenchmarkBasketized(axis, pixel_width, vecsize, nthreads);
-  std::cout << "Finished run: img. width=" << pixel_width << " vecsize=" << vecsize << " nthreads=" << nthreads << " on axis " << axis << std::endl;
+//  std::cout << "Finished run: img. width=" << pixel_width << " vecsize=" << vecsize << " nthreads=" << nthreads << " on axis " << axis << std::endl;
 }

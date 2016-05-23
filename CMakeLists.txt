@@ -396,6 +396,11 @@ if (OPENMP)
       "${VECGEOM_DEFINITIONS} -DVECGEOM_OPENMP")
 endif()
 
+if (OPENMP)
+  message(STATUS "Using OpenMP")
+  set(VECGEOM_DEFINITIONS "${VECGEOM_DEFINITIONS} -DVECGEOM_OPENMP")
+endif()
+
 ################################################################################
 
 # see if we have CCACHE ( to avoid recompilation on branch switches )
@@ -764,7 +769,7 @@ set(TEST_EXECUTABLES_CORE
   ${CMAKE_SOURCE_DIR}/test/core/BooleanConvexityTest.cpp
   ${CMAKE_SOURCE_DIR}/test/unit_tests/TestVecGeomPolycone.cpp
   ${CMAKE_SOURCE_DIR}/test/sc16-basket-demo/SC16SimpleTracker.cpp
-  ${CMAKE_SOURCE_DIR}/test/sc16-basket-demo/LittleEx.cpp
+#  ${CMAKE_SOURCE_DIR}/test/sc16-basket-demo/LittleEx.cpp
 
 
 #  ${CMAKE_SOURCE_DIR}/services/CompNavStatePools.cpp

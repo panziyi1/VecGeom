@@ -37,7 +37,7 @@
 
 // a navigator for the world volume
 // this navigator knows that it is in a BoxWorld and that it has 1 tube daughter
-template <bool fastcopy=false>
+template <bool fastcopy=true>
 class WorldNavigator : public VToyNavigatorHelper<WorldNavigator<fastcopy>> {
 
 public:
@@ -127,8 +127,8 @@ public:
       Vector3D<Real_v> p(Real_v(globalpoints.x() + i), Real_v(globalpoints.y() + i), Real_v(globalpoints.z() + i));
       Vector3D<Real_v> d(Real_v(globaldirs.x() + i), Real_v(globaldirs.y() + i), Real_v(globaldirs.z() + i));
 
-      WorldNavKernel<Backend>(*static_cast<UnplacedBox const *>(unplaced),
-                              *static_cast<UnplacedTube const *>(daughter->GetUnplacedVolume()), p, d,
+      WorldNavKernel<Backend>(*reinterpret_cast<UnplacedBox const *>(unplaced),
+                              *reinterpret_cast<UnplacedTube const *>(daughter->GetUnplacedVolume()), p, d,
                               distance, distance1);
 
       Min(distance,distance1).store(out_steps + i);
@@ -150,8 +150,8 @@ public:
     // tail part
     for (unsigned int i = offset; i < globalpoints.size(); ++i) {
       double distance, distance1;
-      WorldNavKernel<kScalar>(*static_cast<UnplacedBox const *>(unplaced),
-                              *static_cast<UnplacedTube const *>(daughter->GetUnplacedVolume()), globalpoints[i], globaldirs[i],
+      WorldNavKernel<kScalar>(*reinterpret_cast<UnplacedBox const *>(unplaced),
+                              *reinterpret_cast<UnplacedTube const *>(daughter->GetUnplacedVolume()), globalpoints[i], globaldirs[i],
                               distance, distance1);
 
       // relocation here ( or in separate loop ? )
