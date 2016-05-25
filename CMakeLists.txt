@@ -530,6 +530,12 @@ if (VTUNE)
   set(VECGEOM_LIBRARIES_EXTERNAL ${VECGEOM_LIBRARIES_EXTERNAL} ${VTUNE_LIBRARIES} -lpthread -ldl)
 endif()
 
+if (OPENMP)
+  if (AppleClang)
+    set(VECGEOM_LIBRARIES_EXTERNAL ${VECGEOM_LIBRARIES_EXTERNAL} -lomp)
+  endif()
+endif()
+
 ################################################################################
 
 include_directories(BEFORE ${CMAKE_SOURCE_DIR})
