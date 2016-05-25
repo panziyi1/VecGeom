@@ -16,6 +16,13 @@
  #include "omp.h"
 #endif
 
+#ifdef VECGEOM_ROOT
+#include "TGeoManager.h"
+#include "TGeoBBox.h"
+#include "TGeoTube.h"
+#include "TGeoMedium.h"
+#endif
+
 using namespace vecgeom;
 
 #define ALIGN_PADDING kAlignmentBoundary
@@ -161,13 +168,12 @@ struct Window
     pixel_width_2 = (axis2_end-axis2_start)/data_size_y;    
     assert(data_size_x > nslices);
     dslice = data_size_x/nslices;
-    std::cout << "pixel_width= " << pixel_width << std::endl;
-    std::cout << "direction= " << dir_ << std::endl;
-    std::cout << "offset= " << offset << std::endl;
-    std::cout << "data_size_x= " << data_size_x << "  data_size_y= " << data_size_y << std::endl;
-    std::cout << "axis1_start= " << axis1_start << "  axis1_end= " << axis1_end << std::endl;
-    std::cout << "axis2_start= " << axis2_start << "  axis2_end= " << axis2_end << std::endl;
-    std::cout << "pixel_width_1= " << pixel_width_1 << " pixel_width_2= " << pixel_width_2 << std::endl;
+    std::cout << "img_size= " << pixel_width << "  direction= " << dir_ << std::endl;
+//    std::cout << "offset= " << offset << std::endl;
+//    std::cout << "data_size_x= " << data_size_x << "  data_size_y= " << data_size_y << std::endl;
+//    std::cout << "axis1_start= " << axis1_start << "  axis1_end= " << axis1_end << std::endl;
+//    std::cout << "axis2_start= " << axis2_start << "  axis2_end= " << axis2_end << std::endl;
+//    std::cout << "pixel_width_1= " << pixel_width_1 << " pixel_width_2= " << pixel_width_2 << std::endl;
   }
   
   void GetSubwindow(int islice, int &i0, int &ni) const {
@@ -492,17 +498,49 @@ VPlacedVolume *CreateSimpleTracker(unsigned int nlayers) {
   assert(nlayers < kMaxDepth-1);          
   // World size
   const double world_size = 500.;
+// Cylindrical layers
+  double rmax, dz;
+  std::string layerBase = "layer_";
+  double deltaR = world_size/nlayers;
+#ifdef VECGEOM_ROOT
+  {
+  // Top volume for ROOT geometry
+  TGeoMedium *med = new TGeoMedium();
+  TGeoBBox *uTop = new TGeoBBox("uTop", 4*world_size, 4*world_size, 4*world_size);
+  TGeoVolume *top = new TGeoVolume("world", uTop, med);
 
-  // Top volume
-  UnplacedBox *uTop = new UnplacedBox(4*world_size, 4*world_size, 4*world_size);
-  LogicalVolume *top = new LogicalVolume("world", uTop);
-  top->SetUserExtensionPtr( (void *) WorldNavigator<true>::Instance() );
-  
 // Cylindrical layers
   double rmax, dz;
   std::string layerBase = "layer_";
   double deltaR = world_size/nlayers;
 
+  TGeoVolume *mother = top;
+  for (unsigned int layer=0; layer<nlayers; ++layer) {
+    rmax = world_size - layer * deltaR;
+    dz = world_size - 0.1*layer*deltaR;
+    std::ostringstream layerName;
+    layerName << layerBase << layer;
+    TGeoTube *uLayer = new TGeoTube(0, rmax, dz);
+    TGeoVolume *layerVol = new TGeoVolume(layerName.str().c_str(), uLayer, med);
+    // Place in mother
+    mother->AddNode(layerVol, 1);
+    // change mother to current lvol (to make a real hierarchy)
+    mother = layerVol;
+  }
+  gGeoManager->SetTopVolume(top);
+  gGeoManager->CloseGeometry();
+  }
+#endif
+
+  // Top volume for VecGeom geometry
+  UnplacedBox *uTop = new UnplacedBox(4*world_size, 4*world_size, 4*world_size);
+  LogicalVolume *top = new LogicalVolume("world", uTop);
+#ifdef VECGEOM_ROOT
+  top->SetUserExtensionPtr( (void *) RootNavigator<true>::Instance() );
+#else
+  top->SetUserExtensionPtr( (void *) WorldNavigator<true>::Instance() );
+#endif
+  
   LogicalVolume *mother = top;
   for (unsigned int layer=0; layer<nlayers; ++layer) {
     rmax = world_size - layer * deltaR;
@@ -512,7 +550,11 @@ VPlacedVolume *CreateSimpleTracker(unsigned int nlayers) {
     UnplacedTube *uLayer = new UnplacedTube(0, rmax, dz, 0, kTwoPi);
     LogicalVolume *layerVol = new LogicalVolume(layerName.str().c_str(), uLayer);
     
+#ifdef VECGEOM_ROOT
+    layerVol->SetUserExtensionPtr( (void *) RootNavigator<true>::Instance() );
+#else
     AssignNavigatorToVolume(layerVol, layer, nlayers);
+#endif
 
     // Place in mother
     mother->PlaceDaughter(layerName.str().c_str(), layerVol, &Transformation3D::kIdentity);
@@ -680,29 +722,29 @@ void XRayBenchmark(int axis, int pixel_width, unsigned int Nthreads) {
 
     // init navstates
 #ifdef VECGEOM_OPENMP
-    NavigationState * newnavstateArray[Nthreads];
-    NavigationState * curnavstateArray[Nthreads];
+  NavigationState * curnavstateArray[Nthreads];
+  NavigationState * newnavstateArray[Nthreads];
 
-#pragma omp parallel
-    for(size_t index=0;index<Nthreads;++index){
-     newnavstateArray[index]=NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
+  for(size_t index=0;index<Nthreads;++index){
      curnavstateArray[index]=NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
-    }    
+     newnavstateArray[index]=NavigationState::MakeInstance( GeoManager::Instance().getMaxDepth() );
+  }    
 
 #else
-    NavigationState * curnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
-    NavigationState * newnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
+  NavigationState * curnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
+  NavigationState * newnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
 #endif
-    NavigationState *worldnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
-    worldnavstate->Push(GeoManager::Instance().GetWorld());
-    assert( worldnavstate->Top() == GeoManager::Instance().GetWorld());
+  NavigationState *worldnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
+  worldnavstate->Push(GeoManager::Instance().GetWorld());
+  assert( worldnavstate->Top() == GeoManager::Instance().GetWorld());
 
-    worldnavstate->Print();
-    Vector3D<Precision> cpoint;
-    Stopwatch timer;
-    timer.Start();
-   #pragma omp parallel for schedule(dynamic)
-   //#pragma omp parallel for collapse(2) schedule(dynamic)
+  Stopwatch timer;
+  timer.Start();
+#ifdef VECGEOM_OPENMP
+    #pragma omp parallel for schedule(dynamic)
+#endif
+  //#pragma omp parallel for collapse(2) schedule(dynamic)
+  for ( unsigned int img = 0; img < Nthreads; ++img ) {
 
     for( int pixel_count_2 = 0; pixel_count_2 < window.data_size_y; ++pixel_count_2 ) {
        for( int pixel_count_1 = 0; pixel_count_1 < window.data_size_x; ++pixel_count_1 ) {
@@ -711,16 +753,21 @@ void XRayBenchmark(int axis, int pixel_width, unsigned int Nthreads) {
           NavigationState * newnavstate = newnavstateArray[threadid];
           NavigationState * curnavstate = curnavstateArray[threadid];
 #endif
+           Vector3D<Precision> cpoint;
            window.GetCoordinates(pixel_count_1, pixel_count_2, cpoint);
           // Start is always in the top volume
+#ifdef VECGEOM_ROOT
+           if (!gGeoManager->GetCurrentNavigator()) gGeoManager->AddNavigator();
+#endif
            worldnavstate->CopyToFixedSize<NavigationState::SizeOf(1)>(curnavstate);
            *(volume_result+pixel_count_2*window.data_size_x+pixel_count_1) = ScalarNavigation(cpoint,window.dir_,curnavstate, newnavstate);
           // *(volume_result+pixel_count_2*data_size_x+pixel_count_1) = ScalarNavigation_NonSpecialized(p,dir,curnavstate, newnavstate);
        } // end inner loop
     } // end outer loop
+  } // end images loop
 
   timer.Stop();
-  std::cout << " XRay Elapsed time/Nimages: "<< timer.Elapsed() << std::endl;
+  std::cout << " XRay Elapsed time/Nimages: "<< timer.Elapsed()/Nthreads << std::endl;
 
   std::stringstream VecGeomimage;
   VecGeomimage << imagenamebase.str();
@@ -756,94 +803,95 @@ void XRayBenchmarkVecNav(int axis, int pixel_width, int vecsize, unsigned int Nt
   int *volume_result= (int*) new int[window.data_size_y * window.data_size_x*3];
    
 #ifdef VECGEOM_OPENMP
-  NavStatePool * newnavstatesArray[Nthreads];
   NavStatePool * curnavstatesArray[Nthreads];
+  NavStatePool * newnavstatesArray[Nthreads];
+  double *stepsArray[Nthreads];
+  SOA3D<Precision> *pointsArray[Nthreads];
 
-#pragma omp parallel
   for(size_t index=0;index<Nthreads;++index){
-     newnavstatesArray[index]= new NavStatePool(N, GeoManager::Instance().getMaxDepth());
      curnavstatesArray[index]= new NavStatePool(N, GeoManager::Instance().getMaxDepth());
+     newnavstatesArray[index]= new NavStatePool(N, GeoManager::Instance().getMaxDepth());
+     stepsArray[index]       = (double*) _mm_malloc(N*sizeof(double),ALIGN_PADDING);
+     pointsArray[index] = new SOA3D<Precision>(N);
   }
 #else
 
   NavStatePool *curnavstates = new NavStatePool(N, GeoManager::Instance().getMaxDepth());
   NavStatePool *newnavstates = new NavStatePool(N, GeoManager::Instance().getMaxDepth());
+  double *steps    = (double*) _mm_malloc(N*sizeof(double),ALIGN_PADDING);
+  SOA3D<Precision> *points = new SOA3D<Precision>(N);
+#endif
 
   SOA3D<Precision> dirs(N);
-  Vector3D<Precision> cpoint;
-  SOA3D<Precision> points(N);
-  for(auto i=0;i<N;++i){
-      dirs.set(i, window.dir_.x(), window.dir_.y(),window.dir_.z());
-  }
-
-  double *steps    = (double*) _mm_malloc(N*sizeof(double),ALIGN_PADDING);
   double *psteps    = (double*) _mm_malloc(N*sizeof(double),ALIGN_PADDING);
 
-#endif
+  for(int i=0;i<N;++i){
+    dirs.set(i, window.dir_.x(), window.dir_.y(),window.dir_.z());
+    psteps[i] = 1.E30;
+  }
+
   NavigationState *worldnavstate = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
   worldnavstate->Push(GeoManager::Instance().GetWorld());
   assert( worldnavstate->Top() == GeoManager::Instance().GetWorld());
 
   Stopwatch timer;
   timer.Start();
-#pragma omp parallel for schedule(dynamic)
+  // Parallelize on images
+#ifdef VECGEOM_OPENMP
+    #pragma omp parallel for schedule(dynamic)
+#endif
 //#pragma omp parallel for collapse(2) schedule(dynamic)
+  for ( unsigned int img = 0; img < Nthreads; ++img ) {
+  for( int pixel_count_2 = 0; pixel_count_2 < window.data_size_y; ++pixel_count_2 ) {
+    for( int pixel_count_1 = 0; pixel_count_1 < window.data_size_x; ++pixel_count_1 ) {
 
-    for( int pixel_count_2 = 0; pixel_count_2 < window.data_size_y; ++pixel_count_2 ) {
-       for( int pixel_count_1 = 0; pixel_count_1 < window.data_size_x; ++pixel_count_1 ) {
+#ifdef VECGEOM_ROOT
+      if (!gGeoManager->GetCurrentNavigator()) gGeoManager->AddNavigator();
+#endif
 
 #ifdef VECGEOM_OPENMP
-          SOA3D<Precision> points(N);
-          Vector3D<Precision> cpoint;
-          SOA3D<Precision> dirs(N);
-          for(auto i=0;i<N;++i){
-             dirs.set(i, window.dir_.x(), window.dir_.y(),window.dir_.z());
-          }
-
-          double *steps    = (double*) _mm_malloc(N*sizeof(double),64);
-          double *psteps    = (double*) _mm_malloc(N*sizeof(double),64);
-          size_t threadid=omp_get_thread_num();
-          NavStatePool *curnavstates = newnavstatesArray[threadid];
-          NavStatePool *newnavstates = curnavstatesArray[threadid];
+      size_t threadid=omp_get_thread_num();
+      NavStatePool *curnavstates = curnavstatesArray[threadid];
+      NavStatePool *newnavstates = newnavstatesArray[threadid];
+      double *steps = stepsArray[threadid];
+      SOA3D<Precision> *points = pointsArray[threadid];
 #endif 
+      Vector3D<Precision> cpoint;
+      window.GetCoordinates(pixel_count_1, pixel_count_2, cpoint);
+      for(auto i=0;i<N;++i){
+        points->set(i, cpoint[0], cpoint[1], cpoint[2]);
+      }
+      // init initial nav state from the top volume
+      for(auto i=0;i<N;++i){
+        worldnavstate->CopyToFixedSize<NavigationState::SizeOf(1)>(curnavstates->operator[](i));
+      }
 
+      *(volume_result+pixel_count_2*window.data_size_x+pixel_count_1) = 
+        VectorNavigation(*points,dirs,N,curnavstates,newnavstates,psteps,steps);
+    } // end inner loop
+  } // end outer loop 
+  } // end images loop
+  timer.Stop();
+  std::cout << " XRayVecNav Elapsed time /Nimages : "<< timer.Elapsed()/(N*Nthreads) << std::endl;
 
-
-
-          window.GetCoordinates(pixel_count_1, pixel_count_2, cpoint);
-          for(auto i=0;i<N;++i){
-             points.set(i, cpoint[0], cpoint[1], cpoint[2]);
-          }
-          // init initial nav state from the top volume
-          for(auto i=0;i<N;++i){
-              worldnavstate->CopyToFixedSize<NavigationState::SizeOf(1)>(curnavstates->operator[](i));
-          }
-
-          *(volume_result+pixel_count_2*window.data_size_x+pixel_count_1) = VectorNavigation(points,dirs,N,curnavstates,newnavstates,psteps,steps);
+  std::stringstream VecGeomimage;
+  VecGeomimage << imagenamebase.str();
+  VecGeomimage << "_Vector_VecGeom.bmp";
+  make_bmp(volume_result, VecGeomimage.str().c_str(), window.data_size_x, window.data_size_y);
 #ifdef VECGEOM_OPENMP
-         _mm_free(steps);
-         _mm_free(psteps);
-#endif
-      } // end inner loop
-   } // end outer loop 
-   timer.Stop();
-   std::cout << " XRayVecNav Elapsed time /Nimages : "<< timer.Elapsed()/N << std::endl;
-
-    std::stringstream VecGeomimage;
-    VecGeomimage << imagenamebase.str();
-    VecGeomimage << "_Vector_VecGeom.bmp";
-    make_bmp(volume_result, VecGeomimage.str().c_str(), window.data_size_x, window.data_size_y);
-#ifdef VECGEOM_OPENMP
-    for(size_t index=0;index<Nthreads;++index){
-       delete curnavstatesArray[index];
-       delete newnavstatesArray[index];
-    }
+  for(size_t index=0;index<Nthreads;++index){
+    delete curnavstatesArray[index];
+    delete newnavstatesArray[index];
+    _mm_free(stepsArray[index]);
+    delete pointsArray[index];
+  }
 #else
-    _mm_free(steps);
-    _mm_free(psteps);
-    delete curnavstates;
-    delete newnavstates;
+  delete curnavstates;
+  delete newnavstates;
+  _mm_free(steps);
+  delete points;
 #endif
+  _mm_free(psteps);
 }
 
 
@@ -876,6 +924,9 @@ void XRayBenchmarkBasketized(int axis, int pixel_width, int vecsize, int nthread
     for (auto tid=0; tid<nthreads; ++tid) {
       // Create steppers for each slice. This is not best for NUMA - there should be rather the thread code doing this
       // Another policy would be to have as many steppers as threads, making sure that the same thread picks the same stepper
+#ifdef VECGEOM_ROOT
+      if (!gGeoManager->GetCurrentNavigator()) gGeoManager->AddNavigator();
+#endif
       steppers[tid]->TransportTask(window, 0, vecsize, tid);
     }
   }
@@ -1129,9 +1180,14 @@ int main(int argc, char* argv[]) {
   
   int nthreads = 1;
   if (argc > 5) nthreads = atoi(argv[5]);
+#ifdef VECGEOM_ROOT
+  gGeoManager->SetMaxThreads(nthreads);
+#endif
 #ifdef VECGEOM_OPENMP
   omp_set_num_threads(nthreads);
   std::cout << "### Running benchmarks with " << nthreads << " threads.\n";
+#else
+  assert(nthreads ==  1);
 #endif
   
 //  TestScalarNavigation();

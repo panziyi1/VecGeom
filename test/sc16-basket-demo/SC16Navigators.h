@@ -16,6 +16,10 @@
 #include "volumes/PlacedVolume.h"
 #include "backend/Backend.h"
 
+#ifdef VECGEOM_ROOT
+#include "TGeoManager.h"
+#include "TGeoNavigator.h"
+#endif
 
 #pragma once
 
@@ -33,7 +37,82 @@
 
 
 
+#ifdef VECGEOM_ROOT
+// a navigator for ROOT geometry this is not specialized by layer, but unique
 
+template <bool fastcopy=true>
+class RootNavigator : public VToyNavigatorHelper<RootNavigator<fastcopy>> {
+
+public:
+    BOILERPLATE(RootNavigator)
+
+//    static VToyNavigator *Instance() {
+//      static WorldNavigator<fastcopy> instance;
+//      return &instance;}
+    INSTANCE(RootNavigator)
+
+
+    virtual double ComputeStepAndPropagatedState(Vector3D<double> const & globalpoint,
+                                                 Vector3D<double> const & globaldir,
+                                                 double pstep,
+                                                 NavigationState const & in_state,
+                                                 NavigationState & out_state) const override {
+        
+        // The TGeoNavigator cannot be per volume, but per thread
+        TGeoNavigator *nav = gGeoManager->GetCurrentNavigator();
+        assert(nav != nullptr);
+        // We should make the navigator point to in_state
+        int level = in_state.GetCurrentLevel();
+        nav->CdTop();
+        for (auto i=0; i<level-1; ++i) nav->CdDown(0);
+        // Reset navigation state flags and safety to start fresh
+        nav->ResetState();
+        // Setup start state
+        nav->SetCurrentPoint(globalpoint.x(), globalpoint.y(), globalpoint.z());
+        nav->SetCurrentDirection(globaldir.x(), globaldir.y(), globaldir.z());
+        
+        // NO safety computation
+        nav->FindNextBoundaryAndStep(Min(pstep, 1.e20), false);
+        double distance = nav->GetStep();
+
+        auto daughters= in_state.Top()->GetLogicalVolume()->GetDaughtersp();
+        auto daughter = (*daughters)[0];
+
+        // we could speed this up if we knew the depth of this volume
+        if(!fastcopy)
+        {
+          // we could speed this up if we knew the depth of this volume
+          in_state.CopyTo(&out_state);
+        }
+        else {
+          // do a very fast copy using the precomputed size of a NavigationState at this depth
+          in_state.CopyToFixedSize<NavigationState::SizeOf(1)>(&out_state);
+        }
+
+        // do a very efficient relocation depending on distance
+        if(nav->GetLevel() > level-1)
+          out_state.Push(daughter);
+        else // leaving mother ( have to be careful - we could actually leave the world volume )
+          out_state.Pop();
+        return distance;
+    }
+
+    // vector interface
+  virtual void ComputeStepsAndPropagatedStates(SOA3D<double> const & globalpoints,
+                                                 SOA3D<double> const & globaldirs,
+                                                 double const *psteps,
+                                                 NavStatePool const & in_states,
+                                                 NavStatePool & out_states, double *out_steps) const override {
+    // vector part
+    for (unsigned int i = 0; i < globalpoints.size(); ++i) {
+      Vector3D<Precision> p(globalpoints.x(i), globalpoints.y(i), globalpoints.z(i));
+      Vector3D<Precision> d(globaldirs.x(i), globaldirs.y(i), globaldirs.z(i));
+      out_steps[i] = ComputeStepAndPropagatedState(p, d, psteps[i], *(in_states[i]), *(out_states[i]));
+    }
+  }  
+
+};
+#endif
 
 // a navigator for the world volume
 // this navigator knows that it is in a BoxWorld and that it has 1 tube daughter
