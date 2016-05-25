@@ -745,6 +745,9 @@ void XRayBenchmark(int axis, int pixel_width, unsigned int Nthreads) {
 #endif
   //#pragma omp parallel for collapse(2) schedule(dynamic)
   for ( unsigned int img = 0; img < Nthreads; ++img ) {
+#ifdef VECGEOM_ROOT
+    if (!gGeoManager->GetCurrentNavigator()) gGeoManager->AddNavigator();
+#endif
 
     for( int pixel_count_2 = 0; pixel_count_2 < window.data_size_y; ++pixel_count_2 ) {
        for( int pixel_count_1 = 0; pixel_count_1 < window.data_size_x; ++pixel_count_1 ) {
@@ -756,9 +759,6 @@ void XRayBenchmark(int axis, int pixel_width, unsigned int Nthreads) {
            Vector3D<Precision> cpoint;
            window.GetCoordinates(pixel_count_1, pixel_count_2, cpoint);
           // Start is always in the top volume
-#ifdef VECGEOM_ROOT
-           if (!gGeoManager->GetCurrentNavigator()) gGeoManager->AddNavigator();
-#endif
            worldnavstate->CopyToFixedSize<NavigationState::SizeOf(1)>(curnavstate);
            *(volume_result+pixel_count_2*window.data_size_x+pixel_count_1) = ScalarNavigation(cpoint,window.dir_,curnavstate, newnavstate);
           // *(volume_result+pixel_count_2*data_size_x+pixel_count_1) = ScalarNavigation_NonSpecialized(p,dir,curnavstate, newnavstate);
@@ -771,7 +771,11 @@ void XRayBenchmark(int axis, int pixel_width, unsigned int Nthreads) {
 
   std::stringstream VecGeomimage;
   VecGeomimage << imagenamebase.str();
+#ifdef VECGEOM_ROOT
+  VecGeomimage << "_Root.bmp";
+#else
   VecGeomimage << "_VecGeom.bmp";
+#endif
   make_bmp(volume_result, VecGeomimage.str().c_str(), window.data_size_x, window.data_size_y);
 #ifdef VECGEOM_OPENMP 
   for(size_t index=0;index<Nthreads;++index) {
@@ -842,12 +846,11 @@ void XRayBenchmarkVecNav(int axis, int pixel_width, int vecsize, unsigned int Nt
 #endif
 //#pragma omp parallel for collapse(2) schedule(dynamic)
   for ( unsigned int img = 0; img < Nthreads; ++img ) {
+#ifdef VECGEOM_ROOT
+    if (!gGeoManager->GetCurrentNavigator()) gGeoManager->AddNavigator();
+#endif
   for( int pixel_count_2 = 0; pixel_count_2 < window.data_size_y; ++pixel_count_2 ) {
     for( int pixel_count_1 = 0; pixel_count_1 < window.data_size_x; ++pixel_count_1 ) {
-
-#ifdef VECGEOM_ROOT
-      if (!gGeoManager->GetCurrentNavigator()) gGeoManager->AddNavigator();
-#endif
 
 #ifdef VECGEOM_OPENMP
       size_t threadid=omp_get_thread_num();
@@ -876,7 +879,11 @@ void XRayBenchmarkVecNav(int axis, int pixel_width, int vecsize, unsigned int Nt
 
   std::stringstream VecGeomimage;
   VecGeomimage << imagenamebase.str();
+#ifdef VECGEOM_ROOT
+  VecGeomimage << "_Vector_Root.bmp";
+#else
   VecGeomimage << "_Vector_VecGeom.bmp";
+#endif
   make_bmp(volume_result, VecGeomimage.str().c_str(), window.data_size_x, window.data_size_y);
 #ifdef VECGEOM_OPENMP
   for(size_t index=0;index<Nthreads;++index){
@@ -935,7 +942,11 @@ void XRayBenchmarkBasketized(int axis, int pixel_width, int vecsize, int nthread
 
   std::stringstream VecGeomimage;
   VecGeomimage << imagenamebase.str();
+#ifdef VECGEOM_ROOT
+  VecGeomimage << "_basket_Root.bmp";
+#else
   VecGeomimage << "_basket_VecGeom.bmp";
+#endif
   make_bmp(volume_result, VecGeomimage.str().c_str(), window.data_size_x, window.data_size_y);
   delete [] volume_result;
   for (auto tid=0; tid<nthreads; ++tid) delete steppers[tid];
