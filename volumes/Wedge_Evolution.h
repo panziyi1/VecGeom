@@ -266,7 +266,7 @@ Inside_t Wedge::Inside(Vector3D<Real_v> const &point) const
   GenericKernelForContainsAndInside<Real_v, true>(point, completelyinside, completelyoutside);
   Inside_t inside(EInside::kSurface);
   vecCore::MaskedAssign(inside, (InsideBool_v)completelyoutside, Inside_t(EInside::kOutside));
-  vecCore::MaskedAssign(inside, (InsideBool_v)completelyinside, Inside_t(EInside::kInside));
+  vecCore::MaskedAssign(inside, (InsideBool_v)completelyinside, Inside_t(0.0));
   return inside;
 }
 
