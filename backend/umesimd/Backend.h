@@ -476,6 +476,7 @@ struct TypeTraits<vecgeom::cxx::UmeSimdInsideVector> {
   using MaskType   = UME::SIMD::SIMDVecMask<vecgeom::kVectorSize>;
   using IndexType  = vecgeom::cxx::UmeSimdIntegerVector;
 };
+
 }
 
 // some other TEMPORARY additions until we've made the full transition
@@ -559,6 +560,7 @@ vecgeom::UmeSimdPrecisionVector Blend(const UME::SIMD::SIMDVecMask<vecgeom::kVec
 {
   return tval.blend(mask, fval);
 }
+
 
 } // end namespace VecCore
 
