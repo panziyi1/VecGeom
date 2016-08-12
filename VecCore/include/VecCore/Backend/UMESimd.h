@@ -27,6 +27,27 @@ public:
   using UInt64_v = UME::SIMD::SIMDVec<UInt64_s, SIMDWidth<UInt64_s>()>;
 };
 
+
+#define UMESIMD_REAL_FUNC(f, name)                                                                 \
+  VECCORE_FORCE_INLINE UMESimd::Real_v f(const UMESimd::Real_v &x) \
+  {                                                                                                \
+    return x.name();                                                                               \
+  }
+
+UMESIMD_REAL_FUNC(Abs, abs)
+UMESIMD_REAL_FUNC(Exp, exp)
+UMESIMD_REAL_FUNC(Log, log)
+UMESIMD_REAL_FUNC(Sin, sin)
+UMESIMD_REAL_FUNC(Cos, cos)
+UMESIMD_REAL_FUNC(Tan, tan)
+UMESIMD_REAL_FUNC(Atan, atan)
+UMESIMD_REAL_FUNC(Sqrt, sqrt)
+UMESIMD_REAL_FUNC(Round, round)
+UMESIMD_REAL_FUNC(Floor, floor)
+UMESIMD_REAL_FUNC(Ceil, ceil)
+
+#undef UMESIMD_REAL_FUNC
+
 } // namespace backend
 
 } // namespace vecCore

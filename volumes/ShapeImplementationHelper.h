@@ -96,6 +96,7 @@ public:
   }
 
 #endif
+  using Real_v = vecgeom::VectorBackend::Real_v;
   using PlacedShape_t::SafetyToIn;
   using PlacedShape_t::SafetyToOut;
   using PlacedShape_t::DistanceToIn;
@@ -210,7 +211,7 @@ public:
     return output;
   }
 
-  virtual VECGEOM_BACKEND_PRECISION_TYPE DistanceToInVec(Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &point,
+  /*virtual VECGEOM_BACKEND_PRECISION_TYPE DistanceToInVec(Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &point,
                                                          Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &direction,
                                                          const VECGEOM_BACKEND_PRECISION_TYPE stepMax) const override
   {
@@ -220,6 +221,26 @@ public:
     VECGEOM_BACKEND_PRECISION_TYPE output = kInfinity;
     Specialization::template DistanceToIn<VECGEOM_BACKEND_TYPE>(*this->GetUnplacedVolume(), *this->GetTransformation(),
                                                                 point, direction, stepMax, output);
+
+    // MaskedAssign(Abs(output)<kHalfTolerance, 0., &output);
+
+    //#ifdef VECGEOM_DISTANCE_DEBUG
+    //    DistanceComparator::CompareDistanceToIn(this, output, point, direction, stepMax);
+    //#endif
+
+    return output;
+  }*/
+
+  virtual Real_v DistanceToInVec(Vector3D<Real_v> const &point,
+                                                         Vector3D<Real_v> const &direction,
+                                                         const Real_v stepMax) const override
+  {
+    //#ifndef VECGEOM_NVCC
+    //    assert(direction.IsNormalized() && " direction not normalized in call to  DistanceToIn ");
+    //#endif
+    Real_v output = Real_v(kInfinity);
+    //Specialization::template DistanceToIn<VECGEOM_BACKEND_TYPE>(*this->GetUnplacedVolume(), *this->GetTransformation(),
+    //                                                            point, direction, stepMax, output);
 
     // MaskedAssign(Abs(output)<kHalfTolerance, 0., &output);
 
@@ -260,7 +281,7 @@ public:
     return output;
   }
 
-  virtual VECGEOM_BACKEND_PRECISION_TYPE DistanceToOutVec(Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &point,
+  /*virtual VECGEOM_BACKEND_PRECISION_TYPE DistanceToOutVec(Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &point,
                                                           Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &direction,
                                                           const VECGEOM_BACKEND_PRECISION_TYPE stepMax) const override
   {
@@ -270,6 +291,32 @@ public:
     VECGEOM_BACKEND_PRECISION_TYPE output = kInfinity;
     Specialization::template DistanceToOut<VECGEOM_BACKEND_TYPE>(*this->GetUnplacedVolume(), point, direction, stepMax,
                                                                  output);
+    // avoid distance values within tolerance
+    // MaskedAssign(Abs(output)<kHalfTolerance, 0., &output);
+
+    // TODO: provide CompareDistance check for vector interface
+    //#ifdef VECGEOM_DISTANCE_DEBUG
+    //    DistanceComparator::CompareDistanceToOut(this, output, point, direction, stepMax);
+    //#endif
+
+    // detect -inf responses which are often an indication for a real bug
+    //#ifndef VECGEOM_NVCC
+    // assert(!((output < 0.) && std::isinf(output)));
+    //#endif
+
+    return output;
+  }*/
+
+  virtual Real_v DistanceToOutVec(Vector3D<Real_v> const &point,
+                                                          Vector3D<Real_v> const &direction,
+                                                          const Real_v stepMax) const override
+  {
+    //#ifndef VECGEOM_NVCC
+    //    assert(direction.IsNormalized() && " direction not normalized in call to  DistanceToOut ");
+    //#endif
+    Real_v output = Real_v(kInfinity);
+    //Specialization::template DistanceToOut<VECGEOM_BACKEND_TYPE>(*this->GetUnplacedVolume(), point, direction, stepMax,
+    //                                                             output);
     // avoid distance values within tolerance
     // MaskedAssign(Abs(output)<kHalfTolerance, 0., &output);
 
@@ -360,7 +407,7 @@ public:
     return output;
   }
 
-  VECGEOM_FORCE_INLINE
+  /*VECGEOM_FORCE_INLINE
   virtual VECGEOM_BACKEND_PRECISION_TYPE SafetyToInVec(
       Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &position) const override
   {
@@ -372,9 +419,23 @@ public:
     // MaskedAssign(Abs(output)<kHalfTolerance, 0., &output);
 
     return output;
-  }
+  }*/
 
   VECGEOM_FORCE_INLINE
+  virtual Real_v SafetyToInVec(
+      Vector3D<Real_v> const &position) const override
+  {
+    Real_v output(kInfinity);
+    //Specialization::template SafetyToIn<VECGEOM_BACKEND_TYPE>(*this->GetUnplacedVolume(), *this->GetTransformation(),
+    //                                                          position, output);
+
+    // avoid distance values within tolerance
+    // MaskedAssign(Abs(output)<kHalfTolerance, 0., &output);
+
+    return output;
+  }
+  
+  /*VECGEOM_FORCE_INLINE
   virtual VECGEOM_BACKEND_PRECISION_TYPE SafetyToOutVec(
       Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &position) const override
   {
@@ -385,12 +446,26 @@ public:
     // MaskedAssign(Abs(output)<kHalfTolerance, 0., &output);
 
     return output;
+  }*/
+
+  VECGEOM_FORCE_INLINE
+  virtual Real_v SafetyToOutVec(
+      Vector3D<Real_v> const &position) const override
+  {
+    Real_v output(kInfinity);
+    //Specialization::template SafetyToOut<VECGEOM_BACKEND_TYPE>(*this->GetUnplacedVolume(), position, output);
+
+    // avoid distance values within tolerance
+    // MaskedAssign(Abs(output)<kHalfTolerance, 0., &output);
+
+    return output;
   }
 
   virtual void Contains(SOA3D<Precision> const &points, bool *const output) const override
   {
+  /*
     for (int i = 0, i_max = points.size(); i < i_max; i += kVectorSize) {
-      Vector3D<VECGEOM_BACKEND_TYPE::precision_v> point(VECGEOM_BACKEND_PRECISION_FROM_PTR(points.x() + i),
+      Vector3D<Real_v> point(VECGEOM_BACKEND_PRECISION_FROM_PTR(points.x() + i),
                                                         VECGEOM_BACKEND_PRECISION_FROM_PTR(points.y() + i),
                                                         VECGEOM_BACKEND_PRECISION_FROM_PTR(points.z() + i));
       Vector3D<VECGEOM_BACKEND_TYPE::precision_v> localPoint;
@@ -398,11 +473,12 @@ public:
       Specialization::template Contains<VECGEOM_BACKEND_TYPE>(*this->GetUnplacedVolume(), *this->GetTransformation(),
                                                               point, localPoint, result);
       StoreTo(result, output + i);
-    }
+    }*/
   }
 
   virtual void Inside(SOA3D<Precision> const &points, Inside_t *const output) const override
   {
+  /*
     for (int i = 0, i_max = points.size(); i < i_max; i += kVectorSize) {
       Vector3D<VECGEOM_BACKEND_TYPE::precision_v> point(VECGEOM_BACKEND_PRECISION_FROM_PTR(points.x() + i),
                                                         VECGEOM_BACKEND_PRECISION_FROM_PTR(points.y() + i),
@@ -419,12 +495,13 @@ public:
 #else
       StoreTo(result, output + i);
 #endif
-    }
+    }*/
   }
 
   virtual void DistanceToIn(SOA3D<Precision> const &points, SOA3D<Precision> const &directions,
                             Precision const *const stepMax, Precision *const output) const override
   {
+  /*
     for (int i = 0, i_max = points.size(); i < i_max; i += kVectorSize) {
       Vector3D<VECGEOM_BACKEND_TYPE::precision_v> point(VECGEOM_BACKEND_PRECISION_FROM_PTR(points.x() + i),
                                                         VECGEOM_BACKEND_PRECISION_FROM_PTR(points.y() + i),
@@ -437,7 +514,7 @@ public:
       Specialization::template DistanceToIn<VECGEOM_BACKEND_TYPE>(
           *this->GetUnplacedVolume(), *this->GetTransformation(), point, direction, stepMaxBackend, result);
       StoreTo(result, output + i);
-    }
+    }*/
   }
 
 #if !defined(__clang__) && !defined(VECGEOM_INTEL) && defined(VECGEOM_VC)
@@ -446,7 +523,7 @@ public:
 #endif
   virtual void DistanceToInMinimize(SOA3D<Precision> const &points, SOA3D<Precision> const &directions, int daughterId,
                                     Precision *const currentDistance, int *const nextDaughterIdList) const override
-  {
+  {/*
     unsigned safesize = points.size() - points.size() % kVectorSize;
     for (unsigned int i = 0; i < safesize; i += kVectorSize) {
       Vector3D<VECGEOM_BACKEND_TYPE::precision_v> point(VECGEOM_BACKEND_PRECISION_FROM_PTR(points.x() + i),
@@ -467,7 +544,7 @@ public:
       MaskedAssign(!valid, stepMaxBackend, &result);
       StoreTo(result, currentDistance + i); // go back to previous result if we don't get better
 
-      /*
+      
        * Keeping the original comments:
             // currently do not know how to do this better (can do it when Vc offers long ints )
       #ifdef VECGEOM_INTEL
@@ -477,7 +554,7 @@ public:
               nextDaughterIdList[i+j] = (valid[j]) ? daughterId : nextDaughterIdList[i+j];
             }
       */
-      MaskedAssign(valid, daughterId, nextDaughterIdList + i);
+  /*    MaskedAssign(valid, daughterId, nextDaughterIdList + i);
     }
     // treat the tail:
     unsigned tailsize = points.size() - safesize;
@@ -491,7 +568,7 @@ public:
         currentDistance[i]    = result;
         nextDaughterIdList[i] = daughterId;
       }
-    }
+    }*/
   }
 #if !defined(__clang__) && !defined(VECGEOM_INTEL) && defined(VECGEOM_VC)
 #pragma GCC pop_options
@@ -500,7 +577,7 @@ public:
   virtual void DistanceToOut(SOA3D<Precision> const &points, SOA3D<Precision> const &directions,
                              Precision const *const stepMax, Precision *const output) const override
   {
-    for (unsigned int i = 0, i_max = points.size(); i < i_max; i += kVectorSize) {
+   /* for (unsigned int i = 0, i_max = points.size(); i < i_max; i += kVectorSize) {
       Vector3D<VECGEOM_BACKEND_TYPE::precision_v> point(VECGEOM_BACKEND_PRECISION_FROM_PTR(points.x() + i),
                                                         VECGEOM_BACKEND_PRECISION_FROM_PTR(points.y() + i),
                                                         VECGEOM_BACKEND_PRECISION_FROM_PTR(points.z() + i));
@@ -512,14 +589,14 @@ public:
       Specialization::template DistanceToOut<VECGEOM_BACKEND_TYPE>(*this->GetUnplacedVolume(), point, direction,
                                                                    stepMaxBackend, result);
       StoreTo(result, output + i);
-    }
+    }*/
   }
 
   virtual void DistanceToOut(SOA3D<Precision> const &points, SOA3D<Precision> const &directions,
                              Precision const *const stepMax, Precision *const output,
                              int *const nextNodeIndex) const override
   {
-    unsigned safesize = points.size() - points.size() % kVectorSize;
+   /* unsigned safesize = points.size() - points.size() % kVectorSize;
     for (unsigned int i = 0; i < safesize; i += kVectorSize) {
       Vector3D<VECGEOM_BACKEND_TYPE::precision_v> point(VECGEOM_BACKEND_PRECISION_FROM_PTR(points.x() + i),
                                                         VECGEOM_BACKEND_PRECISION_FROM_PTR(points.y() + i),
@@ -550,12 +627,12 @@ public:
       // -1: physics step is longer than geometry
       // -2: particle may stay inside volume
       nextNodeIndex[track] = (result < stepMax[track]) ? -1 : -2;
-    }
+    }*/
   }
 
   virtual void SafetyToIn(SOA3D<Precision> const &points, Precision *const output) const override
   {
-    for (int i = 0, i_max = points.size(); i < i_max; i += kVectorSize) {
+    /*for (int i = 0, i_max = points.size(); i < i_max; i += kVectorSize) {
       Vector3D<VECGEOM_BACKEND_TYPE::precision_v> point(VECGEOM_BACKEND_PRECISION_FROM_PTR(points.x() + i),
                                                         VECGEOM_BACKEND_PRECISION_FROM_PTR(points.y() + i),
                                                         VECGEOM_BACKEND_PRECISION_FROM_PTR(points.z() + i));
@@ -566,12 +643,12 @@ public:
       MaskedAssign(Abs(result) < kHalfTolerance, 0., &result);
 
       StoreTo(result, output + i);
-    }
+    }*/
   }
 
   virtual void SafetyToInMinimize(SOA3D<Precision> const &points, Precision *const safeties) const override
   {
-    unsigned safesize = points.size() - points.size() % kVectorSize;
+    /*unsigned safesize = points.size() - points.size() % kVectorSize;
     for (unsigned int i = 0; i < safesize; i += kVectorSize) {
       Vector3D<VECGEOM_BACKEND_TYPE::precision_v> point(VECGEOM_BACKEND_PRECISION_FROM_PTR(points.x() + i),
                                                         VECGEOM_BACKEND_PRECISION_FROM_PTR(points.y() + i),
@@ -590,12 +667,12 @@ public:
       Specialization::template SafetyToIn<kScalar>(*this->GetUnplacedVolume(), *this->GetTransformation(),
                                                    points[track], result);
       safeties[track] = (result < safeties[track]) ? result : safeties[track];
-    }
+    }*/
   }
 
   virtual void SafetyToOut(SOA3D<Precision> const &points, Precision *const output) const override
   {
-    unsigned safesize = points.size() - points.size() % kVectorSize;
+   /* unsigned safesize = points.size() - points.size() % kVectorSize;
     for (unsigned int i = 0; i < safesize; i += kVectorSize) {
       Vector3D<VECGEOM_BACKEND_TYPE::precision_v> point(VECGEOM_BACKEND_PRECISION_FROM_PTR(points.x() + i),
                                                         VECGEOM_BACKEND_PRECISION_FROM_PTR(points.y() + i),
@@ -611,12 +688,12 @@ public:
       unsigned int track = safesize + i;
       Specialization::template SafetyToOut<kScalar>(*this->GetUnplacedVolume(), points[track], result);
       output[track] = result;
-    }
+    }*/
   }
 
   virtual void SafetyToOutMinimize(SOA3D<Precision> const &points, Precision *const safeties) const override
   {
-    for (int i = 0, iMax = points.size(); i < iMax; i += kVectorSize) {
+    /*for (int i = 0, iMax = points.size(); i < iMax; i += kVectorSize) {
       Vector3D<VECGEOM_BACKEND_TYPE::precision_v> point(VECGEOM_BACKEND_PRECISION_FROM_PTR(points.x() + i),
                                                         VECGEOM_BACKEND_PRECISION_FROM_PTR(points.y() + i),
                                                         VECGEOM_BACKEND_PRECISION_FROM_PTR(points.z() + i));
@@ -625,7 +702,7 @@ public:
       Specialization::template SafetyToOut<VECGEOM_BACKEND_TYPE>(*this->GetUnplacedVolume(), point, result);
       MaskedAssign(estimate < result, estimate, &result);
       StoreTo(result, safeties + i);
-    }
+    }*/
   }
 
 }; // End class ShapeImplementationHelper

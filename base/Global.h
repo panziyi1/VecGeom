@@ -10,6 +10,10 @@
 
 #include "base/Cuda.h"
 #include "base/Math.h"
+
+#if defined VECGEOM_FLOAT_PRECISION
+#define VECCORE_SINGLE_PRECISION
+#endif
 #include <VecCore/VecCore>
 
 using uint = unsigned int;

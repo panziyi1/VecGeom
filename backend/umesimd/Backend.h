@@ -192,6 +192,12 @@ bool IsFull(UmesimdBool_v const &cond)
   return cond.hland();
 }
 
+VECGEOM_FORCE_INLINE 
+bool IsFull(UME::SIMD::SIMDVecMask<kVectorSize> const & cond)
+{
+  return cond.hland();
+}
+
 VECGEOM_FORCE_INLINE
 bool Any(UmesimdBool_v const &cond)
 {
@@ -296,7 +302,13 @@ void MaskedAssign(UmesimdBool_v const &cond, Inside_t const &thenval, UmesimdIns
 VECGEOM_FORCE_INLINE
 void MaskedAssign(UmesimdBool_v const &cond, UmesimdBool_v const &thenval, UmesimdBool_v *const output)
 {
-  output->assign(cond, thenval);
+  //output->assign(cond, thenval);
+  UmesimdBool_v out_v;
+  out_v.assign(*output);
+  UmesimdBool_v t0 = cond.land(thenval);
+  UmesimdBool_v t1 = (!cond).land(out_v);
+  UmesimdBool_v t2 = t0 || t1;
+  output->assign(t2);
 }
 
 VECGEOM_FORCE_INLINE
@@ -427,6 +439,12 @@ UmeSimdMask IsInf(UME::SIMD::SIMDVec_f<double, kVectorSize> const &val)
 #endif
 
 VECGEOM_FORCE_INLINE
+UME::SIMD::SIMDVecMask<kVectorSize> IsInf(vecCore::backend::UMESimd::Real_v &what)
+{
+  return what.isinf();
+}
+
+VECGEOM_FORCE_INLINE
 UmeSimdMask IsInf(UmeSimdPrecisionVector const &val)
 {
   return val.isinf();
@@ -437,6 +455,18 @@ UmeSimdPrecisionVector Max(UmeSimdPrecisionVector const &val1, UmeSimdPrecisionV
 {
   return val1.max(val2);
 }
+
+VECGEOM_FORCE_INLINE
+UmeSimdPrecisionVector CopySign(UmeSimdPrecisionVector const &val1, UmeSimdPrecisionVector const &val2)
+{
+  return val1.copysign(val2);
+}
+
+VECGEOM_FORCE_INLINE
+vecCore::backend::UMESimd::Real_v CopySign(vecCore::backend::UMESimd::Real_v const & val1, vecCore::backend::UMESimd::Real_v const & val2) {
+  return val1.copysign(val2);
+}
+
 
 VECGEOM_FORCE_INLINE
 UmeSimdPrecisionVector Min(UmeSimdPrecisionVector const &val1, UmeSimdPrecisionVector const &val2)
@@ -503,6 +533,9 @@ UMESIMD_REAL_FUNC(Ceil, ceil)
 #undef UMESIMD_REAL_FUNC
 
 } // end namespace math
+
+
+
 
 VECGEOM_FORCE_INLINE
 bool MaskFull(const vecgeom::UmeSimdMask &cond)

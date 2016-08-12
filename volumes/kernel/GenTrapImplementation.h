@@ -214,7 +214,7 @@ void GenTrapImplementation::Inside(UnplacedStruct_t const &unplaced, Vector3D<Re
 
   inside = Inside_t(EInside::kSurface);
   vecCore::MaskedAssign(inside, (InsideBool_v)completelyoutside, Inside_t(EInside::kOutside));
-  vecCore::MaskedAssign(inside, (InsideBool_v)completelyinside, Inside_t(EInside::kInside));
+  vecCore::MaskedAssign(inside, (InsideBool_v)completelyinside, Inside_t(0.0));
 }
 
 //______________________________________________________________________________

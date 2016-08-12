@@ -94,6 +94,7 @@ public:
   {
   }
 #endif
+  using Real_v = vecgeom::VectorBackend::Real_v;
   using PlacedShape_t::SafetyToOut;
   using PlacedShape_t::DistanceToOut;
   using PlacedShape_t::UnplacedContains;
@@ -190,8 +191,15 @@ public:
     return output;
   }
 
-  virtual VECGEOM_BACKEND_PRECISION_TYPE SafetyToInVec(
+  /*virtual VECGEOM_BACKEND_PRECISION_TYPE SafetyToInVec(
       Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &position) const override
+  {
+    Transformation3D const *tr = this->GetTransformation();
+    return this->GetUnplacedVolume()->UnplacedVolume_t::SafetyToInVec(tr->Transform<transC, rotC>(position));
+  }*/
+  
+  virtual Real_v SafetyToInVec(
+      Vector3D<Real_v> const &position) const override
   {
     Transformation3D const *tr = this->GetTransformation();
     return this->GetUnplacedVolume()->UnplacedVolume_t::SafetyToInVec(tr->Transform<transC, rotC>(position));
@@ -280,6 +288,7 @@ class SIMDSpecializedVolImplHelper : public CommonSpecializedVolImplHelper<Speci
   using CommonHelper_t = CommonSpecializedVolImplHelper<Specialization, transC, rotC>;
 
 public:
+  using Real_v = vecgeom::VectorBackend::Real_v;
   using CommonHelper_t::SafetyToOut;
   using CommonHelper_t::DistanceToOut;
   using CommonHelper_t::UnplacedContains;
@@ -331,7 +340,7 @@ public:
   using UnplacedVolume_t = typename Specialization::UnplacedVolume_t;
 
   // the explicit SIMD interface
-  virtual VECGEOM_BACKEND_PRECISION_TYPE DistanceToInVec(Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &p,
+  /*virtual VECGEOM_BACKEND_PRECISION_TYPE DistanceToInVec(Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &p,
                                                          Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &d,
                                                          VECGEOM_BACKEND_PRECISION_TYPE const step_max) const override
   {
@@ -339,6 +348,18 @@ public:
     Transformation3D const *tr = this->GetTransformation();
     auto unplacedstruct        = this->GetUnplacedStruct();
     Specialization::template DistanceToIn<VECGEOM_BACKEND_PRECISION_TYPE>(
+        *unplacedstruct, tr->Transform<transC, rotC>(p), tr->TransformDirection<rotC>(d), step_max, output);
+    return output;
+  }*/
+  
+  virtual Real_v DistanceToInVec(Vector3D<Real_v> const &p,
+                                                         Vector3D<Real_v> const &d,
+                                                         Real_v const step_max) const override
+  {
+    Real_v output(kInfinity);
+    Transformation3D const *tr = this->GetTransformation();
+    auto unplacedstruct        = this->GetUnplacedStruct();
+    Specialization::template DistanceToIn<Real_v>(
         *unplacedstruct, tr->Transform<transC, rotC>(p), tr->TransformDirection<rotC>(d), step_max, output);
     return output;
   }
@@ -413,6 +434,7 @@ class LoopSpecializedVolImplHelper : public CommonSpecializedVolImplHelper<Speci
   using CommonHelper_t = CommonSpecializedVolImplHelper<Specialization, transC, rotC>;
 
 public:
+  using Real_v = vecgeom::VectorBackend::Real_v;
   using CommonHelper_t::SafetyToOut;
   using CommonHelper_t::DistanceToOut;
   using CommonHelper_t::UnplacedContains;
@@ -467,9 +489,16 @@ public:
   }
 
   // the explicit SIMD interface
-  virtual VECGEOM_BACKEND_PRECISION_TYPE DistanceToInVec(Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &p,
+  /*virtual VECGEOM_BACKEND_PRECISION_TYPE DistanceToInVec(Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &p,
                                                          Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &d,
-                                                         VECGEOM_BACKEND_PRECISION_TYPE const step_max) const override
+                                                         Real_v const step_max) const override
+  {
+    throw std::runtime_error("DistanceToInVec unimplemented");
+  }*/
+  
+  virtual Real_v DistanceToInVec(Vector3D<Real_v> const &p,
+                                                         Vector3D<Real_v> const &d,
+                                                         Real_v const step_max) const override
   {
     throw std::runtime_error("DistanceToInVec unimplemented");
   }

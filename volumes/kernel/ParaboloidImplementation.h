@@ -115,7 +115,7 @@ struct ParaboloidImplementation {
     GenericKernelForContainsAndInside<Real_v, Bool_v, true>(paraboloid, point, completelyinside, completelyoutside);
     inside = EInside::kSurface;
     vecCore::MaskedAssign(inside, (InsideBool_v)completelyoutside, Inside_t(EInside::kOutside));
-    vecCore::MaskedAssign(inside, (InsideBool_v)completelyinside, Inside_t(EInside::kInside));
+    vecCore::MaskedAssign(inside, (InsideBool_v)completelyinside, Inside_t(0.0));
   }
 
   template <typename Real_v, typename Bool_v, bool ForInside>

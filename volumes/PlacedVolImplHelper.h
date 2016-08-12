@@ -26,6 +26,7 @@ struct PlacedVolumeImplHelper : public BaseVol {
   using Struct_t = typename UnplacedShape_t::UnplacedStruct_t;
 
 public:
+  using Real_v = vecgeom::VectorBackend::Real_v;
   using BaseVol::BaseVol;
   using BaseVol::GetLogicalVolume;
 
@@ -92,10 +93,19 @@ public:
     return GetUnplacedVolume()->UnplacedShape_t::DistanceToOut(point, direction, stepMax);
   }
 
+/*
   virtual VECGEOM_BACKEND_PRECISION_TYPE DistanceToOutVec(
       Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &position,
       Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &direction,
       VECGEOM_BACKEND_PRECISION_TYPE const step_max = kInfinity) const override
+  {
+    return GetUnplacedVolume()->UnplacedShape_t::DistanceToOutVec(position, direction, step_max);
+  }*/
+  
+  virtual Real_v DistanceToOutVec(
+      Vector3D<Real_v> const &position,
+      Vector3D<Real_v> const &direction,
+      Real_v const step_max = kInfinity) const override
   {
     return GetUnplacedVolume()->UnplacedShape_t::DistanceToOutVec(position, direction, step_max);
   }
@@ -125,8 +135,14 @@ public:
     return GetUnplacedVolume()->UnplacedShape_t::SafetyToOut(point);
   }
 
-  virtual VECGEOM_BACKEND_PRECISION_TYPE SafetyToOutVec(
+  /*virtual VECGEOM_BACKEND_PRECISION_TYPE SafetyToOutVec(
       Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &position) const override
+  {
+    return GetUnplacedVolume()->UnplacedShape_t::SafetyToOutVec(position);
+  }*/
+  
+  virtual Real_v SafetyToOutVec(
+      Vector3D<Real_v> const &position) const override
   {
     return GetUnplacedVolume()->UnplacedShape_t::SafetyToOutVec(position);
   }
