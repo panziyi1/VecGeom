@@ -238,7 +238,7 @@ public:
     //#ifndef VECGEOM_NVCC
     //    assert(direction.IsNormalized() && " direction not normalized in call to  DistanceToIn ");
     //#endif
-    Real_v output = Real_v(kInfinity);
+    Real_v output = kInfinity;
     //Specialization::template DistanceToIn<VECGEOM_BACKEND_TYPE>(*this->GetUnplacedVolume(), *this->GetTransformation(),
     //                                                            point, direction, stepMax, output);
 
@@ -314,7 +314,7 @@ public:
     //#ifndef VECGEOM_NVCC
     //    assert(direction.IsNormalized() && " direction not normalized in call to  DistanceToOut ");
     //#endif
-    Real_v output = Real_v(kInfinity);
+    Real_v output = kInfinity;
     //Specialization::template DistanceToOut<VECGEOM_BACKEND_TYPE>(*this->GetUnplacedVolume(), point, direction, stepMax,
     //                                                             output);
     // avoid distance values within tolerance
@@ -425,7 +425,7 @@ public:
   virtual Real_v SafetyToInVec(
       Vector3D<Real_v> const &position) const override
   {
-    Real_v output(kInfinity);
+    Real_v output = kInfinity;
     //Specialization::template SafetyToIn<VECGEOM_BACKEND_TYPE>(*this->GetUnplacedVolume(), *this->GetTransformation(),
     //                                                          position, output);
 
@@ -452,7 +452,7 @@ public:
   virtual Real_v SafetyToOutVec(
       Vector3D<Real_v> const &position) const override
   {
-    Real_v output(kInfinity);
+    Real_v output = kInfinity;
     //Specialization::template SafetyToOut<VECGEOM_BACKEND_TYPE>(*this->GetUnplacedVolume(), position, output);
 
     // avoid distance values within tolerance

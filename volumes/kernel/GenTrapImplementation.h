@@ -214,7 +214,7 @@ void GenTrapImplementation::Inside(UnplacedStruct_t const &unplaced, Vector3D<Re
 
   inside = Inside_t(EInside::kSurface);
   vecCore::MaskedAssign(inside, (InsideBool_v)completelyoutside, Inside_t(EInside::kOutside));
-  vecCore::MaskedAssign(inside, (InsideBool_v)completelyinside, Inside_t(0.0));
+  vecCore::MaskedAssign(inside, (InsideBool_v)completelyinside, Inside_t(EInside::kInside));
 }
 
 //______________________________________________________________________________
@@ -400,7 +400,7 @@ void GenTrapImplementation::DistanceToOut(UnplacedStruct_t const &unplaced, Vect
   // TODO: do this with some nice template features
 
   Bool_v negDirMask = direction.z() < 0;
-  Real_v sign(1.0);
+  Real_v sign       = 1.;
   vecCore::MaskedAssign(sign, negDirMask, Real_v(-1.));
   //    Real_v invDirZ = 1./direction.z();
   // this construct costs one multiplication more

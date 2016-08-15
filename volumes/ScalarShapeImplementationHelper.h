@@ -462,29 +462,13 @@ public:
   }
 
   // scalar fallback: dispatch a SIMD interface to a scalar kernel
-  /*VECGEOM_FORCE_INLINE
-  virtual VECGEOM_BACKEND_PRECISION_TYPE SafetyToInVec(
-      Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &position) const override
-  {
-    using vecCore::LaneAt;
-    using vecCore::AssignLane;
-    VECGEOM_BACKEND_PRECISION_TYPE output(kInfinity);
-    for (auto i = decltype(VECGEOM_BACKEND_PRECISION_TYPE_SIZE){0}; i < VECGEOM_BACKEND_PRECISION_TYPE_SIZE; ++i) {
-      Precision tmp;
-      Vector3D<Precision> pos(LaneAt(position.x(), i), LaneAt(position.y(), i), LaneAt(position.z(), i));
-      Specialization::template SafetyToIn<kScalar>(*this->GetUnplacedVolume(), *this->GetTransformation(), pos, tmp);
-      AssignLane(output, i, tmp);
-    }
-    return output;
-  }*/
-  
   VECGEOM_FORCE_INLINE
   virtual Real_v SafetyToInVec(
       Vector3D<Real_v> const &position) const override
   {
     using vecCore::LaneAt;
     using vecCore::AssignLane;
-    Real_v output(kInfinity);
+    Real_v output = kInfinity;
     for (auto i = decltype(VECGEOM_BACKEND_PRECISION_TYPE_SIZE){0}; i < VECGEOM_BACKEND_PRECISION_TYPE_SIZE; ++i) {
       Precision tmp;
       Vector3D<Precision> pos(LaneAt(position.x(), i), LaneAt(position.y(), i), LaneAt(position.z(), i));
@@ -493,24 +477,6 @@ public:
     }
     return output;
   }
-
-  /*
-  VECGEOM_FORCE_INLINE
-  virtual VECGEOM_BACKEND_PRECISION_TYPE SafetyToOutVec(
-      Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &position) const override
-  {
-    using vecCore::LaneAt;
-    using vecCore::AssignLane;
-    VECGEOM_BACKEND_PRECISION_TYPE output(kInfinity);
-    for (auto i = decltype(VECGEOM_BACKEND_PRECISION_TYPE_SIZE){0}; i < VECGEOM_BACKEND_PRECISION_TYPE_SIZE; ++i) {
-      Precision tmp;
-      Vector3D<Precision> pos(LaneAt(position.x(), i), LaneAt(position.y(), i), LaneAt(position.z(), i));
-      Specialization::template SafetyToOut<kScalar>(*this->GetUnplacedVolume(), pos, tmp);
-      AssignLane(output, i, tmp);
-    }
-    return output;
-  }*/
-
 
   VECGEOM_FORCE_INLINE
   virtual Real_v SafetyToOutVec(
@@ -518,7 +484,7 @@ public:
   {
     using vecCore::LaneAt;
     using vecCore::AssignLane;
-    Real_v output(kInfinity);
+    Real_v output = kInfinity;
     for (auto i = decltype(VECGEOM_BACKEND_PRECISION_TYPE_SIZE){0}; i < VECGEOM_BACKEND_PRECISION_TYPE_SIZE; ++i) {
       Precision tmp;
       Vector3D<Precision> pos(LaneAt(position.x(), i), LaneAt(position.y(), i), LaneAt(position.z(), i));
@@ -527,25 +493,6 @@ public:
     }
     return output;
   }
-
-  /*virtual VECGEOM_BACKEND_PRECISION_TYPE DistanceToInVec(Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &position,
-                                                         Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &direction,
-                                                         const VECGEOM_BACKEND_PRECISION_TYPE stepMax) const override
-  {
-    using vecCore::LaneAt;
-    using vecCore::AssignLane;
-    VECGEOM_BACKEND_PRECISION_TYPE output(kInfinity);
-    for (auto i = decltype(VECGEOM_BACKEND_PRECISION_TYPE_SIZE){0}; i < VECGEOM_BACKEND_PRECISION_TYPE_SIZE; ++i) {
-      Precision tmp;
-      Vector3D<Precision> pos(LaneAt(position.x(), i), LaneAt(position.y(), i), LaneAt(position.z(), i));
-      Vector3D<Precision> dir(LaneAt(direction.x(), i), LaneAt(direction.y(), i), LaneAt(direction.z(), i));
-      Specialization::template DistanceToIn<kScalar>(*this->GetUnplacedVolume(), *this->GetTransformation(), pos, dir,
-                                                     LaneAt(stepMax, i), tmp);
-      MaskedAssign(Abs(tmp) < kHalfTolerance, 0., &tmp);
-      AssignLane(output, i, tmp);
-    }
-    return output;
-  }*/
   
   virtual Real_v DistanceToInVec(Vector3D<Real_v> const &position,
                                  Vector3D<Real_v> const &direction,
@@ -553,7 +500,7 @@ public:
   {
     using vecCore::LaneAt;
     using vecCore::AssignLane;
-    Real_v output(kInfinity);
+    Real_v output = kInfinity;
     for (auto i = decltype(VECGEOM_BACKEND_PRECISION_TYPE_SIZE){0}; i < VECGEOM_BACKEND_PRECISION_TYPE_SIZE; ++i) {
       Precision tmp;
       Vector3D<Precision> pos(LaneAt(position.x(), i), LaneAt(position.y(), i), LaneAt(position.z(), i));
@@ -565,24 +512,6 @@ public:
     }
     return output;
   }
-
-  /*virtual VECGEOM_BACKEND_PRECISION_TYPE DistanceToOutVec(Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &position,
-                                                          Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &direction,
-                                                          const VECGEOM_BACKEND_PRECISION_TYPE stepMax) const override
-  {
-    using vecCore::LaneAt;
-    using vecCore::AssignLane;
-    VECGEOM_BACKEND_PRECISION_TYPE output(kInfinity);
-    for (auto i = decltype(VECGEOM_BACKEND_PRECISION_TYPE_SIZE){0}; i < VECGEOM_BACKEND_PRECISION_TYPE_SIZE; ++i) {
-      Precision tmp;
-      Vector3D<Precision> pos(LaneAt(position.x(), i), LaneAt(position.y(), i), LaneAt(position.z(), i));
-      Vector3D<Precision> dir(LaneAt(direction.x(), i), LaneAt(direction.y(), i), LaneAt(direction.z(), i));
-      Specialization::template DistanceToOut<kScalar>(*this->GetUnplacedVolume(), pos, dir, LaneAt(stepMax, i), tmp);
-      MaskedAssign(Abs(tmp) < kHalfTolerance, 0., &tmp);
-      AssignLane(output, i, tmp);
-    }
-    return output;
-  }*/
   
   virtual Real_v DistanceToOutVec(Vector3D<Real_v> const &position,
                                   Vector3D<Real_v> const &direction,
@@ -590,7 +519,7 @@ public:
   {
     using vecCore::LaneAt;
     using vecCore::AssignLane;
-    Real_v output(kInfinity);
+    Real_v output = kInfinity;
     for (auto i = decltype(VECGEOM_BACKEND_PRECISION_TYPE_SIZE){0}; i < VECGEOM_BACKEND_PRECISION_TYPE_SIZE; ++i) {
       Precision tmp;
       Vector3D<Precision> pos(LaneAt(position.x(), i), LaneAt(position.y(), i), LaneAt(position.z(), i));
