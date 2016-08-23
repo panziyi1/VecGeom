@@ -211,7 +211,8 @@ public:
     return output;
   }
 
-  /*virtual VECGEOM_BACKEND_PRECISION_TYPE DistanceToInVec(Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &point,
+  // temporary until all shapes have migrated to VecCore backend
+  virtual VECGEOM_BACKEND_PRECISION_TYPE DistanceToInVec(Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &point,
                                                          Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &direction,
                                                          const VECGEOM_BACKEND_PRECISION_TYPE stepMax) const override
   {
@@ -229,7 +230,7 @@ public:
     //#endif
 
     return output;
-  }*/
+  }
 
   virtual Real_v DistanceToInVec(Vector3D<Real_v> const &point,
                                                          Vector3D<Real_v> const &direction,
@@ -281,7 +282,8 @@ public:
     return output;
   }
 
-  /*virtual VECGEOM_BACKEND_PRECISION_TYPE DistanceToOutVec(Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &point,
+  // temporary until all shapes have migrated to VecCore backend
+  virtual VECGEOM_BACKEND_PRECISION_TYPE DistanceToOutVec(Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &point,
                                                           Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &direction,
                                                           const VECGEOM_BACKEND_PRECISION_TYPE stepMax) const override
   {
@@ -305,7 +307,7 @@ public:
     //#endif
 
     return output;
-  }*/
+  }
 
   virtual Real_v DistanceToOutVec(Vector3D<Real_v> const &point,
                                                           Vector3D<Real_v> const &direction,
@@ -407,7 +409,8 @@ public:
     return output;
   }
 
-  /*VECGEOM_FORCE_INLINE
+  // temporary until all shapes have migrated to VecCore backend
+  VECGEOM_FORCE_INLINE
   virtual VECGEOM_BACKEND_PRECISION_TYPE SafetyToInVec(
       Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &position) const override
   {
@@ -419,7 +422,7 @@ public:
     // MaskedAssign(Abs(output)<kHalfTolerance, 0., &output);
 
     return output;
-  }*/
+  }
 
   VECGEOM_FORCE_INLINE
   virtual Real_v SafetyToInVec(
@@ -435,7 +438,8 @@ public:
     return output;
   }
   
-  /*VECGEOM_FORCE_INLINE
+  // temporary until all shapes have migrated to VecCore backend
+  VECGEOM_FORCE_INLINE
   virtual VECGEOM_BACKEND_PRECISION_TYPE SafetyToOutVec(
       Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &position) const override
   {
@@ -446,7 +450,7 @@ public:
     // MaskedAssign(Abs(output)<kHalfTolerance, 0., &output);
 
     return output;
-  }*/
+  }
 
   VECGEOM_FORCE_INLINE
   virtual Real_v SafetyToOutVec(

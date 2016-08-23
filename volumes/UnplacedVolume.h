@@ -121,6 +121,7 @@ public:
   VECGEOM_CUDA_HEADER_BOTH
   virtual Real_v SafetyToInVec(Vector3D<Real_v> const &p) const /* = 0 */;
 
+
   // the tramponline to dispatch to SafetyToInVec if type is not scalar
   template <typename T>
   VECGEOM_FORCE_INLINE

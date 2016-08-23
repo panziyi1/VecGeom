@@ -198,6 +198,13 @@ public:
     return this->GetUnplacedVolume()->UnplacedVolume_t::SafetyToInVec(tr->Transform<transC, rotC>(position));
   }
 
+  // temporary until all shapes have migrated to VecCore backend
+  virtual VECGEOM_BACKEND_PRECISION_TYPE SafetyToInVec(
+      Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &position) const override
+  {
+    Transformation3D const *tr = this->GetTransformation();
+    return this->GetUnplacedVolume()->UnplacedVolume_t::SafetyToInVec(tr->Transform<transC, rotC>(position));
+  }
 }; // End class CommonSpecializedVolImplHelper
 
 // needs to be in the specializations
@@ -331,7 +338,22 @@ public:
   }
 
   using UnplacedVolume_t = typename Specialization::UnplacedVolume_t;
-  
+
+  // temporary until all shapes have migrated to VecCore backend
+  virtual VECGEOM_BACKEND_PRECISION_TYPE DistanceToInVec(Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &p,
+                                 Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &d,
+                                 VECGEOM_BACKEND_PRECISION_TYPE const step_max) const override
+  {
+    VECGEOM_BACKEND_PRECISION_TYPE output = kInfinity;
+    Transformation3D const *tr = this->GetTransformation();
+    auto unplacedstruct        = this->GetUnplacedStruct();
+    Specialization::template DistanceToIn<VECGEOM_BACKEND_PRECISION_TYPE>(
+        *unplacedstruct, tr->Transform<transC, rotC>(p), tr->TransformDirection<rotC>(d), step_max, output);
+    return output;
+  }
+
+
+
   virtual Real_v DistanceToInVec(Vector3D<Real_v> const &p,
                                  Vector3D<Real_v> const &d,
                                  Real_v const step_max) const override
@@ -474,6 +496,16 @@ public:
   {
     throw std::runtime_error("DistanceToInVec unimplemented");
   }
+
+  // temporary until all shapes have migrated to VecCore backend
+  virtual VECGEOM_BACKEND_PRECISION_TYPE DistanceToInVec(Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &p,
+                                 Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &d,
+                                 VECGEOM_BACKEND_PRECISION_TYPE const step_max) const override
+  {
+    throw std::runtime_error("DistanceToInVec unimplemented");
+  }
+
+
 
   virtual void DistanceToInMinimize(SOA3D<Precision> const &points, SOA3D<Precision> const &directions,
                                     int daughterindex, Precision *const output, int *const nextnodeids) const override

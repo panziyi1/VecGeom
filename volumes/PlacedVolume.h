@@ -203,6 +203,12 @@ public:
       Vector3D<Real_v> const &position,
       Vector3D<Real_v> const &direction,
       const Real_v step_max = kInfinity) const = 0;
+  // temporary until all shapes have migrated to VecCore backend
+  virtual VECGEOM_BACKEND_PRECISION_TYPE DistanceToInVec(
+      Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &position,
+      Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &direction,
+      const VECGEOM_BACKEND_PRECISION_TYPE step_max = kInfinity) const = 0;
+
 
   template <typename T>
   VECGEOM_FORCE_INLINE
@@ -230,6 +236,12 @@ public:
       Vector3D<Real_v> const &position,
       Vector3D<Real_v> const &direction,
       Real_v const step_max = kInfinity) const = 0;
+
+  // temporary until all shapes have migrated to VecCore backend
+  virtual VECGEOM_BACKEND_PRECISION_TYPE DistanceToOutVec(
+      Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &position,
+      Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &direction,
+      VECGEOM_BACKEND_PRECISION_TYPE const step_max = kInfinity) const = 0;
       
   template <typename T>
   VECGEOM_FORCE_INLINE
@@ -257,6 +269,10 @@ public:
 
   virtual Real_v SafetyToInVec(
       Vector3D<Real_v> const &position) const = 0;
+
+  // temporary until all shapes have migrated to VecCore backend
+  virtual VECGEOM_BACKEND_PRECISION_TYPE SafetyToInVec(
+      Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &position) const = 0;
       
   template <typename T>
   VECGEOM_FORCE_INLINE
@@ -275,6 +291,9 @@ public:
 
   virtual Real_v SafetyToOutVec(
       Vector3D<Real_v> const &position) const = 0;
+  // temporary until all shapes have migrated to VecCore backend
+  virtual VECGEOM_BACKEND_PRECISION_TYPE SafetyToOutVec(
+      Vector3D<VECGEOM_BACKEND_PRECISION_TYPE> const &position) const = 0;
       
   virtual void SafetyToOut(SOA3D<Precision> const &position, Precision *const safeties) const = 0;
 
