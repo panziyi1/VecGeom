@@ -97,6 +97,13 @@ VECCORE_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
 void MaskedAssign(T &dst, const Mask<T> &mask, const T &src);
 
+// a version of lazy eval of arguments
+template <typename T, typename Lambda>
+VECCORE_FORCE_INLINE
+VECCORE_ATT_HOST_DEVICE
+void MaskedAssignL(T &dst, const Mask<T> &mask, Lambda &&f);
+
+
 template <typename T>
 VECCORE_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE

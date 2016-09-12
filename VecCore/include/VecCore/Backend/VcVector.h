@@ -92,6 +92,9 @@ struct MaskingImplementation<Vc::Vector<T>> {
 
   static inline void Assign(V &dst, M const &mask, V const &src) { dst(mask) = src; }
 
+  template <typename Lambda>
+  static inline void AssignL(V &dst, M const &mask, Lambda &&f) { dst(mask) = f(); }
+
   static inline void Blend(V &dst, M const &mask, V const &src1, V const src2)
   {
     dst       = src2;

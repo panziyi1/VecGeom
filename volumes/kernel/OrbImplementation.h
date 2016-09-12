@@ -191,6 +191,8 @@ struct OrbImplementation {
     vecCore::MaskedAssign(safety, isPointOnSurface, Real_v(0.));
   }
 
+#define ML(EXPRESSION) [&](){return EXPRESSION;}
+
   template <typename Real_v, bool ForDistanceToIn>
   VECGEOM_FORCE_INLINE
   VECGEOM_CUDA_HEADER_BOTH
@@ -210,10 +212,12 @@ struct OrbImplementation {
     if (ForDistanceToIn) {
       Bool_v cond = ((d2 >= 0.) && (pDotV3D <= 0.));
       vecCore::MaskedAssign(distance, cond, (-pDotV3D - Sqrt(vecCore::math::Abs(d2))));
+      //vecCore::MaskedAssignL(distance, cond, ML(-pDotV3D - Sqrt(vecCore::math::Abs(d2))));
       return cond;
     } else {
-      vecCore::MaskedAssign(distance, (d2 >= 0.), (-pDotV3D + Sqrt(vecCore::math::Abs(d2))));
-      return (d2 >= 0.);
+     vecCore::MaskedAssign(distance, (d2 >= 0.), (-pDotV3D + Sqrt(vecCore::math::Abs(d2))));
+    // vecCore::MaskedAssignL(distance, (d2 >= 0.), ML(-pDotV3D + Sqrt(vecCore::math::Abs(d2))));
+     return (d2 >= 0.);
     }
   }
 

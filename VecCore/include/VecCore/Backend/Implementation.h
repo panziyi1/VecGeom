@@ -232,6 +232,14 @@ struct GenericMaskingImplementation<T, true> {
     if (mask) dst = src;
   }
 
+  template<typename Lambda>
+  VECCORE_FORCE_INLINE
+  VECCORE_ATT_HOST_DEVICE
+  static void AssignL(T &dst, Mask<T> const &mask, Lambda &&f)
+  {
+    if (mask) dst = f();
+  }
+
   VECCORE_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
   static void Blend(T &dst, Mask<T> const &mask, T const &src1, T const &src2) { dst = mask ? src1 : src2; }
@@ -244,6 +252,14 @@ struct MaskingImplementation {
   static void Assign(T &dst, Mask<T> const &mask, T const &src)
   {
     GenericMaskingImplementation<T, std::is_scalar<T>::value>::Assign(dst, mask, src);
+  }
+
+  template <typename Lambda>
+  VECCORE_FORCE_INLINE
+  VECCORE_ATT_HOST_DEVICE
+  static void AssignL(T &dst, Mask<T> const &mask, Lambda &&f)
+  {
+    GenericMaskingImplementation<T, std::is_scalar<T>::value>::template AssignL<Lambda>(dst, mask, f);
   }
 
   VECCORE_FORCE_INLINE
@@ -261,6 +277,15 @@ void MaskedAssign(T &dst, const Mask<T> &mask, const T &src)
 {
   MaskingImplementation<T>::Assign(dst, mask, src);
 }
+
+template <typename T, typename Lambda>
+VECCORE_FORCE_INLINE
+VECCORE_ATT_HOST_DEVICE
+void MaskedAssignL(T &dst, const Mask<T> &mask, Lambda &&f)
+{
+  MaskingImplementation<T>::AssignL(dst, mask, f);
+}
+
 
 template <typename T>
 VECCORE_FORCE_INLINE
