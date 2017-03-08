@@ -25,6 +25,27 @@ void UnplacedTube::Print(std::ostream &os) const
   os << "UnplacedTube {" << rmin() << ", " << rmax() << ", " << z() << ", " << sphi() << ", " << dphi() << "}\n";
 }
 
+template <>
+UnplacedTube *Maker<UnplacedTube>::MakeInstance(const Precision &rmin, const Precision &rmax, const Precision &z,
+                                                const Precision &sphi, const Precision &dphi)
+{
+  if (rmin <= 0) {
+    if (dphi >= 2 * M_PI) return new SUnplacedTube<TubeTypes::NonHollowTube>(rmin, rmax, z, sphi, dphi);
+    if (dphi == M_PI) return nullptr;
+    // == M_PI ???
+
+    if (dphi < M_PI) return nullptr;
+    if (dphi > M_PI) return nullptr;
+  } else if (rmin > 0) {
+    if (dphi >= 2 * M_PI) return nullptr; // RETURN_SPECIALIZATION(HollowTube);
+    if (dphi == M_PI) return nullptr;     // RETURN_SPECIALIZATION(HollowTubeWithPiSector); // == M_PI ???
+
+    if (dphi < M_PI) return nullptr; // RETURN_SPECIALIZATION(HollowTubeWithSmallerThanPiSector);
+    if (dphi > M_PI) return nullptr; // RETURN_SPECIALIZATION(HollowTubeWithBiggerThanPiSector);
+  }
+  return nullptr;
+}
+
 // template <TranslationCode transCodeT, RotationCode rotCodeT>
 // VECGEOM_CUDA_HEADER_DEVICE
 // VPlacedVolume *UnplacedTube::Create(LogicalVolume const *const logical_volume,
