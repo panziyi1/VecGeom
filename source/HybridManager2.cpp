@@ -44,7 +44,9 @@ void HybridManager2::BuildStructure_v(LogicalVolume const *vol)
   auto structure              = BuildStructure(ABBoxManager::Instance().GetABBoxes(vol, nDaughters), nDaughters);
   fStructureHolder[vol->id()] = structure;
   assert((int)vol->GetDaughters().size() == nDaughters);
-  assert(structure->fNumberOfOriginalBoxes != 0);
+  if (structure) {
+    assert(structure->fNumberOfOriginalBoxes != 0);
+  }
 }
 
 /**
