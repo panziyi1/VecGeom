@@ -80,13 +80,13 @@ enum_option(VECGEOM_VECTOR
       CASE_INSENSITIVE
     )
 
-set(VECGEOM_BACKEND default Scalar Vc Cilk MicVec umesimd)
+set(VECGEOM_BACKEND Scalar UMESIMD Vc)
 
 enum_option(BACKEND
             DOC "Backend infrastructure to be used"
             TYPE STRING
             VALUES ${VECGEOM_BACKEND}
-            CASE_INSENSITIVE
+            CASE_SENSITIVE
            )
 
 if (CTEST)
@@ -128,76 +128,41 @@ endif()
 
 ################################################################################
 
-# VecCore will initialize the CUDA support so we must have those over-ride placed here as they
-# need to be done before loading FindCUDA.cmake
 if (CUDA)
+  set(VecCore_COMPONENTS ${VecCore_COMPONENTS} "CUDA")
   set(CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "Compile CUDA objects with separable compilation enabled.")
   set(CUDA_USE_STATIC_CUDA_RUNTIME OFF CACHE BOOL "Use the static version of the CUDA runtime library if available")
 endif()
 
 # Determine backend
 
-string(TOUPPER ${BACKEND} _backend_up)
+set(${BACKEND} True)
+string(TOUPPER "${BACKEND}" _BACKEND_UP)
+string(TOLOWER "${BACKEND}" _BACKEND_LO)
 
-if (_backend_up MATCHES VC)
-  set(Vc ON)
-  set(VC ON CACHE BOOL "" FORCE) # enable Vc in VecCore
-  message(STATUS "Configuring with \"Vc\" vector backend")
-elseif (_backend_up MATCHES SCALAR)
-  set(Scalar ON)
-  message(STATUS "Configuring with \"Scalar\" backend.")
-elseif (_backend_up MATCHES CILK)
-  if (NOT Intel)
-    message(FATAL_ERROR "Must use Intel C++ compiler (icpc) for Cilk+ backend.")
-  endif()
-  set(Cilk ON)
-  message(STATUS "Configuring with \"Cilk+\" vector backend.")
-elseif (_backend_up MATCHES MICVEC)
-  if (NOT Intel)
-    message(FATAL_ERROR "Must use Intel C++ compiler (icpc) with MIC SIMD for MICVEC backend.")
-  endif()
-  set(MICVEC ON)
-  message(STATUS "Configuring with \"Micvec\" vector backend.")
-elseif (_backend_up MATCHES UMESIMD)
-  set(UMESIMD ON)
-  find_package(UMESIMD)
-  if(UMESIMD_FOUND)
-    set(UMESIMD ON CACHE BOOL "" FORCE) # enable UMESIMD in VecCore
-    include_directories(SYSTEM ${UMESIMD_INCLUDE_DIR})
-    set(VECGEOM_EXTERNAL_INCLUDES "${VECGEOM_EXTERNAL_INCLUDES};${UMESIMD_INCLUDE_DIR}")
-  endif()
-  message(STATUS "Configuring with \"UME::SIMD\" vector backend.")
-elseif (_backend_up MATCHES DEFAULT)
-  set(Vc ON)
-  set(VC ON CACHE BOOL "" FORCE) # enable Vc in VecCore
-  set(BACKEND VC CACHE STRING "Set by default to VC" FORCE)
-  message(STATUS "Backend not specified. Defaulting to Vc.")
+if("${BACKEND}" MATCHES "Scalar")
+  set(VECGEOM_SCALAR True)
+  message(STATUS "Configuring with Scalar backend")
+elseif ("${BACKEND}" MATCHES "Vc|UMESIMD")
+  set(VECGEOM_${_BACKEND_UP} True)
+  set(VecCore_COMPONENTS ${VecCore_COMPONENTS} ${BACKEND})
+  set(SRC_EXTERNAL ${SRC_EXTERNAL} source/backend/${_BACKEND_LO}/Backend.cpp)
+  message(STATUS "Configuring with ${BACKEND} backend")
 else()
-  message(FATAL_ERROR "Value '${BACKEND}' for variable BACKEND is not allowed. ")
+  message(FATAL_ERROR "Unknown backend: '${BACKEND}'. Known values are: Scalar, UMESIMD, Vc.")
 endif()
 
-add_subdirectory(VecCore)
-# A hack for more user friendliness
-# If Vc wanted but was not found .. we fall back to scalar
-if (Vc)
-  if (NOT Vc_FOUND)
-    message(STATUS "****************************************************************")
-    message(STATUS "***** Tried to configure using Vc backend but Vc was not found *")
-    message(STATUS "***** Falling back to Scalar backend                           *")
-    message(STATUS "***** If you want to use Vc; please install it                 *")
-    message(STATUS "******  ...   and/or fix your cmake command options            *")
-    message(STATUS "****************************************************************")
-    set(Vc OFF)
-    set(VC OFF)
-    set(Scalar ON)
-    set(BACKEND Scalar CACHE STRING "Fallback by default to Scalar" FORCE)
-  endif()
+if (${BACKEND} MATCHES "UMESIMD|Vc")
 endif()
 
+# Find VecCore with selected components turned on (CUDA and backend)
+find_package(VecCore 0.4.0 REQUIRED COMPONENTS ${VecCore_COMPONENTS})
 
-# CMake does not propagate these up, must be added by hand
-include_directories(${PROJECT_SOURCE_DIR}/VecCore/include)
-include_directories(${PROJECT_BINARY_DIR}/VecCore/include)
+include_directories(SYSTEM ${VecCore_INCLUDE_DIRS})
+set(VECGEOM_DEFINITIONS "${VECGEOM_DEFINITIONS} ${VecCore_DEFINITIONS}")
+set(VECGEOM_DEFINITIONS "${VECGEOM_DEFINITIONS} -DVECGEOM_${_BACKEND_UP}")
+set(VECGEOM_EXTERNAL_INCLUDES "${VECGEOM_EXTERNAL_INCLUDES};${VecCore_INCLUDE_DIRS}")
+set(VECGEOM_LIBRARIES_EXTERNAL ${VECGEOM_LIBRARIES_EXTERNAL} ${VecCore_LIBRARIES})
 
 ################################################################################
 
@@ -255,7 +220,6 @@ endif()
 string(TOLOWER ${VECGEOM_VECTOR} _arch_lo)
 string(TOUPPER ${VECGEOM_VECTOR} _arch_up)
 
-
 if (${_arch_lo} MATCHES mic_avx512)
   if (Intel)
     set(VECGEOM_CXX_FLAGS "${VECGEOM_CXX_FLAGS} -xMIC_AVX512")
@@ -303,23 +267,6 @@ message(STATUS "Compiling for ${_arch_up} SIMD architecture")
 if ((NOT PLANESHELL))
   message(STATUS "Disabling PlaneShell class")
   set(VECGEOM_DEFINITIONS "${VECGEOM_DEFINITIONS} -DVECGEOM_PLANESHELL_DISABLE")
-endif()
-
-# Backend specific
-if (Scalar)
-  set(VECGEOM_DEFINITIONS "${VECGEOM_DEFINITIONS} -DVECGEOM_SCALAR")
-endif()
-if (Vc)
-  set(VECGEOM_DEFINITIONS "${VECGEOM_DEFINITIONS} -DVECGEOM_VC")
-endif()
-if (Cilk)
-  set(VECGEOM_DEFINITIONS "${VECGEOM_DEFINITIONS} -DVECGEOM_CILK")
-endif()
-if (MICVEC)
-  set(VECGEOM_DEFINITIONS "${VECGEOM_DEFINITIONS} -DVECGEOM_MICVEC")
-endif()
-if (UMESIMD)
-  set(VECGEOM_COMPILATION_FLAGS "${VECGEOM_COMPILATION_FLAGS} -DVECGEOM_UMESIMD")
 endif()
 
 if (CUDA)
@@ -435,35 +382,6 @@ if(CCACHE_FOUND)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
 endif(CCACHE_FOUND)
-
-
-# Backend configuration
-
-if (Vc)
-  if (MIC)
-    set(VECGEOM_LIBRARIES_EXTERNAL ${VECGEOM_LIBRARIES_EXTERNAL} ${Vc_MIC_LIBRARIES})
-  else()
-    set(VECGEOM_LIBRARIES_EXTERNAL ${VECGEOM_LIBRARIES_EXTERNAL} ${Vc_LIBRARIES})
-  endif()
-  include_directories(AFTER SYSTEM ${Vc_INCLUDE_DIR})
-  set(VECGEOM_EXTERNAL_INCLUDES "${VECGEOM_EXTERNAL_INCLUDES};${Vc_INCLUDE_DIR}")
-
-  if (Vc)
-    set(SRC_EXTERNAL ${SRC_EXTERNAL} source/backend/vc/Backend.cpp)
-  endif()
-endif()
-
-if (Cilk)
-  set(SRC_EXTERNAL ${SRC_EXTERNAL} source/backend/cilk/Backend.cpp)
-endif()
-
-if (MICVEC)
-  set(SRC_EXTERNAL ${SRC_EXTERNAL} source/backend/micvec/Backend.cpp)
-endif()
-
-if (UMESIMD)
-  set(SRC_EXTERNAL ${SRC_EXTERNAL} source/backend/umesimd/Backend.cpp)
-endif()
 
 if (CUDA)
   # See the setting of CUDA_SEPARABLE_COMPILATION and CUDA_USE_STATIC_CUDA_RUNTIME
