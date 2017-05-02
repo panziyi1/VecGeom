@@ -10,8 +10,25 @@ project(VecGeom)
 set(VECGEOM ON)
 
 enable_language(CXX)
-set(CMAKE_CXX_STANDARD 11 CACHE STRING "C++ ISO Standard")
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+option(CPP11 "Enabling C++11 ISO Standart as a default" OFF)
+option(CPP14 "Enabling C++14 ISO Standart as a default" OFF)
+
+if(CPP11)
+  set(CMAKE_CXX_STANDARD 11 CACHE STRING "C++ ISO Standard")
+  message(STATUS "C++11 was selected as a C++ ISO standart")
+  set(CMAKE_CXX_STANDARD_REQUIRED True)
+elseif(CPP14)
+  set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ ISO Standard")
+  message(STATUS "C++14 was selected as a C++ ISO standart")
+  set(CMAKE_CXX_STANDARD_REQUIRED True)
+endif()
+
+if(ROOT)
+  message(STATUS "Defining C++ ISO Standard flags with ROOT_CXX_FLAGS")
+else()
+  set(CPP11 ON)
+endif()
 
 ################################################################################
 if (NOT CMAKE_BUILD_TYPE)
@@ -99,7 +116,7 @@ option(VTUNE "Enable the use of profiler Vtune" OFF)
 set(INSTALL_LIB_DIR lib CACHE PATH "Installation directory for libraries.")
 set(INSTALL_INCLUDE_DIR include CACHE PATH
     "Installation directory for header files.")
-set(INSTALL_CMAKE_DIR lib/CMake/VecGeom CACHE PATH
+set(INSTALL_CMAKE_DIR lib/cmake/VecGeom CACHE PATH
     "Installation directory for CMake files.")
 
 # Make relative paths absolute
@@ -503,10 +520,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_build_type}} ${VECG
 # via -DCMAKE_CXX_FLAGS or CXXFLAGS environment variable.
 string(REPLACE ";" " " CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
-message(STATUS "Compiling with C++ flags: ${CMAKE_CXX_FLAGS}")
-if (CUDA)
-  message(STATUS "Compiling with NVCC flags: ${CUDA_NVCC_FLAGS}")
-endif()
+#message(STATUS "Compiling with C++ flags: ${CMAKE_CXX_FLAGS}")
+#if (CUDA)
+#  message(STATUS "Compiling with NVCC flags: ${CUDA_NVCC_FLAGS}")
+#endif()
 
 if (ROOT)
 
@@ -517,7 +534,7 @@ if (ROOT)
 
 #---Locate the ROOT package and defines a number of variables (e.g. ROOT_INCLUDE_DIRS)
   find_package(ROOT REQUIRED COMPONENTS Geom Graf3d)
-
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXX_FLAGS}")
   set(CMAKE_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX}/lib)
 #---setup ROOT include + lib dirs
   include_directories(AFTER SYSTEM ${ROOT_INCLUDE_DIRS})
@@ -532,6 +549,12 @@ if (ROOT)
       source/Visualizer.cpp)
 
 endif(ROOT)
+
+# Final set of C++ flags
+message(STATUS "Compiling with C++ flags: ${CMAKE_CXX_FLAGS}")
+if (CUDA)
+  message(STATUS "Compiling with NVCC flags: ${CUDA_NVCC_FLAGS}")
+endif()
 
 if (USolids)
 
