@@ -5,7 +5,7 @@ find_package(CUDA REQUIRED)
 set(VECCORE_ENABLE_CUDA True)
 
 if(CMAKE_CXX_STANDARD STREQUAL 11)
-  list(APPEND CUDA_NVCC_FLAGS -std=c++11)
+  list(APPEND CUDA_NVCC_FLAGS -std c++11)
 else()
   message(FATAL_ERROR "CUDA compilation supports only ISO C++ 2011 standard")
 endif()

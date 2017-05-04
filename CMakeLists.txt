@@ -353,7 +353,7 @@ if (CUDA)
         "${VECGEOM_DEFINITIONS} -DVECGEOM_CUDA_NO_VOLUME_SPECIALIZATION")
   endif()
   set(VECGEOM_NVCC_COMPILATION_FLAGS ${VECGEOM_NVCC_COMPILATION_FLAGS}
-      -std=c++11
+      -std c++11
       -Xcompiler -Wno-unused-function
       -Xcudafe "--diag_suppress=code_is_unreachable"
       -Xcudafe "--diag_suppress=initialization_not_reachable")
