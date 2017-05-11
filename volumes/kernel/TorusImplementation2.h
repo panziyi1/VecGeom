@@ -279,8 +279,8 @@ struct TorusImplementation2 {
                              typename Backend::bool_v &inside)
   {
     typedef typename Backend::bool_v Bool_t;
-    Bool_t unused;
-    Bool_t outside;
+
+    Bool_t unused = false, outside = false;
     GenericKernelForContainsAndInside<Backend, false, notForDisk>(torus, point, unused, outside);
     inside = !outside;
   }
@@ -293,7 +293,7 @@ struct TorusImplementation2 {
 
     typedef typename Backend::bool_v Bool_t;
     //
-    Bool_t completelyinside, completelyoutside;
+    Bool_t completelyinside = false, completelyoutside = false;
     GenericKernelForContainsAndInside<Backend, true, true>(torus, point, completelyinside, completelyoutside);
     inside = EInside::kSurface;
     vecCore::MaskedAssign(inside, completelyoutside, EInside::kOutside);
@@ -383,13 +383,13 @@ struct TorusImplementation2 {
     Real_v s             = vecgeom::kInfLength;
     constexpr Real_v tol = 100. * vecgeom::kTolerance;
     Real_v r0sq          = pt[0] * pt[0] + pt[1] * pt[1] + pt[2] * pt[2];
-    Real_v rdotn         = pt[0] * dir[0] + pt[1] * dir[1] + pt[2] * dir[2];
-    Real_v rsumsq        = torus.rtor2() + radius * radius;
-    Real_v a             = 4. * rdotn;
-    Real_v b             = 2. * (r0sq + 2. * rdotn * rdotn - rsumsq + 2. * torus.rtor2() * dir[2] * dir[2]);
-    Real_v c             = 4. * (r0sq * rdotn - rsumsq * rdotn + 2. * torus.rtor2() * pt[2] * dir[2]);
-    Real_v d             = r0sq * r0sq - 2. * r0sq * rsumsq + 4. * torus.rtor2() * pt[2] * pt[2] +
-               (torus.rtor2() - radius * radius) * (torus.rtor2() - radius * radius);
+    Real_v rdotv         = pt[0] * dir[0] + pt[1] * dir[1] + pt[2] * dir[2];
+    Real_v rsumsq        = Real_v(torus.rtor2() + radius * radius);
+    Real_v rdiffsq       = Real_v(torus.rtor2() - radius * radius);
+    Real_v a             = 4. * rdotv;
+    Real_v b             = 2. * (r0sq + 2. * rdotv * rdotv - rsumsq + 2. * torus.rtor2() * dir[2] * dir[2]);
+    Real_v c             = 4. * (r0sq * rdotv - rsumsq * rdotv + 2. * torus.rtor2() * pt[2] * dir[2]);
+    Real_v d             = r0sq * r0sq - 2. * r0sq * rsumsq + 4. * torus.rtor2() * pt[2] * pt[2] + rdiffsq * rdiffsq;
 
     Real_v x[4] = {vecgeom::kInfLength, vecgeom::kInfLength, vecgeom::kInfLength, vecgeom::kInfLength};
     int nsol    = 0;
@@ -419,7 +419,8 @@ struct TorusImplementation2 {
       if (nsol) {
         Sort4(x);
       }
-    } else { // generic case
+    } else {
+      // generic case
       nsol = SolveQuartic(a, b, c, d, x);
     }
     if (!nsol) return vecgeom::kInfLength;
@@ -490,9 +491,9 @@ struct TorusImplementation2 {
     typedef typename Backend::bool_v Bool_t;
     // std::cout<<" torus D2I(): masterPoint="<< masterPoint <<", masterDir="<< masterDirection <<"\n";
 
-    Vector3D<Float_t> point     = transformation.Transform<transCodeT, rotCodeT>(masterPoint);
-    Vector3D<Float_t> direction = transformation.TransformDirection<rotCodeT>(masterDirection);
-    // std::cout<<" torus D2I(): point="<< point <<", dir="<< direction <<"\n";
+    Vector3D<Float_t> point = transformation.Transform<transCodeT, rotCodeT>(masterPoint);
+    Vector3D<Float_t> dir   = transformation.TransformDirection<rotCodeT>(masterDirection);
+    // std::cout<<" torus D2I(): point="<< point <<", dir="<< dir <<"\n";
 
     /// First naive implementation
     distance = kInfLength;
@@ -508,15 +509,15 @@ struct TorusImplementation2 {
     TubeImplementation<TubeTypes::HollowTube>::Contains(torus.GetBoundingTube().GetStruct(), point, inBounds);
 
     // only need to do this check if all particles (in vector) are outside ( otherwise useless )
-    TubeImplementation<TubeTypes::HollowTube>::DistanceToIn(torus.GetBoundingTube().GetStruct(), point, direction,
-                                                            stepMax, tubeDistance);
+    TubeImplementation<TubeTypes::HollowTube>::DistanceToIn(torus.GetBoundingTube().GetStruct(), point, dir, stepMax,
+                                                            tubeDistance);
 #else
     // call the tube functionality -- first of all we check whether we are inside bounding volume
     TubeImplementation<TubeTypes::UniversalTube>::Contains(torus.GetBoundingTube().GetStruct(), point, inBounds);
 
     // only need to do this check if all particles (in vector) are outside ( otherwise useless )
     if (!inBounds)
-      TubeImplementation<TubeTypes::UniversalTube>::DistanceToIn(torus.GetBoundingTube().GetStruct(), point, direction,
+      TubeImplementation<TubeTypes::UniversalTube>::DistanceToIn(torus.GetBoundingTube().GetStruct(), point, dir,
                                                                  stepMax, tubeDistance);
     else
       tubeDistance = 0.;
@@ -540,7 +541,7 @@ struct TorusImplementation2 {
 
     // Propagate the point to the bounding tube, as this will reduce the
     // coefficients of the quartic and improve precision of the solutions
-    point += tubeDistance * direction;
+    point += tubeDistance * dir;
     Bool_t hasphi = (torus.dphi() < vecgeom::kTwoPi);
     if (hasphi) {
       Float_t d1, d2;
@@ -548,11 +549,11 @@ struct TorusImplementation2 {
       auto wedge = torus.GetWedge();
       // checking distance to phi wedges
       // NOTE: if the tube told me its hitting surface, this would be unnecessary
-      wedge.DistanceToIn<Backend>(point, direction, d1, d2);
+      wedge.DistanceToIn<Backend>(point, dir, d1, d2);
 
       // check phi intersections if bounding tube intersection is due to phi in which case we are done
       if (d1 != kInfLength) {
-        Precision daxis = DistSqrToTorusR(torus, point, direction, d1);
+        Precision daxis = DistSqrToTorusR(torus, point, dir, d1);
         if (daxis >= torus.rmin2() && daxis < torus.rmax2()) {
           distance = d1;
           // check if tube intersections is due to phi in which case we are done
@@ -564,7 +565,7 @@ struct TorusImplementation2 {
       }
 
       if (d2 != kInfLength) {
-        Precision daxis = DistSqrToTorusR(torus, point, direction, d2);
+        Precision daxis = DistSqrToTorusR(torus, point, dir, d2);
         if (daxis >= torus.rmin2() && daxis < torus.rmax2()) {
           distance = Min(d2, distance);
           // check if tube intersections is due to phi in which case we are done
@@ -577,11 +578,11 @@ struct TorusImplementation2 {
       distance = kInfLength;
     }
 
-    Float_t dd = ToBoundary<Backend, false>(torus, point, direction, torus.rmax(), false);
+    Float_t dd = ToBoundary<Backend, false>(torus, point, dir, torus.rmax(), false);
 
     // in case of a phi opening we also need to check the Rmin surface
     if (torus.rmin() > 0.) {
-      Float_t ddrmin = ToBoundary<Backend, true>(torus, point, direction, torus.rmin(), false);
+      Float_t ddrmin = ToBoundary<Backend, true>(torus, point, dir, torus.rmin(), false);
       dd             = Min(dd, ddrmin);
     }
     distance = Min(distance, dd);
