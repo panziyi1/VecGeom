@@ -71,7 +71,7 @@ option(GENERATE_MATERIALS_DB "Include materials and particle declarations in lib
 
 option(STATIC_ANALYSIS "enable static analysis on VecGeom" OFF)
 
-set(VECGEOM_ARCH native sse2 sse3 ssse3 sse4.1 sse4.2 avx avx2 mic mic_avx512)
+set(VECGEOM_ARCH native arm sse2 sse3 ssse3 sse4.1 sse4.2 avx avx2 mic mic_avx512)
 
 enum_option(VECGEOM_VECTOR
       DOC "Vector instruction set to be used"
