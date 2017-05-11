@@ -320,10 +320,10 @@ struct TorusImplementation2 {
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
   static void Contains(UnplacedTorus2 const &unplaced, Transformation3D const &transformation,
-                       Vector3D<typename Backend::precision_v> const &point,
+                       Vector3D<typename Backend::precision_v> const &masterPoint,
                        Vector3D<typename Backend::precision_v> &localPoint, typename Backend::bool_v &inside)
   {
-    localPoint = transformation.Transform<transCodeT, rotCodeT>(point);
+    localPoint = transformation.Transform<transCodeT, rotCodeT>(masterPoint);
     UnplacedContains<Backend>(unplaced, localPoint, inside);
   }
   template <class Backend>
@@ -482,19 +482,19 @@ struct TorusImplementation2 {
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
   static void DistanceToIn(UnplacedTorus2 const &torus, Transformation3D const &transformation,
-                           Vector3D<typename Backend::precision_v> const &point,
-                           Vector3D<typename Backend::precision_v> const &direction,
+                           Vector3D<typename Backend::precision_v> const &masterPoint,
+                           Vector3D<typename Backend::precision_v> const &masterDirection,
                            typename Backend::precision_v const &stepMax, typename Backend::precision_v &distance)
   {
     typedef typename Backend::precision_v Float_t;
     typedef typename Backend::bool_v Bool_t;
+    // std::cout<<" torus D2I(): masterPoint="<< masterPoint <<", masterDir="<< masterDirection <<"\n";
+
+    Vector3D<Float_t> point     = transformation.Transform<transCodeT, rotCodeT>(masterPoint);
+    Vector3D<Float_t> direction = transformation.TransformDirection<rotCodeT>(masterDirection);
     // std::cout<<" torus D2I(): point="<< point <<", dir="<< direction <<"\n";
 
-    Vector3D<Float_t> localPoint     = transformation.Transform<transCodeT, rotCodeT>(point);
-    Vector3D<Float_t> localDirection = transformation.TransformDirection<rotCodeT>(direction);
-    // std::cout<<" torus D2I(): localpoint="<< localPoint <<", localDir="<< localDirection <<"\n";
-
-    ////////First naive implementation
+    /// First naive implementation
     distance = kInfLength;
 
     // Check Bounding Cylinder first
@@ -504,22 +504,20 @@ struct TorusImplementation2 {
     Float_t tubeDistance              = kInfLength;
 
 #ifndef VECGEOM_NO_SPECIALIZATION
-    // call the tube functionality -- first of all we check whether we are inside
-    // bounding volume
-    TubeImplementation<TubeTypes::HollowTube>::Contains(torus.GetBoundingTube().GetStruct(), localPoint, inBounds);
+    // call the tube functionality -- first of all we check whether we are inside bounding volume
+    TubeImplementation<TubeTypes::HollowTube>::Contains(torus.GetBoundingTube().GetStruct(), point, inBounds);
 
     // only need to do this check if all particles (in vector) are outside ( otherwise useless )
-    TubeImplementation<TubeTypes::HollowTube>::DistanceToIn(torus.GetBoundingTube().GetStruct(), localPoint,
-                                                            localDirection, stepMax, tubeDistance);
+    TubeImplementation<TubeTypes::HollowTube>::DistanceToIn(torus.GetBoundingTube().GetStruct(), point, direction,
+                                                            stepMax, tubeDistance);
 #else
-    // call the tube functionality -- first of all we check whether we are inside
-    // bounding volume
-    TubeImplementation<TubeTypes::UniversalTube>::Contains(torus.GetBoundingTube().GetStruct(), localPoint, inBounds);
+    // call the tube functionality -- first of all we check whether we are inside bounding volume
+    TubeImplementation<TubeTypes::UniversalTube>::Contains(torus.GetBoundingTube().GetStruct(), point, inBounds);
 
     // only need to do this check if all particles (in vector) are outside ( otherwise useless )
     if (!inBounds)
-      TubeImplementation<TubeTypes::UniversalTube>::DistanceToIn(torus.GetBoundingTube().GetStruct(), localPoint,
-                                                                 localDirection, stepMax, tubeDistance);
+      TubeImplementation<TubeTypes::UniversalTube>::DistanceToIn(torus.GetBoundingTube().GetStruct(), point, direction,
+                                                                 stepMax, tubeDistance);
     else
       tubeDistance = 0.;
 #endif // VECGEOM_NO_SPECIALIZATION
@@ -542,19 +540,19 @@ struct TorusImplementation2 {
 
     // Propagate the point to the bounding tube, as this will reduce the
     // coefficients of the quartic and improve precision of the solutions
-    localPoint += tubeDistance * localDirection;
+    point += tubeDistance * direction;
     Bool_t hasphi = (torus.dphi() < vecgeom::kTwoPi);
     if (hasphi) {
       Float_t d1, d2;
 
       auto wedge = torus.GetWedge();
       // checking distance to phi wedges
-      // NOTE: if the tube told me its hitting surface, this would be unnessecary
-      wedge.DistanceToIn<Backend>(localPoint, localDirection, d1, d2);
+      // NOTE: if the tube told me its hitting surface, this would be unnecessary
+      wedge.DistanceToIn<Backend>(point, direction, d1, d2);
 
       // check phi intersections if bounding tube intersection is due to phi in which case we are done
       if (d1 != kInfLength) {
-        Precision daxis = DistSqrToTorusR(torus, localPoint, localDirection, d1);
+        Precision daxis = DistSqrToTorusR(torus, point, direction, d1);
         if (daxis >= torus.rmin2() && daxis < torus.rmax2()) {
           distance = d1;
           // check if tube intersections is due to phi in which case we are done
@@ -566,7 +564,7 @@ struct TorusImplementation2 {
       }
 
       if (d2 != kInfLength) {
-        Precision daxis = DistSqrToTorusR(torus, localPoint, localDirection, d2);
+        Precision daxis = DistSqrToTorusR(torus, point, direction, d2);
         if (daxis >= torus.rmin2() && daxis < torus.rmax2()) {
           distance = Min(d2, distance);
           // check if tube intersections is due to phi in which case we are done
@@ -579,11 +577,11 @@ struct TorusImplementation2 {
       distance = kInfLength;
     }
 
-    Float_t dd = ToBoundary<Backend, false>(torus, localPoint, localDirection, torus.rmax(), false);
+    Float_t dd = ToBoundary<Backend, false>(torus, point, direction, torus.rmax(), false);
 
     // in case of a phi opening we also need to check the Rmin surface
     if (torus.rmin() > 0.) {
-      Float_t ddrmin = ToBoundary<Backend, true>(torus, localPoint, localDirection, torus.rmin(), false);
+      Float_t ddrmin = ToBoundary<Backend, true>(torus, point, direction, torus.rmin(), false);
       dd             = Min(dd, ddrmin);
     }
     distance = Min(distance, dd);
@@ -666,15 +664,16 @@ struct TorusImplementation2 {
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
   static void SafetyToIn(UnplacedTorus2 const &torus, Transformation3D const &transformation,
-                         Vector3D<typename Backend::precision_v> const &point, typename Backend::precision_v &safety)
+                         Vector3D<typename Backend::precision_v> const &masterPoint,
+                         typename Backend::precision_v &safety)
   {
 
     typedef typename Backend::precision_v Float_t;
-    Vector3D<Float_t> localPoint = transformation.Transform<transCodeT, rotCodeT>(point);
+    Vector3D<Float_t> point = transformation.Transform<transCodeT, rotCodeT>(masterPoint);
 
     // implementation taken from TGeoTorus
-    Float_t rxy = Sqrt(localPoint[0] * localPoint[0] + localPoint[1] * localPoint[1]);
-    Float_t rad = Sqrt((rxy - torus.rtor()) * (rxy - torus.rtor()) + localPoint[2] * localPoint[2]);
+    Float_t rxy = Sqrt(point[0] * point[0] + point[1] * point[1]);
+    Float_t rad = Sqrt((rxy - torus.rtor()) * (rxy - torus.rtor()) + point[2] * point[2]);
     safety      = rad - torus.rmax();
     if (torus.rmin()) {
       safety = Max(torus.rmin() - rad, rad - torus.rmax());
@@ -682,7 +681,7 @@ struct TorusImplementation2 {
 
     bool hasphi = (torus.dphi() < kTwoPi);
     if (hasphi && (rxy != 0.)) {
-      Float_t safetyPhi = torus.GetWedge().SafetyToIn<Backend>(localPoint);
+      Float_t safetyPhi = torus.GetWedge().SafetyToIn<Backend>(point);
       safety            = Max(safetyPhi, safety);
     }
   }
