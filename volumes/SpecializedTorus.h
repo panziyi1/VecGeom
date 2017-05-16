@@ -7,9 +7,7 @@
 
 #include "volumes/kernel/TorusImplementation.h"
 #include "volumes/PlacedTorus.h"
-#include "volumes/ShapeImplementationHelper.h"
-
-#include <stdio.h>
+#include "volumes/ScalarShapeImplementationHelper.h"
 
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
@@ -18,7 +16,7 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 // at the moment this is not done
 
 template <TranslationCode transCodeT, RotationCode rotCodeT>
-using SpecializedTorus = ShapeImplementationHelper<TorusImplementation<transCodeT, rotCodeT>>;
+using SpecializedTorus = ScalarShapeImplementationHelper<TorusImplementation<transCodeT, rotCodeT>>;
 
 using SimpleTorus = SpecializedTorus<translation::kGeneric, rotation::kGeneric>;
 }

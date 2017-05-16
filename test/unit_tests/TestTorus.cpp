@@ -11,9 +11,6 @@
 #include "base/Vector3D.h"
 #include "volumes/Torus.h"
 
-//#include "UVector3.hh"
-//#include "UTorus.hh"
-
 #include <cmath>
 template <class Torus_t, class Vec_t = vecgeom::Vector3D<vecgeom::Precision>>
 bool testTorus()
@@ -100,6 +97,9 @@ bool testTorus()
   Vec_t vt6(0.3059312222729116, 0.8329513862588347, -0.461083588265824);
 
   Vec_t p2t6(70.75950555416668, -3.552713678800501e-15, 22.37458414788935);
+
+  // Check name
+  // assert(t1.GetName()=="Solid Torus #1");
 
   // Check cubic volume
 
@@ -191,11 +191,12 @@ bool testTorus()
   assert(ApproxEqual(Dist, 90));
 
   Dist = t2.DistanceToOut(Vec_t(20, 0, 0), vmy, norm, convex);
-  std::cout << "Dist=t2.DistanceToOut(ponphi12,vy) = " << Dist << " n=" << norm << std::endl;
-  assert(ApproxEqual(Dist, 0) && convex && ApproxEqual(norm, -vy));
+  std::cout << "Dist=t2.DistanceToOut(Vec(20,0,0),vmy) = " << Dist << " n=" << norm << " and convex=" << convex
+            << std::endl;
+  assert(ApproxEqual(Dist, 0) && !convex && ApproxEqual(norm, -vy));
   Dist = t2.DistanceToOut(Vec_t(0, 20, 0), vmx, norm, convex);
   //    std::cout<<"Dist=t2.DistanceToOut(ponphi22,vmxmy) = "<<Dist<<std::endl;
-  assert(ApproxEqual(Dist, 0) && convex && ApproxEqual(norm, -vx));
+  assert(ApproxEqual(Dist, 0) && !convex && ApproxEqual(norm, -vx));
 
   Vec_t test(0., 0., 1);
   for (int i = 1; i < 5; i++) {
@@ -251,13 +252,17 @@ bool testTorus()
   Dist = t2.DistanceToIn(pzero, vy);
   assert(ApproxEqual(Dist, 10));
   Dist = t2.DistanceToIn(ponphi12, vy);
-  assert(ApproxEqual(Dist, 0));
+  std::cout << "Line " << __LINE__ << ", p=" << ponphi12 << ", v=" << vy << ", t2.DIN(p,v) = " << Dist << std::endl;
+  assert(Dist < 0);
   Dist = t2.DistanceToIn(ponphi12, vmy);
-  assert(ApproxEqual(Dist, vecgeom::kInfLength));
+  std::cout << "Line " << __LINE__ << ", p=" << ponphi12 << ", v=" << vmy << ", t2.DIN(p,v) = " << Dist << std::endl;
+  // assert(ApproxEqual(Dist, vecgeom::kInfLength));
+  assert(Dist < 0.0);
   Dist = t2.DistanceToIn(ponphi1, vy);
   //    std::cout<<"Dist=t2.DistanceToIn(ponphi1,vy) = "<<Dist<<std::endl;  // about 13
   Dist = t2.DistanceToIn(ponrmin, vy);
-  assert(ApproxEqual(Dist, 0));
+  std::cout << "Line " << __LINE__ << ", p=" << ponrmin << ", v=" << vy << ", t2.DIN(p,v) = " << Dist << std::endl;
+  assert(ApproxEqual(Dist, vecgeom::kInfLength));
   Dist = t2.DistanceToIn(ponrmin, vmy);
   assert(ApproxEqual(Dist, 20));
 

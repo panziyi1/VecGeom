@@ -1,7 +1,7 @@
-/// @file UnplacedTorus2.h
+/// @file UnplacedTorus.h
 
-#ifndef VECGEOM_VOLUMES_UNPLACEDTORUS2_H_
-#define VECGEOM_VOLUMES_UNPLACEDTORUS2_H_
+#ifndef VECGEOM_VOLUMES_UNPLACEDTORUS_H_
+#define VECGEOM_VOLUMES_UNPLACEDTORUS_H_
 
 #include "base/Global.h"
 #include "base/AlignedBase.h"
@@ -11,12 +11,12 @@
 
 namespace vecgeom {
 
-VECGEOM_DEVICE_FORWARD_DECLARE(class UnplacedTorus2;);
-VECGEOM_DEVICE_DECLARE_CONV(class, UnplacedTorus2);
+VECGEOM_DEVICE_FORWARD_DECLARE(class UnplacedTorus;);
+VECGEOM_DEVICE_DECLARE_CONV(class, UnplacedTorus);
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-class UnplacedTorus2 : public VUnplacedVolume, public AlignedBase {
+class UnplacedTorus : public VUnplacedVolume, public AlignedBase {
 
 private:
   // torus defining parameters ( like G4torus )
@@ -47,20 +47,21 @@ private:
     fRmax2 = fRmax * fRmax;
     fRtor2 = fRtor * fRtor;
 
-    fTolOrmin2 = (fRmin - kTolerance) * (fRmin - kTolerance);
-    fTolIrmin2 = (fRmin + kTolerance) * (fRmin + kTolerance);
+    fTolOrmin2 = (fRmin - kHalfTolerance) * (fRmin - kHalfTolerance);
+    fTolIrmin2 = (fRmin + kHalfTolerance) * (fRmin + kHalfTolerance);
 
-    fTolOrmax2 = (fRmax + kTolerance) * (fRmax + kTolerance);
-    fTolIrmax2 = (fRmax - kTolerance) * (fRmax - kTolerance);
+    fTolOrmax2 = (fRmax + kHalfTolerance) * (fRmax + kHalfTolerance);
+    fTolIrmax2 = (fRmax - kHalfTolerance) * (fRmax - kHalfTolerance);
 
     GetAlongVectorToPhiSector(fSphi, fAlongPhi1x, fAlongPhi1y);
     GetAlongVectorToPhiSector(fSphi + fDphi, fAlongPhi2x, fAlongPhi2y);
   }
 
 public:
+  // Note: theta, phi are assumed to be in radians, for compatibility with Geant4
   VECCORE_ATT_HOST_DEVICE
-  UnplacedTorus2(const Precision rminVal, const Precision rmaxVal, const Precision rtorVal, const Precision sphiVal,
-                 const Precision dphiVal)
+  UnplacedTorus(const Precision rminVal, const Precision rmaxVal, const Precision rtorVal, const Precision sphiVal,
+                const Precision dphiVal)
       : fRmin(rminVal), fRmax(rmaxVal), fRtor(rtorVal), fSphi(sphiVal), fDphi(dphiVal), fPhiWedge(dphiVal, sphiVal),
         fBoundingTube(0, 1, 1, 0, dphiVal)
   {
@@ -74,7 +75,7 @@ public:
   VECCORE_ATT_HOST_DEVICE
   void DetectConvexity();
   //  VECCORE_ATT_HOST_DEVICE
-  //  UnplacedTorus2(UnplacedTorus2 const &other) :
+  //  UnplacedTorus(UnplacedTorus const &other) :
   //  fRmin(other.fRmin), fRmax(other.fRmax), fRtor(other.fRtor), fSphi(other.fSphi),
   //  fDphi(other.fDphi),fBoundingTube(other.fBoundingTube) {
   //    calculateCached();
@@ -222,7 +223,7 @@ public:
                                VPlacedVolume *const placement = NULL);
 
 #ifdef VECGEOM_CUDA_INTERFACE
-  virtual size_t DeviceSizeOf() const { return DevicePtr<cuda::UnplacedTorus2>::SizeOf(); }
+  virtual size_t DeviceSizeOf() const { return DevicePtr<cuda::UnplacedTorus>::SizeOf(); }
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu() const;
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const gpu_ptr) const;
 #endif
@@ -231,7 +232,7 @@ public:
   std::ostream &StreamInfo(std::ostream &os) const;
 #endif
 
-  std::string GetEntityType() const { return "Torus2"; }
+  std::string GetEntityType() const { return "Torus"; }
 
 private:
   virtual void Print(std::ostream &os) const final;
@@ -248,4 +249,4 @@ private:
 }
 } // end global namespace
 
-#endif // VECGEOM_VOLUMES_UNPLACEDTORUS2_H_
+#endif // VECGEOM_VOLUMES_UNPLACEDTORUS_H_

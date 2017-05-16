@@ -610,6 +610,7 @@ set(VECGEOM_SRCS
   source/PlacedHype.cpp
   source/PlacedTube.cpp
   source/PlacedCutTube.cpp
+  source/PlacedTorus.cpp
   source/PlacedTorus2.cpp
   source/PlacedTrd.cpp
   source/PlacedGenTrap.cpp
@@ -632,6 +633,7 @@ set(VECGEOM_SRCS
   source/UnplacedTube.cpp
   source/UnplacedCutTube.cpp
   source/UnplacedHype.cpp
+  source/UnplacedTorus.cpp
   source/UnplacedTorus2.cpp
   source/UnplacedTrd.cpp
   source/UnplacedParaboloid.cpp
@@ -967,6 +969,7 @@ set(TEST_EXECUTABLES_USOLIDS
   ${CMAKE_SOURCE_DIR}/test/unit_tests/TestOrb.cpp
   ${CMAKE_SOURCE_DIR}/test/unit_tests/TestSphere.cpp
   ${CMAKE_SOURCE_DIR}/test/unit_tests/TestBoxlikeTrapezoid.cpp
+  ${CMAKE_SOURCE_DIR}/test/unit_tests/TestTorus.cpp
   ${CMAKE_SOURCE_DIR}/test/unit_tests/TestTorus2.cpp
   ${CMAKE_SOURCE_DIR}/test/unit_tests/usolidTest.cpp
   ${CMAKE_SOURCE_DIR}/test/unit_tests/TestParaboloid.cpp
@@ -994,6 +997,7 @@ set(TEST_EXECUTABLES_SHAPETESTER
   ${CMAKE_SOURCE_DIR}/test/shape_tester/convention_testTube.cpp
   ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testPolyhedron.cpp 
   ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testTorus.cpp 
+  ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testTorus2.cpp 
   ${CMAKE_SOURCE_DIR}/test/shape_tester/shape_testCutTube.cpp 
 )
 

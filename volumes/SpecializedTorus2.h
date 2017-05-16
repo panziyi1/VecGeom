@@ -1,4 +1,4 @@
-/// \file SpecializedTorus.h
+/// \file SpecializedTorus2.h
 
 #ifndef VECGEOM_VOLUMES_SPECIALIZEDTORUS2_H_
 #define VECGEOM_VOLUMES_SPECIALIZEDTORUS2_H_

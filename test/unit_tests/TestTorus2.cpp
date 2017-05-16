@@ -194,12 +194,11 @@ bool testTorus()
   assert(ApproxEqual(Dist, 90));
 
   Dist = t2.DistanceToOut(Vec_t(20, 0, 0), vmy, norm, convex);
-  std::cout << "Dist=t2.DistanceToOut(Vec(20,0,0),vmy) = " << Dist << " n=" << norm << " and convex=" << convex
-            << std::endl;
-  assert(ApproxEqual(Dist, 0) && !convex && ApproxEqual(norm, -vy));
+  std::cout << "Dist=t2.DistanceToOut(ponphi12,vy) = " << Dist << " n=" << norm << std::endl;
+  assert(ApproxEqual(Dist, 0) && convex && ApproxEqual(norm, -vy));
   Dist = t2.DistanceToOut(Vec_t(0, 20, 0), vmx, norm, convex);
   //    std::cout<<"Dist=t2.DistanceToOut(ponphi22,vmxmy) = "<<Dist<<std::endl;
-  assert(ApproxEqual(Dist, 0) && !convex && ApproxEqual(norm, -vx));
+  assert(ApproxEqual(Dist, 0) && convex && ApproxEqual(norm, -vx));
 
   Vec_t test(0., 0., 1);
   for (int i = 1; i < 5; i++) {
@@ -255,17 +254,13 @@ bool testTorus()
   Dist = t2.DistanceToIn(pzero, vy);
   assert(ApproxEqual(Dist, 10));
   Dist = t2.DistanceToIn(ponphi12, vy);
-  std::cout << "Line " << __LINE__ << ", p=" << ponphi12 << ", v=" << vy << ", t2.DIN(p,v) = " << Dist << std::endl;
-  assert(Dist < 0);
+  assert(ApproxEqual(Dist, 0));
   Dist = t2.DistanceToIn(ponphi12, vmy);
-  std::cout << "Line " << __LINE__ << ", p=" << ponphi12 << ", v=" << vmy << ", t2.DIN(p,v) = " << Dist << std::endl;
-  // assert(ApproxEqual(Dist, vecgeom::kInfLength));
-  assert(Dist < 0.0);
+  assert(ApproxEqual(Dist, vecgeom::kInfLength));
   Dist = t2.DistanceToIn(ponphi1, vy);
   //    std::cout<<"Dist=t2.DistanceToIn(ponphi1,vy) = "<<Dist<<std::endl;  // about 13
   Dist = t2.DistanceToIn(ponrmin, vy);
-  std::cout << "Line " << __LINE__ << ", p=" << ponrmin << ", v=" << vy << ", t2.DIN(p,v) = " << Dist << std::endl;
-  assert(ApproxEqual(Dist, vecgeom::kInfLength));
+  assert(ApproxEqual(Dist, 0));
   Dist = t2.DistanceToIn(ponrmin, vmy);
   assert(ApproxEqual(Dist, 20));
 

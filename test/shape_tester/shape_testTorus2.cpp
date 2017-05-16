@@ -5,9 +5,9 @@
 #ifdef VECGEOM_USOLIDS
 #include "UTorus.hh"
 #endif
-#include "volumes/SpecializedTorus.h"
+#include "volumes/SpecializedTorus2.h"
 
-using VGTorus = vecgeom::SimpleTorus;
+using VGTorus = vecgeom::SimpleTorus2;
 
 template <typename ImplT>
 int runTester(ImplT const *shape, int npoints, bool usolids, bool debug, bool stat);
