@@ -17,7 +17,6 @@ Debug
 *.bak
 prototype_generation/Main
 .DS_Store
-test/cmstestdata/cms2015.root
-.vscode
-*.kdev4
-CMakeLists.txt.user
+*.patch
+cms2015.root
+.DS_Store

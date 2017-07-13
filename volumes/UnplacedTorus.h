@@ -1,31 +1,36 @@
-/// @file UnplacedTorus2.h
+/// \file UnplacedTorus.h
+/// \author Guilherme Lima <lima@fnal.gov>
 
-#ifndef VECGEOM_VOLUMES_UNPLACEDTORUS2_H_
-#define VECGEOM_VOLUMES_UNPLACEDTORUS2_H_
+#ifndef VECGEOM_VOLUMES_UNPLACEDTORUS_H_
+#define VECGEOM_VOLUMES_UNPLACEDTORUS_H_
 
 #include "base/Global.h"
 #include "base/AlignedBase.h"
-#include "base/Array.h"
+#include "base/Vector3D.h"
+//#include "base/Array.h"
 #include "volumes/UnplacedVolume.h"
-#include "volumes/UnplacedTube.h"
-#include "volumes/TorusStruct2.h"
-#include "volumes/kernel/TorusImplementation2.h"
-#include "volumes/Wedge.h"
+#include "volumes/TorusStruct.h"
+#include "volumes/kernel/TorusImplementation.h"
 #include "volumes/UnplacedVolumeImplHelper.h"
+
+#include "volumes/UnplacedTube.h"
+#include "volumes/Wedge.h"
+
 
 namespace vecgeom {
 
-VECGEOM_DEVICE_FORWARD_DECLARE(class UnplacedTorus2;);
-VECGEOM_DEVICE_DECLARE_CONV(class, UnplacedTorus2);
+VECGEOM_DEVICE_FORWARD_DECLARE(class UnplacedTorus;);
+VECGEOM_DEVICE_DECLARE_CONV(class, UnplacedTorus);
 // VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE(class, SIMDUnplacedTorus, typename);  // maybe needed w/TorusTypes
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
 // Introduce Intermediate class ( so that we can do type casting )
-class UnplacedTorus2 : public LoopUnplacedVolumeImplHelper<TorusImplementation2>, public AlignedBase {
+class UnplacedTorus : public SIMDUnplacedVolumeImplHelper<TorusImplementation>, public AlignedBase {
+//class UnplacedTorus : public VUnplacedVolume {
 private:
   // tube defining parameters
-  TorusStruct2<Precision> fTorus;
+  TorusStruct<Precision> fTorus;
   Wedge fPhiWedge; // the Phi bounding of the torus (not the cutout)
 
   // cached values
@@ -59,9 +64,10 @@ private:
   }
 
 public:
+  // full constructor
   VECCORE_ATT_HOST_DEVICE
-  UnplacedTorus2(Precision const &_rmin, Precision const &_rmax, Precision const &_rtor, Precision const &_sphi,
-                 Precision const &_dphi)
+  UnplacedTorus(Precision const &_rmin, Precision const &_rmax, Precision const &_rtor, Precision const &_sphi,
+		Precision const &_dphi)
       : fTorus(_rmin, _rmax, _rtor, _sphi, _dphi), fPhiWedge(_dphi, _sphi), fBoundingTube(0, 1, 1, 0, _dphi)
   {
     calculateCached();
@@ -73,13 +79,13 @@ public:
   }
 
   VECCORE_ATT_HOST_DEVICE
-  UnplacedTorus2(UnplacedTorus2 const &other)
+  UnplacedTorus(UnplacedTorus const &other)
       : fTorus(other.fTorus), fPhiWedge(other.GetWedge()), fBoundingTube(other.GetBoundingTube())
   {
   }
 
   VECCORE_ATT_HOST_DEVICE
-  TorusStruct2<double> const &GetStruct() const { return fTorus; }
+  TorusStruct<double> const &GetStruct() const { return fTorus; }
 
   VECCORE_ATT_HOST_DEVICE
   void DetectConvexity();
@@ -203,7 +209,7 @@ public:
   Precision Capacity() const override { return volume(); }
 
   VECCORE_ATT_HOST_DEVICE
-  bool Normal(Vector3D<Precision> const &point, Vector3D<Precision> &norm) const override;
+  virtual bool Normal(Vector3D<Precision> const &point, Vector3D<Precision> &normal) const override;
 
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
@@ -225,7 +231,7 @@ public:
   std::string GetEntityType() const { return "Torus"; }
 
   template <TranslationCode transCodeT, RotationCode rotCodeT>
-  VECCORE_ATT_DEVICE
+  VECCORE_ATT_HOST_DEVICE
   static VPlacedVolume *Create(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
 #ifdef VECCORE_CUDA
                                const int id,
@@ -233,29 +239,35 @@ public:
                                VPlacedVolume *const placement = NULL);
 
 #ifdef VECGEOM_CUDA_INTERFACE
-  virtual size_t DeviceSizeOf() const override { return DevicePtr<cuda::UnplacedTorus2>::SizeOf(); }
+  virtual size_t DeviceSizeOf() const override { return DevicePtr<cuda::UnplacedTorus>::SizeOf(); }
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu() const override;
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const gpu_ptr) const override;
 #endif
 
-private:
-#ifndef VECCORE_CUDA
-  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                           Transformation3D const *const transformation,
-                                           const TranslationCode trans_code, const RotationCode rot_code,
-                                           VPlacedVolume *const placement = NULL) const override;
-
-#else
-  __device__ virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                                      Transformation3D const *const transformation,
-                                                      const TranslationCode trans_code, const RotationCode rot_code,
-                                                      const int id,
-                                                      VPlacedVolume *const placement = NULL) const override;
-
+//private:
+  VECCORE_ATT_HOST_DEVICE
+  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume, Transformation3D const *const transformation,
+					   const TranslationCode trans_code, const RotationCode rot_code,
+#ifdef VECCORE_CUDA
+					   const int id,
 #endif
+					   VPlacedVolume *const placement = NULL) const override;
 };
+
+/*
+// this class finishes the implementation
+
+class SIMDUnplacedTorus : public SIMDUnplacedVolumeImplHelper<TorusImplementation, UnplacedTorus>,
+                      public AlignedBase {
+public:
+  using BaseType_t = SIMDUnplacedVolumeImplHelper<TorusImplementation, UnplacedTorus>;
+  using BaseType_t::BaseType_t;
+};
+
+using GenericUnplacedTorus = SUnplacedTube<TubeTypes::UniversalTorus>;
+*/
 
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // namespace vecgeom
 
-#endif // VECGEOM_VOLUMES_UNPLACEDTORUS2_H_
+#endif // VECGEOM_VOLUMES_UNPLACEDTORUS_H_

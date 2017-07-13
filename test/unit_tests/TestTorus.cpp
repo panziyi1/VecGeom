@@ -9,7 +9,8 @@
 #include "base/Global.h"
 #include "base/Vector3D.h"
 #include "ApproxEqual.h"
-#include "volumes/Torus2.h"
+#include "volumes/Torus.h"
+#include "volumes/SpecializedTorus.h"
 
 #include <cmath>
 using vecgeom::kPi;
@@ -364,6 +365,6 @@ int main()
 #ifdef NDEBUG
   G4Exception("FAIL: *** Assertions must be compiled in! ***");
 #endif
-  assert(testTorus<vecgeom::SimpleTorus2>());
+  assert(testTorus<vecgeom::SimpleTorus>());
   return 0;
 }
