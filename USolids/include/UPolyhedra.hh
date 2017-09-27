@@ -113,7 +113,6 @@ public:
              const double zPlane[], // position of z planes
              const double rInner[], // tangent distance to inner surface
              const double rOuter[]) // tangent distance to outer surface
-      : Base_t(name.c_str(), phiStart, phiTotal, numSide, numZPlanes, zPlane, rInner, rOuter)
   {
     fPhiIsOpen   = (GetPhiDelta() < vecgeom::kTwoPi - vecgeom::kTolerance);
     fGenericPgon = false;
@@ -124,10 +123,9 @@ public:
              double phiStart,  // initial phi starting angle
              double phiTotal,  // total phi angle
              int numSide,      // number sides
-             int numRZ,        // number corners in r,z space
+             int numRZ,        // half number corners in r,z space
              const double r[], // r coordinate of these corners
              const double z[]) // z coordinate of these corners
-      : Base_t(name.c_str(), phiStart, phiTotal, numSide, numRZ / 2, r, z)
   {
     fPhiIsOpen   = (GetPhiDelta() < vecgeom::kTwoPi - vecgeom::kTolerance);
     fGenericPgon = true;
