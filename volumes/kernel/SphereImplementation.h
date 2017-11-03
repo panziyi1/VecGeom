@@ -414,7 +414,7 @@ void SphereImplementation<transCodeT, rotCodeT>::NormalKernel(UnplacedSphere con
                                                               typename Backend::bool_v &valid)
 {
 
-  normal.Set(0.);
+  normal.Set(1e-30);
   typedef typename Backend::precision_v Float_t;
   typedef typename Backend::bool_v Bool_t;
 
@@ -504,7 +504,8 @@ void SphereImplementation<transCodeT, rotCodeT>::NormalKernel(UnplacedSphere con
                           tempNormal2);
   }
 
-  normal = normal.Unit();
+  //normal = normal.Unit();
+  normal.Normalize();
 
   valid = (noSurfaces > 0.);
 }
