@@ -775,15 +775,15 @@ endforeach()
 set(NOT_FOR_CUDA
    ABBoxManager
    ABBoxNavigator
-   HybridManager2
+ # HybridManager2
    Medium
    G4GeoManager
    RootGeoManager
    NavigationSpecializer
    ResultComparator
-   UnplacedTessellated
-   PlacedTessellated
-   TessellatedCluster
+ # UnplacedTessellated
+ # PlacedTessellated
+ # TessellatedCluster
 )
 
 
