@@ -33,7 +33,7 @@ else
   echo "No externals for $PLATFORM in $EXTERNALDIR/$EXTERNALS"
 fi
 
-if [ $LABEL == slc6 ] || [ $LABEL == gvslc6 ] || [ $LABEL == cc7 ] || [ $LABEL == cuda7 ] || [ $LABEL == slc6-physical ] || [  $LABEL == continuous-sl6 ] || [  $LABEL == continuous-cuda7 ] || [ $LABEL == continuous-xeonphi ] || [ $LABEL == c7-checker ]
+if [ $LABEL == slc6 ] || [ $LABEL == gvslc6 ] || [ $LABEL == cc7 ] || [ $LABEL == cuda7 ] || [ $LABEL == slc6-physical ] || [  $LABEL == continuous-sl6 ] || [  $LABEL == continuous-cuda7 ] || [ $LABEL == continuous-xeonphi ] || [ $LABEL == c7-checker ] || [  $LABEL == continuous-cc7 ]
 then
   export PATH=/afs/cern.ch/sw/lcg/contrib/CMake/3.3.2/Linux-x86_64/bin/:${PATH}
   kinit sftnight@CERN.CH -5 -V -k -t /ec/conf/sftnight.keytab
@@ -51,6 +51,8 @@ if [[ $COMPILER == *gcc* ]]; then
   ARCH=$(uname -m)
   if [ $LABEL == cuda7 ] || [ $LABEL == gvslc6 ] || [ $LABEL == slc6-physical ] ||  [ $LABEL == lcgapp-SLC6_64b ] || [  $LABEL == continuous-sl6 ] || [  $LABEL == continuous-cuda7 ]; then
     . /cvmfs/sft.cern.ch/lcg/contrib/gcc/${!COMPILERversion}/${ARCH}-slc6/setup.sh
+  elif [[  $LABEL == continuous-cc7 ]]; then
+    . /cvmfs/sft.cern.ch/lcg/contrib/gcc/${!COMPILERversion}/${ARCH}-centos7/setup.sh
   else
     . /cvmfs/sft.cern.ch/lcg/contrib/gcc/${!COMPILERversion}/${ARCH}-${LABEL}/setup.sh
   fi
