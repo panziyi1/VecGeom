@@ -12,7 +12,6 @@ if len(sys.argv) < 2 :
 
 platform =  sys.argv[1]
 
-#x86_64-slc6-gcc44-fst
 arch, osvers, compiler, btype = platform.split('-')
 
 new_arch =  arch
