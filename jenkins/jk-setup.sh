@@ -17,6 +17,22 @@ else
   return
 fi
 
+PLATFORM=`$THIS/getPlatform.py`
+COMPATIBLE=`$THIS/getCompatiblePlatform.py $PLATFORM`
+ARCH=$(uname -m)
+
+export BUILDTYPE
+export COMPILER
+
+# Set up the externals against devgeantv in CVMFS
+if [ -a /cvmfs/sft.cern.ch/lcg/views/devgeantv/latest/$PLATFORM ]; then
+  source /cvmfs/sft.cern.ch/lcg/views/devgeantv/latest/$PLATFORM/setup.sh
+elif [ -a /cvmfs/sft.cern.ch/lcg/views/devgeantv/latest/$COMPATIBLE ]; then
+  source /cvmfs/sft.cern.ch/lcg/views/devgeantv/latest/$COMPATIBLE/setup.sh
+else
+  echo "No externals for $PLATFORM in $EXTERNALDIR/$EXTERNALS"
+fi
+
 if [ $LABEL == slc6 ] || [ $LABEL == gvslc6 ] || [ $LABEL == cc7 ] || [ $LABEL == cuda7 ] || [ $LABEL == slc6-physical ] || [  $LABEL == continuous-sl6 ] || [  $LABEL == continuous-cuda7 ] || [ $LABEL == continuous-xeonphi ] || [ $LABEL == c7-checker ]
 then
   export PATH=/afs/cern.ch/sw/lcg/contrib/CMake/3.3.2/Linux-x86_64/bin/:${PATH}
@@ -25,8 +41,6 @@ elif [ $LABEL == xeonphi ]
 then
   export PATH=/afs/cern.ch/sw/lcg/contrib/CMake/3.3.2/Linux-x86_64/bin:${PATH}
   kinit sftnight@CERN.CH -5 -V -k -t /data/sftnight/ec/conf/sftnight.keytab
-else
-  export EXTERNALDIR=$HOME/ROOT-externals/
 fi
 
 if [[ $COMPILER == *gcc* ]]; then
@@ -35,10 +49,10 @@ if [[ $COMPILER == *gcc* ]]; then
   gcc49version=4.9
   COMPILERversion=${COMPILER}version
   ARCH=$(uname -m)
-  if [ $LABEL == cuda7 ] || [ $LABEL == gvslc6 ] || [ $LABEL == slc6-physical ] || [  $LABEL == continuous-sl6 ] || [  $LABEL == continuous-cuda7 ]; then
-    . /afs/cern.ch/sw/lcg/contrib/gcc/${!COMPILERversion}/${ARCH}-slc6/setup.sh
+  if [ $LABEL == cuda7 ] || [ $LABEL == gvslc6 ] || [ $LABEL == slc6-physical ] ||  [ $LABEL == lcgapp-SLC6_64b ] || [  $LABEL == continuous-sl6 ] || [  $LABEL == continuous-cuda7 ]; then
+    . /cvmfs/sft.cern.ch/lcg/contrib/gcc/${!COMPILERversion}/${ARCH}-slc6/setup.sh
   else
-    . /afs/cern.ch/sw/lcg/contrib/gcc/${!COMPILERversion}/${ARCH}-${LABEL}/setup.sh
+    . /cvmfs/sft.cern.ch/lcg/contrib/gcc/${!COMPILERversion}/${ARCH}-${LABEL}/setup.sh
   fi
   export FC=gfortran
   export CXX=`which g++`
@@ -72,6 +86,13 @@ elif [[ $COMPILER == *icc* ]]; then
   export CC=icc
   export CXX=icc
   export FC=ifort
+elif [[ $COMPILER == *icc17* ]]; then
+    icc17gcc=6.2
+    . /cvmfs/sft.cern.ch/lcg/contrib/gcc/${!GCCversion}/${ARCH}-${LABEL_COMPILER}/setup.sh
+    . /cvmfs/projects.cern.ch/intelsw/psxe/linux/all-setup.sh
+    export CXX=`which icpc`
+    export FC=`which gfortran`
+    export LDFLAGS="-lirc -limf"
 elif [[ $COMPILER == *clang* ]]; then
   clang34version=3.4
   clang35version=3.5
@@ -84,8 +105,7 @@ elif [[ $COMPILER == *clang* ]]; then
   clang37gcc=49
   clang38gcc=49
   GCCversion=${COMPILER}gcc
-  . /afs/cern.ch/sw/lcg/external/llvm/${!COMPILERversion}/${ARCH}-${LABEL_COMPILER}/setup.sh
-# . /cvmfs/sft.cern.ch/lcg/contrib/llvm/${!COMPILERversion}/${ARCH}-${LABEL_COMPILER}/setup.sh
+ . /cvmfs/sft.cern.ch/lcg/contrib/llvm/${!COMPILERversion}/${ARCH}-${LABEL_COMPILER}/setup.sh
   export CC=`which clang`
   export CXX=`which clang++`
   export FC=`which gfortran`
