@@ -40,7 +40,7 @@ public:
   Vector3D<T> fMaxExtent; ///< Maximum extent
 
   VECCORE_ATT_HOST_DEVICE
-  TessellatedCluster()
+  TessellatedCluster4()
   {
     fMinExtent.Set(InfinityLength<T>());
     fMaxExtent.Set(-InfinityLength<T>());
