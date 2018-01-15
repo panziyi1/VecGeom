@@ -9,12 +9,15 @@
 #include "base/Global.h"
 #include "base/PlaneShell.h"
 #include "VecCore/VecMath.h"
+#include "volumes/TessellatedSection.h"
 
 namespace vecgeom {
 
 // using namespace vecCore::math;
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
+
+typedef TessellatedSection<double, true, false> TrapTslHelper_t;
 
 /*
  * A Trapezoid struct to encapsulate the parameters and some other cached values
@@ -63,6 +66,7 @@ struct TrapezoidStruct {
 
   T sideAreas[6]; // including z-planes
   Vector3D<T> normals[6];
+  TrapTslHelper_t *fTslHelper = nullptr;
 
 public:
   /// \brief Constructors
@@ -148,7 +152,7 @@ public:
 #endif
 };
 
-} // inline NS
-} // vecgeom NS
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif

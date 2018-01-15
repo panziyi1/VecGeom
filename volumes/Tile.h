@@ -6,9 +6,21 @@
 
 namespace vecgeom {
 
-VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE_2t(struct, Tile, size_t, typename);
+enum TileType { kTriangle = 3, kQuadrilateral = 4 };
+
+// Cuda forward declaration below not working (expecting a generic type insted of size_t)
+// VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE_2t(struct, Tile, size_t, typename);
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
+template <size_t, typename>
+struct Tile;
+
+template <typename T>
+using TriangleFacet = Tile<3, T>;
+
+template <typename T>
+using QuadrilateralFacet = Tile<4, T>;
+
 //______________________________________________________________________________
 // Basic facet tile structure having NVERT vertices making a convex polygon.
 // The vertices making the tile have to be given in anti-clockwise
@@ -20,33 +32,56 @@ struct Tile {
   Vector3D<T> fVertices[NVERT];    ///< vertices of the tile
   Vector3D<T> fCenter;             ///< Center of the tile
   int fIndices[NVERT];             ///< indices for 3 distinct vertices
-  int fNeighbors[NVERT];           ///< indices to triangle neighbors
   T fSurfaceArea = 0;              ///< surface area
   Vector3D<T> fNormal;             ///< normal vector pointing outside
+  bool fConvex = false;            ///< convexity of the facet with respect to the solid
   T fDistance;                     ///< distance between the origin and the triangle plane
   Vector3D<T> fSideVectors[NVERT]; ///< side vectors perpendicular to edges
 
   VECCORE_ATT_HOST_DEVICE
-  Tile() { fNeighbors.reserve(NVERT); }
+  Tile() {}
 
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
-  bool AddVertex(Vector3D<T> const &vtx, int ind)
+  bool SetVertices(Vector3D<T> const &vtx0, Vector3D<T> const &vtx1, Vector3D<T> const &vtx2, int ind0 = 0,
+                   int ind1 = 0, int ind2 = 0)
+  {
+    assert(NVERT == 3);
+    AddVertex(vtx0, ind0);
+    AddVertex(vtx1, ind1);
+    return AddVertex(vtx2, ind2);
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
+  bool SetVertices(Vector3D<T> const &vtx0, Vector3D<T> const &vtx1, Vector3D<T> const &vtx2, Vector3D<T> const &vtx3,
+                   int ind0 = 0, int ind1 = 0, int ind2 = 0, int ind3 = 0)
+  {
+    assert(NVERT == 4);
+    AddVertex(vtx0, ind0);
+    AddVertex(vtx1, ind1);
+    AddVertex(vtx2, ind2);
+    return AddVertex(vtx3, ind3);
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
+  bool AddVertex(Vector3D<T> const &vtx, int ind = -1)
   {
     fVertices[fNvert] = vtx;
-    fIndices[fNvert] = ind;
+    fIndices[fNvert]  = ind;
     fNvert++;
-    if ( fNvert < NVERT ) return true;
+    if (fNvert < NVERT) return true;
     // Check validity
     // Get number of different vertices
     size_t nvert = NVERT;
     for (size_t i = 0; i < NVERT; ++i) {
-      const Vector3D<T> vi = fVertices[(i+1)%NVERT] - fVertices[i];
-      if ((vi.Mag2() < kTolerance) {
+      const Vector3D<T> vi = fVertices[(i + 1) % NVERT] - fVertices[i];
+      if (vi.Mag2() < kTolerance) {
         nvert--;
       }
     }
-    
+
     if (nvert < 3) {
       std::cout << "Tile degenerated: Length of sides of facet are too small." << std::endl;
       return false;
@@ -56,9 +91,9 @@ struct Tile {
 
     bool degenerated = true;
     for (size_t i = 0; i < NVERT - 1; ++i) {
-      Vector3D<T> e1 = fVertices[i+1] - fVertices[i];
+      Vector3D<T> e1 = fVertices[i + 1] - fVertices[i];
       if (e1.Mag2() < kTolerance) continue;
-      for (size_t j = i + 1; j < NVERT, ++j) {
+      for (size_t j = i + 1; j < NVERT; ++j) {
         Vector3D<T> e2 = fVertices[(j + 1) % NVERT] - fVertices[j];
         if (e2.Mag2() < kTolerance) continue;
         fNormal = e1.Cross(e2);
@@ -66,7 +101,9 @@ struct Tile {
         if (fNormal.Mag2() < kTolerance) continue;
         fNormal.Normalize();
         degenerated = false;
+        break;
       }
+      if (!degenerated) break;
     }
 
     if (degenerated) {
@@ -76,14 +113,14 @@ struct Tile {
 
     // Compute side vectors
     for (size_t i = 0; i < NVERT; ++i) {
-      Vector3D<T> e1 = fVertices[(i+1) % NVERT] - fVertices[i];
+      Vector3D<T> e1 = fVertices[(i + 1) % NVERT] - fVertices[i];
       if (e1.Mag2() < kTolerance) continue;
       fSideVectors[i] = fNormal.Cross(e1).Normalized();
-      fDistance    = -fNormal.Dot(fVertices[i]);
-      for (size_t j = i + 1; j < i + NVERT, ++j) {
-        Vector3D<T> e2 = fVertices[(j+1) % NVERT] - fVertices[j % NVERT];
-        if (e2.Mag2() < kTolerance) 
-          fSideVectors[j % NVERT] = fSideVectors[(j-1) % NVERT];
+      fDistance       = -fNormal.Dot(fVertices[i]);
+      for (size_t j = i + 1; j < i + NVERT; ++j) {
+        Vector3D<T> e2 = fVertices[(j + 1) % NVERT] - fVertices[j % NVERT];
+        if (e2.Mag2() < kTolerance)
+          fSideVectors[j % NVERT] = fSideVectors[(j - 1) % NVERT];
         else
           fSideVectors[j % NVERT] = fNormal.Cross(e2).Normalized();
       }
@@ -93,22 +130,18 @@ struct Tile {
     // Compute surface area
     fSurfaceArea = 0.;
     for (int i = 0; i < NVERT; ++i) {
-      Vector3D<T> e1 = fVertices[(i+1)%4] - fVertices[i];
-      Vector3D<T> e2 = fVertices[(i+2)%4] - fVertices[(i+1)%4];
+      Vector3D<T> e1 = fVertices[(i + 1) % NVERT] - fVertices[i];
+      Vector3D<T> e2 = fVertices[(i + 2) % NVERT] - fVertices[(i + 1) % NVERT];
       fSurfaceArea += 0.5 * (e1.Cross(e2)).Mag();
     }
-    assert(fSurfaceArea < kTolerance * kTolerance);
+    assert(fSurfaceArea > kTolerance * kTolerance);
 
     // Center of the tile
     for (int i = 0; i < NVERT; ++i)
       fCenter += fVertices[i];
     fCenter /= NVERT;
-    return true;    
+    return true;
   }
-
-  VECCORE_ATT_HOST_DEVICE
-  VECGEOM_FORCE_INLINE
-  bool IsSurrounded() const { return fNeighbors.size() >= NVERT; }
 
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
@@ -200,9 +233,9 @@ struct Tile {
   }
 };
 
-std::ostream &operator<<(std::ostream &os, Tile<NVERT, double> const &facet);
+std::ostream &operator<<(std::ostream &os, Tile<3, double> const &facet);
 
-} // end VECGEOM_IMPL_NAMESPACE
+} // namespace VECGEOM_IMPL_NAMESPACE
 } // end namespace vecgeom
 
 #endif // VECGEOM_VOLUMES_TILE_H_

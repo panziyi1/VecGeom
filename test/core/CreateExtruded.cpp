@@ -51,7 +51,7 @@ void AddFacetToVisualizer(TriangleFacet<double> const *facet, Visualizer &visual
   visualizer.AddLine(pl);
 }
 
-void DrawCluster(TessellatedStruct<double> const &tsl, int icluster, Visualizer &visualizer, bool boxonly = false)
+void DrawCluster(TessellatedStruct<3, double> const &tsl, int icluster, Visualizer &visualizer, bool boxonly = false)
 {
   // Draw only segments of the facets which are not shared within the cluster
   TPolyLine3D pl(2);

@@ -450,6 +450,14 @@ bool UnplacedTrapezoid::MakePlanes()
 {
   TrapCorners pt;
   fromParametersToCorners(pt);
+  // Fill tessellated section helper
+  TrapTslHelper_t *tslHelper = new TrapTslHelper_t(4, -dz(), dz());
+  tslHelper->AddQuadrilateralFacet(pt[0], pt[1], pt[5], pt[4]);
+  tslHelper->AddQuadrilateralFacet(pt[1], pt[3], pt[7], pt[5]);
+  tslHelper->AddQuadrilateralFacet(pt[3], pt[2], pt[6], pt[7]);
+  tslHelper->AddQuadrilateralFacet(pt[2], pt[0], pt[4], pt[6]);
+  fTrap.fTslHelper = tslHelper;
+  // std::cout << *tslHelper << std::endl;
   return MakePlanes(pt);
 }
 
@@ -568,7 +576,7 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedTrapezoid::CopyToGpu() const
 
 #endif // VECGEOM_CUDA_INTERFACE
 
-} // End impl namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
 
 #ifdef VECCORE_CUDA
 
@@ -582,8 +590,8 @@ template void DevicePtr<cuda::UnplacedTrapezoid>::Construct(const Precision dz, 
                                                             const Precision dx3, const Precision dx4,
                                                             const Precision tanAlpha2) const;
 
-} // End cxx namespace
+} // namespace cxx
 
 #endif
 
-} // End global namespace
+} // namespace vecgeom

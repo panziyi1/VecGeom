@@ -11,11 +11,12 @@
 #include "base/Vector3D.h"
 #include "base/Vector.h"
 #include "volumes/kernel/GenericKernels.h"
-#include "TriangleFacet.h"
+#include "Tile.h"
+//#include "TriangleFacet.h"
 
 namespace vecgeom {
 
-VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE(class, TessellatedCluster, typename);
+// VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE_2t(class, TessellatedCluster, size_t, typename);
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
@@ -24,26 +25,41 @@ constexpr size_t kVecSize = vecCore::VectorSize<vecgeom::VectorBackend::Real_v>(
 //______________________________________________________________________________
 // Structure used for vectorizing queries on groups of triangles. Stores Real_v
 // types matched with the compiled SIMD vectors of double.
-template <typename Real_v>
+template <size_t NVERT, typename Real_v>
 class TessellatedCluster : public AlignedBase {
 public:
   using T       = typename vecCore::ScalarType<Real_v>::Type;
-  using Facet_t = TriangleFacet<T>;
+  using Facet_t = Tile<NVERT, T>;
 
-  Vector3D<Real_v> fNormals;        ///< Normals to facet components
-  Real_v fDistances;                ///< Distances from origin to facets
-  Vector3D<Real_v> fSideVectors[3]; ///< Side vectors of the triangular facets
-  Vector3D<Real_v> fVertices[3];    ///< Vertices stored in SIMD format
-  size_t fIfacets[kVecSize]  = {};
-  Facet_t *fFacets[kVecSize] = {};
-  Vector3D<T> fMinExtent; ///< Minimum extent
-  Vector3D<T> fMaxExtent; ///< Maximum extent
+  Vector3D<Real_v> fNormals;            ///< Normals to facet components
+  Real_v fDistances;                    ///< Distances from origin to facets
+  Vector3D<Real_v> fSideVectors[NVERT]; ///< Side vectors of the triangular facets
+  Vector3D<Real_v> fVertices[NVERT];    ///< Vertices stored in SIMD format
+  size_t fIfacets[kVecSize]  = {};      ///< Real indices of facets
+  Facet_t *fFacets[kVecSize] = {};      ///< Array of scalar facets matching the ones in the cluster
+  Vector3D<T> fMinExtent;               ///< Minimum extent
+  Vector3D<T> fMaxExtent;               ///< Maximum extent
+  bool fConvex = false;                 ///< Convexity of the cluster with respect to the solid it belongs to
 
   VECCORE_ATT_HOST_DEVICE
   TessellatedCluster()
   {
     fMinExtent.Set(InfinityLength<T>());
     fMaxExtent.Set(-InfinityLength<T>());
+  }
+
+  VECGEOM_FORCE_INLINE
+  VECCORE_ATT_HOST_DEVICE
+  bool IsConvex() const { return fConvex; }
+
+  VECGEOM_FORCE_INLINE
+  VECCORE_ATT_HOST_DEVICE
+  bool CalculateConvexity()
+  {
+    bool convex = true;
+    for (size_t i = 0; i < kVecSize; ++i)
+      convex &= fFacets[i]->fConvex;
+    return convex;
   }
 
   VECGEOM_FORCE_INLINE
@@ -126,9 +142,9 @@ public:
   }
 
   /** @brief Fill the components 'i' of the cluster with facet data
-    * @param index Triangle index, equivalent to SIMD lane index
-    * @param facet Triangle facet data
-    */
+   * @param index Triangle index, equivalent to SIMD lane index
+   * @param facet Triangle facet data
+   */
   VECCORE_ATT_HOST_DEVICE
   void AddFacet(size_t index, Facet_t *facet, size_t ifacet)
   {
@@ -140,7 +156,7 @@ public:
     // Fill the distance to the plane
     vecCore::Set(fDistances, index, facet->fDistance);
     // Compute side vectors and fill them using the store operation per SIMD lane
-    for (size_t ivert = 0; ivert < 3; ++ivert) {
+    for (size_t ivert = 0; ivert < NVERT; ++ivert) {
       Vector3D<T> c0                            = facet->fVertices[ivert];
       if (c0.x() < fMinExtent[0]) fMinExtent[0] = c0.x();
       if (c0.y() < fMinExtent[1]) fMinExtent[1] = c0.y();
@@ -148,7 +164,7 @@ public:
       if (c0.x() > fMaxExtent[0]) fMaxExtent[0] = c0.x();
       if (c0.y() > fMaxExtent[1]) fMaxExtent[1] = c0.y();
       if (c0.z() > fMaxExtent[2]) fMaxExtent[2] = c0.z();
-      Vector3D<T> c1                            = facet->fVertices[(ivert + 1) % 3];
+      Vector3D<T> c1                            = facet->fVertices[(ivert + 1) % NVERT];
       Vector3D<T> sideVector                    = facet->fNormal.Cross(c1 - c0).Normalized();
       vecCore::Set(fSideVectors[ivert].x(), index, sideVector.x());
       vecCore::Set(fSideVectors[ivert].y(), index, sideVector.y());
@@ -159,6 +175,7 @@ public:
     }
     fFacets[index]  = facet;
     fIfacets[index] = ifacet;
+    if (index == kVecSize - 1) CalculateConvexity();
   }
 
   // === Navigation functionality === //
@@ -171,7 +188,7 @@ public:
     using Bool_v = vecCore::Mask<Real_v>;
 
     inside = Bool_v(true);
-    for (size_t i = 0; i < 3; ++i) {
+    for (size_t i = 0; i < NVERT; ++i) {
       Real_v saf = (point - fVertices[i]).Dot(fSideVectors[i]);
       inside &= saf > Real_v(-kTolerance);
     }
@@ -187,8 +204,8 @@ public:
   }
 
   VECCORE_ATT_HOST_DEVICE
-  void DistanceToCluster(Vector3D<T> const &point, Vector3D<T> const &direction, T &distanceToIn, T &distanceToOut,
-                         int &isurfToIn, int &isurfToOut) const
+  void DistanceToCluster(Vector3D<Real_v> const &point, Vector3D<Real_v> const &direction, T &distanceToIn,
+                         T &distanceToOut, int &isurfToIn, int &isurfToOut) const
   {
     // Computes both distance to in and distance to out for the cluster
     using Bool_v = vecCore::Mask<Real_v>;
@@ -200,16 +217,16 @@ public:
     isurfToIn  = -1;
     isurfToOut = -1;
 
-    Vector3D<Real_v> pointv(point);
-    Vector3D<Real_v> dirv(direction);
-    Real_v ndd = NonZero(dirv.Dot(fNormals));
-    Real_v saf = DistPlanes(pointv);
+    // Vector3D<Real_v> pointv(point);
+    // Vector3D<Real_v> dirv(direction);
+    Real_v ndd = NonZero(direction.Dot(fNormals));
+    Real_v saf = DistPlanes(point);
 
     Bool_v validToIn  = ndd < Real_v(0.) && saf > Real_v(-kTolerance);
     Bool_v validToOut = ndd > Real_v(0.) && saf < Real_v(kTolerance);
 
-    Real_v dist = -saf / ndd;
-    pointv += dist * dirv;
+    Real_v dist             = -saf / ndd;
+    Vector3D<Real_v> pointv = point + dist * direction;
     // Check if propagated points hit the triangles
     Bool_v hit;
     InsideCluster(pointv, hit);
@@ -243,18 +260,18 @@ public:
   }
 
   VECCORE_ATT_HOST_DEVICE
-  void DistanceToIn(Vector3D<T> const &point, Vector3D<T> const &direction, T const & /*stepMax*/, T &distance,
-                    int &isurf) const
+  void DistanceToIn(Vector3D<Real_v> const &point, Vector3D<Real_v> const &direction, T const & /*stepMax*/,
+                    T &distance, int &isurf) const
   {
     using Bool_v = vecCore::Mask<Real_v>;
 
     distance    = InfinityLength<T>();
     Real_v dist = InfinityLength<Real_v>();
     isurf       = -1;
-    Vector3D<Real_v> pointv(point);
-    Vector3D<Real_v> dirv(direction);
-    Real_v ndd   = NonZero(dirv.Dot(fNormals));
-    Real_v saf   = DistPlanes(pointv);
+    //    Vector3D<Real_v> pointv(point);
+    //    Vector3D<Real_v> dirv(direction);
+    Real_v ndd   = NonZero(direction.Dot(fNormals));
+    Real_v saf   = DistPlanes(point);
     Bool_v valid = ndd < Real_v(0.) && saf > Real_v(-kTolerance);
     //    if (vecCore::EarlyReturnAllowed() && vecCore::MaskEmpty(valid)) return;
 
@@ -262,7 +279,7 @@ public:
     // Since we can make no assumptions on convexity, we need to actually check
     // which surface is actually crossed. First propagate the point with the
     // distance to each plane.
-    pointv += dist * dirv;
+    Vector3D<Real_v> pointv = point + dist * direction;
     // Check if propagated points hit the triangles
     Bool_v hit;
     InsideCluster(pointv, hit);
@@ -279,8 +296,8 @@ public:
   }
 
   VECCORE_ATT_HOST_DEVICE
-  void DistanceToOut(Vector3D<T> const &point, Vector3D<T> const &direction, T const & /*stepMax*/, T &distance,
-                     int &isurf) const
+  void DistanceToOut(Vector3D<Real_v> const &point, Vector3D<Real_v> const &direction, T const & /*stepMax*/,
+                     T &distance, int &isurf) const
   {
     using Bool_v = vecCore::Mask<Real_v>;
 
@@ -288,15 +305,15 @@ public:
     Real_v dist = InfinityLength<Real_v>();
     isurf       = -1;
     // Transform scalar point and direction into Real_v types
-    Vector3D<Real_v> pointv(point);
-    Vector3D<Real_v> dirv(direction);
+    //    Vector3D<Real_v> pointv(point);
+    //    Vector3D<Real_v> dirv(direction);
 
     // Dot product between direction and facet normals should be positive
     // for valid crossings
-    Real_v ndd = NonZero(dirv.Dot(fNormals));
+    Real_v ndd = NonZero(direction.Dot(fNormals));
 
     // Distances to facet planes should be negative for valid crossing ("behind" normals)
-    Real_v saf = DistPlanes(pointv);
+    Real_v saf = DistPlanes(point);
 
     Bool_v valid = ndd > Real_v(0.) && saf < Real_v(kTolerance);
     // In case no crossing is valid, the point is outside and returns 0 distance
@@ -306,7 +323,7 @@ public:
     // Since we can make no assumptions on convexity, we need to actually check
     // which surface is actually crossed. First propagate the point with the
     // distance to each plane.
-    pointv += dist * dirv;
+    Vector3D<Real_v> pointv = point + dist * direction;
     // Check if propagated points hit the triangles
     Bool_v hit;
     InsideCluster(pointv, hit);
@@ -325,14 +342,14 @@ public:
 
   template <bool ToIn>
   VECCORE_ATT_HOST_DEVICE
-  T SafetySq(Vector3D<T> const &point, int &isurf) const
+  T SafetySq(Vector3D<Real_v> const &point, int &isurf) const
   {
     using Bool_v = vecCore::Mask<Real_v>;
-    Vector3D<Real_v> pointv(point);
-    Real_v safetyv = DistPlanes(pointv);
+    //    Vector3D<Real_v> pointv(point);
+    Real_v safetyv = DistPlanes(point);
     T distancesq   = InfinityLength<T>();
     // Find the projection of the point on each plane
-    Vector3D<Real_v> intersectionv = pointv - safetyv * fNormals;
+    Vector3D<Real_v> intersectionv = point - safetyv * fNormals;
     Bool_v withinBound;
     InsideCluster(intersectionv, withinBound);
     if (ToIn)
@@ -355,9 +372,9 @@ public:
     }
 
     Vector3D<Real_v> safetyv_outbound = InfinityLength<Real_v>();
-    for (int ivert = 0; ivert < 3; ++ivert) {
+    for (int ivert = 0; ivert < NVERT; ++ivert) {
       safetyv_outbound[ivert] =
-          DistanceToLineSegmentSquared2(fVertices[ivert], fVertices[(ivert + 1) % 3], pointv, !withinBound);
+          DistanceToLineSegmentSquared2(fVertices[ivert], fVertices[(ivert + 1) % NVERT], point, !withinBound);
     }
     Real_v safety_outv = safetyv_outbound.Min();
     vecCore::MaskedAssign(safetyv, !withinBound, safety_outv);
@@ -424,9 +441,9 @@ public:
   */
 };
 
-std::ostream &operator<<(std::ostream &os, TessellatedCluster<typename vecgeom::VectorBackend::Real_v> const &tcl);
+std::ostream &operator<<(std::ostream &os, TessellatedCluster<3, typename vecgeom::VectorBackend::Real_v> const &tcl);
 
-} // end VECGEOM_IMPL_NAMESPACE
+} // namespace VECGEOM_IMPL_NAMESPACE
 } // end namespace vecgeom
 
 #endif
