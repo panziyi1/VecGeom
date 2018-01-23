@@ -17,7 +17,7 @@ namespace vecgeom {
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-typedef TessellatedSection<double, true, false> TrapTslHelper_t;
+using TrapTslHelper_t = TessellatedSection<double, true>;
 
 /*
  * A Trapezoid struct to encapsulate the parameters and some other cached values

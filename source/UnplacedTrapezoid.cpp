@@ -433,10 +433,10 @@ bool UnplacedTrapezoid::MakeAPlane(const Vec3D &p1, const Vec3D &p2, const Vec3D
 #ifndef VECGEOM_PLANESHELL_DISABLE
   fTrap.fPlanes.Set(iplane, normalVector.x(), normalVector.y(), normalVector.z(), d);
 #else
-  plane.fA            = normalVector.x();
-  plane.fB            = normalVector.y();
-  plane.fC            = normalVector.z();
-  plane.fD            = d;
+  plane.fA = normalVector.x();
+  plane.fB = normalVector.y();
+  plane.fC = normalVector.z();
+  plane.fD = d;
   unsigned int iplane = (&plane - fTrap.fPlanes); // pointer arithmetics used here
 #endif
 
@@ -472,7 +472,7 @@ bool UnplacedTrapezoid::MakePlanes(TrapCorners const pt)
 #ifndef VECGEOM_PLANESHELL_DISABLE
   good = MakeAPlane(pt[0], pt[1], pt[5], pt[4], 0);
 #else
-  good                = MakeAPlane(pt[0], pt[1], pt[5], pt[4], fTrap.fPlanes[0]);
+  good = MakeAPlane(pt[0], pt[1], pt[5], pt[4], fTrap.fPlanes[0]);
 #endif
   if (!good) printf("***** GeomSolids0002 - Face at ~-Y not planar for Solid: UnplacedTrapezoid\n");
 

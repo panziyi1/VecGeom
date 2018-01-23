@@ -49,8 +49,8 @@ public:
 // Derived templated tessellated section on convexity
 // making a flat surface at same z.
 
-template <typename T, bool Convex = false, bool Right = false>
-class TessellatedSection : public TessellatedSectionBase<T> {
+template <typename T, bool Convex = true>
+class TessellatedSection /* : public TessellatedSectionBase<T> */ {
   // Here we should be able to use vecgeom::Vector
   template <typename U>
   using vector_t  = std::vector<U>;
@@ -83,16 +83,16 @@ protected:
     // Adjust extent
     using vecCore::math::Min;
     using vecCore::math::Max;
-    T xmin = Min(Min(facet->fVertices[0].x(), facet->fVertices[1].x()),
+    T xmin        = Min(Min(facet->fVertices[0].x(), facet->fVertices[1].x()),
                  Min(facet->fVertices[2].x(), facet->fVertices[3].x()));
-    T ymin = Min(Min(facet->fVertices[0].y(), facet->fVertices[1].y()),
+    T ymin        = Min(Min(facet->fVertices[0].y(), facet->fVertices[1].y()),
                  Min(facet->fVertices[2].y(), facet->fVertices[3].y()));
     fMinExtent[0] = Min(fMinExtent[0], xmin);
     fMinExtent[1] = Min(fMinExtent[1], ymin);
     fMinExtent[2] = fZmin;
     T xmax        = Max(Max(facet->fVertices[0].x(), facet->fVertices[1].x()),
                  Max(facet->fVertices[2].x(), facet->fVertices[3].x()));
-    T ymax = Max(Min(facet->fVertices[0].y(), facet->fVertices[1].y()),
+    T ymax        = Max(Min(facet->fVertices[0].y(), facet->fVertices[1].y()),
                  Max(facet->fVertices[2].y(), facet->fVertices[3].y()));
     fMaxExtent[0] = Max(fMaxExtent[0], xmax);
     fMaxExtent[1] = Max(fMaxExtent[1], ymax);
@@ -110,10 +110,12 @@ protected:
       // The last cluster may not be yet full: fill with last facet
       for (; i < kVecSize; ++i)
         cluster->AddFacet(i, facet, nfacets - 1);
+      fClusters.push_back(cluster);
     }
     if (nfacets == fNfacets) {
-      auto convexity = CalculateConvexity();
-      assert(convexity == Convex);
+      if (Convex) {
+        assert(CalculateConvexity() == Convex);
+      }
     }
   }
 
@@ -197,9 +199,10 @@ public:
       for (size_t i = 0; i < nclusters; ++i) {
         distPlanes = fClusters[i]->DistPlanes(point);
         outside |= distPlanes > Real_v(kTolerance);
-        if (!vecCore::MaskEmpty(outside)) return kOutside;
+        //        if (!vecCore::MaskEmpty(outside)) return kOutside;
         inside &= distPlanes < -kTolerance;
       }
+      if (!vecCore::MaskEmpty(outside)) return kOutside;
       if (vecCore::MaskFull(inside)) return kInside;
       return kSurface;
     }
@@ -245,6 +248,10 @@ public:
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
   size_t GetNclusters() const { return fClusters.size(); }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
+  Cluster_t const &GetCluster(size_t i) const { return *fClusters[i]; }
 
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
@@ -386,7 +393,7 @@ public:
   }
 };
 
-// std::ostream &operator<<(std::ostream &os, TessellatedSection<double, true, false> const &ts);
+std::ostream &operator<<(std::ostream &os, TessellatedSection<double, true> const &ts);
 
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // end namespace vecgeom

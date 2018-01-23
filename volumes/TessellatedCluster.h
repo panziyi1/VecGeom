@@ -92,11 +92,11 @@ public:
       T facetsizesq = 0;
       for (int i = 0; i < 3; ++i) {
         lensq = (fFacets[ifacet]->fVertices[i] - fFacets[ifacet]->fVertices[(i + 1) % 3]).Mag2();
-        if (lensq > facetsizesq) facetsizesq = lensq;
+        if (lensq > facetsizesq) facetsizesq= lensq;
       }
       if (facetsizesq > maxsize) maxsize = facetsizesq;
-      lensq                              = (fFacets[ifacet]->fCenter - clcenter).Mag2();
-      if (lensq > dmax) dmax             = lensq;
+      lensq = (fFacets[ifacet]->fCenter - clcenter).Mag2();
+      if (lensq > dmax) dmax= lensq;
     }
     T dispersion = vecCore::math::Sqrt(dmax / maxsize);
 
@@ -157,15 +157,15 @@ public:
     vecCore::Set(fDistances, index, facet->fDistance);
     // Compute side vectors and fill them using the store operation per SIMD lane
     for (size_t ivert = 0; ivert < NVERT; ++ivert) {
-      Vector3D<T> c0                            = facet->fVertices[ivert];
-      if (c0.x() < fMinExtent[0]) fMinExtent[0] = c0.x();
+      Vector3D<T> c0 = facet->fVertices[ivert];
+      if (c0.x() < fMinExtent[0]) fMinExtent[0]= c0.x();
       if (c0.y() < fMinExtent[1]) fMinExtent[1] = c0.y();
       if (c0.z() < fMinExtent[2]) fMinExtent[2] = c0.z();
       if (c0.x() > fMaxExtent[0]) fMaxExtent[0] = c0.x();
       if (c0.y() > fMaxExtent[1]) fMaxExtent[1] = c0.y();
       if (c0.z() > fMaxExtent[2]) fMaxExtent[2] = c0.z();
-      Vector3D<T> c1                            = facet->fVertices[(ivert + 1) % NVERT];
-      Vector3D<T> sideVector                    = facet->fNormal.Cross(c1 - c0).Normalized();
+      Vector3D<T> c1         = facet->fVertices[(ivert + 1) % NVERT];
+      Vector3D<T> sideVector = facet->fNormal.Cross(c1 - c0).Normalized();
       vecCore::Set(fSideVectors[ivert].x(), index, sideVector.x());
       vecCore::Set(fSideVectors[ivert].y(), index, sideVector.y());
       vecCore::Set(fSideVectors[ivert].z(), index, sideVector.z());
@@ -295,6 +295,31 @@ public:
     }
   }
 
+  /*
+    VECCORE_ATT_HOST_DEVICE
+    VECGEOM_FORCE_INLINE
+    void DistanceToInConvex(Vector3D<Real_v> const &point, Vector3D<Real_v> const &direction, const T dmin, const T
+    dmax, T &distance) const
+    {
+      using Bool_v = vecCore::Mask<Real_v>;
+      distance = kInfLength;
+
+      const Real_v proj   = NonZero(direction.Dot(fNormals));
+      const Bool_v moving_away = proj > -kTolerance;
+      const Real_v pdist   = DistPlanes(point);
+      const Bool_v side_correct = pdist > -kTolerance;
+      if (vecCore::MaskFull(side_correct && moving_away)) return;
+      const Real_v dist  = -pdist / proj;
+      Real_v tmin(dmin), tmax(dmax);
+      vecCore__MaskedAssignFunc(tmin, side_correct && !moving_away && dist > tmin, dist);
+      vecCore__MaskedAssignFunc(tmax, !side_correct && moving_away && dist < tmax, dist);
+      const T smin = vecCore::ReduceMax(tmin);
+      const T smax = vecCore::ReduceMin(tmax);
+
+      if (tmax < tmin + kTolerance) return;
+      distance = tmin;
+    }
+  */
   VECCORE_ATT_HOST_DEVICE
   void DistanceToOut(Vector3D<Real_v> const &point, Vector3D<Real_v> const &direction, T const & /*stepMax*/,
                      T &distance, int &isurf) const
@@ -442,6 +467,7 @@ public:
 };
 
 std::ostream &operator<<(std::ostream &os, TessellatedCluster<3, typename vecgeom::VectorBackend::Real_v> const &tcl);
+std::ostream &operator<<(std::ostream &os, TessellatedCluster<4, typename vecgeom::VectorBackend::Real_v> const &tcl);
 
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // end namespace vecgeom

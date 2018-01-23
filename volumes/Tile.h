@@ -233,7 +233,8 @@ struct Tile {
   }
 };
 
-std::ostream &operator<<(std::ostream &os, Tile<3, double> const &facet);
+std::ostream &operator<<(std::ostream &os, TriangleFacet<double> const &facet);
+std::ostream &operator<<(std::ostream &os, QuadrilateralFacet<double> const &facet);
 
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // end namespace vecgeom

@@ -460,7 +460,41 @@ struct TrapezoidImplementation {
   }
 };
 
-} // end of inline namespace
-} // end of global namespace
+// Scalar specialisations using tessellated section helper
+
+template <>
+VECGEOM_FORCE_INLINE
+VECCORE_ATT_HOST_DEVICE
+void TrapezoidImplementation::Inside<double, Inside_t>(UnplacedStruct_t const &unplaced, Vector3D<double> const &point,
+                                                       Inside_t &inside)
+{
+  // Check Z range with scalar point
+  inside      = EInside::kOutside;
+  double safZ = vecCore::math::Abs(point.z()) - unplaced.fDz;
+  if (safZ > kTolerance) return;
+  bool insideZ = safZ < -kTolerance;
+  inside       = unplaced.fTslHelper->Inside(point);
+  if (insideZ || inside == EInside::kOutside) return;
+  inside = EInside::kSurface;
+}
+
+/*
+template <>
+VECGEOM_FORCE_INLINE
+VECCORE_ATT_HOST_DEVICE
+void TrapezoidImplementation::DistanceToIn(UnplacedStruct_t const &unplaced, Vector3D<double> const &point,
+Vector3D<double> const &dir, double const &stepMax, double &distance)
+{
+  distance = kInfLength;
+  // Check hit on Z
+  double safZ = vecCore::math::Abs(point.z()) - unplaced.fDz;
+  if (safZ > -kTolerance && point.z() * dir.z() >= 0) return;
+  double distZ =
+
+}
+*/
+
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif // VECGEOM_VOLUMES_KERNEL_TRAPEZOIDIMPLEMENTATION_H_
