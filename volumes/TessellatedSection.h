@@ -307,22 +307,21 @@ public:
   }
 
   VECCORE_ATT_HOST_DEVICE
-  T DistanceToIn(Vector3D<Real_v> const &point, Vector3D<Real_v> const &direction, int &isurf) const
+  T DistanceToInConvex(Vector3D<T> const &point, Vector3D<T> const &direction, T stepmax) const
   {
-    // Compute distance to segment from outside point, returning also the crossed
-    // facet.
-    isurf               = -1;
-    T distance          = InfinityLength<T>();
-    T stepmax           = InfinityLength<T>();
+    // Compute distance to segment from outside point.
+    T dz = 0.5 * (fZmax - fZmin);
+    T pz = point.z() - 0.5 * (fZmax + fZmin);
+    if ((vecCore::math::Abs(pz) - dz) > -kTolerance && pz * direction.z() >= 0) return InfinityLength<T>();
+    const T invz = -1. / NonZero(direction.z());
+    const T ddz  = (invz < 0) ? dz : -dz;
+    T distance   = (pz + ddz) * invz;
+    T limit      = vecCore::math::Min((pz - ddz) * invz, stepmax);
+
     const int nclusters = fClusters.size();
     for (int i = 0; i < nclusters; ++i) {
-      int isurfcrt = -1;
-      T distcrt;
-      fClusters[i]->DistanceToIn(point, direction, stepmax, distcrt, isurfcrt);
-      if (distcrt < distance) {
-        distance = distcrt;
-        isurf    = isurfcrt;
-      }
+      // bool hitcluster =
+      fClusters[i]->DistanceToInConvex(point, direction, distance, limit);
     }
     return distance;
   }

@@ -295,31 +295,47 @@ public:
     }
   }
 
-  /*
-    VECCORE_ATT_HOST_DEVICE
-    VECGEOM_FORCE_INLINE
-    void DistanceToInConvex(Vector3D<Real_v> const &point, Vector3D<Real_v> const &direction, const T dmin, const T
-    dmax, T &distance) const
-    {
-      using Bool_v = vecCore::Mask<Real_v>;
-      distance = kInfLength;
+  /** Compute distance from point outside within limit. Returns
+      validity of the computed distance.
+    */
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
+  bool DistanceToInConvex(Vector3D<Real_v> const &point, Vector3D<Real_v> const &direction, T &distance, T &limit) const
+  {
+    using Bool_v = vecCore::Mask<Real_v>;
 
-      const Real_v proj   = NonZero(direction.Dot(fNormals));
-      const Bool_v moving_away = proj > -kTolerance;
-      const Real_v pdist   = DistPlanes(point);
-      const Bool_v side_correct = pdist > -kTolerance;
-      if (vecCore::MaskFull(side_correct && moving_away)) return;
-      const Real_v dist  = -pdist / proj;
-      Real_v tmin(dmin), tmax(dmax);
-      vecCore__MaskedAssignFunc(tmin, side_correct && !moving_away && dist > tmin, dist);
-      vecCore__MaskedAssignFunc(tmax, !side_correct && moving_away && dist < tmax, dist);
-      const T smin = vecCore::ReduceMax(tmin);
-      const T smax = vecCore::ReduceMin(tmax);
+    // Check if track is moving away from facets
+    const Real_v proj        = NonZero(direction.Dot(fNormals));
+    const Bool_v moving_away = proj > Real_v(-kTolerance);
+    // Check if track is on the correct side of of the planes
+    const Real_v pdist        = DistPlanes(point);
+    const Bool_v side_correct = pdist > Real_v(-kTolerance);
 
-      if (tmax < tmin + kTolerance) return;
-      distance = tmin;
+    if (!vecCore::MaskEmpty(side_correct && moving_away)) {
+      distance = InfinityLength<T>();
+      return false;
     }
-  */
+
+    // These facets can be hit from outside
+    const Bool_v from_outside = side_correct && !moving_away;
+
+    // These facets can be hit from inside
+    const Bool_v from_inside = !side_correct && moving_away;
+
+    Real_v dmin = -InfinityLength<Real_v>();
+    Real_v dmax = InfinityLength<Real_v>();
+    // Distances to facets
+    const Real_v dist = -pdist / NonZero(proj);
+    vecCore__MaskedAssignFunc(dmin, from_outside, dist);
+    vecCore__MaskedAssignFunc(dmax, from_inside, dist);
+    distance = vecCore::math::Max(distance, vecCore::ReduceMax(dmin));
+    limit    = vecCore::math::Min(limit, vecCore::ReduceMin(dmax));
+
+    if (distance < limit - kTolerance) return true;
+    distance = InfinityLength<T>();
+    return false;
+  }
+
   VECCORE_ATT_HOST_DEVICE
   void DistanceToOut(Vector3D<Real_v> const &point, Vector3D<Real_v> const &direction, T const & /*stepMax*/,
                      T &distance, int &isurf) const

@@ -94,6 +94,12 @@ int main(int argc, char *argv[])
   }
   trapPtr->Print();
 
+  Vector3D<double> pt(-11.133819270303316528725190437399, -17.982842057911515354362563812174,
+                      -6.501074725470741277888464537682);
+  Vector3D<double> dir(-0.799481622756370913229773123021, 0.550971166258607758514642682712,
+                       0.239290427778609010589505601274);
+  trapPtr->DistanceToIn(pt, dir);
+
   LogicalVolume world("world", &worldUnplaced);
   LogicalVolume trap("trap", trapPtr);
 

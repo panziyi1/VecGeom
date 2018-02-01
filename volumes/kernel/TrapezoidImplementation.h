@@ -478,21 +478,14 @@ void TrapezoidImplementation::Inside<double, Inside_t>(UnplacedStruct_t const &u
   inside = EInside::kSurface;
 }
 
-/*
 template <>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
 void TrapezoidImplementation::DistanceToIn(UnplacedStruct_t const &unplaced, Vector3D<double> const &point,
-Vector3D<double> const &dir, double const &stepMax, double &distance)
+                                           Vector3D<double> const &dir, double const &stepmax, double &distance)
 {
-  distance = kInfLength;
-  // Check hit on Z
-  double safZ = vecCore::math::Abs(point.z()) - unplaced.fDz;
-  if (safZ > -kTolerance && point.z() * dir.z() >= 0) return;
-  double distZ =
-
+  distance = unplaced.fTslHelper->DistanceToInConvex(point, dir, stepmax);
 }
-*/
 
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // namespace vecgeom
