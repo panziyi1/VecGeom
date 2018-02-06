@@ -451,7 +451,7 @@ bool UnplacedTrapezoid::MakePlanes()
   TrapCorners pt;
   fromParametersToCorners(pt);
   // Fill tessellated section helper
-  TrapTslHelper_t *tslHelper = new TrapTslHelper_t(4, -dz(), dz());
+  TessellatedSection<double> *tslHelper = new TessellatedSection<double>(4, -dz(), dz());
   tslHelper->AddQuadrilateralFacet(pt[0], pt[1], pt[5], pt[4]);
   tslHelper->AddQuadrilateralFacet(pt[1], pt[3], pt[7], pt[5]);
   tslHelper->AddQuadrilateralFacet(pt[3], pt[2], pt[6], pt[7]);

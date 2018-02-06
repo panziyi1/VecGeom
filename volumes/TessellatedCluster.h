@@ -295,9 +295,9 @@ public:
     }
   }
 
-  /** Compute distance from point outside within limit. Returns
-      validity of the computed distance.
-    */
+  /** @brief Compute distance from point outside within limit. Returns
+             validity of the computed distance.
+  */
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
   bool DistanceToInConvex(Vector3D<Real_v> const &point, Vector3D<Real_v> const &direction, T &distance, T &limit) const
@@ -311,10 +311,7 @@ public:
     const Real_v pdist        = DistPlanes(point);
     const Bool_v side_correct = pdist > Real_v(-kTolerance);
 
-    if (!vecCore::MaskEmpty(side_correct && moving_away)) {
-      distance = InfinityLength<T>();
-      return false;
-    }
+    if (!vecCore::MaskEmpty(side_correct && moving_away)) return false;
 
     // These facets can be hit from outside
     const Bool_v from_outside = side_correct && !moving_away;
@@ -331,9 +328,9 @@ public:
     distance = vecCore::math::Max(distance, vecCore::ReduceMax(dmin));
     limit    = vecCore::math::Min(limit, vecCore::ReduceMin(dmax));
 
-    if (distance < limit - kTolerance) return true;
-    distance = InfinityLength<T>();
-    return false;
+    // if (distance < limit - kTolerance) return true;
+    // distance = InfinityLength<T>();
+    return true;
   }
 
   VECCORE_ATT_HOST_DEVICE
@@ -379,6 +376,29 @@ public:
         isurf    = fIfacets[i];
       }
     }
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  bool DistanceToOutConvex(Vector3D<Real_v> const &point, Vector3D<Real_v> const &direction, T &distance) const
+  {
+    using Bool_v = vecCore::Mask<Real_v>;
+
+    distance    = -kTolerance;
+    Real_v dist = InfinityLength<Real_v>();
+
+    // Distances to facet planes should be negative for valid crossing ("behind" normals)
+    Real_v saf   = DistPlanes(point);
+    Bool_v valid = saf < Real_v(kTolerance);
+    if (vecCore::EarlyReturnAllowed() && !vecCore::MaskFull(valid)) return false;
+
+    // Dot product between direction and facet normals should be positive
+    // for valid crossings
+    Real_v ndd = NonZero(direction.Dot(fNormals));
+    valid      = ndd > Real_v(0.);
+
+    vecCore__MaskedAssignFunc(dist, valid, -saf / ndd);
+    distance = vecCore::ReduceMin(dist);
+    return true;
   }
 
   template <bool ToIn>

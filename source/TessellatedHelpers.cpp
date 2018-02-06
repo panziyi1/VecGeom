@@ -60,7 +60,7 @@ std::ostream &operator<<(std::ostream &os, TessellatedCluster<4, typename vecgeo
   return os;
 }
 
-std::ostream &operator<<(std::ostream &os, vecgeom::TessellatedSection<double, true> const &ts)
+std::ostream &operator<<(std::ostream &os, vecgeom::TessellatedSection<double> const &ts)
 {
 #ifndef VECCORE_ENABLE_UMESIMD
   os << " tessellated section with " << ts.GetNclusters() << "clusters:\n";

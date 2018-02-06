@@ -15,41 +15,10 @@ namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
 // Navigation helper for adjacent quadrilateral facets forming a closed
-// section in between 2 Z planes. A base class defines the scalar navigation
+// convex section in between 2 Z planes. A base class defines the scalar navigation
 // interfaces.
 
 template <typename T>
-class TessellatedSectionBase {
-
-  using Real_v = vecgeom::VectorBackend::Real_v;
-
-public:
-  VECCORE_ATT_HOST_DEVICE
-  virtual Inside_t Inside(Vector3D<Real_v> const &point) const = 0;
-
-  VECCORE_ATT_HOST_DEVICE
-  virtual bool Contains(Vector3D<Real_v> const &point) const = 0;
-
-  VECCORE_ATT_HOST_DEVICE
-  virtual T DistanceToIn(Vector3D<Real_v> const &point, Vector3D<Real_v> const &direction, int &isurf) const = 0;
-
-  VECCORE_ATT_HOST_DEVICE
-  virtual T DistanceToOut(Vector3D<Real_v> const &point, Vector3D<Real_v> const &direction, int &isurf) const = 0;
-
-  VECCORE_ATT_HOST_DEVICE
-  virtual double SafetyToInSq(Vector3D<Real_v> const &point, int &isurf) const = 0;
-
-  VECCORE_ATT_HOST_DEVICE
-  virtual double SafetyToOutSq(Vector3D<Real_v> const &point, int &isurf) const = 0;
-
-  VECCORE_ATT_HOST_DEVICE
-  virtual void Normal(Vector3D<T> const &point, Vector3D<T> &normal, bool &valid) const = 0;
-};
-
-// Derived templated tessellated section on convexity
-// making a flat surface at same z.
-
-template <typename T, bool Convex = true>
 class TessellatedSection /* : public TessellatedSectionBase<T> */ {
   // Here we should be able to use vecgeom::Vector
   template <typename U>
@@ -64,7 +33,6 @@ private:
   T fZmax        = 0;     ///< Maximum Z
   T fCubicVolume = 0;     ///< Cubic volume
   T fSurfaceArea = 0;     ///< Surface area
-  bool fConvex   = false; ///< Convexity
   Vector3D<T> fMinExtent; ///< Minimum extent
   Vector3D<T> fMaxExtent; ///< Maximum extent
   Vector3D<T> fTestDir;   ///< Test direction for generalized Contains/Inside
@@ -113,9 +81,7 @@ protected:
       fClusters.push_back(cluster);
     }
     if (nfacets == fNfacets) {
-      if (Convex) {
-        assert(CalculateConvexity() == Convex);
-      }
+      assert(CalculateConvexity() == true);
     }
   }
 
@@ -192,53 +158,18 @@ public:
 
     // Assuming the fast check on extent was already done using the scalar point
     size_t nclusters = fClusters.size();
-    if (Convex) {
-      // Convex polygone on top/bottom
-      Real_v distPlanes;
-      Bool_v inside(true), outside(false);
-      for (size_t i = 0; i < nclusters; ++i) {
-        distPlanes = fClusters[i]->DistPlanes(point);
-        outside |= distPlanes > Real_v(kTolerance);
-        //        if (!vecCore::MaskEmpty(outside)) return kOutside;
-        inside &= distPlanes < -kTolerance;
-      }
-      if (!vecCore::MaskEmpty(outside)) return kOutside;
-      if (vecCore::MaskFull(inside)) return kInside;
-      return kSurface;
-    }
-
-    // The general case.
-    T distanceToIn  = InfinityLength<T>();
-    T distanceToOut = InfinityLength<T>();
-    int isurfToIn   = -1;
-    int isurfToOut  = -1;
-
-    T clusterToIn, clusterToOut;
-    int icrtToIn, icrtToOut;
+    // Convex polygone on top/bottom
+    Real_v distPlanes;
+    Bool_v inside(true), outside(false);
     for (size_t i = 0; i < nclusters; ++i) {
-      fClusters[i]->DistanceToCluster(point, fTestDir, clusterToIn, clusterToOut, icrtToIn, icrtToOut);
-
-      // Update distanceToIn/Out
-      if (icrtToIn >= 0 && clusterToIn < distanceToIn) {
-        distanceToIn = clusterToIn;
-        isurfToIn    = icrtToIn;
-      }
-
-      if (icrtToOut >= 0 && clusterToOut < distanceToOut) {
-        distanceToOut = clusterToOut;
-        isurfToOut    = icrtToOut;
-      }
+      distPlanes = fClusters[i]->DistPlanes(point);
+      outside |= distPlanes > Real_v(kTolerance);
+      //        if (!vecCore::MaskEmpty(outside)) return kOutside;
+      inside &= distPlanes < -kTolerance;
     }
-    if (isurfToOut < 0) return kOutside;
-    if (isurfToIn >= 0 && distanceToIn < distanceToOut &&
-        distanceToIn * fTestDir.Dot(fFacets[isurfToIn]->fNormal) < -kTolerance)
-      return kOutside;
-
-    if (distanceToOut < 0 || distanceToOut * fTestDir.Dot(fFacets[isurfToOut]->fNormal) < kTolerance) return kSurface;
-
-    if (isurfToIn < 0 || distanceToOut < distanceToIn) return kInside;
-
-    if (distanceToIn < 0 || distanceToIn * fTestDir.Dot(fFacets[isurfToIn]->fNormal) > -kTolerance) return kSurface;
+    if (!vecCore::MaskEmpty(outside)) return kOutside;
+    if (vecCore::MaskFull(inside)) return kInside;
+    return kSurface;
   }
 
   VECCORE_ATT_HOST_DEVICE
@@ -266,62 +197,60 @@ public:
     // if ((point - fMinExtent).Min() < 0. || (point - fMaxExtent).Max() > 0.) return kOutside;
 
     size_t nclusters = fClusters.size();
-    if (Convex) {
-      // Convex polygone on top/bottom
-      Bool_v outside(false);
-      for (size_t i = 0; i < nclusters; ++i) {
-        Real_v distPlanes = fClusters[i]->DistPlanes(point);
-        outside |= distPlanes > Real_v(0);
-        if (!vecCore::MaskEmpty(outside)) return kOutside;
-      }
-      return kInside;
-    }
-
-    // The general case.
-    T distanceToIn  = InfinityLength<T>();
-    T distanceToOut = InfinityLength<T>();
-    int isurfToIn   = -1;
-    int isurfToOut  = -1;
-
-    T clusterToIn, clusterToOut;
-    int icrtToIn, icrtToOut;
+    // Convex polygone on top/bottom
+    Bool_v outside(false);
     for (size_t i = 0; i < nclusters; ++i) {
-      fClusters[i]->DistanceToCluster(point, fTestDir, clusterToIn, clusterToOut, icrtToIn, icrtToOut);
-
-      // Update distanceToIn/Out
-      if (icrtToIn >= 0 && clusterToIn < distanceToIn) {
-        distanceToIn = clusterToIn;
-        isurfToIn    = icrtToIn;
-      }
-
-      if (icrtToOut >= 0 && clusterToOut < distanceToOut) {
-        distanceToOut = clusterToOut;
-        isurfToOut    = icrtToOut;
-      }
+      Real_v distPlanes = fClusters[i]->DistPlanes(point);
+      outside |= distPlanes > Real_v(0);
+      if (!vecCore::MaskEmpty(outside)) return false;
     }
-    if (isurfToOut < 0) return kOutside;
-    if (isurfToIn >= 0 && distanceToIn < distanceToOut && distanceToIn * fTestDir.Dot(fFacets[isurfToIn]->fNormal) < 0)
-      return kOutside;
-
-    return kInside;
+    return true;
   }
 
+  template <bool skipZ = true>
   VECCORE_ATT_HOST_DEVICE
-  T DistanceToInConvex(Vector3D<T> const &point, Vector3D<T> const &direction, T stepmax) const
+  T DistanceToIn(Vector3D<T> const &point, Vector3D<T> const &direction, T invdirz, T stepmax) const
   {
     // Compute distance to segment from outside point.
     T dz = 0.5 * (fZmax - fZmin);
     T pz = point.z() - 0.5 * (fZmax + fZmin);
-    if ((vecCore::math::Abs(pz) - dz) > -kTolerance && pz * direction.z() >= 0) return InfinityLength<T>();
-    const T invz = -1. / NonZero(direction.z());
-    const T ddz  = (invz < 0) ? dz : -dz;
-    T distance   = (pz + ddz) * invz;
-    T limit      = vecCore::math::Min((pz - ddz) * invz, stepmax);
+    if (!skipZ) {
+      if ((vecCore::math::Abs(pz) - dz) > -kTolerance && pz * direction.z() >= 0) return InfinityLength<T>();
+    }
+    const T ddz   = vecCore::math::CopySign(dz, invdirz);
+    const T distz = -(pz + ddz) * invdirz;
+    T distance    = distz;
+    T limit       = vecCore::math::Min(-(pz - ddz) * invdirz, stepmax);
 
     const int nclusters = fClusters.size();
     for (int i = 0; i < nclusters; ++i) {
-      // bool hitcluster =
-      fClusters[i]->DistanceToInConvex(point, direction, distance, limit);
+      bool canhit =
+          (fClusters[i]->DistanceToInConvex(point, direction, distance, limit)) && (distance < limit - kTolerance);
+      if (!canhit) return InfinityLength<T>();
+    }
+    if (skipZ) {
+      if (distance > distz) return distance;
+      return InfinityLength<T>();
+    }
+    return distance;
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  T DistanceToOut(Vector3D<T> const &point, Vector3D<T> const &direction) const
+  {
+    // Compute distance to segment from point inside, returning also the crossed
+    // facet.
+    T dz         = 0.5 * (fZmax - fZmin);
+    T pz         = point.z() - 0.5 * (fZmax + fZmin);
+    const T safz = vecCore::math::Abs(pz) - dz;
+    if (safz > kTolerance) return -kTolerance;
+    const T vz = direction.z();
+    T distance = (vecCore::math::CopySign(dz, vz) - point.z()) / NonZero(vz);
+    T dist;
+    const int nclusters = fClusters.size();
+    for (int i = 0; i < nclusters; ++i) {
+      if (!fClusters[i]->DistanceToOutConvex(point, direction, dist)) return dist;
+      if (dist < distance) distance = dist;
     }
     return distance;
   }
@@ -348,6 +277,20 @@ public:
   }
 
   VECCORE_ATT_HOST_DEVICE
+  T SafetyToIn(Vector3D<T> const &point) const
+  {
+    // Compute approximate safety for the convex case
+    T safety            = vecCore::math::Max(fZmin - point.z(), point.z() - fZmax);
+    const int nclusters = fClusters.size();
+    for (int i = 0; i < nclusters; ++i) {
+      const Real_v safcl = fClusters[i]->DistPlanes(point);
+      const T saf        = vecCore::ReduceMax(safcl);
+      if (saf > safety) safety= saf;
+    }
+    return safety;
+  }
+
+  VECCORE_ATT_HOST_DEVICE
   T SafetyToInSq(Vector3D<Real_v> const &point, int &isurf) const
   {
     // Compute safety squared to segment from point outside, returning also the crossed
@@ -364,6 +307,20 @@ public:
       }
     }
     return safetysq;
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  T SafetyToOut(Vector3D<T> const &point) const
+  {
+    // Compute approximate safety for the convex case
+    T safety            = vecCore::math::Max(fZmin - point.z(), point.z() - fZmax);
+    const int nclusters = fClusters.size();
+    for (int i = 0; i < nclusters; ++i) {
+      const Real_v safcl = fClusters[i]->DistPlanes(point);
+      const T saf        = vecCore::ReduceMax(safcl);
+      if (saf > safety) safety= saf;
+    }
+    return -safety;
   }
 
   VECCORE_ATT_HOST_DEVICE
@@ -392,7 +349,7 @@ public:
   }
 };
 
-std::ostream &operator<<(std::ostream &os, TessellatedSection<double, true> const &ts);
+std::ostream &operator<<(std::ostream &os, TessellatedSection<double> const &ts);
 
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // end namespace vecgeom

@@ -14,7 +14,7 @@ UnplacedPolyhedron *NoInnerRadii()
   Precision zPlanes[nPlanes] = {-4, -2, 0, 2, 4};
   Precision rInner[nPlanes]  = {0, 0, 0, 0, 0};
   Precision rOuter[nPlanes]  = {2, 3, 2, 3, 2};
-  return new UnplacedPolyhedron(5, nPlanes, zPlanes, rInner, rOuter);
+  return new UnplacedPolyhedron(8, nPlanes, zPlanes, rInner, rOuter);
 }
 
 UnplacedPolyhedron *WithInnerRadii()
@@ -23,7 +23,7 @@ UnplacedPolyhedron *WithInnerRadii()
   Precision zPlanes[nPlanes] = {-4, -1, 0, 1, 4};
   Precision rInner[nPlanes]  = {1, 0.75, 0.5, 0.75, 1};
   Precision rOuter[nPlanes]  = {1.5, 1.5, 1.5, 1.5, 1.5};
-  return new UnplacedPolyhedron(5, nPlanes, zPlanes, rInner, rOuter);
+  return new UnplacedPolyhedron(8, nPlanes, zPlanes, rInner, rOuter);
 }
 
 UnplacedPolyhedron *WithPhiSection()
@@ -32,7 +32,7 @@ UnplacedPolyhedron *WithPhiSection()
   Precision zPlanes[nPlanes] = {-4, -1, 0, 1, 4};
   Precision rInner[nPlanes]  = {1, 0.75, 0.5, 0.75, 1};
   Precision rOuter[nPlanes]  = {1.5, 1.5, 1.5, 1.5, 1.5};
-  return new UnplacedPolyhedron(15 * kDegToRad, 45 * kDegToRad, 5, nPlanes, zPlanes, rInner, rOuter);
+  return new UnplacedPolyhedron(15 * kDegToRad, 45 * kDegToRad, 8, nPlanes, zPlanes, rInner, rOuter);
 }
 
 UnplacedPolyhedron *ManySegments()
@@ -41,7 +41,7 @@ UnplacedPolyhedron *ManySegments()
   Precision zPlanes[nPlanes] = {-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8};
   Precision rInner[nPlanes]  = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
   Precision rOuter[nPlanes]  = {2, 2, 3, 3, 2, 2, 3, 3, 2, 2, 3, 3, 2, 2, 3, 3, 2};
-  return new UnplacedPolyhedron(6, nPlanes, zPlanes, rInner, rOuter);
+  return new UnplacedPolyhedron(8, nPlanes, zPlanes, rInner, rOuter);
 }
 
 int main(int argc, char *argv[])
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
   //   1=WithInnerRadii
   //   2=WithPhiSection
   //   3=ManySegments
-  OPTION_INT(type, 2);
+  OPTION_INT(type, 1);
 
   UnplacedBox worldUnplaced = UnplacedBox(10, 10, 10);
 

@@ -484,7 +484,35 @@ VECCORE_ATT_HOST_DEVICE
 void TrapezoidImplementation::DistanceToIn(UnplacedStruct_t const &unplaced, Vector3D<double> const &point,
                                            Vector3D<double> const &dir, double const &stepmax, double &distance)
 {
-  distance = unplaced.fTslHelper->DistanceToInConvex(point, dir, stepmax);
+  double invdirz = 1. / NonZero(dir.z());
+  distance       = unplaced.fTslHelper->DistanceToIn<false>(point, dir, invdirz, stepmax);
+}
+
+template <>
+VECGEOM_FORCE_INLINE
+VECCORE_ATT_HOST_DEVICE
+void TrapezoidImplementation::DistanceToOut(UnplacedStruct_t const &unplaced, Vector3D<double> const &point,
+                                            Vector3D<double> const &dir, double const &, double &distance)
+{
+  distance = unplaced.fTslHelper->DistanceToOut(point, dir);
+}
+
+template <>
+VECGEOM_FORCE_INLINE
+VECCORE_ATT_HOST_DEVICE
+void TrapezoidImplementation::SafetyToIn(UnplacedStruct_t const &unplaced, Vector3D<double> const &point,
+                                         double &safety)
+{
+  safety = unplaced.fTslHelper->SafetyToIn(point);
+}
+
+template <>
+VECGEOM_FORCE_INLINE
+VECCORE_ATT_HOST_DEVICE
+void TrapezoidImplementation::SafetyToOut(UnplacedStruct_t const &unplaced, Vector3D<double> const &point,
+                                          double &safety)
+{
+  safety = unplaced.fTslHelper->SafetyToOut(point);
 }
 
 } // namespace VECGEOM_IMPL_NAMESPACE

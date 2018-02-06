@@ -17,8 +17,6 @@ namespace vecgeom {
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-using TrapTslHelper_t = TessellatedSection<double, true>;
-
 /*
  * A Trapezoid struct to encapsulate the parameters and some other cached values
  * related to Trapezoid that are required in Implementation
@@ -66,7 +64,7 @@ struct TrapezoidStruct {
 
   T sideAreas[6]; // including z-planes
   Vector3D<T> normals[6];
-  TrapTslHelper_t *fTslHelper = nullptr;
+  TessellatedSection<T> *fTslHelper = nullptr;
 
 public:
   /// \brief Constructors

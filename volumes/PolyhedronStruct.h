@@ -16,6 +16,7 @@
 #include "base/Array.h"
 #include "base/SOA3D.h"
 #include "volumes/TubeStruct.h"
+#include "volumes/TessellatedSection.h"
 
 // These enums should be in the scope vecgeom::Polyhedron, but when used in the
 // shape implementation helper instantiations, nvcc gets confused:
@@ -32,7 +33,7 @@ VECGEOM_DEVICE_DECLARE_CONV(struct, ZSegment);
 namespace Polyhedron {
 using ::EInnerRadii;
 using ::EPhiCutout;
-}
+} // namespace Polyhedron
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
@@ -48,52 +49,50 @@ struct ZSegment {
 // a plain and lightweight struct to encapsulate data members of a polyhedron
 template <typename T = double>
 struct PolyhedronStruct {
-  int fSideCount;                 ///< Number of segments along phi.
-  bool fHasInnerRadii;            ///< Has any Z-segments with an inner radius != 0.
-  bool fHasPhiCutout;             ///< Has a cutout angle along phi.
-  bool fHasLargePhiCutout;        ///< Phi cutout is larger than pi.
-  T fPhiStart;                    ///< Phi start in radians (input to constructor)
-  T fPhiDelta;                    ///< Phi delta in radians (input to constructor)
-  evolution::Wedge fPhiWedge;     ///< Phi wedge
-  Array<ZSegment> fZSegments;     ///< AOS'esque collections of quadrilaterals
-  Array<T> fZPlanes;              ///< Z-coordinate of each plane separating segments
-  Array<T> fRMin;                 ///< Inner radii as specified in constructor.
-  Array<T> fRMax;                 ///< Outer radii as specified in constructor.
-  Array<bool> fSameZ;             ///< Array of flags marking that the following plane is at same Z
-  SOA3D<T> fPhiSections;          ///< Unit vectors marking the bounds between
-                                  ///  phi segments, represented by planes
-                                  ///  through the origin with the normal
-                                  ///  point along the positive phi direction.
-  TubeStruct<T> fBoundingTube;    ///< Tube enclosing the outer bounds of the
-                                  ///  polyhedron. Used in Contains, Inside and
-                                  ///  DistanceToIn.
-  T fBoundingTubeOffset;          ///< Offset in Z of the center of the bounding
-                                  ///  tube. Used as a quick substitution for
-                                  ///  running a full transformation.
-  mutable Precision fSurfaceArea; ///< Stored SurfaceArea
-  mutable Precision fCapacity;    ///< Stored Capacity
+  int fSideCount          = 0;         ///< Number of segments along phi.
+  bool fHasInnerRadii     = false;     ///< Has any Z-segments with an inner radius != 0.
+  bool fHasPhiCutout      = false;     ///< Has a cutout angle along phi.
+  bool fHasLargePhiCutout = false;     ///< Phi cutout is larger than pi.
+  T fPhiStart             = 0.;        ///< Phi start in radians (input to constructor)
+  T fPhiDelta             = 0.;        ///< Phi delta in radians (input to constructor)
+  evolution::Wedge fPhiWedge;          ///< Phi wedge
+  Array<ZSegment> fZSegments;          ///< AOS'esque collections of quadrilaterals
+  Array<T> fZPlanes;                   ///< Z-coordinate of each plane separating segments
+  Array<T> fRMin;                      ///< Inner radii as specified in constructor.
+  Array<T> fRMax;                      ///< Outer radii as specified in constructor.
+  Array<bool> fSameZ;                  ///< Array of flags marking that the following plane is at same Z
+  SOA3D<T> fPhiSections;               ///< Unit vectors marking the bounds between
+                                       ///  phi segments, represented by planes
+                                       ///  through the origin with the normal
+                                       ///  point along the positive phi direction.
+  TubeStruct<T> fBoundingTube;         ///< Tube enclosing the outer bounds of the
+                                       ///  polyhedron. Used in Contains, Inside and
+                                       ///  DistanceToIn.
+  T fBoundingTubeOffset = 0.;          ///< Offset in Z of the center of the bounding
+                                       ///  tube. Used as a quick substitution for
+                                       ///  running a full transformation.
+  mutable Precision fSurfaceArea = 0.; ///< Stored SurfaceArea
+  mutable Precision fCapacity    = 0.; ///< Stored Capacity
 
   // These data member and member functions are added for convexity detection
-  bool fContinuousInSlope;
-  bool fConvexityPossible;
-  bool fEqualRmax;
+  bool fContinuousInSlope = true;
+  bool fConvexityPossible = true;
+  bool fEqualRmax         = true;
+  // Tessellated section helper
+  Array<TessellatedSection<T> *> fOuterTslHelper; ///< Tessellated helper for outer sections
+  Array<TessellatedSection<T> *> fInnerTslHelper; ///< Tessellated helper for iner sections
 
   VECCORE_ATT_HOST_DEVICE
-  PolyhedronStruct()
-      : fSideCount(0), fHasInnerRadii(false), fHasPhiCutout(false), fHasLargePhiCutout(false), fPhiStart(0),
-        fPhiDelta(0), fPhiWedge(0., 0.), fBoundingTube(0, 0, 0, 0, 0), fBoundingTubeOffset(0)
-  {
-  }
+  PolyhedronStruct() : fPhiWedge(0., 0.), fBoundingTube(0, 0, 0, 0, 0) {}
 
   VECCORE_ATT_HOST_DEVICE
   PolyhedronStruct(Precision phiStart, Precision phiDelta, const int sideCount, const int zPlaneCount,
                    Precision const zPlanes[], Precision const rMin[], Precision const rMax[])
-      : fSideCount(sideCount), fHasInnerRadii(false), fHasPhiCutout(phiDelta < kTwoPi),
-        fHasLargePhiCutout(phiDelta < kPi), fPhiStart(NormalizeAngle<kScalar>(phiStart)),
-        fPhiDelta((phiDelta > kTwoPi) ? kTwoPi : phiDelta), fPhiWedge(fPhiDelta, fPhiStart),
-        fZSegments(zPlaneCount - 1), fZPlanes(zPlaneCount), fRMin(zPlaneCount), fRMax(zPlaneCount),
-        fPhiSections(sideCount + 1), fBoundingTube(0, 1, 1, fPhiStart, fPhiDelta), fSurfaceArea(0.), fCapacity(0.),
-        fContinuousInSlope(true), fConvexityPossible(true), fEqualRmax(true)
+      : fSideCount(sideCount), fHasPhiCutout(phiDelta < kTwoPi), fHasLargePhiCutout(phiDelta < kPi),
+        fPhiStart(NormalizeAngle<kScalar>(phiStart)), fPhiDelta((phiDelta > kTwoPi) ? kTwoPi : phiDelta),
+        fPhiWedge(fPhiDelta, fPhiStart), fZSegments(zPlaneCount - 1), fZPlanes(zPlaneCount), fRMin(zPlaneCount),
+        fRMax(zPlaneCount), fPhiSections(sideCount + 1), fBoundingTube(0, 1, 1, fPhiStart, fPhiDelta),
+        fOuterTslHelper(zPlaneCount - 1), fInnerTslHelper(zPlaneCount - 1)
   {
     // initialize polyhedron internals
     Initialize(phiStart, phiDelta, sideCount, zPlaneCount, zPlanes, rMin, rMax);
@@ -101,11 +100,9 @@ struct PolyhedronStruct {
 
   PolyhedronStruct(Precision phiStart, Precision phiDelta, const int sideCount, const int verticesCount,
                    Precision const r[], Precision const z[])
-      : fSideCount(sideCount), fHasInnerRadii(false), fHasPhiCutout(phiDelta < kTwoPi),
-        fHasLargePhiCutout(phiDelta < kPi), fPhiStart(NormalizeAngle<kScalar>(phiStart)),
-        fPhiDelta((phiDelta > kTwoPi) ? kTwoPi : phiDelta), fPhiWedge(fPhiDelta, fPhiStart), fZSegments(), fZPlanes(),
-        fRMin(), fRMax(), fPhiSections(sideCount + 1), fBoundingTube(0, 1, 1, fPhiStart, fPhiDelta), fSurfaceArea(0.),
-        fCapacity(0.), fContinuousInSlope(true), fConvexityPossible(true), fEqualRmax(true)
+      : fSideCount(sideCount), fHasPhiCutout(phiDelta < kTwoPi), fHasLargePhiCutout(phiDelta < kPi),
+        fPhiStart(NormalizeAngle<kScalar>(phiStart)), fPhiDelta((phiDelta > kTwoPi) ? kTwoPi : phiDelta),
+        fPhiWedge(fPhiDelta, fPhiStart), fPhiSections(sideCount + 1), fBoundingTube(0, 1, 1, fPhiStart, fPhiDelta)
   {
     if (verticesCount < 3) throw std::runtime_error("A Polyhedron needs at least 3 (rz) vertices");
 
@@ -175,8 +172,8 @@ struct PolyhedronStruct {
     if (vecCore::math::Abs(zb - znew[(i0 + inc) % verticesCount1]) < kTolerance) i0 = (i0 + inc) % verticesCount1;
 
     if (phiDelta > kTwoPi) phiDelta = kTwoPi;
-    Precision sidePhi               = phiDelta / sideCount;
-    Precision cosHalfDeltaPhi       = cos(0.5 * sidePhi);
+    Precision sidePhi         = phiDelta / sideCount;
+    Precision cosHalfDeltaPhi = cos(0.5 * sidePhi);
 
     // We count vertices starting from imin, making sure we move counter-clockwise
 
@@ -202,6 +199,8 @@ struct PolyhedronStruct {
     fZPlanes.Allocate(Nz);
     fRMin.Allocate(Nz);
     fRMax.Allocate(Nz);
+    fOuterTslHelper.Allocate(Nz - 1);
+    fInnerTslHelper.Allocate(Nz - 1);
 
     // Delegate to full constructor
     Initialize(phiStart, phiDelta, sideCount, Nz, zArg, rMin, rMax);
@@ -250,8 +249,8 @@ struct PolyhedronStruct {
     for (int i = 0; i < zPlaneCount; i++) {
       fConvexityPossible &= (rMin[i] == 0.);
       fEqualRmax &= (startRmax == rMax[i]);
-      fSameZ[i]                                                                     = false;
-      if (i > 0 && i < zPlaneCount - 1 && fZPlanes[i] == fZPlanes[i + 1]) fSameZ[i] = true;
+      fSameZ[i] = false;
+      if (i > 0 && i < zPlaneCount - 1 && fZPlanes[i] == fZPlanes[i + 1]) fSameZ[i]= true;
     }
     fContinuousInSlope = CheckContinuityInSlope(rMax, zPlanes, zPlaneCount);
 
@@ -285,9 +284,9 @@ struct PolyhedronStruct {
 
     // Compute the cylindrical coordinate phi along which the corners are placed
     assert(phiDelta > 0);
-    phiStart                        = NormalizeAngle<kScalar>(phiStart);
-    if (phiDelta > kTwoPi) phiDelta = kTwoPi;
-    Precision sidePhi               = phiDelta / sideCount;
+    phiStart = NormalizeAngle<kScalar>(phiStart);
+    if (phiDelta > kTwoPi) phiDelta= kTwoPi;
+    Precision sidePhi = phiDelta / sideCount;
     vecgeom::unique_ptr<Precision[]> vertixPhi(new Precision[sideCount + 1]);
     for (int i = 0, iMax = sideCount + 1; i < iMax; ++i) {
       vertixPhi[i]                     = NormalizeAngle<kScalar>(phiStart + i * sidePhi);
@@ -364,6 +363,7 @@ struct PolyhedronStruct {
         return normal[0] * corner[0] + normal[1] * corner[1] < 0;
       };
 
+      fOuterTslHelper[iPlane] = new TessellatedSection<double>(sideCount, zPlanes[iPlane], zPlanes[iPlane + 1]);
       // Draw the regular quadrilaterals along phi
       for (int iSide = 0; iSide < fZSegments[iPlane].outer.size(); ++iSide) {
         fZSegments[iPlane].outer.Set(
@@ -373,8 +373,12 @@ struct PolyhedronStruct {
         if (WrongNormal(fZSegments[iPlane].outer.GetNormal(iSide), outerVertices[VertixIndex(iPlane, iSide)])) {
           fZSegments[iPlane].outer.FlipSign(iSide);
         }
+        fOuterTslHelper[iPlane]->AddQuadrilateralFacet(
+            outerVertices[VertixIndex(iPlane, iSide)], outerVertices[VertixIndex(iPlane, iSide + 1)],
+            outerVertices[VertixIndex(iPlane + 1, iSide + 1)], outerVertices[VertixIndex(iPlane + 1, iSide)]);
       }
       if (fZSegments[iPlane].hasInnerRadius) {
+        fInnerTslHelper[iPlane] = new TessellatedSection<double>(sideCount, zPlanes[iPlane], zPlanes[iPlane + 1]);
         for (int iSide = 0; iSide < fZSegments[iPlane].inner.size(); ++iSide) {
           fZSegments[iPlane].inner.Set(
               iSide, innerVertices[VertixIndex(iPlane, iSide)], innerVertices[VertixIndex(iPlane, iSide + 1)],
@@ -383,6 +387,9 @@ struct PolyhedronStruct {
           if (WrongNormal(fZSegments[iPlane].inner.GetNormal(iSide), innerVertices[VertixIndex(iPlane, iSide)])) {
             fZSegments[iPlane].inner.FlipSign(iSide);
           }
+          fInnerTslHelper[iPlane]->AddQuadrilateralFacet(
+              innerVertices[VertixIndex(iPlane, iSide)], innerVertices[VertixIndex(iPlane, iSide + 1)],
+              innerVertices[VertixIndex(iPlane + 1, iSide + 1)], innerVertices[VertixIndex(iPlane + 1, iSide)]);
         }
       }
 
@@ -408,7 +415,7 @@ struct PolyhedronStruct {
     } // End loop over segments
   }
 };
-}
-} // end global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif
