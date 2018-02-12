@@ -382,13 +382,15 @@ Real_v PolyhedronImplementation<innerRadiiT, phiCutoutT>::DistanceToInZSegment(U
 
   Real_v distance;
   Bool_v done;
+  Real_v invdirz = NonZero(1. / direction.z());
 
   ZSegment const &segment = unplaced.fZSegments[segmentIndex];
 
   // If the outer shell is hit, this will always be the correct result
-  distance =
-      unplaced.fOuterTslHelper[segmentIndex]->DistanceToIn(point, direction, 1. / NonZero(direction.z()), kInfLength);
-  // distance = segment.outer.DistanceToIn<Real_v, false>(point, direction);
+  if (TreatPhi<phiCutoutT>(unplaced.fHasPhiCutout))
+    distance = segment.outer.DistanceToIn<Real_v, false>(point, direction);
+  else
+    distance = unplaced.fOuterTslHelper[segmentIndex]->DistanceToIn(point, direction, invdirz, kInfLength);
   done = distance < InfinityLength<Real_v>();
   if (vecCore::MaskFull(done)) return distance;
 
@@ -402,9 +404,12 @@ Real_v PolyhedronImplementation<innerRadiiT, phiCutoutT>::DistanceToInZSegment(U
 
   // Finally treat inner shell
   if (TreatInner<innerRadiiT>(segment.hasInnerRadius)) {
-    vecCore__MaskedAssignFunc(distance, !done, (segment.inner.DistanceToIn<Real_v, true>(point, direction)));
-    //    vecCore__MaskedAssignFunc(distance, !done, (unplaced.fInnerTslHelper[segmentIndex]->DistanceToOut(point,
-    //    direction)));
+    if (TreatPhi<phiCutoutT>(unplaced.fHasPhiCutout)) {
+      vecCore__MaskedAssignFunc(distance, !done, (segment.inner.DistanceToIn<Real_v, true>(point, direction)));
+    } else {
+      vecCore__MaskedAssignFunc(distance, !done,
+                                unplaced.fInnerTslHelper[segmentIndex]->DistanceToOutRange(point, direction, invdirz));
+    }
   }
 
   return distance;
@@ -424,13 +429,19 @@ Real_v PolyhedronImplementation<innerRadiiT, phiCutoutT>::DistanceToOutZSegment(
 
   Bool_v done(false);
   Real_v distance = InfinityLength<Real_v>();
+  Real_v invdirz  = NonZero(1. / direction.z());
 
   ZSegment const &segment = unplaced.fZSegments[segmentIndex];
 
   // Check inner shell first, as it would always be the correct result
   if (TreatInner<innerRadiiT>(segment.hasInnerRadius)) {
-    distance = segment.inner.DistanceToIn<Real_v, false>(point, direction);
-    done     = distance < InfinityLength<Real_v>();
+    if (TreatPhi<phiCutoutT>(unplaced.fHasPhiCutout)) {
+      distance = segment.inner.DistanceToIn<Real_v, false>(point, direction);
+    } else {
+      distance =
+          unplaced.fInnerTslHelper[segmentIndex]->DistanceToIn(point, direction, invdirz, InfinityLength<Real_v>());
+    }
+    done = distance < InfinityLength<Real_v>();
     if (vecCore::MaskFull(done)) return distance;
   }
 
@@ -444,7 +455,12 @@ Real_v PolyhedronImplementation<innerRadiiT, phiCutoutT>::DistanceToOutZSegment(
   }
 
   // Finally check outer shell
-  Real_v distout = segment.outer.DistanceToOut<Real_v>(point, direction, zMin, zMax);
+  Real_v distout;
+  if (TreatPhi<phiCutoutT>(unplaced.fHasPhiCutout)) {
+    distout = segment.outer.DistanceToOut<Real_v>(point, direction, zMin, zMax);
+  } else {
+    distout = unplaced.fOuterTslHelper[segmentIndex]->DistanceToOutRange(point, direction, invdirz);
+  }
   vecCore::MaskedAssign(distance, !done, distout);
 
   return distance;

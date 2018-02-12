@@ -450,14 +450,6 @@ bool UnplacedTrapezoid::MakePlanes()
 {
   TrapCorners pt;
   fromParametersToCorners(pt);
-  // Fill tessellated section helper
-  TessellatedSection<double> *tslHelper = new TessellatedSection<double>(4, -dz(), dz());
-  tslHelper->AddQuadrilateralFacet(pt[0], pt[1], pt[5], pt[4]);
-  tslHelper->AddQuadrilateralFacet(pt[1], pt[3], pt[7], pt[5]);
-  tslHelper->AddQuadrilateralFacet(pt[3], pt[2], pt[6], pt[7]);
-  tslHelper->AddQuadrilateralFacet(pt[2], pt[0], pt[4], pt[6]);
-  fTrap.fTslHelper = tslHelper;
-  // std::cout << *tslHelper << std::endl;
   return MakePlanes(pt);
 }
 
@@ -467,6 +459,15 @@ bool UnplacedTrapezoid::MakePlanes(TrapCorners const pt)
 
   // Checking coplanarity of all four side faces
   bool good = true;
+
+  // Fill tessellated section helper
+  TessellatedSection<double> *tslHelper = new TessellatedSection<double>(4, -dz(), dz());
+  tslHelper->AddQuadrilateralFacet(pt[0], pt[1], pt[5], pt[4]);
+  tslHelper->AddQuadrilateralFacet(pt[1], pt[3], pt[7], pt[5]);
+  tslHelper->AddQuadrilateralFacet(pt[3], pt[2], pt[6], pt[7]);
+  tslHelper->AddQuadrilateralFacet(pt[2], pt[0], pt[4], pt[6]);
+  fTrap.fTslHelper = tslHelper;
+// std::cout << *tslHelper << std::endl;
 
 // Bottom side with normal approx. -Y
 #ifndef VECGEOM_PLANESHELL_DISABLE

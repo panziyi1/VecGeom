@@ -401,6 +401,39 @@ public:
     return true;
   }
 
+  /* @brief Compute distance to in/out for the convex case. */
+  VECCORE_ATT_HOST_DEVICE
+  bool DistanceToInOut(Vector3D<Real_v> const &point, Vector3D<Real_v> const &direction, T &dtoin, T &dtoout) const
+  {
+    using Bool_v = vecCore::Mask<Real_v>;
+    using vecCore::math::Min;
+    using vecCore::math::Max;
+    using vecCore::ReduceMin;
+    using vecCore::ReduceMax;
+
+    // Direction projected to all facets
+    Real_v projdir_v   = NonZero(direction.Dot(fNormals));
+    Bool_v moving_away = projdir_v > Real_v(0.);
+    // Signed projected distances to facets
+    Real_v projdist_v = DistPlanes(point);
+    Bool_v outside    = projdist_v > Real_v(-kTolerance);
+    // If outside and mowing away any facet, no hit possible (convexity)
+    if (!vecCore::MaskEmpty(outside && moving_away)) return false;
+    // Facets that can be hit from inside
+    Bool_v from_inside = projdist_v < Real_v(kTolerance) && moving_away;
+    // Facets that can be hit from outside
+    Bool_v from_outside = outside && !moving_away;
+    // Distances to all facets
+    const Real_v dist_v = -projdist_v / NonZero(projdir_v);
+    Real_v dtoin_v      = -InfinityLength<Real_v>();
+    Real_v dtoout_v     = InfinityLength<Real_v>();
+    vecCore__MaskedAssignFunc(dtoin_v, from_outside, dist_v);
+    dtoin = Max(dtoin, ReduceMax(dtoin_v));
+    vecCore__MaskedAssignFunc(dtoout_v, from_inside, dist_v);
+    dtoout = Min(dtoout, ReduceMin(dtoout_v));
+    return true;
+  }
+
   template <bool ToIn>
   VECCORE_ATT_HOST_DEVICE
   T SafetySq(Vector3D<Real_v> const &point, int &isurf) const

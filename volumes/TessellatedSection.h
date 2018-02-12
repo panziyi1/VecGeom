@@ -113,7 +113,7 @@ public:
   VECCORE_ATT_HOST_DEVICE
   TessellatedSection(int nfacets, T zmin, T zmax) : fNfacets(nfacets), fZmin(zmin), fZmax(zmax)
   {
-    assert(zmax > zmin && "zmin is greater than zmax");
+    assert(zmax >= zmin && "zmin is greater than zmax");
     double testangle = 1.e-3;
     fTestDir.Set(vecCore::math::Cos(testangle), vecCore::math::Sin(testangle), 0.);
     fMinExtent.Set(InfinityLength<T>());
@@ -235,6 +235,7 @@ public:
     return distance;
   }
 
+  template <bool skipZ = true>
   VECCORE_ATT_HOST_DEVICE
   T DistanceToOut(Vector3D<T> const &point, Vector3D<T> const &direction) const
   {
@@ -245,7 +246,7 @@ public:
     const T safz = vecCore::math::Abs(pz) - dz;
     if (safz > kTolerance) return -kTolerance;
     const T vz = direction.z();
-    T distance = (vecCore::math::CopySign(dz, vz) - point.z()) / NonZero(vz);
+    T distance = (vecCore::math::CopySign(dz, vz) - pz) / NonZero(vz);
     T dist;
     const int nclusters = fClusters.size();
     for (int i = 0; i < nclusters; ++i) {
@@ -253,6 +254,28 @@ public:
       if (dist < distance) distance = dist;
     }
     return distance;
+  }
+
+  template <bool skipZ = true>
+  VECCORE_ATT_HOST_DEVICE
+  T DistanceToOutRange(Vector3D<T> const &point, Vector3D<T> const &direction, T invdirz) const
+  {
+    // Compute distance to segment from point inside, returning also the crossed
+    // facet.
+    T dz                = 0.5 * (fZmax - fZmin);
+    T pz                = point.z() - 0.5 * (fZmax + fZmin);
+    T dmax              = (vecCore::math::CopySign(dz, invdirz) - pz) * invdirz;
+    T dmin              = (-vecCore::math::CopySign(dz, invdirz) - pz) * invdirz;
+    T dtoin             = dmin;                // will be reduced Max for all clusters
+    T dtoout            = InfinityLength<T>(); // will be reduced Min for all clusters
+    const int nclusters = fClusters.size();
+    for (int i = 0; i < nclusters; ++i) {
+      bool hit = fClusters[i]->DistanceToInOut(point, direction, dtoin, dtoout);
+      if (!hit) return InfinityLength<T>();
+    }
+
+    if (dtoout > dtoin - kTolerance && dtoout < dmax) return dtoout;
+    return InfinityLength<T>();
   }
 
   VECCORE_ATT_HOST_DEVICE
