@@ -101,9 +101,9 @@ void DrawCluster(TessellatedStruct<3, double> const &tsl, int icluster, Visualiz
     return;
   }
 
-  unsigned nfacets = 0;
-  unsigned ifacet  = 0;
-  unsigned iother  = 0;
+  size_t nfacets = 0;
+  size_t ifacet  = 0;
+  size_t iother  = 0;
   TriangleFacet<double> *facets[kVecSize];
   while (ifacet < kVecSize) {
     bool add = true;
@@ -118,10 +118,10 @@ void DrawCluster(TessellatedStruct<3, double> const &tsl, int icluster, Visualiz
   }
   // Loop facets
   ifacet = 0;
-  int ivert[2];
+  size_t ivert[2];
   while (ifacet < nfacets) {
     // loop segments
-    for (int iseg = 0; iseg < 3; iseg++) {
+    for (size_t iseg = 0; iseg < 3; iseg++) {
       bool shared = false;
       ivert[0]    = facets[ifacet]->fIndices[iseg];
       ivert[1]    = facets[ifacet]->fIndices[(iseg + 1) % 3];

@@ -174,7 +174,7 @@ public:
     fFacets.push_back(facet);
     int ind = fHelper->fAllVert.size();
     // Add the vertices
-    for (int i = 0; i < NVERT; ++i) {
+    for (size_t i = 0; i < NVERT; ++i) {
       fHelper->fAllVert.push_back(facet->fVertices[i]);
       facet->fIndices[i] = ind + i;
       fMinExtent[0]      = Min(fMinExtent[0], facet->fVertices[i].x());

@@ -28,10 +28,10 @@ using QuadrilateralFacet = Tile<4, T>;
 //______________________________________________________________________________
 template <size_t NVERT, typename T = double>
 struct Tile {
-  int fNvert = 0;                  ///< the tile is fully defined after adding the last vertex
+  size_t fNvert = 0;               ///< the tile is fully defined after adding the last vertex
   Vector3D<T> fVertices[NVERT];    ///< vertices of the tile
   Vector3D<T> fCenter;             ///< Center of the tile
-  int fIndices[NVERT];             ///< indices for 3 distinct vertices
+  size_t fIndices[NVERT];          ///< indices for 3 distinct vertices
   T fSurfaceArea = 0;              ///< surface area
   Vector3D<T> fNormal;             ///< normal vector pointing outside
   bool fConvex = false;            ///< convexity of the facet with respect to the solid
@@ -43,8 +43,8 @@ struct Tile {
 
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
-  bool SetVertices(Vector3D<T> const &vtx0, Vector3D<T> const &vtx1, Vector3D<T> const &vtx2, int ind0 = 0,
-                   int ind1 = 0, int ind2 = 0)
+  bool SetVertices(Vector3D<T> const &vtx0, Vector3D<T> const &vtx1, Vector3D<T> const &vtx2, size_t ind0 = 0,
+                   size_t ind1 = 0, size_t ind2 = 0)
   {
     assert(NVERT == 3);
     AddVertex(vtx0, ind0);
@@ -55,7 +55,7 @@ struct Tile {
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
   bool SetVertices(Vector3D<T> const &vtx0, Vector3D<T> const &vtx1, Vector3D<T> const &vtx2, Vector3D<T> const &vtx3,
-                   int ind0 = 0, int ind1 = 0, int ind2 = 0, int ind3 = 0)
+                   size_t ind0 = 0, size_t ind1 = 0, size_t ind2 = 0, size_t ind3 = 0)
   {
     assert(NVERT == 4);
     AddVertex(vtx0, ind0);
@@ -66,7 +66,7 @@ struct Tile {
 
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
-  bool AddVertex(Vector3D<T> const &vtx, int ind = -1)
+  bool AddVertex(Vector3D<T> const &vtx, size_t ind = 0)
   {
     fVertices[fNvert] = vtx;
     fIndices[fNvert]  = ind;
@@ -129,7 +129,7 @@ struct Tile {
 
     // Compute surface area
     fSurfaceArea = 0.;
-    for (int i = 0; i < NVERT; ++i) {
+    for (size_t i = 0; i < NVERT; ++i) {
       Vector3D<T> e1 = fVertices[(i + 1) % NVERT] - fVertices[i];
       Vector3D<T> e2 = fVertices[(i + 2) % NVERT] - fVertices[(i + 1) % NVERT];
       fSurfaceArea += 0.5 * (e1.Cross(e2)).Mag();
@@ -137,7 +137,7 @@ struct Tile {
     assert(fSurfaceArea > kTolerance * kTolerance);
 
     // Center of the tile
-    for (int i = 0; i < NVERT; ++i)
+    for (size_t i = 0; i < NVERT; ++i)
       fCenter += fVertices[i];
     fCenter /= NVERT;
     return true;
@@ -145,12 +145,16 @@ struct Tile {
 
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
-  int IsNeighbor(Tile<NVERT, T> const &other)
+  Vector3D<T> const &GetNormal() const { return fNormal; }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
+  size_t IsNeighbor(Tile<NVERT, T> const &other)
   {
     // Check if a segment is common
-    int ncommon = 0;
-    for (int ind1 = 0; ind1 < NVERT; ++ind1) {
-      for (int ind2 = 0; ind2 < NVERT; ++ind2) {
+    size_t ncommon = 0;
+    for (size_t ind1 = 0; ind1 < NVERT; ++ind1) {
+      for (size_t ind2 = 0; ind2 < NVERT; ++ind2) {
         if (fIndices[ind1] == other.fIndices[ind2]) ncommon++;
       }
     }
@@ -225,7 +229,7 @@ struct Tile {
     if (withinBound) return safety;
 
     Vector3D<T> safety_outbound = InfinityLength<T>();
-    for (int ivert = 0; ivert < NVERT; ++ivert) {
+    for (size_t ivert = 0; ivert < NVERT; ++ivert) {
       safety_outbound[ivert] =
           DistanceToLineSegmentSquared<kScalar>(fVertices[ivert], fVertices[(ivert + 1) % NVERT], point);
     }

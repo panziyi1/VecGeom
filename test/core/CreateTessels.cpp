@@ -56,7 +56,7 @@ void AddFacetToVisualizer(TriangleFacet<double> const *facet, Visualizer &visual
   visualizer.AddLine(pl);
 }
 
-void DrawCluster(TessellatedStruct<3, double> const &tsl, int icluster, Visualizer &visualizer, bool boxonly = false)
+void DrawCluster(TessellatedStruct<3, double> const &tsl, size_t icluster, Visualizer &visualizer, bool boxonly = false)
 {
   // Draw only segments of the facets which are not shared within the cluster
   TPolyLine3D pl(2);
@@ -106,13 +106,13 @@ void DrawCluster(TessellatedStruct<3, double> const &tsl, int icluster, Visualiz
     return;
   }
 
-  unsigned nfacets = 0;
-  unsigned ifacet  = 0;
-  unsigned iother  = 0;
+  size_t nfacets = 0;
+  size_t ifacet  = 0;
+  size_t iother  = 0;
   TriangleFacet<double> *facets[kVecSize];
   while (ifacet < kVecSize) {
     bool add = true;
-    for (unsigned i = 0; i < nfacets; ++i) {
+    for (size_t i = 0; i < nfacets; ++i) {
       if (tsl.fClusters[icluster]->fFacets[ifacet] == facets[i]) {
         ifacet++;
         add = false;
@@ -123,7 +123,7 @@ void DrawCluster(TessellatedStruct<3, double> const &tsl, int icluster, Visualiz
   }
   // Loop facets
   ifacet = 0;
-  int ivert[2];
+  size_t ivert[2];
   while (ifacet < nfacets) {
     // loop segments
     for (int iseg = 0; iseg < 3; iseg++) {

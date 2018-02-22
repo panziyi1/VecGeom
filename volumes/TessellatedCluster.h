@@ -73,6 +73,10 @@ public:
 
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
+  Facet_t *GetFacet(size_t ifacet) const { return fFacets[ifacet]; }
+
+  VECGEOM_FORCE_INLINE
+  VECCORE_ATT_HOST_DEVICE
   T ComputeSparsity(int &nblobs, int &nfacets)
   {
     // Calculate cluster sparsity (number of separate blobs)
@@ -92,11 +96,11 @@ public:
       T facetsizesq = 0;
       for (int i = 0; i < 3; ++i) {
         lensq = (fFacets[ifacet]->fVertices[i] - fFacets[ifacet]->fVertices[(i + 1) % 3]).Mag2();
-        if (lensq > facetsizesq) facetsizesq= lensq;
+        if (lensq > facetsizesq) facetsizesq = lensq;
       }
       if (facetsizesq > maxsize) maxsize = facetsizesq;
-      lensq = (fFacets[ifacet]->fCenter - clcenter).Mag2();
-      if (lensq > dmax) dmax= lensq;
+      lensq                              = (fFacets[ifacet]->fCenter - clcenter).Mag2();
+      if (lensq > dmax) dmax             = lensq;
     }
     T dispersion = vecCore::math::Sqrt(dmax / maxsize);
 
@@ -157,15 +161,15 @@ public:
     vecCore::Set(fDistances, index, facet->fDistance);
     // Compute side vectors and fill them using the store operation per SIMD lane
     for (size_t ivert = 0; ivert < NVERT; ++ivert) {
-      Vector3D<T> c0 = facet->fVertices[ivert];
-      if (c0.x() < fMinExtent[0]) fMinExtent[0]= c0.x();
+      Vector3D<T> c0                            = facet->fVertices[ivert];
+      if (c0.x() < fMinExtent[0]) fMinExtent[0] = c0.x();
       if (c0.y() < fMinExtent[1]) fMinExtent[1] = c0.y();
       if (c0.z() < fMinExtent[2]) fMinExtent[2] = c0.z();
       if (c0.x() > fMaxExtent[0]) fMaxExtent[0] = c0.x();
       if (c0.y() > fMaxExtent[1]) fMaxExtent[1] = c0.y();
       if (c0.z() > fMaxExtent[2]) fMaxExtent[2] = c0.z();
-      Vector3D<T> c1         = facet->fVertices[(ivert + 1) % NVERT];
-      Vector3D<T> sideVector = facet->fNormal.Cross(c1 - c0).Normalized();
+      Vector3D<T> c1                            = facet->fVertices[(ivert + 1) % NVERT];
+      Vector3D<T> sideVector                    = facet->fNormal.Cross(c1 - c0).Normalized();
       vecCore::Set(fSideVectors[ivert].x(), index, sideVector.x());
       vecCore::Set(fSideVectors[ivert].y(), index, sideVector.y());
       vecCore::Set(fSideVectors[ivert].z(), index, sideVector.z());
@@ -416,11 +420,11 @@ public:
     Bool_v moving_away = projdir_v > Real_v(0.);
     // Signed projected distances to facets
     Real_v projdist_v = DistPlanes(point);
-    Bool_v outside    = projdist_v > Real_v(-kTolerance);
+    Bool_v outside    = projdist_v > Real_v(kTolerance);
     // If outside and mowing away any facet, no hit possible (convexity)
     if (!vecCore::MaskEmpty(outside && moving_away)) return false;
     // Facets that can be hit from inside
-    Bool_v from_inside = projdist_v < Real_v(kTolerance) && moving_away;
+    Bool_v from_inside = !outside && moving_away;
     // Facets that can be hit from outside
     Bool_v from_outside = outside && !moving_away;
     // Distances to all facets
@@ -466,7 +470,7 @@ public:
     }
 
     Vector3D<Real_v> safetyv_outbound = InfinityLength<Real_v>();
-    for (int ivert = 0; ivert < NVERT; ++ivert) {
+    for (size_t ivert = 0; ivert < NVERT; ++ivert) {
       safetyv_outbound[ivert] =
           DistanceToLineSegmentSquared2(fVertices[ivert], fVertices[(ivert + 1) % NVERT], point, !withinBound);
     }
