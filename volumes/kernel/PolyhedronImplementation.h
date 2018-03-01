@@ -391,7 +391,7 @@ Real_v PolyhedronImplementation<innerRadiiT, phiCutoutT>::DistanceToInZSegment(U
     distance = segment.outer.DistanceToIn<Real_v, false>(point, direction);
   else
     distance = unplaced.fOuterTslHelper[segmentIndex]->DistanceToIn(point, direction, invdirz, kInfLength);
-  done = distance < InfinityLength<Real_v>();
+  done       = distance < InfinityLength<Real_v>();
   if (vecCore::MaskFull(done)) return distance;
 
   // If the outer shell is not hit and the phi cutout sides are hit, this will
@@ -561,8 +561,8 @@ Precision PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarSafetyToZSegm
 
   // Otherwise check the outer shell
   // TODO: we need to check segment.outer.size() > 0
-  Precision safetySquaredOuter = InfinityLength<Precision>();
-  if (segment.outer.size() > 0) safetySquaredOuter= segment.outer.ScalarDistanceSquared(phiIndex, point);
+  Precision safetySquaredOuter                     = InfinityLength<Precision>();
+  if (segment.outer.size() > 0) safetySquaredOuter = segment.outer.ScalarDistanceSquared(phiIndex, point);
 
   // And finally the inner
   Precision safetySquaredInner = InfinityLength<Precision>();
@@ -797,9 +797,9 @@ Inside_t PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarInsideKernel(U
   // have identical Z. In this case, if the point is close within tolerance
   // to such section, the returned index has to be the first of the 2, so that
   // all navigation functions start by checking the degenerated segment.
-  int zIndex = FindZSegment<Precision>(unplaced, point[2]);
-  if (zIndex > (unplaced.fZSegments.size() - 1)) zIndex= unplaced.fZSegments.size() - 1;
-  if (zIndex < 0) zIndex = 0;
+  int zIndex                                            = FindZSegment<Precision>(unplaced, point[2]);
+  if (zIndex > (unplaced.fZSegments.size() - 1)) zIndex = unplaced.fZSegments.size() - 1;
+  if (zIndex < 0) zIndex                                = 0;
 
   ZSegment const &segment = unplaced.fZSegments[zIndex];
 
