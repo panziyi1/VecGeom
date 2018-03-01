@@ -969,7 +969,7 @@ Precision PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarDistanceToInK
       distance = DistanceToInZSegment<Precision>(unplaced, zIndex, point, direction);
       // No segment further away can be at a shorter distance to the point, so
       // if a valid distance is found, only endcaps remain to be investigated
-      if (distance >= 0 && distance < InfinityLength<Precision>()) break;
+      if (distance >= -kTolerance && distance < InfinityLength<Precision>()) break;
     }
   } else {
     // Going left
@@ -977,7 +977,7 @@ Precision PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarDistanceToInK
       distance = DistanceToInZSegment<Precision>(unplaced, zIndex, point, direction);
       // No segment further away can be at a shorter distance to the point, so
       // if a valid distance is found, only endcaps remain to be investigated
-      if (distance >= 0 && distance < InfinityLength<Precision>()) break;
+      if (distance >= -kTolerance && distance < InfinityLength<Precision>()) break;
     }
   }
 

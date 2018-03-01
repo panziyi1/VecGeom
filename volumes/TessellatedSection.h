@@ -218,14 +218,13 @@ public:
     return true;
   }
 
-  template <bool skipZ = true, bool sameZ = false>
+  template <bool skipZ = true>
   VECCORE_ATT_HOST_DEVICE
   T DistanceToIn(Vector3D<T> const &point, Vector3D<T> const &direction, T invdirz, T stepmax) const
   {
     // Compute distance to segment from outside point.
-    if (sameZ) {
+    if (fSameZ) {
       // All facets are on the plane at Z = fZmin = fZmax
-      assert(fSameZ);
       // Distance to plane
       T pz = point.z() - fZmin;
       // If wrong direction or opposite side, no hit
@@ -284,6 +283,15 @@ public:
   {
     // Compute distance to segment from point inside, returning also the crossed
     // facet.
+    if (fSameZ) {
+      // All facets are on the plane at Z = fZmin = fZmax
+      // Distance to plane
+      T pz = point.z() - fZmin;
+      // If wrong direction or opposite side, no hit
+      if (fUpNorm * direction.z() < 0 || pz * fUpNorm > kTolerance) return InfinityLength<T>();
+      T distance = pz * invdirz * fUpNorm;
+      return distance;
+    }
     T dz                = 0.5 * (fZmax - fZmin);
     T pz                = point.z() - 0.5 * (fZmax + fZmin);
     T dmax              = (vecCore::math::CopySign(dz, invdirz) - pz) * invdirz;
