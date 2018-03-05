@@ -1134,7 +1134,7 @@ Precision PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarDistanceToOut
     for (; zIndex < zMax; ++zIndex) {
       distance = DistanceToOutZSegment<Precision>(unplaced, zIndex, unplaced.fZPlanes[zIndex],
                                                   unplaced.fZPlanes[zIndex + 1], point, direction);
-      if (distance >= 0 && distance < InfinityLength<Precision>()) break;
+      if (distance >= -kTolerance && distance < InfinityLength<Precision>()) break;
       if (unplaced.fZPlanes[zIndex] - point[2] > distance) break;
     }
   } else {

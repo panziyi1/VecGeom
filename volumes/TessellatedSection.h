@@ -229,8 +229,15 @@ public:
       T pz = point.z() - fZmin;
       // If wrong direction or opposite side, no hit
       if (fUpNorm * direction.z() > 0 || pz * fUpNorm < -kTolerance) return InfinityLength<T>();
-      T distance = -pz * invdirz * fUpNorm;
-      return distance;
+      T distance = - pz * invdirz;
+      // Still need to check that the propagated point is in the section
+      Vector3D<T> propagated(point + distance * direction);
+      const int nclusters = fClusters.size();
+      for (int i = 0; i < nclusters; ++i) {
+        if (fClusters[i]->Contains(propagated))
+          return distance;
+      }
+      return InfinityLength<T>();
     }
 
     T dz = 0.5 * (fZmax - fZmin);
@@ -289,8 +296,15 @@ public:
       T pz = point.z() - fZmin;
       // If wrong direction or opposite side, no hit
       if (fUpNorm * direction.z() < 0 || pz * fUpNorm > kTolerance) return InfinityLength<T>();
-      T distance = pz * invdirz * fUpNorm;
-      return distance;
+      T distance = -pz * invdirz;
+      // Still need to check that the propagated point is in the section
+      Vector3D<T> propagated(point + distance * direction);
+      const int nclusters = fClusters.size();
+      for (int i = 0; i < nclusters; ++i) {
+        if (fClusters[i]->Contains(propagated))
+          return distance;
+      }
+      return InfinityLength<T>();
     }
     T dz                = 0.5 * (fZmax - fZmin);
     T pz                = point.z() - 0.5 * (fZmax + fZmin);

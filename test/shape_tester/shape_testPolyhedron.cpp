@@ -47,9 +47,6 @@ int main(int argc, char *argv[])
 
   if (!solid) return 0;
 
-  Vector3D<double> point(-0.1063504195417308284543623, -0.8436476540327260131846288, 1);
-  Vector3D<double> direction(-0.1244749595966148231207526, -0.9919454212875592480358478, -0.02345774115441807625148662);
-  double dist = solid->DistanceToIn(point, direction);
   ShapeTester<vecgeom::VPlacedVolume> tester;
   tester.setDebug(debug);
   tester.setStat(stat);

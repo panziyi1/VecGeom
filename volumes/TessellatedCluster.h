@@ -183,6 +183,20 @@ public:
   }
 
   // === Navigation functionality === //
+
+  /** @brief Check if a scalar point is inside any of the cluster tiles */
+  VECGEOM_FORCE_INLINE
+  VECCORE_ATT_HOST_DEVICE
+  bool Contains(Vector3D<T> point)
+  {
+    using Bool_v = vecCore::Mask<Real_v>;
+
+    Bool_v inside;
+    // Implicit conversion of point to Real_v
+    InsideCluster(point, inside);
+    return (!vecCore::MaskEmpty(inside));
+  }
+
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
   void InsideCluster(Vector3D<Real_v> const &point, typename vecCore::Mask<Real_v> &inside) const
