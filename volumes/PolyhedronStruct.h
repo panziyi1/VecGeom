@@ -172,8 +172,8 @@ struct PolyhedronStruct {
     if (vecCore::math::Abs(zb - znew[(i0 + inc) % verticesCount1]) < kTolerance) i0 = (i0 + inc) % verticesCount1;
 
     if (phiDelta > kTwoPi) phiDelta = kTwoPi;
-    Precision sidePhi         = phiDelta / sideCount;
-    Precision cosHalfDeltaPhi = cos(0.5 * sidePhi);
+    Precision sidePhi               = phiDelta / sideCount;
+    Precision cosHalfDeltaPhi       = cos(0.5 * sidePhi);
 
     // We count vertices starting from imin, making sure we move counter-clockwise
 
@@ -249,8 +249,8 @@ struct PolyhedronStruct {
     for (int i = 0; i < zPlaneCount; i++) {
       fConvexityPossible &= (rMin[i] == 0.);
       fEqualRmax &= (startRmax == rMax[i]);
-      fSameZ[i] = false;
-      if (i > 0 && i < zPlaneCount - 1 && fZPlanes[i] == fZPlanes[i + 1]) fSameZ[i]= true;
+      fSameZ[i]                                                                     = false;
+      if (i > 0 && i < zPlaneCount - 1 && fZPlanes[i] == fZPlanes[i + 1]) fSameZ[i] = true;
     }
     fContinuousInSlope = CheckContinuityInSlope(rMax, zPlanes, zPlaneCount);
 
@@ -284,9 +284,9 @@ struct PolyhedronStruct {
 
     // Compute the cylindrical coordinate phi along which the corners are placed
     assert(phiDelta > 0);
-    phiStart = NormalizeAngle<kScalar>(phiStart);
-    if (phiDelta > kTwoPi) phiDelta= kTwoPi;
-    Precision sidePhi = phiDelta / sideCount;
+    phiStart                        = NormalizeAngle<kScalar>(phiStart);
+    if (phiDelta > kTwoPi) phiDelta = kTwoPi;
+    Precision sidePhi               = phiDelta / sideCount;
     vecgeom::unique_ptr<Precision[]> vertixPhi(new Precision[sideCount + 1]);
     for (int i = 0, iMax = sideCount + 1; i < iMax; ++i) {
       vertixPhi[i]                     = NormalizeAngle<kScalar>(phiStart + i * sidePhi);
