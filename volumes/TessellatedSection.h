@@ -123,7 +123,7 @@ public:
     assert(zmax >= zmin && "zmin is greater than zmax");
     if (fDz < kTolerance) {
       fSameZ = true;
-      fDz = 0.;
+      fDz    = 0.;
     }
     fMinExtent.Set(InfinityLength<T>());
     fMaxExtent.Set(-InfinityLength<T>());
@@ -287,7 +287,7 @@ public:
     // Compute distance to segment from point inside, returning also the crossed
     // facet.
     if (fSameZ) {
-      // All facets are on the plane at z = fZ 
+      // All facets are on the plane at z = fZ
       // Distance to plane
       T pz = point.z() - fZ;
       // If wrong direction or opposite side, no hit
