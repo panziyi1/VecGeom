@@ -29,8 +29,8 @@ class TessellatedSection /* : public TessellatedSectionBase<T> */ {
 
 private:
   size_t fNfacets = 0;    ///< Number of triangle facets on the section
-  T fZmin         = 0;    ///< Minimum Z
-  T fZmax         = 0;    ///< Maximum Z
+  T fZ            = 0;    ///<< Z position of the section
+  T fDz           = 0;    ///< Half-length in Z
   T fCubicVolume  = 0;    ///< Cubic volume
   T fSurfaceArea  = 0;    ///< Surface area
   Vector3D<T> fMinExtent; ///< Minimum extent
@@ -64,14 +64,14 @@ protected:
                  Min(facet->fVertices[2].y(), facet->fVertices[3].y()));
     fMinExtent[0] = Min(fMinExtent[0], xmin);
     fMinExtent[1] = Min(fMinExtent[1], ymin);
-    fMinExtent[2] = fZmin;
+    fMinExtent[2] = fZ - fDz;
     T xmax        = Max(Max(facet->fVertices[0].x(), facet->fVertices[1].x()),
                  Max(facet->fVertices[2].x(), facet->fVertices[3].x()));
     T ymax = Max(Min(facet->fVertices[0].y(), facet->fVertices[1].y()),
                  Max(facet->fVertices[2].y(), facet->fVertices[3].y()));
     fMaxExtent[0] = Max(fMaxExtent[0], xmax);
     fMaxExtent[1] = Max(fMaxExtent[1], ymax);
-    fMaxExtent[2] = fZmax;
+    fMaxExtent[2] = fZ + fDz;
     // Check if we can create a Tessellated cluster
     size_t nfacets = fFacets.size();
     assert(nfacets <= fNfacets && "Cannot add extra facets to section");
@@ -118,12 +118,12 @@ protected:
 
 public:
   VECCORE_ATT_HOST_DEVICE
-  TessellatedSection(int nfacets, T zmin, T zmax) : fNfacets(nfacets), fZmin(zmin), fZmax(zmax)
+  TessellatedSection(int nfacets, T zmin, T zmax) : fNfacets(nfacets), fZ(0.5 * (zmin + zmax)), fDz(0.5 * (zmax - zmin))
   {
     assert(zmax >= zmin && "zmin is greater than zmax");
-    if ((zmax - zmin) < kTolerance) {
+    if (fDz < kTolerance) {
       fSameZ = true;
-      fZmax  = zmin;
+      fDz = 0.;
     }
     fMinExtent.Set(InfinityLength<T>());
     fMaxExtent.Set(-InfinityLength<T>());
@@ -224,9 +224,9 @@ public:
   {
     // Compute distance to segment from outside point.
     if (fSameZ) {
-      // All facets are on the plane at Z = fZmin = fZmax
+      // All facets are on the plane at fZ
       // Distance to plane
-      T pz = point.z() - fZmin;
+      T pz = point.z() - fZ;
       // If wrong direction or opposite side, no hit
       if (fUpNorm * direction.z() > 0 || pz * fUpNorm < -kTolerance) return InfinityLength<T>();
       T distance = -pz * invdirz;
@@ -239,12 +239,11 @@ public:
       return InfinityLength<T>();
     }
 
-    T dz = 0.5 * (fZmax - fZmin);
-    T pz = point.z() - 0.5 * (fZmax + fZmin);
+    T pz = point.z() - fZ;
     if (!skipZ) {
-      if ((vecCore::math::Abs(pz) - dz) > -kTolerance && pz * direction.z() >= 0) return InfinityLength<T>();
+      if ((vecCore::math::Abs(pz) - fDz) > -kTolerance && pz * direction.z() >= 0) return InfinityLength<T>();
     }
-    const T ddz   = vecCore::math::CopySign(dz, invdirz);
+    const T ddz   = vecCore::math::CopySign(fDz, invdirz);
     const T distz = -(pz + ddz) * invdirz;
     T distance    = distz;
     T limit       = vecCore::math::Min(-(pz - ddz) * invdirz, stepmax);
@@ -268,12 +267,11 @@ public:
   {
     // Compute distance to segment from point inside, returning also the crossed
     // facet.
-    T dz         = 0.5 * (fZmax - fZmin);
-    T pz         = point.z() - 0.5 * (fZmax + fZmin);
-    const T safz = vecCore::math::Abs(pz) - dz;
+    T pz         = point.z() - fZ;
+    const T safz = vecCore::math::Abs(pz) - fDz;
     if (safz > kTolerance) return -kTolerance;
     const T vz = direction.z();
-    T distance = (vecCore::math::CopySign(dz, vz) - pz) / NonZero(vz);
+    T distance = (vecCore::math::CopySign(fDz, vz) - pz) / NonZero(vz);
     T dist;
     const int nclusters = fClusters.size();
     for (int i = 0; i < nclusters; ++i) {
@@ -283,16 +281,15 @@ public:
     return distance;
   }
 
-  template <bool skipZ = true>
   VECCORE_ATT_HOST_DEVICE
   T DistanceToOutRange(Vector3D<T> const &point, Vector3D<T> const &direction, T invdirz) const
   {
     // Compute distance to segment from point inside, returning also the crossed
     // facet.
     if (fSameZ) {
-      // All facets are on the plane at Z = fZmin = fZmax
+      // All facets are on the plane at z = fZ 
       // Distance to plane
-      T pz = point.z() - fZmin;
+      T pz = point.z() - fZ;
       // If wrong direction or opposite side, no hit
       if (fUpNorm * direction.z() < 0 || pz * fUpNorm > kTolerance) return InfinityLength<T>();
       T distance = -pz * invdirz;
@@ -304,10 +301,9 @@ public:
       }
       return InfinityLength<T>();
     }
-    T dz                = 0.5 * (fZmax - fZmin);
-    T pz                = point.z() - 0.5 * (fZmax + fZmin);
-    T dmax              = (vecCore::math::CopySign(dz, invdirz) - pz) * invdirz;
-    T dmin              = (-vecCore::math::CopySign(dz, invdirz) - pz) * invdirz;
+    T pz                = point.z() - fZ;
+    T dmax              = (vecCore::math::CopySign(fDz, invdirz) - pz) * invdirz;
+    T dmin              = (-vecCore::math::CopySign(fDz, invdirz) - pz) * invdirz;
     T dtoin             = dmin;                // will be reduced Max for all clusters
     T dtoout            = InfinityLength<T>(); // will be reduced Min for all clusters
     const int nclusters = fClusters.size();
@@ -345,7 +341,7 @@ public:
   T SafetyToIn(Vector3D<T> const &point) const
   {
     // Compute approximate safety for the convex case
-    T safety            = vecCore::math::Max(fZmin - point.z(), point.z() - fZmax);
+    T safety            = vecCore::math::Max(fZ - fDz - point.z(), point.z() - fZ - fDz);
     const int nclusters = fClusters.size();
     for (int i = 0; i < nclusters; ++i) {
       const Real_v safcl       = fClusters[i]->DistPlanes(point);
@@ -378,7 +374,7 @@ public:
   T SafetyToOut(Vector3D<T> const &point) const
   {
     // Compute approximate safety for the convex case
-    T safety            = vecCore::math::Max(fZmin - point.z(), point.z() - fZmax);
+    T safety            = vecCore::math::Max(fZ - fDz - point.z(), point.z() - fZ - fDz);
     const int nclusters = fClusters.size();
     for (int i = 0; i < nclusters; ++i) {
       const Real_v safcl       = fClusters[i]->DistPlanes(point);
