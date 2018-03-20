@@ -9,6 +9,7 @@
 #define VECGEOM_VOLUMES_GENTRAPSTRUCT_H_
 #include "base/Global.h"
 #include "volumes/SecondOrderSurfaceShell.h"
+#include "volumes/TessellatedSection.h"
 
 namespace vecgeom {
 
@@ -48,6 +49,7 @@ struct GenTrapStruct {
   bool fDegenerated[4]; /** Flags for each top-bottom edge marking that this is degenerated */
 
   SecondOrderSurfaceShell<4> fSurfaceShell; /** Utility class for twisted surface algorithms */
+  TessellatedSection<T> *fTslHelper = nullptr;
 
   VECCORE_ATT_HOST_DEVICE
   GenTrapStruct()
@@ -164,6 +166,15 @@ struct GenTrapStruct {
     }
 
     fIsTwisted = ComputeIsTwisted();
+
+    // Create the tessellated helper if  the faces are planar
+    if (IsPlanar()) {
+      fTslHelper = new TessellatedSection<T>(4, -fDz, fDz);
+      fTslHelper->AddQuadrilateralFacet(fVertices[0], fVertices[4], fVertices[5], fVertices[1]);
+      fTslHelper->AddQuadrilateralFacet(fVertices[1], fVertices[5], fVertices[6], fVertices[2]);
+      fTslHelper->AddQuadrilateralFacet(fVertices[2], fVertices[6], fVertices[7], fVertices[3]);
+      fTslHelper->AddQuadrilateralFacet(fVertices[3], fVertices[7], fVertices[4], fVertices[0]);
+    }
     ComputeBoundingBox();
     return true;
   }
