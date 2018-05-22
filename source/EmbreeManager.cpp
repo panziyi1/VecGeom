@@ -11,6 +11,7 @@
 #include "management/GeoManager.h"
 #include "management/ABBoxManager.h"
 #include "volumes/PlacedVolume.h"
+#include "base/Stopwatch.h"
 
 #include <embree3/rtcore.h>
 
@@ -18,6 +19,17 @@
 
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
+
+ double g_step;
+ LogicalVolume const *g_lvol;
+ VPlacedVolume const *g_pvol;
+ VPlacedVolume const *g_lastexited;
+ Vector3D<double> const* g_pos;
+ Vector3D<double> const* g_dir;
+ Vector3D<float> const* g_normals;
+ int g_count;
+ bool* g_geomIDs;
+ EmbreeManager::BoxIdDistancePair_t* g_hitlist;
 
 void EmbreeManager::InitStructure(LogicalVolume const *lvol)
 {
@@ -47,6 +59,8 @@ void EmbreeManager::BuildStructure(LogicalVolume const *vol)
 EmbreeManager::EmbreeAccelerationStructure *EmbreeManager::BuildStructureFromBoundingBoxes(
     ABBoxManager::ABBoxContainer_t abboxes, size_t numberofdaughters) const
 {
+  Stopwatch timer;
+  timer.Start();
   // init (device) + scene
   // make the scene
   auto device = rtcNewDevice("VecGeomDevice"); // --> could be a global device??
@@ -70,6 +84,9 @@ EmbreeManager::EmbreeAccelerationStructure *EmbreeManager::BuildStructureFromBou
 
   // commit the scene
   rtcCommitScene(scene);
+
+  auto elasped = timer.Stop();
+  std::cout << "EMBREE SETUP TOOK " << elasped << "s \n";
   return structure;
 }
 
@@ -110,7 +127,6 @@ void EmbreeManager::AddBoxGeometryToScene(EmbreeAccelerationStructure& structure
   rtcSetGeometryBuildQuality(geom_0, RTC_BUILD_QUALITY_HIGH);
   rtcSetGeometryTimeStepCount(geom_0, 1);
   meshID = rtcAttachGeometry(embreeScene, geom_0);
-  std::cout << "meshID " << meshID << "\n";
 
   // to get vertices in the frame of the scene:
   const auto lower = transf.InverseTransform(lower_local);

@@ -26,16 +26,16 @@
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-double g_step;
-LogicalVolume const *g_lvol;
-VPlacedVolume const *g_pvol;
-VPlacedVolume const *g_lastexited;
-Vector3D<double> const* g_pos;
-Vector3D<double> const* g_dir;
-Vector3D<float> const* g_normals;
-int g_count;
-bool* g_geomIDs;
-EmbreeManager::BoxIdDistancePair_t* g_hitlist;
+extern double g_step;
+extern LogicalVolume const *g_lvol;
+extern VPlacedVolume const *g_pvol;
+extern VPlacedVolume const *g_lastexited;
+extern Vector3D<double> const* g_pos;
+extern Vector3D<double> const* g_dir;
+extern Vector3D<float> const* g_normals;
+extern int g_count;
+extern bool* g_geomIDs;
+extern EmbreeManager::BoxIdDistancePair_t* g_hitlist;
 
 // A navigator using Intel Embree as the underlying acceleration library to
 // exclude hit targets quickly
