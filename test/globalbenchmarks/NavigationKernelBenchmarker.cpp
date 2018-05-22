@@ -19,6 +19,7 @@
 #include "navigation/HybridLevelLocator.h"
 #include "navigation/HybridNavigator2.h"
 #include "management/HybridManager2.h"
+#include "navigation/EmbreeNavigator.h"
 //#define BENCH_GENERATED_NAVIGATOR
 #ifdef BENCH_GENERATED_NAVIGATOR
 #include "navigation/GeneratedNavigator.h"
@@ -47,7 +48,7 @@
 #undef NDEBUG
 #include <cassert>
 
-//#define CALLGRIND_ENABLED
+#define CALLGRIND_ENABLED
 #ifdef CALLGRIND_ENABLED
 #include <valgrind/callgrind.h>
 #endif
@@ -79,6 +80,10 @@ void InitNavigators()
     }
     if (lvol.second->GetDaughtersp()->size() >= 5) {
       lvol.second->SetNavigator(SimpleABBoxNavigator<>::Instance());
+    }
+    if (lvol.second->GetDaughtersp()->size() >= 10) {
+      lvol.second->SetNavigator(HybridNavigator<>::Instance());
+      HybridManager2::Instance().InitStructure((lvol.second));
     }
     if (lvol.second->GetDaughtersp()->size() >= 10) {
       lvol.second->SetNavigator(HybridNavigator<>::Instance());
@@ -558,12 +563,12 @@ void benchDifferentNavigators(SOA3D<Precision> const &points, SOA3D<Precision> c
     RUNBENCH((benchNavigator<WithSafety>(gSpecializedNavigator, points, dirs, pool, outpool)));
   }
   std::cerr << "##\n";
-  RUNBENCH((benchNavigator<WithSafety>(NewSimpleNavigator<false>::Instance(), points, dirs, pool, outpool)));
+  //RUNBENCH((benchNavigator<WithSafety>(NewSimpleNavigator<false>::Instance(), points, dirs, pool, outpool)));
   std::stringstream str;
   str << outfilenamebase << "_simple.bin";
   outpool.ToFile(str.str());
   std::cerr << "##\n";
-  RUNBENCH((benchNavigator<WithSafety>(NewSimpleNavigator<true>::Instance(), points, dirs, pool, outpool)));
+  //RUNBENCH((benchNavigator<WithSafety>(NewSimpleNavigator<true>::Instance(), points, dirs, pool, outpool)));
   std::cerr << "##\n";
 #ifdef BENCH_GENERATED_NAVIGATOR
   RUNBENCH((benchNavigator<GeneratedNavigator, WithSafety>(points, dirs, pool, outpool)));
@@ -598,6 +603,19 @@ void benchDifferentNavigators(SOA3D<Precision> const &points, SOA3D<Precision> c
     RUNBENCH((benchVectorNavigator<HybridNavigator<true>, WithSafety>(points, dirs, pool, outpool)));
     std::cerr << "##\n";
   }
+
+  // Embree
+  RUNBENCH((benchNavigator<WithSafety>(EmbreeNavigator<false>::Instance(), points, dirs, pool, outpool)));
+  std::cerr << "##\n";
+  RUNBENCH((benchNavigator<WithSafety>(EmbreeNavigator<true>::Instance(), points, dirs, pool, outpool)));
+  std::cerr << "##\n";
+  if (gBenchVecInterface) {
+    RUNBENCH((benchVectorNavigator<EmbreeNavigator<false>, WithSafety>(points, dirs, pool, outpool)));
+    std::cerr << "##\n";
+    RUNBENCH((benchVectorNavigator<EmbreeNavigator<true>, WithSafety>(points, dirs, pool, outpool)));
+    std::cerr << "##\n";
+  }
+
   RUNBENCH(benchmarkOldNavigator(points, dirs, pool));
   std::cerr << "##\n";
 #ifdef VECGEOM_ROOT
@@ -607,6 +625,7 @@ void benchDifferentNavigators(SOA3D<Precision> const &points, SOA3D<Precision> c
 #endif // VECGEOM_GEANT4
 #endif
 
+  /*
   std::cerr << "## -- TESTING WITHOUT RELOC\n";
   // testing interfaces without relocation
   RUNBENCH((benchNavigatorNoReloc<WithSafety>(NewSimpleNavigator<false>::Instance(), points, dirs, pool, outpool)));
@@ -616,8 +635,9 @@ void benchDifferentNavigators(SOA3D<Precision> const &points, SOA3D<Precision> c
   RUNBENCH((benchNavigatorNoReloc<WithSafety>(SimpleABBoxNavigator<false>::Instance(), points, dirs, pool, outpool)));
   // the vector navigator
   RUNBENCH((benchVectorNavigatorNoReloc<SimpleABBoxNavigator<false>, WithSafety>(points, dirs, pool, outpool)));
+  */
 #ifdef VECGEOM_ROOT
-  benchmarkROOTNavigator<true, false>(points, dirs);
+ // benchmarkROOTNavigator<true, false>(points, dirs);
 #endif
   if (gAnalyseOutStates) {
     analyseOutStates(pool, outpool);
@@ -649,13 +669,14 @@ int main(int argc, char *argv[])
   std::string volname(argv[2]);
   auto lvol = GeoManager::Instance().FindLogicalVolume(volname.c_str());
   HybridManager2::Instance().InitStructure(lvol);
+  EmbreeManager::Instance().InitStructure(lvol);
 
   // some output on volume
   std::cerr << "NavigationKernelBenchmarker run on " << argv[2] << " having " << lvol->GetDaughters().size()
             << " daughters \n";
 
   bool usecached = false;
-  int npoints    = 500000;
+  int npoints    = 5000;
   for (auto i = 3; i < argc; i++) {
     if (!strcmp(argv[i], "--usecache")) usecached = true;
     // benchmark vector interface?

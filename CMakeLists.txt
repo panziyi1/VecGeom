@@ -588,6 +588,11 @@ if (ROOT)
 
 endif(ROOT)
 
+# Intel Embree
+find_package(embree 3.2 REQUIRED)
+include_directories(${EMBREE_INCLUDE_DIRS})
+set(VECGEOM_LIBRARIES_EXTERNAL ${VECGEOM_LIBRARIES_EXTERNAL} ${EMBREE_LIBRARIES})
+
 if (Geant4)
 
   find_package(Geant4 REQUIRED)
@@ -694,6 +699,7 @@ set(VECGEOM_SRCS
   source/ABBoxManager.cpp
   source/HybridManager2.cpp
   source/ABBoxNavigator.cpp
+  source/EmbreeManager.cpp
 
   source/MessageLogger.cpp
 
@@ -937,6 +943,7 @@ set(TEST_EXECUTABLES_ROOT
   ${CMAKE_SOURCE_DIR}/test/root/TestExportToROOT.cpp
   ${CMAKE_SOURCE_DIR}/test/root/ExitingOrEntering.cpp
   ${CMAKE_SOURCE_DIR}/test/core/BoxBoxIntersectionTest.cpp
+  ${CMAKE_SOURCE_DIR}/test/core/EmbreeManagerTest.cpp
   ${CMAKE_SOURCE_DIR}/test/core/SplittedABBox.cpp
   ${CMAKE_SOURCE_DIR}/test/root/AssemblyExample.cpp
   ${CMAKE_SOURCE_DIR}/test/core/TestRegions.cpp
