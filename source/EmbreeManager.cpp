@@ -77,7 +77,7 @@ EmbreeManager::EmbreeAccelerationStructure *EmbreeManager::BuildStructureFromBou
   auto structure = new EmbreeManager::EmbreeAccelerationStructure();
   structure->fDevice = device;
   structure->fScene = scene;
-  structure->fNormals = new Vector3D<float>[numberofdaughters * 12];
+  structure->fNormals = new Vector3D<float>[numberofdaughters * 6];
   structure->fNumberObjects = numberofdaughters;
 
   for (int d = 0; d < numberofdaughters; ++d) {
@@ -111,7 +111,7 @@ EmbreeManager::EmbreeAccelerationStructure *EmbreeManager::BuildStructureFromBou
   structure->fDevice = device;
   structure->fScene = scene;
 
-  structure->fNormals = new Vector3D<float>[numberofdaughters * 12];
+  structure->fNormals = new Vector3D<float>[numberofdaughters * 6];
   structure->fNumberObjects = numberofdaughters;
 
   for (int d = 0; d < numberofdaughters; ++d) {
@@ -156,6 +156,7 @@ void EmbreeManager::AddArbitraryBBoxToScene(EmbreeAccelerationStructure &structu
   }
 }
 
+#ifdef USETRIANGLES
 void EmbreeManager::AddBoxGeometryToScene(EmbreeAccelerationStructure& structure,
                                           Vector3D<Precision> const &lower_local,
                                           Vector3D<Precision> const &upper_local, Transformation3D const &transf) const
@@ -330,6 +331,175 @@ void EmbreeManager::AddBoxGeometryToScene(EmbreeAccelerationStructure& structure
   rtcCommitGeometry(geom_0);
   rtcReleaseGeometry(geom_0);
 }
+#endif
+
+#define USEQUADS 1
+
+#ifdef USEQUADS
+void EmbreeManager::AddBoxGeometryToScene(EmbreeAccelerationStructure& structure,
+                                          Vector3D<Precision> const &lower_local,
+                                          Vector3D<Precision> const &upper_local, Transformation3D const &transf) const
+{
+  auto embreeDevice = structure.fDevice;
+  auto embreeScene = structure.fScene;
+
+
+  //     6 --- 7
+  //    /|    /|
+  //  2--4--3  5             y      z
+  //  | /   | /              |     /
+  //  0 --- 1       ---> x   |    /
+
+  // lower_local is 0
+  // upper_local is 7
+  // the normals are supposed to face outwards!
+
+  // calculate the individual corners
+  const auto dx = Vector3D<Precision>(upper_local.x() - lower_local.x(), 0, 0);
+  const auto dy = Vector3D<Precision>(0, upper_local.y() - lower_local.y(), 0);
+  const auto dz = Vector3D<Precision>(0, 0, upper_local.z() - lower_local.z());
+
+  const auto c0 = transf.InverseTransform(lower_local);
+  const auto c1 = transf.InverseTransform(lower_local + dx);
+  const auto c2 = transf.InverseTransform(lower_local + dy);
+  const auto c3 = transf.InverseTransform(lower_local + dx + dy);
+  const auto c4 = transf.InverseTransform(lower_local + dz);
+  const auto c5 = transf.InverseTransform(lower_local + dz + dx);
+  const auto c6 = transf.InverseTransform(lower_local + dz + dy);
+  const auto c7 = transf.InverseTransform(upper_local);
+
+  /* create a triangulated cube with 12 triangles and 8 vertices */
+  unsigned int meshID;
+  RTCGeometry geom_0 = rtcNewGeometry(embreeDevice, RTC_GEOMETRY_TYPE_QUAD);
+  rtcSetGeometryBuildQuality(geom_0, RTC_BUILD_QUALITY_HIGH);
+  rtcSetGeometryTimeStepCount(geom_0, 1);
+  meshID = rtcAttachGeometry(embreeScene, geom_0);
+
+  // to get vertices in the frame of the scene:
+  const auto lower = transf.InverseTransform(lower_local);
+  const auto upper = transf.InverseTransform(upper_local);
+
+  struct Vertex {
+    float x, y, z, r;
+  };
+  struct Triangle {
+    int v0, v1, v2;
+  };
+  struct Quad {
+    int v0, v1, v2, v3;
+  };
+
+  //
+  /* set vertices and vertex colors */
+  Vertex *vertices =
+      (Vertex *)rtcSetNewGeometryBuffer(geom_0, RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, 4 * sizeof(float), 8);
+  vertices[0].x = c0.x();
+  vertices[0].y = c0.y();
+  vertices[0].z = c0.z();
+  vertices[1].x = c1.x();
+  vertices[1].y = c1.y();
+  vertices[1].z = c1.z();
+  vertices[2].x = c2.x();
+  vertices[2].y = c2.y();
+  vertices[2].z = c2.z();
+  vertices[3].x = c3.x();
+  vertices[3].y = c3.y();
+  vertices[3].z = c3.z();
+  vertices[4].x = c4.x();
+  vertices[4].y = c4.y();
+  vertices[4].z = c4.z();
+  vertices[5].x = c5.x();
+  vertices[5].y = c5.y();
+  vertices[5].z = c5.z();
+  vertices[6].x = c6.x();
+  vertices[6].y = c6.y();
+  vertices[6].z = c6.z();
+  vertices[7].x = c7.x();
+  vertices[7].y = c7.y();
+  vertices[7].z = c7.z();
+
+  //  /* set triangles and face colors */
+  int tri = 0;
+  Quad *quads =
+      (Quad *)rtcSetNewGeometryBuffer(geom_0, RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT4, 4 * sizeof(int), 6);
+
+  // build up triangles by using indices to vertices
+
+  //     6 --- 7
+  //    /|    /|
+  //  2--4--3  5             y      z
+  //  | /   | /              |     /
+  //  0 --- 1       ---> x   |    /
+
+  // lower_local is 0
+  // upper_local is 7
+
+  // "front" side
+  quads[tri].v0 = 0;
+  quads[tri].v1 = 2;
+  quads[tri].v2 = 3;
+  quads[tri].v3 = 1;
+
+  tri++;
+  // "back" side
+  quads[tri].v0 = 5;
+  quads[tri].v1 = 7;
+  quads[tri].v2 = 6;
+  quads[tri].v3 = 4;
+
+  tri++;
+  // "left" side
+  quads[tri].v0 = 0;
+  quads[tri].v1 = 4;
+  quads[tri].v2 = 6;
+  quads[tri].v3 = 2;
+
+  tri++;
+  // "right" side
+  quads[tri].v0 = 1;
+  quads[tri].v1 = 3;
+  quads[tri].v2 = 7;
+  quads[tri].v3 = 5;
+
+  tri++;
+  // "top" side
+  quads[tri].v0 = 3;
+  quads[tri].v1 = 2;
+  quads[tri].v2 = 6;
+  quads[tri].v3 = 7;
+
+  tri++;
+  // "bottom" side
+  quads[tri].v0 = 0;
+  quads[tri].v1 = 1;
+  quads[tri].v2 = 5;
+  quads[tri].v3 = 4;
+
+  // calculate normals to detect on which side of triangle we are
+  auto calcNormal = [quads, vertices](int i) {
+    const auto &vertex0 = vertices[quads[i].v0];
+    Vector3D<float> p0(vertex0.x, vertex0.y, vertex0.z);
+    const auto &vertex1 = vertices[quads[i].v1];
+    Vector3D<float> p1(vertex1.x, vertex1.y, vertex1.z);
+    const auto &vertex2 = vertices[quads[i].v2];
+    Vector3D<float> p2(vertex2.x, vertex2.y, vertex2.z);
+    // the normal is (p1 - p0) x (p2 - p0);
+    Vector3D<float> n = (p1 - p0).Cross(p2 - p0).Normalized().FixZeroes();
+    return n;
+  };
+
+  // show all normals
+  std::cerr << "-----\n";
+  for (int i = 0; i < 6; ++i) {
+    std::cerr << "normal " << i << " " << calcNormal(i) << "\n";
+    structure.fNormals[meshID * 6 + i] = calcNormal(i);
+    assert(structure.fNormals[meshID*6 + i].Mag2() > 0.);
+  }
+
+  rtcCommitGeometry(geom_0);
+  rtcReleaseGeometry(geom_0);
+}
+#endif
 
 //void EmbreeManager::AddBoxGeometryToScene(RTCDevice embreeDevice, RTCScene embreeScene, Vector3D<Precision> const &lower, Vector3D<Precision> const &upper) const
 //{

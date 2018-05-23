@@ -115,7 +115,7 @@ private:
       g_geomIDs->push_back(id);
 
       const auto ray      = (RTCRay *)args->ray;
-      const auto normalID = id * 12 + hit->primID;
+      const auto normalID = id * 6 + hit->primID;
       const auto normal   = g_normals[normalID];
       const bool backface = ray->dir_x * normal.x() + ray->dir_y * normal.y() + ray->dir_z * normal.z() > 0;
       float dist           = backface ? -1.f : ray->tfar;
