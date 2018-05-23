@@ -418,12 +418,12 @@ void EmbreeManager::AddBoxGeometryToScene(EmbreeAccelerationStructure& structure
   vertices[7].y = c7.y();
   vertices[7].z = c7.z();
 
-  //  /* set triangles and face colors */
+  //  /* set quads and face colors */
   int tri = 0;
   Quad *quads =
       (Quad *)rtcSetNewGeometryBuffer(geom_0, RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT4, 4 * sizeof(int), 6);
 
-  // build up triangles by using indices to vertices
+  // build up quads by using indices to vertices
 
   //     6 --- 7
   //    /|    /|
@@ -493,106 +493,13 @@ void EmbreeManager::AddBoxGeometryToScene(EmbreeAccelerationStructure& structure
   for (int i = 0; i < 6; ++i) {
     std::cerr << "normal " << i << " " << calcNormal(i) << "\n";
     structure.fNormals[meshID * 6 + i] = calcNormal(i);
-    assert(structure.fNormals[meshID*6 + i].Mag2() > 0.);
+    assert(structure.fNormals[meshID * 6 + i].Mag2() > 0.);
   }
 
   rtcCommitGeometry(geom_0);
   rtcReleaseGeometry(geom_0);
 }
 #endif
-
-//void EmbreeManager::AddBoxGeometryToScene(RTCDevice embreeDevice, RTCScene embreeScene, Vector3D<Precision> const &lower, Vector3D<Precision> const &upper) const
-//{
-//  // just convenience structs
-//  struct Vertex {
-//    float x, y, z, r;
-//  };
-//  struct Quad {
-//    int v0, v1, v2, v3;
-//  };
-//
-//  /* create a triangulated cube with 12 triangles and 8 vertices */
-//  unsigned int meshID;
-//  RTCGeometry geom_0 = rtcNewGeometry(embreeDevice, RTC_GEOMETRY_TYPE_QUAD);
-//  rtcSetGeometryBuildQuality(geom_0, RTC_BUILD_QUALITY_HIGH);
-//  rtcSetGeometryTimeStepCount(geom_0, 1);
-//  meshID = rtcAttachGeometry(embreeScene, geom_0);
-//
-//  //
-//  /* set vertices and vertex colors */
-//  Vertex *vertices =
-//      (Vertex *)rtcSetNewGeometryBuffer(geom_0, RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, 4 * sizeof(float), 8);
-//  vertices[0].x = lower.x();
-//  vertices[0].y = lower.y();
-//  vertices[0].z = lower.z();
-//  vertices[1].x = lower.x();
-//  vertices[1].y = lower.y();
-//  vertices[1].z = upper.z();
-//  vertices[2].x = lower.x();
-//  vertices[2].y = upper.y();
-//  vertices[2].z = lower.z();
-//  vertices[3].x = lower.x();
-//  vertices[3].y = upper.y();
-//  vertices[3].z = upper.z();
-//  vertices[4].x = upper.x();
-//  vertices[4].y = lower.y();
-//  vertices[4].z = lower.z();
-//  vertices[5].x = upper.x();
-//  vertices[5].y = lower.y();
-//  vertices[5].z = upper.z();
-//  vertices[6].x = upper.x();
-//  vertices[6].y = upper.y();
-//  vertices[6].z = lower.z();
-//  vertices[7].x = upper.x();
-//  vertices[7].y = upper.y();
-//  vertices[7].z = upper.z();
-//
-//  //  /* set triangles and face colors */
-//  int tri = 0;
-//  Quad *quads =
-//      (Quad *)rtcSetNewGeometryBuffer(geom_0, RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT4, 4 * sizeof(int), 6);
-//  // build up quads by using indices to vertices
-//  // left side
-//  quads[tri].v0 = 0;
-//  quads[tri].v1 = 2;
-//  quads[tri].v2 = 1;
-//  quads[tri].v3 = 3;
-//  tri++;
-//  // right side
-//  quads[tri].v0 = 4;
-//  quads[tri].v1 = 5;
-//  quads[tri].v2 = 6;
-//  quads[tri].v3 = 7;
-//  tri++;
-//  // bottom side
-//  quads[tri].v0 = 0;
-//  quads[tri].v1 = 1;
-//  quads[tri].v2 = 4;
-//  quads[tri].v3 = 5;
-//  tri++;
-//  // top side
-//  quads[tri].v0 = 2;
-//  quads[tri].v1 = 6;
-//  quads[tri].v2 = 3;
-//  quads[tri].v3 = 7;
-//  tri++;
-//  // front side
-//  quads[tri].v0 = 0;
-//  quads[tri].v1 = 4;
-//  quads[tri].v2 = 2;
-//  quads[tri].v3 = 6;
-//  tri++;
-//
-//  // back side
-//  quads[tri].v0 = 1;
-//  quads[tri].v1 = 3;
-//  quads[tri].v2 = 5;
-//  quads[tri].v3 = 7;
-//
-//  rtcCommitGeometry(geom_0);
-//}
-
-
 
 } // end inline namespace
 } // end global namespace
