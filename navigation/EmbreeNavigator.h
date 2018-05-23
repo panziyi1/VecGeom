@@ -34,7 +34,7 @@ extern Vector3D<double> const* g_pos;
 extern Vector3D<double> const* g_dir;
 extern Vector3D<float> const* g_normals;
 extern int g_count;
-extern bool* g_geomIDs;
+extern std::vector<int>* g_geomIDs;
 extern EmbreeManager::BoxIdDistancePair_t* g_hitlist;
 
 // A navigator using Intel Embree as the underlying acceleration library to
@@ -78,12 +78,7 @@ private:
                             EmbreeManager::BoxIdDistancePair_t *hitlist, float step) const
   {
     if (accstructure.fNumberObjects == 0) return false;
-    bool geom_seen[VECGEOM_MAXFACETS * sizeof(bool)];
-    for (int i = 0; i < accstructure.fNumberObjects; ++i) {
-      geom_seen[i] = false;
-    }
-
-    // we need to setup an Embree ray
+     // we need to setup an Embree ray
     RTCRayHit ray;
     ray.ray.flags = 0;
     ray.ray.org_x = point.x();
@@ -93,13 +88,12 @@ private:
     ray.ray.dir_y = dir.y();
     ray.ray.dir_z = dir.z();
     ray.ray.tnear = 0.f;
-    ray.ray.tfar  = 1E20; // step is the current limit
+    ray.ray.tfar  = 1E20f; // step is the current limit
 
     g_normals = accstructure.fNormals;
     g_hitlist = hitlist;
     g_count   = 0;
-    g_geomIDs = geom_seen;
-    // std::cerr << "----\n";
+    g_geomIDs->clear();// = geom_seen;
 
     RTCIntersectContext context;
     // we can't do a real capture ... so we do it via global variables
@@ -109,20 +103,26 @@ private:
       const auto hit = (RTCHit *)args->hit;
       int *hitvalid  = args->valid;
       const auto id  = hit->geomID;
-      if (g_geomIDs[id]) {
+      //if (g_geomIDs[id]) {
+      //  hitvalid[0] = 0;
+      //  return;
+      // }
+      //g_geomIDs[id] = true;
+      if (std::find(g_geomIDs->begin(), g_geomIDs->end(), id) != g_geomIDs->end()) {
         hitvalid[0] = 0;
         return;
       }
-      g_geomIDs[id] = true;
+      g_geomIDs->push_back(id);
+
       const auto ray      = (RTCRay *)args->ray;
       const auto normalID = id * 12 + hit->primID;
       const auto normal   = g_normals[normalID];
-      const bool backface = ray->dir_x * normal.x() + ray->dir_y * normal.y() + ray->dir_z * normal.z() < 0;
-      float dist           = backface ? -1. : ray->tfar;
+      const bool backface = ray->dir_x * normal.x() + ray->dir_y * normal.y() + ray->dir_z * normal.z() > 0;
+      float dist           = backface ? -1.f : ray->tfar;
 
-      // no need to sort twice !!!
+      // no need to sort twice !!! (in principle this thing is giving sorted inters??)
 
-      // std::cerr << "putting " << id << " " << dist << "\n";
+      // std::cerr << "putting " << id << " " << dist << " " << ray->tfar << "\n";
       g_hitlist[g_count++] = HybridManager2::BoxIdDistancePair_t(id, dist);
       // we strictly take all hits
       hitvalid[0] = 0;

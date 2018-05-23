@@ -21,6 +21,13 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 
 class VPlacedVolume;
 
+
+// enumeration used to decide how to build the structure
+enum class EmbreeBuildMode {
+  kAABBox, // from axis aligned bounding boxes
+  kBBox    // from arbitrary (rotated) bounding boxes
+};
+
 // A singleton class which manages Embree geometries/scenes/helper structure for voxelized navigation
 // The helper structure is whatever Intel Embree decides to use
 class EmbreeManager {
@@ -75,10 +82,14 @@ public:
   }
 
   // public method allowing to build Embree acceleration structure
-  // given a vector of aligned bounding boxes
+  // given a vector of aligned bounding boxes (without reference to a logical volume)
   EmbreeAccelerationStructure *BuildStructureFromBoundingBoxes(ABBoxContainer_t alignedboxes, size_t numberofboxes) const;
 
+  // build structure for a given logical volume
+  EmbreeAccelerationStructure *BuildStructureFromBoundingBoxes(LogicalVolume const *lvol) const;
+
   // we could add more such methods starting from other structures (non-aligned bounding boxes or any crude triangular hulls)
+  void SetBuildMode(EmbreeBuildMode mode) { fBuildMode = mode; }
 
 private:
   // private methods use
@@ -89,7 +100,9 @@ private:
                              Transformation3D const &transf = Transformation3D::kIdentity) const;
 
   // adds an arbitratry bounding box (not necessarily axis aligned) for pvol
-  void AddArbitraryBBoxToScene(EmbreeAccelerationStructure &, VPlacedVolume const *pvol) const;
+  void AddArbitraryBBoxToScene(EmbreeAccelerationStructure &, VPlacedVolume const *pvol, EmbreeBuildMode mode = EmbreeBuildMode::kBBox) const;
+
+  EmbreeBuildMode fBuildMode = EmbreeBuildMode::kBBox;
 
 }; // end class
 }

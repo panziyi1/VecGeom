@@ -12,10 +12,7 @@
 #include "management/ABBoxManager.h"
 #include "volumes/PlacedVolume.h"
 #include "base/Stopwatch.h"
-
 #include <embree3/rtcore.h>
-
-// TODO: study BACKFACE_CULLING OPTION
 
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
@@ -28,7 +25,8 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
  Vector3D<double> const* g_dir;
  Vector3D<float> const* g_normals;
  int g_count;
- bool* g_geomIDs;
+ //bool* g_geomIDs;
+ std::vector<int>* g_geomIDs = new std::vector<int>;
  EmbreeManager::BoxIdDistancePair_t* g_hitlist;
 
 void EmbreeManager::InitStructure(LogicalVolume const *lvol)
@@ -48,13 +46,54 @@ void EmbreeManager::BuildStructure(LogicalVolume const *vol)
   // for a logical volume we are referring to the functions that builds everything giving just bounding
   // boxes
   int nDaughters{0};
-  // get the boxes (and number of boxes), must be called before the BuildStructure
-  // function call since otherwise nDaughters is not guaranteed to be initialized
-  auto boxes                  = ABBoxManager::Instance().GetABBoxes(vol, nDaughters);
-  auto structure              = BuildStructureFromBoundingBoxes(boxes, nDaughters);
-  fStructureHolder[vol->id()] = structure;
-  assert((int)vol->GetDaughters().size() == nDaughters);
+
+  if (fBuildMode == EmbreeBuildMode::kAABBox) {
+    // get the boxes (and number of boxes), must be called before the BuildStructure
+    // function call since otherwise nDaughters is not guaranteed to be initialized
+    auto boxes                  = ABBoxManager::Instance().GetABBoxes(vol, nDaughters);
+    auto structure              = BuildStructureFromBoundingBoxes(boxes, nDaughters);
+    fStructureHolder[vol->id()] = structure;
+    assert((int)vol->GetDaughters().size() == nDaughters);
+  }
+  else if (fBuildMode == EmbreeBuildMode::kBBox) {
+	auto structure              = BuildStructureFromBoundingBoxes(vol);
+	fStructureHolder[vol->id()] = structure;
+  }
 }
+
+EmbreeManager::EmbreeAccelerationStructure *EmbreeManager::BuildStructureFromBoundingBoxes(
+   LogicalVolume const* lvol) const
+{
+  Stopwatch timer;
+  timer.Start();
+  auto device = rtcNewDevice("VecGeomDevice"); // --> could be a global device??
+  auto scene = rtcNewScene(device);
+  rtcSetSceneFlags(scene, RTC_SCENE_FLAG_CONTEXT_FILTER_FUNCTION);
+  rtcSetSceneBuildQuality(scene, RTC_BUILD_QUALITY_HIGH);
+
+  const auto daughters = lvol->GetDaughtersp();
+  const auto numberofdaughters = daughters->size();
+
+  auto structure = new EmbreeManager::EmbreeAccelerationStructure();
+  structure->fDevice = device;
+  structure->fScene = scene;
+  structure->fNormals = new Vector3D<float>[numberofdaughters * 12];
+  structure->fNumberObjects = numberofdaughters;
+
+  for (int d = 0; d < numberofdaughters; ++d) {
+    const auto pvol = daughters->operator [](d);
+    // add each box as different geometry to the scene (will be able to obtain the geometryID and hence the object id)
+    AddArbitraryBBoxToScene(*structure, pvol, fBuildMode);
+  }
+
+  // commit the scene
+  rtcCommitScene(scene);
+
+  auto elapsed = timer.Stop();
+  std::cout << "EMBREE SETUP TOOK " << elapsed << "s \n";
+  return structure;
+}
+
 
 EmbreeManager::EmbreeAccelerationStructure *EmbreeManager::BuildStructureFromBoundingBoxes(
     ABBoxManager::ABBoxContainer_t abboxes, size_t numberofdaughters) const
@@ -85,8 +124,8 @@ EmbreeManager::EmbreeAccelerationStructure *EmbreeManager::BuildStructureFromBou
   // commit the scene
   rtcCommitScene(scene);
 
-  auto elasped = timer.Stop();
-  std::cout << "EMBREE SETUP TOOK " << elasped << "s \n";
+  auto elapsed = timer.Stop();
+  std::cout << "EMBREE SETUP TOOK " << elapsed << "s \n";
   return structure;
 }
 
@@ -97,7 +136,8 @@ void EmbreeManager::RemoveStructure(LogicalVolume const *lvol)
 }
 
 // it does not have to be a box? could by any polygonal hull
-void EmbreeManager::AddArbitraryBBoxToScene(EmbreeAccelerationStructure& structure, VPlacedVolume const *pvol) const
+void EmbreeManager::AddArbitraryBBoxToScene(EmbreeAccelerationStructure &structure, VPlacedVolume const *pvol,
+                                            EmbreeBuildMode mode) const
 {
   if (!pvol) {
     return;
@@ -109,10 +149,12 @@ void EmbreeManager::AddArbitraryBBoxToScene(EmbreeAccelerationStructure& structu
   Vector3D<double> lower;
   Vector3D<double> upper;
   unplaced->Extent(lower, upper);
-
-  AddBoxGeometryToScene(structure, lower, upper, *transf);
+  if (mode == EmbreeBuildMode::kAABBox) {
+    AddBoxGeometryToScene(structure, lower, upper);
+  } else {
+    AddBoxGeometryToScene(structure, lower, upper, *transf);
+  }
 }
-
 
 void EmbreeManager::AddBoxGeometryToScene(EmbreeAccelerationStructure& structure,
                                           Vector3D<Precision> const &lower_local,
@@ -120,6 +162,31 @@ void EmbreeManager::AddBoxGeometryToScene(EmbreeAccelerationStructure& structure
 {
   auto embreeDevice = structure.fDevice;
   auto embreeScene = structure.fScene;
+
+
+  //     6 --- 7
+  //    /|    /|
+  //  2--4--3  5             y      z
+  //  | /   | /              |     /
+  //  0 --- 1       ---> x   |    /
+
+  // lower_local is 0
+  // upper_local is 7
+  // the normals are supposed to face outwards!
+
+  // calculate the individual corners
+  const auto dx = Vector3D<Precision>(upper_local.x() - lower_local.x(), 0, 0);
+  const auto dy = Vector3D<Precision>(0, upper_local.y() - lower_local.y(), 0);
+  const auto dz = Vector3D<Precision>(0, 0, upper_local.z() - lower_local.z());
+
+  const auto c0 = transf.InverseTransform(lower_local);
+  const auto c1 = transf.InverseTransform(lower_local + dx);
+  const auto c2 = transf.InverseTransform(lower_local + dy);
+  const auto c3 = transf.InverseTransform(lower_local + dx + dy);
+  const auto c4 = transf.InverseTransform(lower_local + dz);
+  const auto c5 = transf.InverseTransform(lower_local + dz + dx);
+  const auto c6 = transf.InverseTransform(lower_local + dz + dy);
+  const auto c7 = transf.InverseTransform(upper_local);
 
   /* create a triangulated cube with 12 triangles and 8 vertices */
   unsigned int meshID;
@@ -143,38 +210,48 @@ void EmbreeManager::AddBoxGeometryToScene(EmbreeAccelerationStructure& structure
   /* set vertices and vertex colors */
   Vertex *vertices =
       (Vertex *)rtcSetNewGeometryBuffer(geom_0, RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, 4 * sizeof(float), 8);
-  vertices[0].x = lower.x();
-  vertices[0].y = lower.y();
-  vertices[0].z = lower.z();
-  vertices[1].x = lower.x();
-  vertices[1].y = lower.y();
-  vertices[1].z = upper.z();
-  vertices[2].x = lower.x();
-  vertices[2].y = upper.y();
-  vertices[2].z = lower.z();
-  vertices[3].x = lower.x();
-  vertices[3].y = upper.y();
-  vertices[3].z = upper.z();
-  vertices[4].x = upper.x();
-  vertices[4].y = lower.y();
-  vertices[4].z = lower.z();
-  vertices[5].x = upper.x();
-  vertices[5].y = lower.y();
-  vertices[5].z = upper.z();
-  vertices[6].x = upper.x();
-  vertices[6].y = upper.y();
-  vertices[6].z = lower.z();
-  vertices[7].x = upper.x();
-  vertices[7].y = upper.y();
-  vertices[7].z = upper.z();
+  vertices[0].x = c0.x();
+  vertices[0].y = c0.y();
+  vertices[0].z = c0.z();
+  vertices[1].x = c1.x();
+  vertices[1].y = c1.y();
+  vertices[1].z = c1.z();
+  vertices[2].x = c2.x();
+  vertices[2].y = c2.y();
+  vertices[2].z = c2.z();
+  vertices[3].x = c3.x();
+  vertices[3].y = c3.y();
+  vertices[3].z = c3.z();
+  vertices[4].x = c4.x();
+  vertices[4].y = c4.y();
+  vertices[4].z = c4.z();
+  vertices[5].x = c5.x();
+  vertices[5].y = c5.y();
+  vertices[5].z = c5.z();
+  vertices[6].x = c6.x();
+  vertices[6].y = c6.y();
+  vertices[6].z = c6.z();
+  vertices[7].x = c7.x();
+  vertices[7].y = c7.y();
+  vertices[7].z = c7.z();
 
   //  /* set triangles and face colors */
   int tri = 0;
   Triangle *triangles =
       (Triangle *)rtcSetNewGeometryBuffer(geom_0, RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, 3 * sizeof(int), 12);
+
   // build up triangles by using indices to vertices
 
-  // left side
+  //     6 --- 7
+  //    /|    /|
+  //  2--4--3  5             y      z
+  //  | /   | /              |     /
+  //  0 --- 1       ---> x   |    /
+
+  // lower_local is 0
+  // upper_local is 7
+
+  // "front" side
   triangles[tri].v0 = 0;
   triangles[tri].v1 = 2;
   triangles[tri].v2 = 1;
@@ -183,34 +260,16 @@ void EmbreeManager::AddBoxGeometryToScene(EmbreeAccelerationStructure& structure
   triangles[tri].v1 = 2;
   triangles[tri].v2 = 3;
   tri++;
-  // right side
-  triangles[tri].v0 = 4;
-  triangles[tri].v1 = 5;
-  triangles[tri].v2 = 6;
-  tri++;
+  // "back" side
   triangles[tri].v0 = 5;
   triangles[tri].v1 = 7;
   triangles[tri].v2 = 6;
   tri++;
-  // bottom side
-  triangles[tri].v0 = 0;
-  triangles[tri].v1 = 1;
-  triangles[tri].v2 = 4;
-  tri++;
-  triangles[tri].v0 = 1;
+  triangles[tri].v0 = 4;
   triangles[tri].v1 = 5;
-  triangles[tri].v2 = 4;
+  triangles[tri].v2 = 6;
   tri++;
-  // top side
-  triangles[tri].v0 = 2;
-  triangles[tri].v1 = 6;
-  triangles[tri].v2 = 3;
-  tri++;
-  triangles[tri].v0 = 3;
-  triangles[tri].v1 = 6;
-  triangles[tri].v2 = 7;
-  tri++;
-  // front side
+  // "left" side
   triangles[tri].v0 = 0;
   triangles[tri].v1 = 4;
   triangles[tri].v2 = 2;
@@ -219,8 +278,7 @@ void EmbreeManager::AddBoxGeometryToScene(EmbreeAccelerationStructure& structure
   triangles[tri].v1 = 4;
   triangles[tri].v2 = 6;
   tri++;
-
-  // back side
+  // "right" side
   triangles[tri].v0 = 1;
   triangles[tri].v1 = 3;
   triangles[tri].v2 = 5;
@@ -228,6 +286,24 @@ void EmbreeManager::AddBoxGeometryToScene(EmbreeAccelerationStructure& structure
   triangles[tri].v0 = 3;
   triangles[tri].v1 = 7;
   triangles[tri].v2 = 5;
+  tri++;
+  // "top" side
+  triangles[tri].v0 = 3;
+  triangles[tri].v1 = 2;
+  triangles[tri].v2 = 6;
+  tri++;
+  triangles[tri].v0 = 3;
+  triangles[tri].v1 = 6;
+  triangles[tri].v2 = 7;
+  tri++;
+  // "bottom" side
+  triangles[tri].v0 = 0;
+  triangles[tri].v1 = 1;
+  triangles[tri].v2 = 5;
+  tri++;
+  triangles[tri].v0 = 0;
+  triangles[tri].v1 = 5;
+  triangles[tri].v2 = 4;
   tri++;
 
   // calculate normals to detect on which side of triangle we are
@@ -239,13 +315,16 @@ void EmbreeManager::AddBoxGeometryToScene(EmbreeAccelerationStructure& structure
     const auto &vertex2 = vertices[triangles[i].v2];
     Vector3D<float> p2(vertex2.x, vertex2.y, vertex2.z);
     // the normal is (p1 - p0) x (p2 - p0);
-    return (p1 - p0).Cross(p2 - p0).FixZeroes();
+    Vector3D<float> n = (p1 - p0).Cross(p2 - p0).Normalized().FixZeroes();
+    return n;
   };
 
   // show all normals
+  // std::cerr << "-----\n";
   for (int i = 0; i < 12; ++i) {
     // std::cerr << "normal " << i << " " << calcNormal(i) << "\n";
     structure.fNormals[meshID * 12 + i] = calcNormal(i);
+    assert(structure.fNormals[meshID*12 + i].Mag2() > 0.);
   }
 
   rtcCommitGeometry(geom_0);
