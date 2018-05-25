@@ -198,11 +198,11 @@ int Benchmarker::CompareDistances(SOA3D<Precision> *points, SOA3D<Precision> *di
 #endif
       mismatches += mismatch;
 
-      if (mismatch) {
+      //if (mismatch) {
         fProblematicRays.push_back(std::pair<Vector3D<Precision>, Vector3D<Precision>>(
             Vector3D<Precision>(points->x(i), points->y(i), points->z(i)),
             Vector3D<Precision>(directions->x(i), directions->y(i), directions->z(i))));
-      }
+      //}
 
       if ((mismatch && fVerbosity > 2) || fVerbosity > 4) {
         printf("Point (%.30f, %.30f, %.30f)", points->x(i), points->y(i), points->z(i));
