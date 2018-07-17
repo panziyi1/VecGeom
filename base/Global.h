@@ -176,4 +176,7 @@ T NonZero(T const &x)
 
 } // End global namespace
 
+// ROOT persistency
+class TRootIOCtor;
+
 #endif // VECGEOM_BASE_GLOBAL_H_

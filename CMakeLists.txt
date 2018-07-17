@@ -58,6 +58,8 @@ option(USE_CACHED_TRANSFORMATIONS "Use cached transformations in navigation stat
 
 option(FAST_MATH "Enable the -ffast-math compiler option in Release builds" OFF)
 
+option(ROOT_PERSISTENCY "Enable ROOT persistency. Requires ROOT" OFF)
+
 set(VECGEOM_ARCH native sse2 sse3 ssse3 sse4.1 sse4.2 avx avx2 mic mic_avx512)
 
 enum_option(VECGEOM_VECTOR
@@ -936,6 +938,15 @@ if(GDML)
   option(GDMLDEBUG "Enable additional debug information in GDML module" OFF)
   add_subdirectory(persistency/gdml)
 endif() # GDML
+
+if(ROOT_PERSISTENCY AND NOT ROOT)
+  message(STATUS "ROOT persistency requires ROOT. Turning ROOT_PERSISTENCY OFF")
+  set(ROOT_PERSISTENCY OFF)
+endif()
+
+if(ROOT_PERSISTENCY)
+  add_subdirectory(persistency/root)
+endif()
 
 ################################################################################
 

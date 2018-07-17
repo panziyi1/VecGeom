@@ -19,6 +19,8 @@ template <typename T = double>
 struct BoxStruct {
   Vector3D<T> fDimensions; //<the HALF lengths of the box
 
+  BoxStruct(TRootIOCtor *){};
+
   VECCORE_ATT_HOST_DEVICE
   BoxStruct(Vector3D<T> const &dim) : fDimensions(dim) {}
 

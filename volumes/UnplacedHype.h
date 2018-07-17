@@ -59,6 +59,9 @@ public:
     DetectConvexity();
   }
 
+  /// I/O constructor
+  UnplacedHype(TRootIOCtor *) {}
+
   /// Getter for the structure storing hyperboloid data.
   VECCORE_ATT_HOST_DEVICE
   HypeStruct<double> const &GetStruct() const { return fHype; }

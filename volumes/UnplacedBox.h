@@ -23,6 +23,7 @@ private:
 
 public:
   using Kernel = BoxImplementation;
+  UnplacedBox(TRootIOCtor *) : fBox((TRootIOCtor *)nullptr) {}
   UnplacedBox(Vector3D<Precision> const &dim) : fBox(dim) {}
   UnplacedBox(char const *, Vector3D<Precision> const &dim) : fBox(dim) {}
 

@@ -35,6 +35,8 @@ public:
   VECGEOM_FORCE_INLINE
   ThetaCone const &GetThetaCone() const { return fSphere.fThetaCone; }
 
+  UnplacedSphere(TRootIOCtor *){};
+
   VECCORE_ATT_HOST_DEVICE
   UnplacedSphere(Precision pRmin, Precision pRmax, Precision pSPhi = 0., Precision pDPhi = kTwoPi,
                  Precision pSTheta = 0., Precision pDTheta = kPi);
