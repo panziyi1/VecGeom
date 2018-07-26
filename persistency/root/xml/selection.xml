@@ -70,4 +70,24 @@
    <class name="vecgeom::CutPlanes"/>
    <class name="vecgeom::Plane"/>
 
+    <class name="vecgeom::VPlacedVolume"/>
+    <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::BoxImplementation>"/>
+
+    <class name="vecgeom::LogicalVolume">
+        <field name="fUserExtensionPtr" transient="true"/>
+        <field name="fMaterialPtr" transient="true"/>
+        <field name="fMaterialCutsPtr" transient="true"/>
+        <field name="fBasketManagerPtr" transient="true"/>
+        <field name="fRegion" transient="true"/>
+        <field name="fLevelLocator" transient="true"/>
+        <field name="fSafetyEstimator" transient="true"/>
+        <field name="fNavigator" transient="true"/>
+    </class>
+    <class name="vecgeom::Transformation3D"/>
+    <class name="vecgeom::PlacedBox"/>
+    <class name="vecgeom::GeoManager"/>
+
+    <class name="vecgeom::Vector<const vecgeom::VPlacedVolume*>"/>
+    <class name="vecgeom::VectorBase<const vecgeom::VPlacedVolume*>"/>
+
 </lcgdict>

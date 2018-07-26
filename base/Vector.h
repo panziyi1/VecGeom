@@ -63,12 +63,14 @@ template <typename Type>
 class VectorBase {
 
 private:
-  Type *fData;
-  size_t fSize, fMemorySize;
+  int fSize, fMemorySize;
+  Type *fData; //[fSize]
   bool fAllocated;
 
 public:
   using value_type = Type;
+
+  VectorBase(TRootIOCtor *) : fData(nullptr), fSize(0), fMemorySize(0), fAllocated(false) {}
 
   VECCORE_ATT_HOST_DEVICE
   VectorBase() : VectorBase(5) {}

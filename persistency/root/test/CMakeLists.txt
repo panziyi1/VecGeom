@@ -7,6 +7,9 @@ add_executable(test_unplacedvol "test_unplacedvol.cpp")
 install(TARGETS test_unplacedvol DESTINATION ${CMAKE_INSTALL_PREFIX})
 target_link_libraries(test_unplacedvol RootPClassesDict ${VECGEOM_LIBRARIES} ${ROOT_LIBRARIES})
 
+add_executable(test_fullgeo "test_fullgeo.cpp")
+install(TARGETS test_fullgeo DESTINATION ${CMAKE_INSTALL_PREFIX})
+target_link_libraries(test_fullgeo RootPClassesDict ${VECGEOM_LIBRARIES} ${ROOT_LIBRARIES})
 
 
 

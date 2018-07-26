@@ -56,6 +56,14 @@ VNavigator *NewSimpleNavigator<false>::Instance()
 int LogicalVolume::gIdCount = 0;
 
 #ifndef VECCORE_CUDA
+
+LogicalVolume::LogicalVolume(TRootIOCtor *)
+    : fLabel(nullptr), fUserExtensionPtr(nullptr), fMaterialPtr(nullptr), fMaterialCutsPtr(nullptr),
+      fBasketManagerPtr(nullptr), fLevelLocator(SimpleAssemblyLevelLocator::GetInstance()),
+      fSafetyEstimator(SimpleSafetyEstimator::Instance()), fNavigator(NewSimpleNavigator<>::Instance()), fDaughters()
+{
+}
+
 LogicalVolume::LogicalVolume(char const *const label, VUnplacedVolume const *const unplaced_volume)
     : fUnplacedVolume(unplaced_volume), fId(0), fLabel(nullptr), fUserExtensionPtr(nullptr), fMaterialPtr(nullptr),
       fMaterialCutsPtr(nullptr), fBasketManagerPtr(nullptr), fLevelLocator(SimpleAssemblyLevelLocator::GetInstance()),
