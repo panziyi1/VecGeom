@@ -22,16 +22,19 @@ VECGEOM_DEVICE_DECLARE_CONV(class, PlacedTrd);
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-class PlacedTrd : public PlacedVolumeImplHelper<UnplacedTrd, VPlacedVolume> {
-  using Base = PlacedVolumeImplHelper<UnplacedTrd, VPlacedVolume>;
+// class PlacedTrd : public PlacedVolumeImplHelper<UnplacedTrd, VPlacedVolume> {
+class PlacedTrd : public VPlacedVolume {
+  // using Base = PlacedVolumeImplHelper<UnplacedTrd, VPlacedVolume>;
 
 public:
+  using VPlacedVolume::VPlacedVolume;
 #ifndef VECCORE_CUDA
   // constructor inheritance;
-  using Base::Base;
+  // using Base::Base;
   PlacedTrd(char const *const label, LogicalVolume const *const logicalVolume,
             Transformation3D const *const transformation, vecgeom::PlacedBox const *const boundingBox)
-      : Base(label, logicalVolume, transformation, boundingBox)
+      : VPlacedVolume(label, logicalVolume, transformation,
+                      boundingBox) // Base(label, logicalVolume, transformation, boundingBox)
   {
   }
 
@@ -126,7 +129,17 @@ public:
 #endif
 #endif // VECCORE_CUDA
 };
-}
-} // End global namespace
+
+template <typename UnplacedTrd_t>
+class SPlacedTrd : public PlacedVolumeImplHelper<UnplacedTrd_t, PlacedTrd> {
+  using Base = PlacedVolumeImplHelper<UnplacedTrd_t, PlacedTrd>;
+
+public:
+  typedef UnplacedTrd UnplacedShape_t;
+  using Base::Base;
+};
+
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif // VECGEOM_VOLUMES_PLACEDTUBE_H_

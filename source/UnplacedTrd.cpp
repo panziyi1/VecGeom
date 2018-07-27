@@ -6,10 +6,74 @@
 #include "volumes/utilities/GenerationUtilities.h"
 #include "base/RNG.h"
 
+#ifdef VECGEOM_ROOT
+#include "TGeoTrd1.h"
+#include "TGeoTrd2.h"
+#endif
+
+#ifdef VECGEOM_GEANT4
+#include "G4Trd.hh"
+#endif
+
+#ifndef VECCORE_CUDA
+#include "volumes/UnplacedImplAs.h"
+#endif
+
 #include "management/VolumeFactory.h"
 
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
+
+#ifndef VECCORE_CUDA
+#ifdef VECGEOM_ROOT
+TGeoShape const *UnplacedTrd::ConvertToRoot(char const *label) const
+{
+  if (dy1() == dy2()) return new TGeoTrd1(label, dx1(), dx2(), dy1(), dz());
+  return new TGeoTrd2(label, dx1(), dx2(), dy1(), dy2(), dz());
+}
+#endif
+
+#ifdef VECGEOM_GEANT4
+G4VSolid const *UnplacedTrd::ConvertToGeant4(char const *label) const
+{
+  return new G4Trd(label, dx1(), dx2(), dy1(), dy2(), dz());
+}
+#endif
+#endif
+
+template <>
+// UnplacedTrd
+UnplacedTrd *Maker<UnplacedTrd>::MakeInstance(const Precision x1, const Precision x2, const Precision y1,
+                                              const Precision y2, const Precision z)
+{
+
+#ifndef VECGEOM_NO_SPECIALIZATION
+  // If its a box, then just return a box from the factory
+  if ((x1 == x2) && (y1 == y2)) // return new UnplacedBox(x1, y1, z);
+    return new SUnplacedImplAs<SUnplacedTrd<TrdTypes::Trd1>, UnplacedBox>(x1, y1, z);
+
+  if (y1 == y2)
+    return new SUnplacedTrd<TrdTypes::Trd1>(x1, x2, y1, z);
+  else
+    return new SUnplacedTrd<TrdTypes::Trd2>(x1, x2, y1, y2, z);
+// return new SUnplacedTrd<TrdTypes::UniversalTrd>(x1,x2,y1,y2,z);
+#else
+  return new SUnplacedTrd<TrdTypes::UniversalTrd>(x1, x2, y1, y2, z);
+#endif
+}
+
+template <>
+// UnplacedTrd
+UnplacedTrd *Maker<UnplacedTrd>::MakeInstance(const Precision x1, const Precision x2, const Precision y1,
+                                              const Precision z)
+{
+
+#ifndef VECGEOM_NO_SPECIALIZATION
+  return new SUnplacedTrd<TrdTypes::UniversalTrd>(x1, x2, y1, z);
+#else
+  return new SUnplacedTrd<TrdTypes::UniversalTrd>(x1, x2, y1, z);
+#endif
+}
 
 void UnplacedTrd::Print() const
 {
@@ -237,7 +301,7 @@ bool UnplacedTrd::Normal(Vector3D<Precision> const &point, Vector3D<Precision> &
 }
 
 #endif
-
+/*
 template <TranslationCode transCodeT, RotationCode rotCodeT>
 VECCORE_ATT_DEVICE
 VPlacedVolume *UnplacedTrd::Create(LogicalVolume const *const logical_volume,
@@ -292,7 +356,9 @@ VPlacedVolume *UnplacedTrd::Create(LogicalVolume const *const logical_volume,
                                                                                                       ,
                                                                                                       placement);
 }
+*/
 
+/*
 VECCORE_ATT_DEVICE
 VPlacedVolume *UnplacedTrd::SpecializedVolume(LogicalVolume const *const volume,
                                               Transformation3D const *const transformation,
@@ -309,6 +375,7 @@ VPlacedVolume *UnplacedTrd::SpecializedVolume(LogicalVolume const *const volume,
 #endif
                                                             placement);
 }
+*/
 
 std::ostream &UnplacedTrd::StreamInfo(std::ostream &os) const
 {
@@ -340,7 +407,7 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedTrd::CopyToGpu() const
 
 #endif // VECGEOM_CUDA_INTERFACE
 
-} // End impl namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
 
 #ifdef VECCORE_CUDA
 
@@ -350,8 +417,8 @@ template size_t DevicePtr<cuda::UnplacedTrd>::SizeOf();
 template void DevicePtr<cuda::UnplacedTrd>::Construct(const Precision dx1, const Precision dx2, const Precision dy1,
                                                       const Precision dy2, const Precision z) const;
 
-} // End cxx namespace
+} // namespace cxx
 
 #endif
 
-} // End global namespace
+} // namespace vecgeom
