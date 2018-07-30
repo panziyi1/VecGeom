@@ -15,12 +15,10 @@ namespace vecgeom {
 
 VECGEOM_DEVICE_FORWARD_DECLARE(class UnplacedTrd;);
 VECGEOM_DEVICE_DECLARE_CONV(class, UnplacedTrd);
-VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE(class, SUnplacedHype, typename);
+VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE(class, SUnplacedTrd, typename);
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-// class UnplacedTrd : public SIMDUnplacedVolumeImplHelper<TrdImplementation<TrdTypes::UniversalTrd>>, public
-// AlignedBase {
 class UnplacedTrd : public VUnplacedVolume {
 private:
   TrdStruct<double> fTrd; ///< Structure with trapezoid parameters
@@ -30,7 +28,7 @@ public:
   UnplacedTrd() : fTrd() { fGlobalConvexity = true; }
 
   VECCORE_ATT_HOST_DEVICE
-  UnplacedTrd(const Precision x, const Precision y, const Precision z) : fTrd(x, x, y, z) { fGlobalConvexity = true; }
+  UnplacedTrd(const Precision x, const Precision y, const Precision z) : fTrd(x, y, z) { fGlobalConvexity = true; }
 
   // special case Trd1 when dY1 == dY2
   VECCORE_ATT_HOST_DEVICE
@@ -162,6 +160,8 @@ public:
 
   Precision SurfaceArea() const override;
 
+  Vector3D<Precision> SamplePointOnSurface() const override;
+
   Precision GetPlusXArea() const
   { //  Area in +x direction
     return 2 * fTrd.fDZ * (fTrd.fDY1 + fTrd.fDY2) * fTrd.fSecxz;
@@ -194,8 +194,6 @@ public:
 
   int ChooseSurface() const;
 
-  Vector3D<Precision> SamplePointOnSurface() const override;
-
 #ifndef VECCORE_CUDA
   VECCORE_ATT_HOST_DEVICE
   bool Normal(Vector3D<Precision> const &point, Vector3D<Precision> &normal) const override;
@@ -208,32 +206,17 @@ public:
 
   std::string GetEntityType() const { return "Trd"; }
 
-  /*
-    template <TranslationCode transCodeT, RotationCode rotCodeT>
-    VECCORE_ATT_DEVICE
-    static VPlacedVolume *Create(LogicalVolume const *const logical_volume, Transformation3D const *const
-  transformation, #ifdef VECCORE_CUDA const int id, #endif VPlacedVolume *const placement = NULL);
-  */
-
 #ifdef VECGEOM_CUDA_INTERFACE
-  virtual size_t DeviceSizeOf() const override { return DevicePtr<cuda::UnplacedTrd>::SizeOf(); }
+  virtual size_t DeviceSizeOf() const override
+  {
+    return DevicePtr<cuda::SUnplacedTrd<cuda::TrdTypes::UniversalTrd>>::SizeOf();
+  }
+
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu() const override;
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const gpu_ptr) const override;
 #endif
 
   std::ostream &StreamInfo(std::ostream &os) const;
-
-  /*
-  private:
-    VECCORE_ATT_DEVICE
-    virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                             Transformation3D const *const transformation,
-                                             const TranslationCode trans_code, const RotationCode rot_code,
-  #ifdef VECCORE_CUDA
-                                             const int id,
-  #endif
-                                             VPlacedVolume *const placement = NULL) const final;
-  */
 
 #ifndef VECCORE_CUDA
 #ifdef VECGEOM_ROOT
@@ -249,25 +232,11 @@ public:
 template <>
 struct Maker<UnplacedTrd> {
   template <typename... ArgTypes>
-  // static UnplacedTrd
-  // static VUnplacedVolume
   static UnplacedTrd *MakeInstance(const Precision x1, const Precision x2, const Precision y1, const Precision y2,
                                    const Precision z);
   template <typename... ArgTypes>
-  // static UnplacedTrd
-  // static VUnplacedVolume
   static UnplacedTrd *MakeInstance(const Precision x1, const Precision x2, const Precision y1, const Precision z);
 };
-
-/*
-
-template <>
-struct Maker<UnplacedTrd> {
-  template <typename... ArgTypes>
-  static UnplacedTrd *MakeInstance(const Precision x1, const Precision x2, const Precision y1, const Precision z);
-};
-
-*/
 
 template <typename TrdType = TrdTypes::UniversalTrd>
 class SUnplacedTrd : public SIMDUnplacedVolumeImplHelper<TrdImplementation<TrdType>, UnplacedTrd>, public AlignedBase {

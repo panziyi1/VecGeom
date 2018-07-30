@@ -22,19 +22,15 @@ VECGEOM_DEVICE_DECLARE_CONV(class, PlacedTrd);
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-// class PlacedTrd : public PlacedVolumeImplHelper<UnplacedTrd, VPlacedVolume> {
 class PlacedTrd : public VPlacedVolume {
-  // using Base = PlacedVolumeImplHelper<UnplacedTrd, VPlacedVolume>;
 
 public:
   using VPlacedVolume::VPlacedVolume;
 #ifndef VECCORE_CUDA
   // constructor inheritance;
-  // using Base::Base;
   PlacedTrd(char const *const label, LogicalVolume const *const logicalVolume,
             Transformation3D const *const transformation, vecgeom::PlacedBox const *const boundingBox)
-      : VPlacedVolume(label, logicalVolume, transformation,
-                      boundingBox) // Base(label, logicalVolume, transformation, boundingBox)
+      : VPlacedVolume(label, logicalVolume, transformation, boundingBox)
   {
   }
 
@@ -46,7 +42,7 @@ public:
 #else
   VECCORE_ATT_DEVICE PlacedTrd(LogicalVolume const *const logicalVolume, Transformation3D const *const transformation,
                                PlacedBox const *const boundingBox, const int id)
-      : Base(logicalVolume, transformation, boundingBox, id)
+      : VPlacedVolume(logicalVolume, transformation, boundingBox, id)
   {
   }
 #endif

@@ -211,9 +211,6 @@ static void UnplacedInside(TrdStruct<double> const &trd, Vector3D<Real_v> const 
 
 } // namespace TrdUtilities
 
-// class PlacedTrd;
-// class UnplacedTrd;
-
 template <typename T>
 class SPlacedTrd;
 template <typename T>
@@ -224,10 +221,6 @@ struct TrdStruct;
 
 template <typename trdTypeT>
 struct TrdImplementation {
-
-  //  using PlacedShape_t    = PlacedTrd;
-  //  using UnplacedStruct_t = TrdStruct<double>;
-  //  using UnplacedVolume_t = UnplacedTrd;
 
   using UnplacedStruct_t = TrdStruct<double>;
   using UnplacedVolume_t = SUnplacedTrd<trdTypeT>;

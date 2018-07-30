@@ -11,8 +11,11 @@
 #include "volumes/Trd.h"
 #include "ApproxEqual.h"
 #include <cmath>
+#include "management/GeoManager.h"
 
 bool testvecgeom = true;
+
+using namespace vecgeom;
 
 template <typename Constants, class Trd_t, class Vec_t = vecgeom::Vector3D<vecgeom::Precision>>
 bool TestTrd()
@@ -398,6 +401,39 @@ bool TestTrd()
   // std::cout<<" min="<<minExtent<<" max="<<maxExtent<<std::endl;
   assert(ApproxEqual(minExtent, Vec_t(-30, -40, -40)));
   assert(ApproxEqual(maxExtent, Vec_t(30, 40, 40)));
+
+  // Simple Unit Tests for Factory of Trd.
+  // Trd_t trdBoxTrd1("Test Trd", 20, 20, 30, 40);
+  auto trdBoxTrd1 = GeoManager::MakeInstance<UnplacedTrd>(20, 20, 30, 40);
+  assert(trdBoxTrd1->dx1() == 20);
+  assert(trdBoxTrd1->dx2() == 20);
+  assert(trdBoxTrd1->dy1() == 30);
+  assert(trdBoxTrd1->dy2() == 30);
+  assert(trdBoxTrd1->dz() == 40);
+
+  // Trd_t trdBoxTrd2("TestTrdBox", 20, 20, 30, 30, 40);
+  auto trdBoxTrd2 = GeoManager::MakeInstance<UnplacedTrd>(20, 20, 30, 30, 40);
+  assert(trdBoxTrd2->dx1() == 20);
+  assert(trdBoxTrd2->dx2() == 20);
+  assert(trdBoxTrd2->dy1() == 30);
+  assert(trdBoxTrd2->dy2() == 30);
+  assert(trdBoxTrd2->dz() == 40);
+
+  // Trd_t trdType1("Test Trd", 20, 25, 30, 40);
+  auto trdType1 = GeoManager::MakeInstance<UnplacedTrd>(20, 25, 30, 40);
+  assert(trdType1->dx1() == 20);
+  assert(trdType1->dx2() == 25);
+  assert(trdType1->dy1() == 30);
+  assert(trdType1->dy2() == 30);
+  assert(trdType1->dz() == 40);
+
+  // Trd_t trdType2("Test Trd", 20, 25, 30, 35, 40);
+  auto trdType2 = GeoManager::MakeInstance<UnplacedTrd>(20, 25, 30, 35, 40);
+  assert(trdType2->dx1() == 20);
+  assert(trdType2->dx2() == 25);
+  assert(trdType2->dy1() == 30);
+  assert(trdType2->dy2() == 35);
+  assert(trdType2->dz() == 40);
 
   return true;
 }
