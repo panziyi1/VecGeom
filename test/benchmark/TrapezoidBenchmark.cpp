@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
               << " Testing box-like trapezoid for npoints = " << npoints << "\n"
               << "==================================================\n";
 
-    //trapPtr = new UnplacedTrapezoid(10, 0, 0, 10, 10, 10, 0, 10, 10, 10, 0);
+    // trapPtr = new UnplacedTrapezoid(10, 0, 0, 10, 10, 10, 0, 10, 10, 10, 0);
     trapPtr = GeoManager::MakeInstance<UnplacedTrapezoid>(10, 0, 0, 10, 10, 10, 0, 10, 10, 10, 0);
     break;
 

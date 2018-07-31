@@ -186,7 +186,7 @@ public:
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const gpu_ptr) const override;
 #endif
 
-//private:
+// private:
 #ifdef VECCORE_CUDA
   VECCORE_ATT_DEVICE
 #endif
@@ -198,7 +198,7 @@ public:
 #endif
                                            VPlacedVolume *const placement = NULL) const final;
 };
-}
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif // VECGEOM_VOLUMES_UNPLACEDPARALLELEPIPED_H_

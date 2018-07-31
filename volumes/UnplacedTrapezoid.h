@@ -84,22 +84,22 @@ public:
 
   /// \brief Constructor required by Geant4
   VECCORE_ATT_HOST_DEVICE
-//  UnplacedTrapezoid(double dx, double dy, double dz, double);
-  //Constructor corresponding to Trd1
+  //  UnplacedTrapezoid(double dx, double dy, double dz, double);
+  // Constructor corresponding to Trd1
   UnplacedTrapezoid(double dx1, double dx2, double dy, double dz);
 
-  //Constructor corresponding to Trd2
+  // Constructor corresponding to Trd2
   /// \brief Constructor for a Trd-like trapezoid
   UnplacedTrapezoid(double dx1, double dx2, double dy1, double dy2, double dz)
       //: UnplacedTrapezoid(dz, 0., 0., dy1, dx1, dx2, 0., dy2, dx1, dx2, 0.)
-  : UnplacedTrapezoid(dz, 0., 0., dy1, dx1, dx1, 0., dy2, dx2, dx2, 0.)
+      : UnplacedTrapezoid(dz, 0., 0., dy1, dx1, dx1, 0., dy2, dx2, dx2, 0.)
   {
   }
 
   /// \brief Constructor for a Parallelepiped-like trapezoid (Note: still to be validated)
   UnplacedTrapezoid(double dx, double dy, double dz, double alpha, double theta, double phi)
-//      : fTrap(dz, theta, phi, dy, dx, dx, 0., dy, dx, dx, 0.)
-  : fTrap(dz, theta, phi, dy, dx, dx, alpha, dy, dx, dx, alpha)
+      //      : fTrap(dz, theta, phi, dy, dx, dx, 0., dy, dx, dx, 0.)
+      : fTrap(dz, theta, phi, dy, dx, dx, alpha, dy, dx, dx, alpha)
   {
     // TODO: validate alpha usage here
     fTrap.fTanAlpha1 = std::tan(alpha);
@@ -429,7 +429,6 @@ public:
   G4VSolid const *ConvertToGeant4(char const *label) const;
 #endif
 #endif
-
 };
 
 // Adding specialized factory.
@@ -437,12 +436,12 @@ template <>
 struct Maker<UnplacedTrapezoid> {
   template <typename... ArgTypes>
   static UnplacedTrapezoid *MakeInstance(const Precision dz, const Precision theta, const Precision phi,
-                                       const Precision dy1, const Precision dx1, const Precision dx2,
-                                       const Precision Alpha1, const Precision dy2, const Precision dx3,
-                                       const Precision dx4, const Precision Alpha2);
+                                         const Precision dy1, const Precision dx1, const Precision dx2,
+                                         const Precision Alpha1, const Precision dy2, const Precision dx3,
+                                         const Precision dx4, const Precision Alpha2);
 };
 
-} // inline NS
-} // vecgeom NS
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif

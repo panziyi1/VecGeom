@@ -36,20 +36,20 @@ VPlacedVolume const *PlacedTrapezoid::ConvertToUnspecialized() const
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedTrapezoid::ConvertToRoot() const
 {
-	return GetUnplacedVolume()->ConvertToRoot(GetName());
+  return GetUnplacedVolume()->ConvertToRoot(GetName());
 }
 #endif
 
 #ifdef VECGEOM_GEANT4
 G4VSolid const *PlacedTrapezoid::ConvertToGeant4() const
 {
-	return GetUnplacedVolume()->ConvertToGeant4(GetName());
+  return GetUnplacedVolume()->ConvertToGeant4(GetName());
 }
 #endif
 
 #endif // VECCORE_CUDA
 
-} // End impl namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
 
 #ifdef VECCORE_CUDA
 VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC(SpecializedTrapezoid)

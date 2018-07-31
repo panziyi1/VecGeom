@@ -30,32 +30,29 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 
 using Vec3D = Vector3D<Precision>;
 
-
 #ifndef VECCORE_CUDA
 #ifdef VECGEOM_ROOT
 TGeoShape const *UnplacedTrapezoid::ConvertToRoot(char const *label) const
 {
-	return new TGeoTrap(label, dz(), theta() * kRadToDeg, phi() * kRadToDeg, dy1(), dx1(),
-	                      dx2(), alpha1() * kRadToDeg, dy2(), dx3(), dx4(), alpha2() * kRadToDeg);
+  return new TGeoTrap(label, dz(), theta() * kRadToDeg, phi() * kRadToDeg, dy1(), dx1(), dx2(), alpha1() * kRadToDeg,
+                      dy2(), dx3(), dx4(), alpha2() * kRadToDeg);
 }
 #endif
 
 #ifdef VECGEOM_GEANT4
 G4VSolid const *UnplacedTrapezoid::ConvertToGeant4(char const *label) const
 {
-	return new G4Trap(label, dz(), theta(), phi(), dy1(), dx1(), dx2(), alpha1(),
-	                    dy2(), dx3(), dx4(), alpha2());
+  return new G4Trap(label, dz(), theta(), phi(), dy1(), dx1(), dx2(), alpha1(), dy2(), dx3(), dx4(), alpha2());
 }
 #endif
 #endif
 
-
 template <>
-UnplacedTrapezoid *Maker<UnplacedTrapezoid>::MakeInstance(const Precision dz, const Precision theta, const Precision phi,
-                                                        const Precision dy1, const Precision dx1, const Precision dx2,
-                                                        const Precision Alpha1, const Precision dy2,
-                                                        const Precision dx3, const Precision dx4,
-                                                        const Precision Alpha2)
+UnplacedTrapezoid *Maker<UnplacedTrapezoid>::MakeInstance(const Precision dz, const Precision theta,
+                                                          const Precision phi, const Precision dy1, const Precision dx1,
+                                                          const Precision dx2, const Precision Alpha1,
+                                                          const Precision dy2, const Precision dx3, const Precision dx4,
+                                                          const Precision Alpha2)
 {
 
 #ifndef VECGEOM_NO_SPECIALIZATION
@@ -73,8 +70,8 @@ UnplacedTrapezoid *Maker<UnplacedTrapezoid>::MakeInstance(const Precision dz, co
   }
 
   // Parallelepiped Like Trapezoid
-  if (Alpha1 == Alpha2 && dx1 == dx2 && dx2 == dx3 && dx3 == dx4  && dy1 == dy2) {
-     return new SUnplacedImplAs<UnplacedTrapezoid, UnplacedParallelepiped>(dx1, dy1, dz, Alpha1, theta, phi);
+  if (Alpha1 == Alpha2 && dx1 == dx2 && dx2 == dx3 && dx3 == dx4 && dy1 == dy2) {
+    return new SUnplacedImplAs<UnplacedTrapezoid, UnplacedParallelepiped>(dx1, dy1, dz, Alpha1, theta, phi);
   }
   return new UnplacedTrapezoid(dz, theta, phi, dy1, dx1, dx2, Alpha1, dy2, dx3, dx4, Alpha2);
 #else
@@ -106,7 +103,7 @@ UnplacedTrapezoid::UnplacedTrapezoid(double dx1, double dx2, double dy, double d
 {
 // TODO: this needs a proper logger treatment as per geantv conventions
 #ifndef VECCORE_CUDA
-  //fprintf(stderr, "*** ERROR: STEP-based trapezoid constructor called, but not implemented ***");
+// fprintf(stderr, "*** ERROR: STEP-based trapezoid constructor called, but not implemented ***");
 #endif
   //assert(false);
 }
@@ -511,10 +508,10 @@ bool UnplacedTrapezoid::MakeAPlane(const Vec3D &p1, const Vec3D &p2, const Vec3D
 #ifndef VECGEOM_PLANESHELL_DISABLE
   fTrap.fPlanes.Set(iplane, normalVector.x(), normalVector.y(), normalVector.z(), d);
 #else
-  plane.fA            = normalVector.x();
-  plane.fB            = normalVector.y();
-  plane.fC            = normalVector.z();
-  plane.fD            = d;
+  plane.fA = normalVector.x();
+  plane.fB = normalVector.y();
+  plane.fC = normalVector.z();
+  plane.fD = d;
   unsigned int iplane = (&plane - fTrap.fPlanes); // pointer arithmetics used here
 #endif
 
@@ -542,7 +539,7 @@ bool UnplacedTrapezoid::MakePlanes(TrapCorners const pt)
 #ifndef VECGEOM_PLANESHELL_DISABLE
   good = MakeAPlane(pt[0], pt[1], pt[5], pt[4], 0);
 #else
-  good                = MakeAPlane(pt[0], pt[1], pt[5], pt[4], fTrap.fPlanes[0]);
+  good = MakeAPlane(pt[0], pt[1], pt[5], pt[4], fTrap.fPlanes[0]);
 #endif
   if (!good) printf("***** GeomSolids0002 - Face at ~-Y not planar for Solid: UnplacedTrapezoid\n");
 
@@ -646,7 +643,7 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedTrapezoid::CopyToGpu() const
 
 #endif // VECGEOM_CUDA_INTERFACE
 
-} // End impl namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
 
 #ifdef VECCORE_CUDA
 
@@ -660,8 +657,8 @@ template void DevicePtr<cuda::UnplacedTrapezoid>::Construct(const Precision dz, 
                                                             const Precision dx3, const Precision dx4,
                                                             const Precision tanAlpha2) const;
 
-} // End cxx namespace
+} // namespace cxx
 
 #endif
 
-} // End global namespace
+} // namespace vecgeom
