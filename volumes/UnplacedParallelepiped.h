@@ -24,6 +24,7 @@ private:
   ParallelepipedStruct<double> fPara; /** The parallelepiped structure */
 
 public:
+  using Kernel = ParallelepipedImplementation;
   /** @brief Constructor */
   VECCORE_ATT_HOST_DEVICE
   UnplacedParallelepiped(Vector3D<Precision> const &dimensions, const Precision alpha, const Precision theta,
@@ -185,7 +186,7 @@ public:
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const gpu_ptr) const override;
 #endif
 
-private:
+//private:
 #ifdef VECCORE_CUDA
   VECCORE_ATT_DEVICE
 #endif

@@ -5,15 +5,82 @@
 // 160722 G. Lima    Revision + moving to new backend structure
 
 #include "volumes/UnplacedTrapezoid.h"
+#include "volumes/UnplacedTrd.h"
+#include "volumes/UnplacedParallelepiped.h"
+#include "management/GeoManager.h"
 #include "management/VolumeFactory.h"
 #include "volumes/SpecializedTrapezoid.h"
 #include "base/RNG.h"
+#include "volumes/kernel/shapetypes/TrdTypes.h"
 #include <cstdio>
+
+#ifdef VECGEOM_ROOT
+#include "TGeoArb8.h"
+#endif
+#ifdef VECGEOM_GEANT4
+#include "G4Trap.hh"
+#endif
+
+#ifndef VECCORE_CUDA
+#include "volumes/UnplacedImplAs.h"
+#endif
 
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
 using Vec3D = Vector3D<Precision>;
+
+
+#ifndef VECCORE_CUDA
+#ifdef VECGEOM_ROOT
+TGeoShape const *UnplacedTrapezoid::ConvertToRoot(char const *label) const
+{
+	return new TGeoTrap(label, dz(), theta() * kRadToDeg, phi() * kRadToDeg, dy1(), dx1(),
+	                      dx2(), alpha1() * kRadToDeg, dy2(), dx3(), dx4(), alpha2() * kRadToDeg);
+}
+#endif
+
+#ifdef VECGEOM_GEANT4
+G4VSolid const *UnplacedTrapezoid::ConvertToGeant4(char const *label) const
+{
+	return new G4Trap(label, dz(), theta(), phi(), dy1(), dx1(), dx2(), alpha1(),
+	                    dy2(), dx3(), dx4(), alpha2());
+}
+#endif
+#endif
+
+
+template <>
+UnplacedTrapezoid *Maker<UnplacedTrapezoid>::MakeInstance(const Precision dz, const Precision theta, const Precision phi,
+                                                        const Precision dy1, const Precision dx1, const Precision dx2,
+                                                        const Precision Alpha1, const Precision dy2,
+                                                        const Precision dx3, const Precision dx4,
+                                                        const Precision Alpha2)
+{
+
+#ifndef VECGEOM_NO_SPECIALIZATION
+  // Box Like Trapezoid
+  if (theta == 0. && phi == 0. && Alpha1 == 0. && Alpha2 == 0 && dx1 == dx2 && dx2 == dx3 && dx3 == dx4 && dy1 == dy2) {
+    return new SUnplacedImplAs<UnplacedTrapezoid, UnplacedBox>(dx1, dy1, dz);
+  }
+  // Trd1 Like Trapezoid
+  if (theta == 0. && phi == 0. && Alpha1 == 0. && Alpha2 == 0 && dx1 == dx2 && dx3 == dx4 && dx2 != dx3 && dy1 == dy2) {
+    return new SUnplacedImplAs<UnplacedTrapezoid, SUnplacedTrd<TrdTypes::Trd1>>(dx1, dx3, dy1, dz);
+  }
+  // Trd2 Like Trapezoid
+  if (theta == 0. && phi == 0. && Alpha1 == 0. && Alpha2 == 0 && dx1 == dx2 && dx3 == dx4 && dx2 != dx3 && dy1 != dy2) {
+    return new SUnplacedImplAs<UnplacedTrapezoid, SUnplacedTrd<TrdTypes::Trd2>>(dx1, dx3, dy1, dy2, dz);
+  }
+
+  // Parallelepiped Like Trapezoid
+  if (Alpha1 == Alpha2 && dx1 == dx2 && dx2 == dx3 && dx3 == dx4  && dy1 == dy2) {
+     return new SUnplacedImplAs<UnplacedTrapezoid, UnplacedParallelepiped>(dx1, dy1, dz, Alpha1, theta, phi);
+  }
+  return new UnplacedTrapezoid(dz, theta, phi, dy1, dx1, dx2, Alpha1, dy2, dx3, dx4, Alpha2);
+#else
+  return new UnplacedTrapezoid(dz, theta, phi, dy1, dx1, dx2, Alpha1, dy2, dx3, dx4, Alpha2);
+#endif
+}
 
 VECCORE_ATT_HOST_DEVICE
 UnplacedTrapezoid::UnplacedTrapezoid(TrapCorners const corners) : fTrap()
@@ -22,7 +89,7 @@ UnplacedTrapezoid::UnplacedTrapezoid(TrapCorners const corners) : fTrap()
   fromCornersToParameters(corners);
 }
 
-VECCORE_ATT_HOST_DEVICE
+/*VECCORE_ATT_HOST_DEVICE
 UnplacedTrapezoid::UnplacedTrapezoid(double dx, double dy, double dz, double)
     : fTrap(dz, 0., 0., dy, dx, dx, 0., dy, dx, dx, 0.)
 {
@@ -31,6 +98,17 @@ UnplacedTrapezoid::UnplacedTrapezoid(double dx, double dy, double dz, double)
   fprintf(stderr, "*** ERROR: STEP-based trapezoid constructor called, but not implemented ***");
 #endif
   assert(false);
+}*/
+
+VECCORE_ATT_HOST_DEVICE
+UnplacedTrapezoid::UnplacedTrapezoid(double dx1, double dx2, double dy, double dz)
+    : fTrap(dz, 0., 0., dy, dx1, dx1, 0., dy, dx2, dx2, 0.)
+{
+// TODO: this needs a proper logger treatment as per geantv conventions
+#ifndef VECCORE_CUDA
+  //fprintf(stderr, "*** ERROR: STEP-based trapezoid constructor called, but not implemented ***");
+#endif
+  //assert(false);
 }
 
 VECCORE_ATT_HOST_DEVICE
