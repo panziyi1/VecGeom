@@ -94,8 +94,6 @@ int main(int argc, char *argv[])
               << "=====================================================================\n";
 
     {
-      // check geometry derived from JIRA-393 (dividing by 4 in order to fit on world box)
-      // trapPtr           = new UnplacedTrapezoid(15, theta, phi, 10, 7.5, 10, alpha, 4, 2.5, 3.5, alpha);
       trapPtr = GeoManager::MakeInstance<UnplacedTrapezoid>(15, 0., 0., 10., 7.5, 7.5, 0., 10., 3.5, 3.5, 0.);
     }
     break;
@@ -106,8 +104,6 @@ int main(int argc, char *argv[])
               << "=====================================================================\n";
 
     {
-      // check geometry derived from JIRA-393 (dividing by 4 in order to fit on world box)
-      // trapPtr           = new UnplacedTrapezoid(15, theta, phi, 10, 7.5, 10, alpha, 4, 2.5, 3.5, alpha);
       trapPtr = GeoManager::MakeInstance<UnplacedTrapezoid>(15, 0., 0., 10., 7.5, 7.5, 0., 8., 3.5, 3.5, 0.);
     }
     break;
@@ -118,13 +114,11 @@ int main(int argc, char *argv[])
               << "=====================================================================\n";
 
     {
-      // check geometry derived from JIRA-393 (dividing by 4 in order to fit on world box)
       const double &deg = kDegToRad;
       double theta      = 20. * deg;
       double phi        = 5. * deg;
       double alpha      = 10. * deg;
 
-      // trapPtr           = new UnplacedTrapezoid(15, theta, phi, 10, 7.5, 10, alpha, 4, 2.5, 3.5, alpha);
       trapPtr = GeoManager::MakeInstance<UnplacedTrapezoid>(15, theta, phi, 10., 7.5, 7.5, alpha, 10., 7.5, 7.5, alpha);
     }
     break;

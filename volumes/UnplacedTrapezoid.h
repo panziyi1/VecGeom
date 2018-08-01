@@ -439,6 +439,8 @@ struct Maker<UnplacedTrapezoid> {
                                          const Precision dy1, const Precision dx1, const Precision dx2,
                                          const Precision Alpha1, const Precision dy2, const Precision dx3,
                                          const Precision dx4, const Precision Alpha2);
+
+  // FOR TRAP DO WE NEED MAKEINSTANCE FOR OTHER CONSTRUCTORS ALSO ?
 };
 
 } // namespace VECGEOM_IMPL_NAMESPACE

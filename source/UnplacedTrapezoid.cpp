@@ -73,6 +73,8 @@ UnplacedTrapezoid *Maker<UnplacedTrapezoid>::MakeInstance(const Precision dz, co
   if (Alpha1 == Alpha2 && dx1 == dx2 && dx2 == dx3 && dx3 == dx4 && dy1 == dy2) {
     return new SUnplacedImplAs<UnplacedTrapezoid, UnplacedParallelepiped>(dx1, dy1, dz, Alpha1, theta, phi);
   }
+
+  // if none of the above then return the full Trapezoid.
   return new UnplacedTrapezoid(dz, theta, phi, dy1, dx1, dx2, Alpha1, dy2, dx3, dx4, Alpha2);
 #else
   return new UnplacedTrapezoid(dz, theta, phi, dy1, dx1, dx2, Alpha1, dy2, dx3, dx4, Alpha2);
@@ -101,11 +103,6 @@ VECCORE_ATT_HOST_DEVICE
 UnplacedTrapezoid::UnplacedTrapezoid(double dx1, double dx2, double dy, double dz)
     : fTrap(dz, 0., 0., dy, dx1, dx1, 0., dy, dx2, dx2, 0.)
 {
-// TODO: this needs a proper logger treatment as per geantv conventions
-#ifndef VECCORE_CUDA
-// fprintf(stderr, "*** ERROR: STEP-based trapezoid constructor called, but not implemented ***");
-#endif
-  //assert(false);
 }
 
 VECCORE_ATT_HOST_DEVICE
