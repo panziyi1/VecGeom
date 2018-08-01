@@ -112,6 +112,8 @@ protected:
 #endif
 
 public:
+  VPlacedVolume(TRootIOCtor *);
+
   VECCORE_ATT_HOST_DEVICE
   VPlacedVolume(VPlacedVolume const &);
   VECCORE_ATT_HOST_DEVICE

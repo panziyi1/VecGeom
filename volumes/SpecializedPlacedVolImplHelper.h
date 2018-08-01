@@ -31,7 +31,7 @@ VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE_1t_2v(class, LoopSpecializedVolImplHelper, 
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-template <class Specialization, TranslationCode transC, RotationCode rotC>
+template <class Specialization, int transC, int rotC>
 class CommonSpecializedVolImplHelper : public Specialization::PlacedShape_t {
 
   using PlacedShape_t    = typename Specialization::PlacedShape_t;
@@ -39,6 +39,8 @@ class CommonSpecializedVolImplHelper : public Specialization::PlacedShape_t {
 
 public:
 #ifndef VECCORE_CUDA
+  CommonSpecializedVolImplHelper(TRootIOCtor *) : PlacedShape_t((TRootIOCtor *)nullptr) {}
+
   CommonSpecializedVolImplHelper(char const *const label, LogicalVolume const *const logical_volume,
                                  Transformation3D const *const transformation,
                                  vecgeom::PlacedBox const *const boundingBox)
@@ -300,10 +302,14 @@ public:
   using CommonHelper_t::Inside;
   using CommonHelper_t::CommonHelper_t;
 
+
   SIMDSpecializedVolImplHelper(VPlacedVolume const *other)
       : CommonHelper_t(other->GetName(), other->GetLogicalVolume(), other->GetTransformation())
   {
   }
+
+  SIMDSpecializedVolImplHelper(TRootIOCtor *) : CommonHelper_t((TRootIOCtor *)nullptr) {}
+
 
   VECCORE_ATT_HOST_DEVICE
   virtual ~SIMDSpecializedVolImplHelper() {}

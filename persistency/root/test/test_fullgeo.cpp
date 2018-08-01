@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 
     TFile fo("geo_full.root", "RECREATE");
 
-    cout << "writing on geo_full.root:";
+    cout << "writing on geo_full.root:" << endl << endl;
 
     UnplacedBox worldUnplaced = UnplacedBox(4, 8, 6);
     UnplacedBox boxUnplaced   = UnplacedBox(4, 8, 6);
@@ -22,20 +22,31 @@ int main(int argc, char *argv[])
 
     VPlacedVolume *worldPlaced = world.Place();
 
-    GeoManager::Instance().SetWorldAndClose(worldPlaced);
+    // world.Print();
+    cout << endl << endl;
 
     world.Print();
+    cout << endl << endl;
+    worldPlaced->Print();
 
     fo.WriteObject(&world, "world_saved");
+    fo.WriteObject(worldPlaced, "worldP_saved");
+
+    // GeoManager::Instance().SetWorldAndClose(worldPlaced);
+
   } else {
     TFile fi("geo_full.root");
 
     LogicalVolume *world;
+    VPlacedVolume *worldPlaced;
+
+    cout << "reading from geo_full.root:" << endl << endl;
 
     fi.GetObject("world_saved", world);
+    fi.GetObject("worldP_saved", worldPlaced);
 
-    cout << "\n\t";
     world->Print();
+    worldPlaced->Print();
   }
 
   return 0;

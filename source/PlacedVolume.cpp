@@ -42,6 +42,10 @@ VPlacedVolume::VPlacedVolume(VPlacedVolume const &other)
   assert(0 && "COPY CONSTRUCTOR FOR PlacedVolumes NOT IMPLEMENTED");
 }
 
+VPlacedVolume::VPlacedVolume(TRootIOCtor *) : id_(), label_(NULL), logical_volume_(), fTransformation(), bounding_box_()
+{
+}
+
 VECCORE_ATT_HOST_DEVICE
 VPlacedVolume *VPlacedVolume::operator=(VPlacedVolume const &other)
 {
