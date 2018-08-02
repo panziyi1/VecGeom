@@ -43,10 +43,10 @@ int main(int argc, char *argv[])
     trapez->Print();
     fo.WriteObject(trapez, "trapez_saved");
 
-    auto hype = new UnplacedHype(0.2, .3, .4, .4, .01);
-    cout << "\n\t";
-    hype->Print();
-    fo.WriteObject(hype, "hype_saved");
+//    auto hype = new UnplacedHype(0.2, .3, .4, .4, .01);
+//    cout << "\n\t";
+//    hype->Print();
+//    fo.WriteObject(hype, "hype_saved");
 
     auto orb = new UnplacedOrb(.215);
     cout << "\n\t";
@@ -99,10 +99,10 @@ int main(int argc, char *argv[])
     cout << "\n\t";
     trapez->Print();
 
-    UnplacedHype *hype;
-    fi.GetObject("hype_saved", hype);
-    cout << "\n\t";
-    hype->Print();
+//    UnplacedHype *hype;
+//    fi.GetObject("hype_saved", hype);
+//    cout << "\n\t";
+//    hype->Print();
 
     UnplacedOrb *orb;
     fi.GetObject("orb_saved", orb);

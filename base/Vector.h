@@ -63,27 +63,28 @@ template <typename Type>
 class VectorBase {
 
 private:
-  int fSize, fMemorySize;
-  Type *fData; //[fSize]
-  bool fAllocated;
+  int fSize = 0;
+  int fMemorySize = 0;
+  Type *fData = nullptr; //[fSize]
+  bool fAllocated = false;
 
 public:
   using value_type = Type;
 
-  VectorBase(TRootIOCtor *) : fData(nullptr), fSize(0), fMemorySize(0), fAllocated(false) {}
+  VectorBase(TRootIOCtor *) {}
 
   VECCORE_ATT_HOST_DEVICE
   VectorBase() : VectorBase(5) {}
 
   VECCORE_ATT_HOST_DEVICE
-  VectorBase(size_t maxsize) : fData(nullptr), fSize(0), fMemorySize(0), fAllocated(true) { reserve(maxsize); }
+  VectorBase(size_t maxsize) : fAllocated(true) { reserve(maxsize); }
 
   VECCORE_ATT_HOST_DEVICE
-  VectorBase(Type *const vec, const int sz) : fData(vec), fSize(sz), fMemorySize(sz), fAllocated(false) {}
+  VectorBase(Type *const vec, const int sz) : fSize(sz), fMemorySize(sz), fData(vec) {}
 
   VECCORE_ATT_HOST_DEVICE
   VectorBase(Type *const vec, const int sz, const int maxsize)
-      : fData(vec), fSize(sz), fMemorySize(maxsize), fAllocated(false)
+      : fSize(sz), fMemorySize(maxsize), fData(vec)
   {
   }
 
@@ -91,7 +92,7 @@ public:
   VectorBase(VectorBase const &other) : fSize(other.fSize), fMemorySize(other.fMemorySize), fAllocated(true)
   {
     fData = Internal::AllocTrait<Type>::Allocate(fMemorySize);
-    for (size_t i = 0; i < fSize; ++i)
+    for (int i = 0; i < fSize; ++i)
       new (&fData[i]) Type(other.fData[i]);
   }
 
@@ -100,7 +101,7 @@ public:
   {
     if (&other != this) {
       reserve(other.fMemorySize);
-      for (size_t i = 0; i < other.fSize; ++i)
+      for (int i = 0; i < other.fSize; ++i)
         push_back(other.fData[i]);
     }
     return *this;
@@ -144,7 +145,7 @@ public:
     if (fSize == fMemorySize) {
       assert(fAllocated && "Trying to push on a 'fixed' size vector (memory "
                            "not allocated by Vector itself)");
-      reserve(fMemorySize << 1);
+      reserve((size_t)fMemorySize << 1);
     }
     new (&fData[fSize]) Type(item);
     fSize++;
@@ -181,16 +182,16 @@ public:
   VECGEOM_FORCE_INLINE
   void resize(size_t newsize, Type value)
   {
-    if (newsize <= fSize) {
-      for (size_t i = newsize; i < fSize; ++i) {
+    if (newsize <= (size_t)fSize) {
+      for (size_t i = newsize; i < (size_t)fSize; ++i) {
         Internal::AllocTrait<Type>::Destroy(fData[i]);
       }
       fSize = newsize;
     } else {
-      if (newsize > fMemorySize) {
+      if (newsize > (size_t)fMemorySize) {
         reserve(newsize);
       }
-      for (size_t i = fSize; i < newsize; ++i)
+      for (size_t i = (size_t)fSize; i < newsize; ++i)
         push_back(value);
     }
   }
@@ -199,11 +200,11 @@ public:
   VECGEOM_FORCE_INLINE
   void reserve(size_t newsize)
   {
-    if (newsize <= fMemorySize) {
+    if (newsize <= (size_t)fMemorySize) {
       // Do nothing ...
     } else {
       Type *newdata = Internal::AllocTrait<Type>::Allocate(newsize);
-      for (size_t i = 0; i < fSize; ++i)
+      for (int i = 0; i < fSize; ++i)
         new (&newdata[i]) Type(fData[i]);
       Internal::AllocTrait<Type>::Destroy(fData, fSize);
       if (fAllocated) {
