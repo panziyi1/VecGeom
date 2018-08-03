@@ -20,7 +20,11 @@ int main(int argc, char *argv[])
     // LogicalVolume box2("box2", &boxUnplaced);
 
     Transformation3D placement(0.1, 0, 0);
-    world.PlaceDaughter("box", &box, &placement);
+    for (auto i = 0; i < 10; ++i) {
+      char name[10];
+      sprintf(name, "box_%d", i);
+      world.PlaceDaughter(name, &box, &placement);
+    }
     // world.PlaceDaughter("box2", &box2, &placement);
 
     VPlacedVolume *worldPlaced = world.Place();
@@ -46,6 +50,9 @@ int main(int argc, char *argv[])
     fi.GetObject("worldP_saved", worldPlaced);
 
     world->Print();
+    std::cout << "Number of daughters: " << world->GetDaughters().size() << " expected value is 10" << std::endl;
+    for (auto placed : world->GetDaughters())
+      placed->Print();
     worldPlaced->Print();
   }
 
