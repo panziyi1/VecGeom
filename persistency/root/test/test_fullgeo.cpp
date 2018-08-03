@@ -5,6 +5,7 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
+  proxy();
   if (argc > 1 && strcmp(argv[1], "w") == 0) { // if w -> write the file
 
     TFile fo("geo_full.root", "RECREATE");
@@ -16,14 +17,13 @@ int main(int argc, char *argv[])
 
     LogicalVolume world("world", &worldUnplaced);
     LogicalVolume box("box", &boxUnplaced);
+    // LogicalVolume box2("box2", &boxUnplaced);
 
     Transformation3D placement(0.1, 0, 0);
     world.PlaceDaughter("box", &box, &placement);
+    // world.PlaceDaughter("box2", &box2, &placement);
 
     VPlacedVolume *worldPlaced = world.Place();
-
-    // world.Print();
-    cout << endl << endl;
 
     world.Print();
     cout << endl << endl;

@@ -7,3 +7,5 @@
 #include "TSystem.h"
 #include "TClass.h"
 #include "TCollectionProxyInfo.h"
+
+void proxy();
