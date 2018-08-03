@@ -62,6 +62,8 @@ LogicalVolume::LogicalVolume(TRootIOCtor *)
       fBasketManagerPtr(nullptr), fLevelLocator(SimpleAssemblyLevelLocator::GetInstance()),
       fSafetyEstimator(SimpleSafetyEstimator::Instance()), fNavigator(NewSimpleNavigator<>::Instance()), fDaughters()
 {
+  fId = gIdCount++;
+  fDaughters = new Vector<Daughter>();
 }
 
 LogicalVolume::LogicalVolume(char const *const label, VUnplacedVolume const *const unplaced_volume)

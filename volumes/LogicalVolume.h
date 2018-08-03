@@ -59,37 +59,37 @@ class LogicalVolume {
 
 private:
   /// Pointer to concrete unplaced volume/shape
-  VUnplacedVolume const *fUnplacedVolume;
+  VUnplacedVolume const *fUnplacedVolume = nullptr;
 
-  int fId; ///< global id of logical volume object
+  int fId = 0; ///< global id of logical volume object
 
-  std::string *fLabel; ///< name of logical volume
+  std::string *fLabel = nullptr; ///< name of logical volume
 
-  static int gIdCount; ///< a static class counter
+  static int gIdCount; ///<! a static class counter
 
   //--- The following pointers are used mainly by simulation packages ---
   // Consider enabling them only when needed
 
   /// A pointer member to register arbitrary objects with logical volumes.
   /// Included for the moment to model UserExtension like in a TGeoVolume.
-  void *fUserExtensionPtr;
+  void *fUserExtensionPtr = nullptr;
 
-  void *fMaterialPtr; ///< Pointer to some user material class (used by Geant-V)
+  void *fMaterialPtr = nullptr; ///< Pointer to some user material class (used by Geant-V)
 
-  void *fMaterialCutsPtr; ///< Pointer to some user cuts (used by Geant-V)
+  void *fMaterialCutsPtr = nullptr; ///< Pointer to some user cuts (used by Geant-V)
 
-  void *fBasketManagerPtr; ///< A specific pointer used by Geant-V
+  void *fBasketManagerPtr = nullptr; ///< A specific pointer used by Geant-V
 
   Region *fRegion = nullptr; ///< Pointer to a region object (following the Geant4 Region concept)
 
   //--- The following pointers are used by VecGeom itself ---
 
-  VLevelLocator const *fLevelLocator;       ///< A locator class for this logical volume.
-  VSafetyEstimator const *fSafetyEstimator; ///< A safety estimator class for this logical volume.
-  VNavigator const *fNavigator;             ///< Pointer to attached VecGeom navigator.
+  VLevelLocator const *fLevelLocator = nullptr;       ///< A locator class for this logical volume.
+  VSafetyEstimator const *fSafetyEstimator = nullptr; ///< A safety estimator class for this logical volume.
+  VNavigator const *fNavigator = nullptr;             ///< Pointer to attached VecGeom navigator.
 
   /// The container of daughter (placed) volumes which are placed inside this logical volume
-  Vector<Daughter> *fDaughters;
+  Vector<Daughter> *fDaughters = nullptr;
 
   using CudaDaughter_t = cuda::VPlacedVolume const *;
   friend class CudaManager;

@@ -61,17 +61,17 @@ private:
   int copy_no_ = 0; ///< Copy number for the physical volume, used by transport
 
   // Use a pointer so the string won't be constructed on the GPU
-  std::string *label_;            ///< Label/name of placed volume
+  std::string *label_ = nullptr;  ///< Label/name of placed volume
   static unsigned int g_id_count; ///< Static instance counter
 
 protected:
-  LogicalVolume const *logical_volume_; ///< Pointer to positioned logical volume
+  LogicalVolume const *logical_volume_ = nullptr; ///< Pointer to positioned logical volume
 #ifdef VECGEOM_INPLACE_TRANSFORMATIONS
   Transformation3D fTransformation; ///< The positioning transformation
 #else
-  Transformation3D const *fTransformation; ///< The positioning transformation
+  Transformation3D const *fTransformation = nullptr; ///< The positioning transformation
 #endif
-  PlacedBox const *bounding_box_; ///< Pointer to bounding box (to be deprecated)
+  PlacedBox const *bounding_box_ = nullptr; ///< Pointer to bounding box (to be deprecated)
 
 #ifndef VECCORE_CUDA
 

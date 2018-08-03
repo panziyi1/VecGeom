@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     pal->Print();
     fo.WriteObject(pal, "pal_saved");
 
-    auto trd = new UnplacedTrd();
+    auto trd = new UnplacedTrd(3, 4, 5, 6, 7);
     cout << "\n\t";
     trd->Print();
     fo.WriteObject(trd, "trd_saved");
@@ -118,6 +118,7 @@ int main(int argc, char *argv[])
     fi.GetObject("sphere_saved", sphere);
     cout << "\n\t";
     sphere->Print();
+    cout << "\n\t";
   }
 
   return 0;
