@@ -88,6 +88,66 @@ bool UnplacedTessellated::Normal(Vector3D<Precision> const &point, Vector3D<Prec
   return valid;
 }
 
+void UnplacedTessellated::PrecomputeInsideAndSafety()
+{
+  std::cout << "prcomputing insides and safeties\n";
+  using GridCell = TessellatedStruct<3, double>::GridCell;
+  using Cell_xyz = TessellatedStruct<3, double>::Cell_xyz;
+
+  if (!fTessellated.fHelper->fGrid) return;
+  fTessellated.fHelper->CreateCellsXYZ();
+  const int ngrid                  = fTessellated.fHelper->fNgrid;
+  const Vector3D<double> cell_size = (fTessellated.fHelper->fMaxExtent - fTessellated.fHelper->fMinExtent) / ngrid;
+  const double safdelta            = 0.5 * cell_size.Mag();
+
+  EInsideVoxel last_inside = kUnknown;
+  GridCell *grid_cell      = nullptr;
+  Cell_xyz *cell           = nullptr;
+  bool inside              = false;
+  double safety            = 0;
+
+  int ind[3] = {0};
+  for (ind[0] = 0; ind[0] < ngrid; ++ind[0]) {
+    for (ind[1] = 0; ind[1] < ngrid; ++ind[1]) {
+      for (ind[2] = 0; ind[2] < ngrid; ++ind[2]) {
+        grid_cell  = fTessellated.fHelper->GetCell(ind);
+        cell       = fTessellated.fHelper->GetCellXYZ(ind);
+        bool empty = grid_cell->fArray.size() == 0;
+        if (empty) {
+          Vector3D<double> center =
+              fTessellated.fHelper->fMinExtent + Vector3D<double>(ind[0], ind[1], ind[2]) * cell_size + 0.5 * cell_size;
+          // import inside  from ajacent cell
+          if (last_inside != kUnknown) {
+            cell->inside = last_inside;
+          } else {
+            // Compute the inside for the center of the cell
+            TessellatedImplementation::Contains<double, bool>(fTessellated, center, inside);
+            if (inside)
+              cell->inside = kInsideVoxel;
+            else
+              cell->inside = kOutsideVoxel;
+            last_inside = cell->inside;
+          }
+          // compute safety for the cell center
+          if (cell->inside == kInsideVoxel)
+            TessellatedImplementation::SafetyToOut<double>(fTessellated, center, safety);
+          else
+            TessellatedImplementation::SafetyToIn<double>(fTessellated, center, safety);
+          cell->safety = safety - safdelta - 1.e-6;
+          if (cell->safety < 0) cell->safety = 0;
+        } else {
+          cell->safety = 0;
+          last_inside  = kUnknown;
+        }
+      }
+      last_inside = kUnknown;
+    }
+    last_inside = kUnknown;
+  }
+  fTessellated.fHelper->DeleteCells();
+  std::cout << "prcomputing insides and safeties\n";
+}
+
 #ifdef VECCORE_CUDA
 template <TranslationCode transCodeT, RotationCode rotCodeT>
 VECCORE_ATT_DEVICE
@@ -158,7 +218,7 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedTessellated::CopyToGpu() const
 
 #endif // VECGEOM_CUDA_INTERFACE
 
-} // End impl namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
 
 #ifdef VECCORE_CUDA
 
@@ -167,8 +227,8 @@ namespace cxx {
 template size_t DevicePtr<cuda::UnplacedTessellated>::SizeOf();
 template void DevicePtr<cuda::UnplacedTessellated>::Construct() const;
 
-} // End cxx namespace
+} // namespace cxx
 
 #endif
 
-} // End global namespace
+} // namespace vecgeom

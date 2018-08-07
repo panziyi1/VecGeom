@@ -52,7 +52,11 @@ public:
   TriangleFacet<double> *GetFacet(int ifacet) const { return fTessellated.fFacets[ifacet]; }
 
   VECCORE_ATT_HOST_DEVICE
-  void Close() { fTessellated.Close(); }
+  void Close()
+  {
+    fTessellated.Close();
+    PrecomputeInsideAndSafety();
+  }
 
   VECCORE_ATT_HOST_DEVICE
   bool IsClosed() const { return fTessellated.fSolidClosed; }
@@ -76,6 +80,9 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   bool Normal(Vector3D<Precision> const &point, Vector3D<Precision> &normal) const override;
+
+  VECCORE_ATT_HOST_DEVICE
+  void PrecomputeInsideAndSafety();
 
   VECCORE_ATT_HOST_DEVICE
   virtual void Print() const override;

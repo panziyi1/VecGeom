@@ -20,6 +20,7 @@ namespace vecgeom {
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
+enum EInsideVoxel { kUnknown = 0, kInsideVoxel, kOutsideVoxel };
 // Structure used for vectorizing queries on groups of triangles
 
 template <size_t NVERT, typename T = double>
@@ -39,13 +40,22 @@ class TessellatedStruct {
 
   using BVHStructure = HybridManager2::HybridBoxAccelerationStructure;
 
+public:
   //__________________________________________________________________________
   struct GridCell {
     vector_t<int> fArray; // Array of facet indices
     bool fUsed = false;   // Used flag
 
     VECCORE_ATT_HOST_DEVICE
-    GridCell() { /* fArray.reserve(4); */}
+    GridCell()
+    { /* fArray.reserve(4); */
+    }
+  };
+
+  //__________________________________________________________________________
+  struct Cell_xyz {
+    float safety        = 0.;
+    EInsideVoxel inside = kUnknown;
   };
 
   //__________________________________________________________________________
@@ -53,7 +63,9 @@ class TessellatedStruct {
     int fNgrid       = 0;           ///< Grid size
     int fNcells      = 0;           ///< Number of cells in the grid
     int fNcached     = 0;           ///< number of cached cells
+    int fNfilled     = 0;           ///< number of filled cells
     GridCell **fGrid = nullptr;     ///< Grid for clustering facets
+    Cell_xyz *fCells = nullptr;     ///< Grid for clustering facets
     Vector3D<T> fMinExtent;         ///< Minimum extent
     Vector3D<T> fMaxExtent;         ///< Maximum extent
     Vector3D<T> fInvExtSize;        ///< Inverse extent size
@@ -63,11 +75,8 @@ class TessellatedStruct {
 
     ~GridHelper()
     {
-      if (fGrid) {
-        for (int i = 0; i < fNcells; ++i)
-          delete fGrid[i];
-        delete[] fGrid;
-      }
+      DeleteCells();
+      if (fCells) delete[] fCells;
     }
 
     void CreateCells(int ngrid)
@@ -80,6 +89,12 @@ class TessellatedStruct {
         fGrid[i] = new GridCell();
     }
 
+    void CreateCellsXYZ()
+    {
+      if (fCells) return;
+      fCells = new Cell_xyz[fNcells];
+    }
+
     VECCORE_ATT_HOST_DEVICE
     VECGEOM_FORCE_INLINE
     void ClearCells()
@@ -90,7 +105,42 @@ class TessellatedStruct {
 
     VECCORE_ATT_HOST_DEVICE
     VECGEOM_FORCE_INLINE
+    void DeleteCells()
+    {
+      if (fGrid) {
+        for (int i = 0; i < fNcells; ++i)
+          delete fGrid[i];
+        delete[] fGrid;
+      }
+      fGrid = 0;
+    }
+
+    VECCORE_ATT_HOST_DEVICE
+    VECGEOM_FORCE_INLINE
+    void CompactCells()
+    {
+      if (!fGrid) return;
+      GridCell **grid = new GridCell *[fNcells];
+      // Copy only filled cells in the new grid
+      for (int icell = 0; icell < fNcells; ++icell) {
+        grid[icell] = nullptr;
+        if (fGrid[icell]->fArray.size() > 0) {
+          grid[icell] = new GridCell(*fGrid[icell]);
+        }
+      }
+      for (int icell = 0; icell < fNcells; ++icell)
+        delete fGrid[icell];
+      delete fGrid;
+      fGrid = grid;
+    }
+
+    VECCORE_ATT_HOST_DEVICE
+    VECGEOM_FORCE_INLINE
     GridCell *GetCell(int ind[3]) { return fGrid[fNgrid * fNgrid * ind[0] + fNgrid * ind[1] + ind[2]]; }
+
+    VECCORE_ATT_HOST_DEVICE
+    VECGEOM_FORCE_INLINE
+    Cell_xyz *GetCellXYZ(int ind[3]) { return &fCells[fNgrid * fNgrid * ind[0] + fNgrid * ind[1] + ind[2]]; }
 
     VECCORE_ATT_HOST_DEVICE
     VECGEOM_FORCE_INLINE
@@ -168,8 +218,8 @@ public:
   {
     // Method adding a facet to the structure. The vertices are added to the
     // list of all vertices (including duplications) and the extent is re-adjusted.
-    using vecCore::math::Min;
     using vecCore::math::Max;
+    using vecCore::math::Min;
 
     fFacets.push_back(facet);
     int ind = fHelper->fAllVert.size();
@@ -256,6 +306,8 @@ public:
     fHelper->ClearCells();
     unsigned ifacet = 0;
     for (auto facet : fFacets) {
+      GridCell *cell = fHelper->GetCell(facet->fCenter, ind);
+      if (cell->fArray.size() == 0) fHelper->fNfilled++;
       fHelper->GetCell(facet->fCenter, ind)->fArray.push_back(ifacet);
       //      for (int ivert = 0; ivert < 3; ++ivert) {
       //        fHelper->GetCell(facet->fVertices[ivert], ind)->fArray.push_back(ifacet);
@@ -280,7 +332,7 @@ public:
     TessellatedCluster<NVERT, Real_v> *cluster;
     while (fCandidates.size()) {
       // Use existing candidates in fCandidates to create the cluster
-      cluster               = CreateCluster();
+      cluster = CreateCluster();
       if (!cluster) cluster = MakePartialCluster();
       fClusters.push_back(cluster);
       // Fill cluster from the same cell or from a neighbor cell
@@ -310,6 +362,9 @@ public:
       }
       break;
     }
+    //    fHelper->CompactCells();
+    //    std::cout << "Number of cells after compacting: " << fHelper->fNfilled << std::endl;
+
     fSolidClosed = true;
   }
 
@@ -327,8 +382,8 @@ public:
   {
     // Loop over facets and group them in clusters in the order of definition
     TessellatedCluster<NVERT, Real_v> *tcl = nullptr;
-    int i = 0;
-    int j = 0;
+    int i                                  = 0;
+    int j                                  = 0;
     for (auto facet : fFacets) {
       i = i % kVecSize;
       if (i == 0) {
@@ -365,7 +420,7 @@ public:
 
     // The cluster is now complete, create a tessellated cluster object
     TessellatedCluster<NVERT, Real_v> *tcl = new TessellatedCluster<NVERT, Real_v>();
-    int i = 0;
+    int i                                  = 0;
     for (auto ifct : fCluster) {
       Facet_t *facet = fFacets[ifct];
       tcl->AddFacet(i++, facet, ifct);
@@ -387,7 +442,7 @@ public:
 
     // The cluster is now complete, create a tessellated cluster object
     TessellatedCluster<NVERT, Real_v> *tcl = new TessellatedCluster<NVERT, Real_v>();
-    int i = 0;
+    int i                                  = 0;
     for (auto ifacet : fCluster) {
       Facet_t *facet = fFacets[ifacet];
       tcl->AddFacet(i++, facet, ifacet);
