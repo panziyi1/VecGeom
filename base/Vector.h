@@ -217,7 +217,8 @@ public:
   void resize(size_t newsize)
   {
     Type value;
-    if (Internal::is_pointer<Type>::value) value = nullptr;
+    // if (Internal::is_pointer<Type>::value) value = nullptr;
+    value = 0; // changed otherwise doesn't work with Vector<double>
     resize(newsize, value);
   }
 

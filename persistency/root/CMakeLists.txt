@@ -16,7 +16,7 @@ include(${ROOT_USE_FILE})
 
 
 #generating the dictionary
-REFLEX_GENERATE_DICTIONARY(RootPClasses include/classes.hh SELECTION xml/selection.xml OPTIONS --debug)
+REFLEX_GENERATE_DICTIONARY(RootPClasses include/classes.hh SELECTION xml/selection.xml) #OPTIONS --debug)
 add_library(RootPClassesDict SHARED RootPClasses.cxx)
 set_target_properties(RootPClassesDict PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
 target_link_libraries(RootPClassesDict ${VECGEOM_LIBRARIES} ${ROOT_LIBRARIES})

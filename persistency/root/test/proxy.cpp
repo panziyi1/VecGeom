@@ -1,4 +1,4 @@
-#include "test_fullgeo.hh"
+#include "RootPersistencyTest.h"
 
 template <class T>
 void SetCollectionProxy()
@@ -23,4 +23,6 @@ void SetCollectionProxy()
 void proxy()
 {
   SetCollectionProxy<vecgeom::Vector<const vecgeom::VPlacedVolume *>>();
+  SetCollectionProxy<vecgeom::Vector<double>>();
+  SetCollectionProxy<vecgeom::Vector<double *>>();
 }
