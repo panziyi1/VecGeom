@@ -103,8 +103,26 @@ VECCORE_ATT_HOST_DEVICE
 UnplacedTrapezoid::UnplacedTrapezoid(double dx1, double dx2, double dy, double dz)
     : fTrap(dz, 0., 0., dy, dx1, dx1, 0., dy, dx2, dx2, 0.)
 {
+  MakePlanes();
+  fGlobalConvexity = true;
 }
 
+UnplacedTrapezoid::UnplacedTrapezoid(double dx1, double dx2, double dy1, double dy2, double dz)
+    : UnplacedTrapezoid(dz, 0., 0., dy1, dx1, dx1, 0., dy2, dx2, dx2, 0.)
+{
+  MakePlanes();
+  fGlobalConvexity = true;
+}
+
+UnplacedTrapezoid::UnplacedTrapezoid(double dx, double dy, double dz, double alpha, double theta, double phi)
+    : fTrap(dz, theta, phi, dy, dx, dx, alpha, dy, dx, dx, alpha)
+{
+  // TODO: validate alpha usage here
+  fTrap.fTanAlpha1 = std::tan(alpha);
+  fTrap.fTanAlpha2 = fTrap.fTanAlpha1;
+  MakePlanes();
+  fGlobalConvexity = true;
+}
 VECCORE_ATT_HOST_DEVICE
 UnplacedTrapezoid::UnplacedTrapezoid(Precision xbox, Precision ybox, Precision zbox)
     : fTrap(zbox, 0., 0., ybox, xbox, xbox, 0., ybox, xbox, xbox, 0.)

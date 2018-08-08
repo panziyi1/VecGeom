@@ -84,29 +84,15 @@ public:
 
   /// \brief Constructor required by Geant4
   VECCORE_ATT_HOST_DEVICE
-  //  UnplacedTrapezoid(double dx, double dy, double dz, double);
   // Constructor corresponding to Trd1
   UnplacedTrapezoid(double dx1, double dx2, double dy, double dz);
 
   // Constructor corresponding to Trd2
   /// \brief Constructor for a Trd-like trapezoid
-  UnplacedTrapezoid(double dx1, double dx2, double dy1, double dy2, double dz)
-      //: UnplacedTrapezoid(dz, 0., 0., dy1, dx1, dx2, 0., dy2, dx1, dx2, 0.)
-      : UnplacedTrapezoid(dz, 0., 0., dy1, dx1, dx1, 0., dy2, dx2, dx2, 0.)
-  {
-  }
+  UnplacedTrapezoid(double dx1, double dx2, double dy1, double dy2, double dz);
 
   /// \brief Constructor for a Parallelepiped-like trapezoid (Note: still to be validated)
-  UnplacedTrapezoid(double dx, double dy, double dz, double alpha, double theta, double phi)
-      //      : fTrap(dz, theta, phi, dy, dx, dx, 0., dy, dx, dx, 0.)
-      : fTrap(dz, theta, phi, dy, dx, dx, alpha, dy, dx, dx, alpha)
-  {
-    // TODO: validate alpha usage here
-    fTrap.fTanAlpha1 = std::tan(alpha);
-    fTrap.fTanAlpha2 = fTrap.fTanAlpha1;
-    fGlobalConvexity = true;
-    MakePlanes();
-  }
+  UnplacedTrapezoid(double dx, double dy, double dz, double alpha, double theta, double phi);
 
   /// \brief Accessors
   /// @{
