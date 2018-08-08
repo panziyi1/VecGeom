@@ -8,6 +8,7 @@
 #include "management/GeoManager.h"
 #include "volumes/UnplacedPolycone.h"
 #include "volumes/UnplacedCone.h"
+#include "volumes/UnplacedTube.h"
 #include "volumes/PlacedPolycone.h"
 #include "volumes/PlacedCone.h"
 #include "volumes/SpecializedPolycone.h"
@@ -15,14 +16,242 @@
 #include "volumes/utilities/GenerationUtilities.h"
 #ifndef VECCORE_CUDA
 #include "base/RNG.h"
+#include "volumes/UnplacedImplAs.h"
 #endif
+
+#ifdef VECGEOM_ROOT
+#include "TGeoPcon.h"
+#endif
+
+#ifdef VECGEOM_GEANT4
+#include "G4Polycone.hh"
+#endif
+
 #include <iostream>
 #include <cstdio>
 #include <vector>
 #include "base/Vector.h"
+#include "management/GeoManager.h"
 
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
+
+template <>
+UnplacedPolycone *Maker<UnplacedPolycone>::MakeInstance(Precision phistart, Precision deltaphi, int Nz,
+                                                        Precision const *z, Precision const *rmin,
+                                                        Precision const *rmax)
+{
+
+#ifndef VECGEOM_NO_SPECIALIZATION
+  // Polycone is actually a cone or a tube
+  if (Nz == 2) {
+    // Basically here we need all the specializations from tube and cone
+    Precision dz = std::fabs(z[1] - z[0]) / 2.;
+    if (rmin[0] == rmin[1] && rmax[0] == rmax[1]) {
+      // List of Tube Specializations
+      if (rmin[0] <= 0.) {
+        // NonHollowType
+        if (deltaphi >= 2 * M_PI) {
+          return new SUnplacedImplAs<SUnplacedPolycone<ConeTypes::NonHollowCone>,
+                                     SUnplacedTube<TubeTypes::NonHollowTube>>(rmin[0], rmax[0], dz, phistart, deltaphi);
+        }
+        if (deltaphi == M_PI) {
+          return new SUnplacedImplAs<SUnplacedPolycone<ConeTypes::NonHollowConeWithPiSector>,
+                                     SUnplacedTube<TubeTypes::NonHollowTubeWithPiSector>>(rmin[0], rmax[0], dz,
+                                                                                          phistart, deltaphi);
+        }
+        if (deltaphi < M_PI) {
+          return new SUnplacedImplAs<SUnplacedPolycone<ConeTypes::NonHollowConeWithSmallerThanPiSector>,
+                                     SUnplacedTube<TubeTypes::NonHollowTubeWithSmallerThanPiSector>>(
+              rmin[0], rmax[0], dz, phistart, deltaphi);
+        }
+        if (deltaphi > M_PI) {
+          return new SUnplacedImplAs<SUnplacedPolycone<ConeTypes::NonHollowConeWithBiggerThanPiSector>,
+                                     SUnplacedTube<TubeTypes::NonHollowTubeWithBiggerThanPiSector>>(
+              rmin[0], rmax[0], dz, phistart, deltaphi);
+        }
+
+      } else if (rmin[0] > 0.) {
+        // HollowType
+        if (deltaphi >= 2 * M_PI) {
+          return new SUnplacedImplAs<SUnplacedPolycone<ConeTypes::HollowCone>, SUnplacedTube<TubeTypes::HollowTube>>(
+              rmin[0], rmax[0], dz, phistart, deltaphi);
+        }
+        if (deltaphi == M_PI) {
+          return new SUnplacedImplAs<SUnplacedPolycone<ConeTypes::HollowConeWithPiSector>,
+                                     SUnplacedTube<TubeTypes::HollowTubeWithPiSector>>(rmin[0], rmax[0], dz, phistart,
+                                                                                       deltaphi);
+        }
+        if (deltaphi < M_PI) {
+          return new SUnplacedImplAs<SUnplacedPolycone<ConeTypes::HollowConeWithSmallerThanPiSector>,
+                                     SUnplacedTube<TubeTypes::HollowTubeWithSmallerThanPiSector>>(rmin[0], rmax[0], dz,
+                                                                                                  phistart, deltaphi);
+        }
+        if (deltaphi > M_PI) {
+          return new SUnplacedImplAs<SUnplacedPolycone<ConeTypes::HollowConeWithBiggerThanPiSector>,
+                                     SUnplacedTube<TubeTypes::HollowTubeWithBiggerThanPiSector>>(rmin[0], rmax[0], dz,
+                                                                                                 phistart, deltaphi);
+        }
+      }
+
+      // SHOULD NEVER REACH HERE
+      return new SUnplacedImplAs<SUnplacedPolycone<ConeTypes::UniversalCone>, SUnplacedTube<TubeTypes::UniversalTube>>(
+          rmin[0], rmax[0], dz, phistart, deltaphi);
+
+    } else {
+
+      // List of Cone Specializations
+      if (rmin[0] <= 0 && rmin[1] <= 0) {
+        // NonHollowType
+        if (deltaphi >= 2 * M_PI) {
+          return new SUnplacedImplAs<SUnplacedPolycone<ConeTypes::NonHollowCone>,
+                                     SUnplacedCone<ConeTypes::NonHollowCone>>(rmin[0], rmax[0], rmin[1], rmax[1], dz,
+                                                                              phistart, deltaphi);
+        }
+        if (deltaphi == M_PI) {
+          return new SUnplacedImplAs<SUnplacedPolycone<ConeTypes::NonHollowConeWithPiSector>,
+                                     SUnplacedCone<ConeTypes::NonHollowConeWithPiSector>>(
+              rmin[0], rmax[0], rmin[1], rmax[1], dz, phistart, deltaphi);
+        }
+        if (deltaphi < M_PI) {
+          return new SUnplacedImplAs<SUnplacedPolycone<ConeTypes::NonHollowConeWithSmallerThanPiSector>,
+                                     SUnplacedCone<ConeTypes::NonHollowConeWithSmallerThanPiSector>>(
+              rmin[0], rmax[0], rmin[1], rmax[1], dz, phistart, deltaphi);
+        }
+        if (deltaphi > M_PI) {
+          return new SUnplacedImplAs<SUnplacedPolycone<ConeTypes::NonHollowConeWithBiggerThanPiSector>,
+                                     SUnplacedCone<ConeTypes::NonHollowConeWithBiggerThanPiSector>>(
+              rmin[0], rmax[0], rmin[1], rmax[1], dz, phistart, deltaphi);
+        }
+      } else {
+        // HollowType
+        if (deltaphi >= 2 * M_PI) {
+          return new SUnplacedImplAs<SUnplacedPolycone<ConeTypes::HollowCone>, SUnplacedCone<ConeTypes::HollowCone>>(
+              rmin[0], rmax[0], rmin[1], rmax[1], dz, phistart, deltaphi);
+        }
+        if (deltaphi == M_PI) {
+          return new SUnplacedImplAs<SUnplacedPolycone<ConeTypes::HollowConeWithPiSector>,
+                                     SUnplacedCone<ConeTypes::HollowConeWithPiSector>>(rmin[0], rmax[0], rmin[1],
+                                                                                       rmax[1], dz, phistart, deltaphi);
+        }
+        if (deltaphi < M_PI) {
+          return new SUnplacedImplAs<SUnplacedPolycone<ConeTypes::HollowConeWithSmallerThanPiSector>,
+                                     SUnplacedCone<ConeTypes::HollowConeWithSmallerThanPiSector>>(
+              rmin[0], rmax[0], rmin[1], rmax[1], dz, phistart, deltaphi);
+        }
+        if (deltaphi > M_PI) {
+          return new SUnplacedImplAs<SUnplacedPolycone<ConeTypes::HollowConeWithBiggerThanPiSector>,
+                                     SUnplacedCone<ConeTypes::HollowConeWithBiggerThanPiSector>>(
+              rmin[0], rmax[0], rmin[1], rmax[1], dz, phistart, deltaphi);
+        }
+      }
+      // SHOULD NEVER REACH HERE
+      return new SUnplacedImplAs<SUnplacedPolycone<ConeTypes::UniversalCone>, SUnplacedCone<ConeTypes::UniversalCone>>(
+          rmin[0], rmax[0], rmin[1], rmax[1], dz, phistart, deltaphi);
+    }
+  } else {
+    // Still there are many more cases for specialization of polycone havin Nz > 2
+    // 1) When the polycone is Completely NonHollow Polycone
+    bool isCompletelyNonHollow = false;
+    for (int i = 0; i < Nz; i++) {
+      if (i == 0)
+        isCompletelyNonHollow = rmin[i] == 0.;
+      else
+        isCompletelyNonHollow &= rmin[i] == 0.;
+    }
+    if (isCompletelyNonHollow) {
+      if (deltaphi >= 2 * M_PI) {
+        return new SUnplacedPolycone<ConeTypes::NonHollowCone>(phistart, deltaphi, Nz, z, rmin, rmax);
+      }
+      if (deltaphi == M_PI) {
+        return new SUnplacedPolycone<ConeTypes::NonHollowConeWithPiSector>(phistart, deltaphi, Nz, z, rmin, rmax);
+      }
+      if (deltaphi < M_PI) {
+        return new SUnplacedPolycone<ConeTypes::NonHollowConeWithSmallerThanPiSector>(phistart, deltaphi, Nz, z, rmin,
+                                                                                      rmax);
+      }
+      if (deltaphi > M_PI) {
+        return new SUnplacedPolycone<ConeTypes::NonHollowConeWithBiggerThanPiSector>(phistart, deltaphi, Nz, z, rmin,
+                                                                                     rmax);
+      }
+    }
+
+    // 2) When the polycone is Completely Hollow Polycone
+    bool isCompletelyHollow = false;
+    for (int i = 0; i < Nz; i++) {
+      if (i == 0)
+        isCompletelyHollow = rmin[i] > 0.;
+      else
+        isCompletelyHollow &= rmin[i] > 0.;
+    }
+    if (isCompletelyHollow) {
+      if (deltaphi >= 2 * M_PI) {
+        return new SUnplacedPolycone<ConeTypes::HollowCone>(phistart, deltaphi, Nz, z, rmin, rmax);
+      }
+      if (deltaphi == M_PI) {
+        return new SUnplacedPolycone<ConeTypes::HollowConeWithPiSector>(phistart, deltaphi, Nz, z, rmin, rmax);
+      }
+      if (deltaphi < M_PI) {
+        return new SUnplacedPolycone<ConeTypes::HollowConeWithSmallerThanPiSector>(phistart, deltaphi, Nz, z, rmin,
+                                                                                   rmax);
+      }
+      if (deltaphi > M_PI) {
+        return new SUnplacedPolycone<ConeTypes::HollowConeWithBiggerThanPiSector>(phistart, deltaphi, Nz, z, rmin,
+                                                                                  rmax);
+      }
+    }
+
+    // In case the polycone is the combination of Hollow and NonHollow Sections, then
+    // we will pass it on to UnversalCone.
+    return new SUnplacedPolycone<ConeTypes::UniversalCone>(phistart, deltaphi, Nz, z, rmin, rmax);
+  }
+
+#else
+  return new SUnplacedPolycone<ConeTypes::UniversalCone>(phistart, deltaphi, Nz, z, rmin, rmax);
+#endif
+}
+
+#ifndef VECCORE_CUDA
+#ifdef VECGEOM_ROOT
+TGeoShape const *UnplacedPolycone::ConvertToRoot(char const *label) const
+{
+  //	  UnplacedPolycone const *unplaced = GetUnplacedVolume();
+
+  std::vector<double> rmin;
+  std::vector<double> rmax;
+  std::vector<double> z;
+  // unplaced->ReconstructSectionArrays(z, rmin, rmax);
+  ReconstructSectionArrays(z, rmin, rmax);
+
+  TGeoPcon *rootshape = new TGeoPcon(fPolycone.fStartPhi * kRadToDeg, fPolycone.fDeltaPhi * kRadToDeg, z.size());
+
+  if (fPolycone.fNz != z.size()) std::cout << "WARNING: Inconsistency in number of polycone sections\n";
+
+  for (unsigned int i = 0; i < fPolycone.fNz; ++i)
+    rootshape->DefineSection(i, z[i], rmin[i], rmax[i]);
+
+  return rootshape;
+}
+#endif
+
+#ifdef VECGEOM_GEANT4
+G4VSolid const *UnplacedPolycone::ConvertToGeant4(char const *label) const
+{
+  // UnplacedPolycone const *unplaced = GetUnplacedVolume();
+
+  std::vector<double> rmin;
+  std::vector<double> rmax;
+  std::vector<double> z;
+  // unplaced->
+  ReconstructSectionArrays(z, rmin, rmax);
+
+  G4Polycone *g4shape =
+      new G4Polycone("", fPolycone.fStartPhi, fPolycone.fDeltaPhi, z.size(), &z[0], &rmin[0], &rmax[0]);
+
+  return g4shape;
+}
+#endif
+#endif
 
 void UnplacedPolycone::Reset()
 {
@@ -508,7 +737,7 @@ bool UnplacedPolycone::Normal(Vector3D<Precision> const &point, Vector3D<Precisi
   int index  = GetSectionIndex(point.z() - kTolerance);
 
   if (index < 0) {
-    valid                 = false;
+    valid = false;
     if (index == -1) norm = Vector3D<Precision>(0., 0., -1.);
     if (index == -2) norm = Vector3D<Precision>(0., 0., 1.);
     return valid;
@@ -563,7 +792,7 @@ void UnplacedPolycone::Extent(Vector3D<Precision> &aMin, Vector3D<Precision> &aM
   Precision maxR = 0;
 
   for (i = 0; i < GetNSections(); i++) {
-    PolyconeSection const &sec          = GetSection(i);
+    PolyconeSection const &sec = GetSection(i);
     if (maxR < sec.fSolid->fRmax1) maxR = sec.fSolid->fRmax1;
     if (maxR < sec.fSolid->fRmax2) maxR = sec.fSolid->fRmax2;
   }
@@ -686,12 +915,12 @@ bool UnplacedPolycone::CheckContinuity(const double rOuter[], const double rInne
   }
 
   /* Creating a new temporary Reduced polycone with desired data elements,
-  *  which makes sure that denominator will never be zero (hence avoiding FPE(division by zero)),
-  *  while calculating slope.
-  *
-  *  This will be the minimum polycone,i.e. no extra section which
-  *  affect its shape
-  */
+   *  which makes sure that denominator will never be zero (hence avoiding FPE(division by zero)),
+   *  while calculating slope.
+   *
+   *  This will be the minimum polycone,i.e. no extra section which
+   *  affect its shape
+   */
 
   for (size_t j = 0; j < rOut.size();) {
 
@@ -757,16 +986,18 @@ void UnplacedPolycone::DetectConvexity()
   // return convexity;
 }
 
+/*
 #ifndef VECCORE_CUDA
 template <TranslationCode trans_code, RotationCode rot_code>
 VPlacedVolume *UnplacedPolycone::Create(LogicalVolume const *const logical_volume,
                                         Transformation3D const *const transformation, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedPolycone<trans_code, rot_code>(logical_volume, transformation);
-    return placement;
+    //new (placement) SpecializedPolycone<trans_code, rot_code,PolyconeTypes::UniversalPolycone>(logical_volume,
+transformation); new (placement) SpecializedPolycone<trans_code, rot_code,ConeTypes::UniversalCone>(logical_volume,
+transformation); return placement;
   }
-  return new SpecializedPolycone<trans_code, rot_code>(logical_volume, transformation);
+  return new SpecializedPolycone<trans_code, rot_code, ConeTypes::UniversalCone>(logical_volume, transformation);
 }
 
 VPlacedVolume *UnplacedPolycone::SpecializedVolume(LogicalVolume const *const volume,
@@ -803,8 +1034,9 @@ VPlacedVolume *UnplacedPolycone::SpecializedVolume(LogicalVolume const *const vo
 }
 
 #endif
+*/
 
-} // End impl namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
 
 #ifdef VECCORE_CUDA
 
@@ -814,8 +1046,8 @@ template size_t DevicePtr<cuda::UnplacedPolycone>::SizeOf();
 template void DevicePtr<cuda::UnplacedPolycone>::Construct(Precision, Precision, int, Precision *, Precision *,
                                                            Precision *) const;
 
-} // End cxx namespace
+} // namespace cxx
 
 #endif
 
-} // end global namespace
+} // namespace vecgeom

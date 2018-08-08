@@ -266,6 +266,7 @@ template <typename ConeType = ConeTypes::UniversalCone>
 class SUnplacedCone : public SIMDUnplacedVolumeImplHelper<ConeImplementation<ConeType>, UnplacedCone>,
                       public vecgeom::AlignedBase {
 public:
+  using Kernel     = ConeImplementation<ConeType>;
   using BaseType_t = SIMDUnplacedVolumeImplHelper<ConeImplementation<ConeType>, UnplacedCone>;
   using BaseType_t::BaseType_t;
 
@@ -277,7 +278,6 @@ public:
 #endif
                                VPlacedVolume *const placement = NULL);
 
-private:
 #ifndef VECCORE_CUDA
   virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
                                            Transformation3D const *const transformation,
@@ -303,8 +303,8 @@ private:
 
 using GenericUnplacedCone = SUnplacedCone<ConeTypes::UniversalCone>;
 
-} // end VECGEOM_IMPL_NAMESPACE
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 // we include this header here because SpecializedCone
 // implements the Create function of SUnplacedCone<> (and to avoid a circular dependency)
