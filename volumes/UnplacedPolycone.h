@@ -186,8 +186,7 @@ public:
   // these methods are required by VUnplacedVolume
   //
 public:
-  // virtual int MemorySize() const final { return sizeof(*this); }
-  virtual int MemorySize() const { return sizeof(*this); }
+  virtual int MemorySize() const override { return sizeof(*this); }
 
   VECCORE_ATT_HOST_DEVICE
   virtual void Print() const final;
