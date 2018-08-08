@@ -44,5 +44,5 @@ void vector_test()
     cout << *i << "(" << i << ")"
          << ", ";
 
-  cout << endl << endl;
+  cout << endl;
 }

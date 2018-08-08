@@ -26,7 +26,7 @@ void unplaced_test()
   // reading back
 
   cout << "reading from unplaced.root" << endl;
-  TFile fi("geo.root");
+  TFile fi("unplaced.root");
 
   UnplacedBox *rbox;
   UnplacedParaboloid *rpar;
