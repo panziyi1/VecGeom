@@ -1,6 +1,6 @@
 <lcgdict>
 
-  <class name="Vc::VectorAlignedBase"/>
+  <class name="Vc_1::AlignedBase<16>"/>
   <class name="vecgeom::AlignedBase"/>
   <class name="vecgeom::VUnplacedVolume"/>
   <class name="vecgeom::LogicalVolume">
