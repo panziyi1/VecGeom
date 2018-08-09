@@ -42,6 +42,13 @@ public:
     fGlobalConvexity = true;
   }
 
+  // Constructor for BoxLikeParallelepiped
+  VECCORE_ATT_HOST_DEVICE
+  UnplacedParallelepiped(const Precision x, const Precision y, const Precision z) : fPara(x, y, z, 0., 0., 0.)
+  {
+    fGlobalConvexity = true;
+  }
+
   /** @brief Default constructor */
   VECCORE_ATT_HOST_DEVICE
   UnplacedParallelepiped() : fPara(0., 0., 0., 0., 0., 0.) { fGlobalConvexity = true; }
@@ -146,6 +153,15 @@ public:
 #ifndef VECCORE_CUDA
   /** @brief Generates randomly a point on the surface of the parallelepiped */
   Vector3D<Precision> SamplePointOnSurface() const override;
+
+#ifdef VECGEOM_ROOT
+  TGeoShape const *ConvertToRoot(char const *label) const;
+#endif
+
+#ifdef VECGEOM_GEANT4
+  G4VSolid const *ConvertToGeant4(char const *label) const;
+#endif
+
 #endif
 
   /** @brief Implementation of surface area computation */
@@ -195,9 +211,21 @@ private:
 #ifdef VECCORE_CUDA
                                            const int id,
 #endif
-                                           VPlacedVolume *const placement = NULL) const final;
+                                           VPlacedVolume *const placement = NULL) const override;
 };
-}
-} // End global namespace
+
+template <>
+struct Maker<UnplacedParallelepiped> {
+  template <typename... ArgTypes>
+  static UnplacedParallelepiped *MakeInstance(const Precision x, const Precision y, const Precision z,
+                                              const Precision alpha, const Precision theta, const Precision phi);
+
+  template <typename... ArgTypes>
+  static UnplacedParallelepiped *MakeInstance(Vector3D<Precision> const &dimensions, const Precision alpha,
+                                              const Precision theta, const Precision phi);
+};
+
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif // VECGEOM_VOLUMES_UNPLACEDPARALLELEPIPED_H_

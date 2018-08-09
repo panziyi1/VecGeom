@@ -5,12 +5,14 @@
 
 #include "volumes/Parallelepiped.h"
 
+/*
 #ifdef VECGEOM_ROOT
 #include "TGeoPara.h"
 #endif
 #ifdef VECGEOM_GEANT4
 #include "G4Para.hh"
 #endif
+*/
 
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
@@ -25,21 +27,23 @@ VPlacedVolume const *PlacedParallelepiped::ConvertToUnspecialized() const
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedParallelepiped::ConvertToRoot() const
 {
-  return new TGeoPara(GetLabel().c_str(), GetX(), GetY(), GetZ(), GetAlpha() * kRadToDeg, GetTheta() * kRadToDeg,
-                      GetPhi() * kRadToDeg);
+  // return new TGeoPara(GetLabel().c_str(), GetX(), GetY(), GetZ(), GetAlpha() * kRadToDeg, GetTheta() * kRadToDeg,
+  //                  GetPhi() * kRadToDeg);
+  return GetUnplacedVolume()->ConvertToRoot(GetName());
 }
 #endif
 
 #ifdef VECGEOM_GEANT4
 G4VSolid const *PlacedParallelepiped::ConvertToGeant4() const
 {
-  return new G4Para(GetLabel(), GetX(), GetY(), GetZ(), GetAlpha(), GetTheta(), GetPhi());
+  // return new G4Para(GetLabel(), GetX(), GetY(), GetZ(), GetAlpha(), GetTheta(), GetPhi());
+  return GetUnplacedVolume()->ConvertToGeant4(GetName());
 }
 #endif
 
 #endif // VECCORE_CUDA
 
-} // End impl namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
 
 #ifdef VECCORE_CUDA
 
@@ -47,4 +51,4 @@ VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC(SpecializedParallelepiped)
 
 #endif // VECCORE_CUDA
 
-} // End global namespace
+} // namespace vecgeom

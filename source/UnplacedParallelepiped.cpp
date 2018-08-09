@@ -8,14 +8,61 @@
 #include "management/VolumeFactory.h"
 #include "volumes/SpecializedParallelepiped.h"
 #include "volumes/utilities/GenerationUtilities.h"
+#include "volumes/UnplacedBox.h"
 
 #ifndef VECCORE_CUDA
 #include "base/RNG.h"
 #endif
 
+#ifdef VECGEOM_ROOT
+#include "TGeoPara.h"
+#endif
+#ifdef VECGEOM_GEANT4
+#include "G4Para.hh"
+#endif
+
+#ifndef VECCORE_CUDA
+#include "volumes/UnplacedImplAs.h"
+#endif
+
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
+template <>
+UnplacedParallelepiped *Maker<UnplacedParallelepiped>::MakeInstance(const Precision x, const Precision y,
+                                                                    const Precision z, const Precision alpha,
+                                                                    const Precision theta, const Precision phi)
+{
+#ifndef VECGEOM_NO_SPECIALIZATION
+#ifndef VECCORE_CUDA
+  // Parallelepiped becomes Box
+  if (alpha == 0 && theta == 0 && phi == 0) {
+    return new SUnplacedImplAs<UnplacedParallelepiped, UnplacedBox>(x, y, z);
+  }
+#endif
+  return new UnplacedParallelepiped(x, y, z, alpha, theta, phi);
+#else
+  return new UnplacedParallelepiped(x, y, z, alpha, theta, phi);
+#endif
+}
+
+template <>
+UnplacedParallelepiped *Maker<UnplacedParallelepiped>::MakeInstance(Vector3D<Precision> const &dimensions,
+                                                                    const Precision alpha, const Precision theta,
+                                                                    const Precision phi)
+{
+#ifndef VECGEOM_NO_SPECIALIZATION
+#ifndef VECCORE_CUDA
+  // Parallelepiped becomes Box
+  if (alpha == 0 && theta == 0 && phi == 0) {
+    return new SUnplacedImplAs<UnplacedParallelepiped, UnplacedBox>(dimensions.x(), dimensions.y(), dimensions.z());
+  }
+#endif
+  return new UnplacedParallelepiped(dimensions, alpha, theta, phi);
+#else
+  return new UnplacedParallelepiped(dimensions, alpha, theta, phi);
+#endif
+}
 //______________________________________________________________________________
 void UnplacedParallelepiped::Print() const
 {
@@ -79,6 +126,24 @@ Vector3D<Precision> UnplacedParallelepiped::SamplePointOnSurface() const
   point[2] = dz;
   return (point);
 }
+
+#ifdef VECGEOM_ROOT
+TGeoShape const *UnplacedParallelepiped::ConvertToRoot(char const *label) const
+{
+  // return new TGeoHype(label, GetRmin(), GetStIn() * kRadToDeg, GetRmax(), GetStOut() * kRadToDeg, GetDz());
+  return new TGeoPara(label, GetX(), GetY(), GetZ(), GetAlpha() * kRadToDeg, GetTheta() * kRadToDeg,
+                      GetPhi() * kRadToDeg);
+}
+#endif
+
+#ifdef VECGEOM_GEANT4
+G4VSolid const *UnplacedParallelepiped::ConvertToGeant4(char const *label) const
+{
+  // return new G4Hype(label, GetRmin(), GetRmax(), GetStIn(), GetStOut(), GetDz());
+  return new G4Para(label, GetX(), GetY(), GetZ(), GetAlpha(), GetTheta(), GetPhi());
+}
+#endif
+
 #endif
 
 //______________________________________________________________________________
@@ -103,7 +168,7 @@ bool UnplacedParallelepiped::Normal(Vector3D<Precision> const &point, Vector3D<P
     isurf  = 1;
   }
   if (safetyVector[2] < safety) isurf = 2;
-  normal                              = fPara.fNormals[isurf];
+  normal = fPara.fNormals[isurf];
   if (local[isurf] < 0) normal *= -1;
   return true;
 }
@@ -161,7 +226,7 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedParallelepiped::CopyToGpu() const
 
 #endif // VECGEOM_CUDA_INTERFACE
 
-} // End impl namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
 
 #ifdef VECCORE_CUDA
 
@@ -172,8 +237,8 @@ template void DevicePtr<cuda::UnplacedParallelepiped>::Construct(const Precision
                                                                  const Precision z, const Precision alpha,
                                                                  const Precision theta, const Precision phi) const;
 
-} // End cxx namespace
+} // namespace cxx
 
 #endif
 
-} // End global namespace
+} // namespace vecgeom
