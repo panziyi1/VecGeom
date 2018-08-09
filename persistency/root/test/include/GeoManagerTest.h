@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "classes.hh"
+#include "Classes.h"
 
 #include "TROOT.h"
 #include "TFile.h"
