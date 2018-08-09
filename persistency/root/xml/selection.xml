@@ -17,6 +17,13 @@
   </class>
   <class name="vecgeom::VPlacedVolume"/>
 
+  <class name="vecgeom::GeoManager">
+    <field name="fgInstance" transient="true"/>
+  </class>
+  <class name="std::map<unsigned int,vecgeom::VPlacedVolume*>"/>
+  <class name="std::map<unsigned int,vecgeom::LogicalVolume*>"/>
+  <class name="std::map<const vecgeom::VPlacedVolume*, unsigned int>"/>
+
   <class name="vecgeom::Vector3D<double>"/>
   <class name="vecgeom::Transformation3D"/>
   <class name="vecgeom::VectorBase<const vecgeom::VPlacedVolume*>"/>

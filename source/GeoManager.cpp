@@ -23,6 +23,7 @@ namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
 VPlacedVolume *GeoManager::gCompactPlacedVolBuffer = nullptr;
+GeoManager *GeoManager::fgInstance                 = nullptr;
 
 void GeoManager::RegisterLogicalVolume(LogicalVolume *const logical_volume)
 {

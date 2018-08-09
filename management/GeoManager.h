@@ -126,14 +126,23 @@ private:
   void visitAllPlacedVolumesWithContext(VPlacedVolume const *, Visitor *visitor, NavigationState *state,
                                         int level = 1) const;
 
+  static GeoManager *fgInstance; // required to be defined as class attribute
 public:
   static VPlacedVolume *gCompactPlacedVolBuffer;
+
+  GeoManager(TRootIOCtor *) : fWorld(nullptr), fPlacedVolumesMap(), fLogicalVolumesMap(), fVolumeToIndexMap()
+  {
+    if (fgInstance != nullptr)
+      throw std::runtime_error("GeoManager(TRootIOCtor *) already called, it should be a singleton");
+
+    fgInstance = this;
+  }
 
   /// Returns the singleton instance
   static GeoManager &Instance()
   {
-    static GeoManager instance;
-    return instance;
+    if (fgInstance == nullptr) fgInstance = new GeoManager();
+    return *fgInstance;
   }
 
   /**
