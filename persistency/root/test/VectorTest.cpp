@@ -7,7 +7,7 @@ void vector_test()
 {
   cout << "Running vector_test" << endl << endl;
 
-  proxy(); // calling the proxy
+  RootPersistencyProxy(); // calling the proxy
 
   double a = 9.548;
 

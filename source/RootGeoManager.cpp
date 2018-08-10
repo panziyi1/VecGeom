@@ -127,6 +127,53 @@ bool RootGeoManager::ExportToROOTGeometry(VPlacedVolume const *topvolume, std::s
   return true;
 }
 
+bool RootGeoManager::Export(const char *filename)
+{
+#ifndef VECGEOM_ROOT_PERSISTENCY
+  std::cerr << "ROOT persistency not enable. You must define ROOT_PERSISTENCY flag during compilation\n";
+  return false;
+#else
+
+  auto out_file = TFile::Open(filename, "RECREATE");
+  if (!out_file) {
+    std::cerr << "cannot open file " << filename << "\n";
+    return false;
+  }
+  RootPersistencyProxy();
+  out_file->WriteObject(&GeoManager::Instance(), "VecGeom_GeoManager");
+  delete out_file;
+
+  return true;
+#endif
+}
+
+bool RootGeoManager::Import(const char *filename)
+{
+#ifndef VECGEOM_ROOT_PERSISTENCY
+  std::cerr << "ROOT persistency not enable. You must define ROOT_PERSISTENCY flag during compilation\n";
+  return false;
+#else
+  GeoManager *GeoM = nullptr;
+  auto in_file     = TFile::Open(filename);
+  if (!in_file) {
+    std::cerr << "cannot open file " << filename << "\n";
+    return false;
+  }
+  RootPersistencyProxy();
+  in_file->GetObject("VecGeom_GeoManager", GeoM);
+
+  if (!GeoM) {
+    std::cerr << "cannot load VecGeom geometry\n";
+    return false;
+  }
+
+  assert(GeoM == &GeoManager::Instance());
+
+  delete in_file;
+  return true;
+#endif
+}
+
 // a helper function to convert ROOT assembly constructs into a flat list of nodes
 // allows parsing of more complex ROOT geometries ( until VecGeom supports assemblies natively )
 void FlattenAssemblies(TGeoNode *node, std::list<TGeoNode *> &nodeaccumulator, TGeoHMatrix const *globalmatrix,

@@ -1,6 +1,4 @@
-#include <iostream>
 
-#include "Classes.h"
 
 #include "TROOT.h"
 #include "TFile.h"
@@ -8,4 +6,5 @@
 #include "TClass.h"
 #include "TCollectionProxyInfo.h"
 
-void RootPersistencyProxy();
+#include "base/Vector.h"
+#include "volumes/PlacedVolume.h"

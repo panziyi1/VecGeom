@@ -1,4 +1,4 @@
-#include "RootPersistencyTest.h"
+#include "persistency/root/include/RootPersistencyProxy.h"
 
 template <class T>
 void SetCollectionProxy()
@@ -20,7 +20,7 @@ void SetCollectionProxy()
   delete info;
 }
 
-void proxy()
+void RootPersistencyProxy()
 {
   SetCollectionProxy<vecgeom::Vector<const vecgeom::VPlacedVolume *>>();
   SetCollectionProxy<vecgeom::Vector<double>>();

@@ -8,7 +8,7 @@
 #include "TClass.h"
 #include "TCollectionProxyInfo.h"
 
-void proxy();
+void RootPersistencyProxy();
 
 void unplaced_test();
 void logical_test();

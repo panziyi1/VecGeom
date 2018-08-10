@@ -518,6 +518,9 @@ endif()
 if (USE_INDEXEDNAVSTATES)
   set(VECGEOM_DEFINITIONS "${VECGEOM_DEFINITIONS} -DVECGEOM_USE_INDEXEDNAVSTATES")
 endif()
+if (ROOT_PERSISTENCY)
+  set(VECGEOM_DEFINITIONS "${VECGEOM_DEFINITIONS} -DVECGEOM_ROOT_PERSISTENCY")
+endif()
 
 ################################################################################
 
@@ -754,6 +757,13 @@ endif()
 if (ROOT)
   set(VECGEOM_ROOT_SRCS
     source/RootGeoManager.cpp
+  )
+endif()
+
+if (ROOT_PERSISTENCY)
+  set(VECGEOM_ROOT_SRCS
+    ${VECGEOM_ROOT_SRCS}
+    persistency/root/RootPersistencyProxy.cpp
   )
 endif()
 

@@ -2,14 +2,12 @@
 
 using namespace std;
 using namespace vecgeom;
-using namespace std;
-using namespace vecgeom;
 
 void write()
 {
   cout << "/////Running GeoManagerTest in write mode/////" << endl << endl;
 
-  proxy(); // calling the proxy
+  RootPersistencyProxy(); // calling the proxy
 
   double dx = 20.;
   double dy = 30.;
@@ -80,7 +78,7 @@ int main(int argc, char *argv[])
     usage();
     return 0;
   }
-  proxy();
+  RootPersistencyProxy();
   switch (argv[1][0]) {
   case 'w':
     write();

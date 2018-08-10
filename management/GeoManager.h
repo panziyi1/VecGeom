@@ -132,9 +132,11 @@ public:
 
   GeoManager(TRootIOCtor *) : fWorld(nullptr), fPlacedVolumesMap(), fLogicalVolumesMap(), fVolumeToIndexMap()
   {
-    if (fgInstance != nullptr)
-      throw std::runtime_error("GeoManager(TRootIOCtor *) already called, it should be a singleton");
-
+    if (fgInstance != nullptr) {
+      fgInstance->Clear();
+      delete fgInstance;
+      std::cout << "Deleting previous geometry\n";
+    }
     fgInstance = this;
   }
 

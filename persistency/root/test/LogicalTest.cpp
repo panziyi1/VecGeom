@@ -7,7 +7,7 @@ void logical_test()
 {
   cout << "Running logical_test" << endl << endl;
 
-  proxy(); // calling the proxy
+  RootPersistencyProxy(); // calling the proxy
 
   UnplacedBox worldUnplaced = UnplacedBox(4, 8, 6);
   UnplacedBox boxUnplaced   = UnplacedBox(4, 8, 6);
