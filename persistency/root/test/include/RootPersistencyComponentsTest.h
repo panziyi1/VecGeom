@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 
 #include "Classes.h"
@@ -9,3 +11,7 @@
 #include "TCollectionProxyInfo.h"
 
 void RootPersistencyProxy();
+
+bool unplaced_test();
+bool logical_test();
+bool vector_test();

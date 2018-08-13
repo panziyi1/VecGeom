@@ -32,6 +32,8 @@
   <class name="vecgeom::Vector<double>"/>
   <class name="vecgeom::VectorBase<double *>"/>
   <class name="vecgeom::Vector<double *>"/>
+  <class name="std::vector<double *>"/>
+  <class name="std::vector<double>"/>
 
   <class name="vecgeom::UnplacedBox"/>
   <class name="vecgeom::BoxStruct<double>"/>

@@ -1,16 +1,16 @@
-#include "RootPersistencyTest.h"
+#include "RootPersistencyComponentsTest.h"
 
 using namespace std;
 using namespace vecgeom;
 
-void logical_test()
+bool logical_test()
 {
-  cout << "Running logical_test" << endl << endl;
+  cout << "///// Running logical_test /////" << endl << endl;
 
   RootPersistencyProxy(); // calling the proxy
 
   UnplacedBox worldUnplaced = UnplacedBox(4, 8, 6);
-  UnplacedBox boxUnplaced   = UnplacedBox(4, 8, 6);
+  UnplacedBox boxUnplaced   = UnplacedBox(4, 18, 6);
   LogicalVolume world("world", &worldUnplaced);
   LogicalVolume box("box", &boxUnplaced);
   Transformation3D placement(0.1, 0, 0);
@@ -24,7 +24,6 @@ void logical_test()
   VPlacedVolume *worldPlaced = world.Place();
 
   cout << "writing on logical.root" << endl << endl;
-
   TFile fo("logical.root", "RECREATE");
   fo.WriteObject(&world, "world_saved");
   fo.WriteObject(worldPlaced, "worldP_saved");
@@ -39,21 +38,49 @@ void logical_test()
   fi.GetObject("world_saved", rworld);
   fi.GetObject("worldP_saved", rworldPlaced);
 
-  world.Print();
-  cout << endl << "------------------------------" << endl;
-  rworld->Print();
-  cout << endl << endl;
+  // testing
+  bool all_test_ok = true;
+  bool test_ok;
 
-  cout << "Number of daughters: " << rworld->GetDaughters().size() << ", expected: " << world.GetDaughters().size()
-       << endl
-       << endl;
-  for (auto placed : rworld->GetDaughters())
-    placed->Print();
+  test_ok = true;
+  cout << "[1] comparing LogicalVolume *world\n\n"
+       << ">> before\n";
+  world.PrintContent();
+  cout << "\n\n"
+       << ">> after\n";
+  rworld->PrintContent();
+  cout << "\n" << endl;
+  auto daughters  = world.GetDaughters();
+  auto rdaughters = rworld->GetDaughters();
+  if (rworld->GetDaughters().size() != world.GetDaughters().size()) {
+    cout << "number of daughters don't match\n";
+    test_ok = false;
+  }
+  for (VPlacedVolume const **vol = daughters.begin(), **rvol = rdaughters.begin(), **volEnd = daughters.end(),
+                           **rvolEnd = rdaughters.end();
+       vol != volEnd && rvol != rvolEnd; ++vol, ++rvol) {
+    if ((*vol)->GetLabel() != (*rvol)->GetLabel()) {
+      cout << "label doesn't match\n";
+      test_ok = false;
+    }
+    if ((*vol)->GetTransformation() != (*rvol)->GetTransformation()) {
+      cout << "transformation doesn't match\n";
+      test_ok = false;
+    }
+    if (((UnplacedBox *)((*vol)->GetLogicalVolume()->GetUnplacedVolume()))->dimensions() !=
+        ((UnplacedBox *)((*rvol)->GetLogicalVolume()->GetUnplacedVolume()))->dimensions()) {
+      cout << "dimensions of unplaced doesn't match\n";
+      test_ok = false;
+    }
+  }
+
+  if (test_ok)
+    cout << "test passed\n\n" << endl;
+  else {
+    cout << "! test not passed\n\n" << endl;
+    all_test_ok = false;
+  }
 
   cout << endl << endl;
-
-  worldPlaced->Print();
-  cout << endl << "------------------------------" << endl;
-  rworldPlaced->Print();
-  cout << endl << endl;
+  return all_test_ok;
 }

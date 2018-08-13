@@ -1,11 +1,11 @@
-#include "RootPersistencyTest.h"
+#include "RootPersistencyComponentsTest.h"
 
 using namespace std;
 using namespace vecgeom;
 
-void unplaced_test()
+bool unplaced_test()
 {
-  cout << "Running unplaced_test" << endl << endl;
+  cout << "///// Running unplaced_test /////" << endl << endl;
 
   auto box  = new UnplacedBox(.05, .06, .07);
   auto par  = new UnplacedParaboloid(.08, .09, .10);
@@ -37,25 +37,78 @@ void unplaced_test()
   fi.GetObject("par_saved", rpar);
   fi.GetObject("pal_saved", rpal);
   fi.GetObject("box2_saved", rbox2);
+  // testing
+  bool all_test_ok = true;
+  bool test_ok;
 
-  // printing
-  box->Print();
-  cout << endl;
+  // [1]
+  cout << "[1] comparing UnplacedBox box\n\n"
+       << ">> before\n",
+      box->Print();
+  cout << "\n"
+       << ">> after\n";
   rbox->Print();
-  cout << endl << endl;
 
-  par->Print();
-  cout << endl;
+  test_ok = (box->dimensions() == rbox->dimensions());
+  cout << "\n\n";
+  if (test_ok)
+    cout << "test passed\n\n" << endl;
+  else {
+    cout << "! test not passed\n\n" << endl;
+    all_test_ok = false;
+  }
+
+  // [2]
+  cout << "[2] comparing UnplacedParaboloid\n\n"
+       << ">> before\n",
+      par->Print();
+  cout << "\n"
+       << ">> after\n";
   rpar->Print();
-  cout << endl << endl;
+  cout << "\n\n";
+  test_ok = (par->GetRlo() == rpar->GetRlo() && par->GetRhi() == rpar->GetRhi() && par->GetDz() == rpar->GetDz() &&
+             par->GetA() == rpar->GetA() && par->GetB() == rpar->GetB());
 
-  pal->Print();
-  cout << endl;
+  if (test_ok)
+    cout << "test passed\n\n" << endl;
+  else {
+    cout << "! test not passed\n\n" << endl;
+    all_test_ok = false;
+  }
+  // [3]
+  cout << "[3] comparing UnplacedParallelepiped\n\n"
+       << ">> before\n",
+      pal->Print();
+  cout << "\n"
+       << ">> after\n";
   rpal->Print();
-  cout << endl << endl;
+  cout << "\n\n";
+  test_ok = (pal->GetX() == rpal->GetX() && pal->GetY() == rpal->GetY() && pal->GetZ() == rpal->GetZ() &&
+             pal->GetTanAlpha() == rpal->GetTanAlpha() && pal->GetTanThetaCosPhi() == rpal->GetTanThetaCosPhi() &&
+             pal->GetTanThetaSinPhi() == rpal->GetTanThetaSinPhi());
 
-  box2->Print();
-  cout << endl;
+  if (test_ok)
+    cout << "test passed\n\n" << endl;
+  else {
+    cout << "! test not passed\n\n" << endl;
+    all_test_ok = false;
+  }
+
+  // [4]
+  cout << "[4] comparing UnplacedBox box2\n\n"
+       << ">> before\n",
+      box2->Print();
+  cout << "\n"
+       << ">> after\n";
   rbox2->Print();
-  cout << endl << endl;
+
+  test_ok = (box2->dimensions() == rbox2->dimensions());
+  cout << "\n\n";
+  if (test_ok)
+    cout << "test passed\n\n" << endl;
+  else {
+    cout << "! test not passed\n\n" << endl;
+    all_test_ok = false;
+  }
+  return all_test_ok;
 }
