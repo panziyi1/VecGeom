@@ -20,10 +20,6 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 
 class UnplacedExtruded : public LoopUnplacedVolumeImplHelper<ExtrudedImplementation>, public AlignedBase {
 
-  // template <typename U>
-  // using vector_t = vecgeom::Vector<U>;
-  template <typename U>
-  using vector_t = std::vector<U>;
 
 private:
   ExtrudedStruct fXtru; ///< Structure storing the data for the tessellated solid

@@ -10,7 +10,7 @@
 
 int test()
 {
-  vecgeom::Vector<double> aVector;
+  vector_t<double> aVector;
   aVector.resize(2, 0.0);
   size_t newSize = aVector.size();
 

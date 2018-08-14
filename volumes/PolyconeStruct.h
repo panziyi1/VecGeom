@@ -34,16 +34,16 @@ struct PolyconeStruct {
   Precision fDeltaPhi;
   unsigned int fNz;
 
-  Vector<PolyconeSection> fSections;
-  Vector<double> fZs;
+  vector_t<PolyconeSection> fSections;
+  vector_t<double> fZs;
   PolyconeHistorical *fOriginal_parameters;
 
   VECCORE_ATT_HOST_DEVICE
   bool CheckContinuity(const double rOuter[], const double rInner[], const double zPlane[],
-                       Vector<Precision> &newROuter, Vector<Precision> &newRInner, Vector<Precision> &newZPlane)
+                       vector_t<Precision> &newROuter, vector_t<Precision> &newRInner, vector_t<Precision> &newZPlane)
   {
-    Vector<Precision> rOut, rIn;
-    Vector<Precision> zPl;
+    vector_t<Precision> rOut, rIn;
+    vector_t<Precision> zPl;
     rOut.push_back(rOuter[0]);
     rIn.push_back(rInner[0]);
     zPl.push_back(zPlane[0]);
@@ -113,7 +113,7 @@ struct PolyconeStruct {
   }
 
   VECCORE_ATT_HOST_DEVICE
-  bool CheckContinuityInRmax(const Vector<Precision> &rOuter)
+  bool CheckContinuityInRmax(const vector_t<Precision> &rOuter)
   {
     bool continuous  = true;
     unsigned int len = rOuter.size();
@@ -127,7 +127,7 @@ struct PolyconeStruct {
   }
 
   VECCORE_ATT_HOST_DEVICE
-  bool CheckContinuityInSlope(const Vector<Precision> &rOuter, const Vector<Precision> &zPlane)
+  bool CheckContinuityInSlope(const vector_t<Precision> &rOuter, const vector_t<Precision> &zPlane)
   {
 
     bool continuous      = true;
@@ -189,7 +189,7 @@ struct PolyconeStruct {
     //
     double RMaxextent = rOuterR[0];
 
-    Vector<Precision> newROuter, newZPlane, newRInner;
+    vector_t<Precision> newROuter, newZPlane, newRInner;
     fContinuityOverAll &= CheckContinuity(rOuterR, rInnerR, zPlaneR, newROuter, newRInner, newZPlane);
     fConvexityPossible &= (newRInner[0] == 0.);
 

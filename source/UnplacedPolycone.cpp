@@ -757,7 +757,7 @@ void UnplacedPolycone::Extent(Vector3D<Precision> &aMin, Vector3D<Precision> &aM
 
 #if (0)
 
-bool UnplacedPolycone::CheckContinuityInRmax(const Vector<Precision> &rOuter)
+bool UnplacedPolycone::CheckContinuityInRmax(const vector_t<Precision> &rOuter)
 {
 
   bool continuous  = true;
@@ -772,12 +772,12 @@ bool UnplacedPolycone::CheckContinuityInRmax(const Vector<Precision> &rOuter)
 }
 
 bool UnplacedPolycone::CheckContinuity(const double rOuter[], const double rInner[], const double zPlane[],
-                                       Vector<Precision> &newROuter, Vector<Precision> &newRInner,
-                                       Vector<Precision> &newZPlane)
+                                       vector_t<Precision> &newROuter, vector_t<Precision> &newRInner,
+                                       vector_t<Precision> &newZPlane)
 {
 
-  Vector<Precision> rOut, rIn;
-  Vector<Precision> zPl;
+  vector_t<Precision> rOut, rIn;
+  vector_t<Precision> zPl;
   rOut.push_back(rOuter[0]);
   rIn.push_back(rInner[0]);
   zPl.push_back(zPlane[0]);
@@ -849,7 +849,7 @@ bool UnplacedPolycone::CheckContinuity(const double rOuter[], const double rInne
  * Because of new design, it will not get the case of FPE exception
  * (division by zero)
  */
-bool UnplacedPolycone::CheckContinuityInSlope(const Vector<Precision> &rOuter, const Vector<Precision> &zPlane)
+bool UnplacedPolycone::CheckContinuityInSlope(const vector_t<Precision> &rOuter, const vector_t<Precision> &zPlane)
 {
 
   bool continuous      = true;

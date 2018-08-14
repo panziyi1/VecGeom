@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
   // worldPlaced->PrintContent();
 
   GeoManager::Instance().SetWorld(worldPlaced);
-  // Vector<Daughter> dau=worldPlaced->daughters();
+  // vector_t<Daughter> dau=worldPlaced->daughters();
   std::cout << "World and paraboloid placed\n";
 
   // My placed volume

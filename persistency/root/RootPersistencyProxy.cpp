@@ -22,8 +22,8 @@ void SetCollectionProxy()
 
 void RootPersistencyProxy()
 {
-  SetCollectionProxy<vecgeom::Vector<const vecgeom::VPlacedVolume *>>();
-  SetCollectionProxy<vecgeom::Vector<double>>();
-  SetCollectionProxy<vecgeom::Vector<double *>>();
+  // SetCollectionProxy<std::vector<const vecgeom::VPlacedVolume *>>();
+  // SetCollectionProxy<std::vector<double>>();
+  // SetCollectionProxy<std::vector<double *>>();
   SetCollectionProxy<std::vector<double *>>();
 }

@@ -125,7 +125,7 @@ vecgeom::DevicePtr<const vecgeom::cuda::VPlacedVolume> CudaManager::Synchronize(
   if (verbose_ > 2) std::cout << "Copying daughter arrays...";
   timer.Start();
   std::vector<CudaDaughter_t> daughter_array;
-  for (std::set<Vector<Daughter_t> *>::const_iterator i = daughters_.begin(); i != daughters_.end(); ++i) {
+  for (std::set<vector_t<Daughter_t> *>::const_iterator i = daughters_.begin(); i != daughters_.end(); ++i) {
 
     // First handle C arrays that must now point to GPU locations
     const int daughter_count = (*i)->size();
@@ -324,7 +324,7 @@ void CudaManager::AllocateGeometry()
     daughter_gpu_c_array.Allocate(total_volumes);
     allocated_memory_.push_back(GpuAddress(daughter_gpu_c_array));
 
-    for (std::set<Vector<Daughter> *>::const_iterator i = daughters_.begin(); i != daughters_.end(); ++i) {
+    for (std::set<vector_t<Daughter> *>::const_iterator i = daughters_.begin(); i != daughters_.end(); ++i) {
 
       memory_map[ToCpuAddress(*i)]                   = GpuAddress(daughter_gpu_array);
       gpu_memory_map[GpuAddress(daughter_gpu_array)] = GpuAddress(daughter_gpu_c_array);
@@ -422,12 +422,12 @@ DevicePtr<cuda::Transformation3D> CudaManager::LookupTransformation(Transformati
   return DevicePtr<cuda::Transformation3D>(Lookup(host_ptr));
 }
 
-DevicePtr<cuda::Vector<CudaManager::CudaDaughter_t>> CudaManager::LookupDaughters(Vector<Daughter> *const host_ptr)
+DevicePtr<cuda::Vector<CudaManager::CudaDaughter_t>> CudaManager::LookupDaughters(vector_t<Daughter> *const host_ptr)
 {
   return DevicePtr<cuda::Vector<CudaManager::CudaDaughter_t>>(Lookup(host_ptr));
 }
 
-DevicePtr<CudaManager::CudaDaughter_t> CudaManager::LookupDaughterArray(Vector<Daughter> *const host_ptr)
+DevicePtr<CudaManager::CudaDaughter_t> CudaManager::LookupDaughterArray(vector_t<Daughter> *const host_ptr)
 {
   GpuAddress daughters_(LookupDaughters(host_ptr));
   return DevicePtr<CudaManager::CudaDaughter_t>(Lookup(daughters_));

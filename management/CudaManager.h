@@ -61,7 +61,7 @@ private:
   std::set<LogicalVolume const *> logical_volumes_;
   std::set<VPlacedVolume const *> placed_volumes_;
   std::set<Transformation3D const *> transformations_;
-  std::set<Vector<Daughter_t> *> daughters_;
+  std::set<vector_t<Daughter_t> *> daughters_;
 
   typedef void const *CpuAddress;
   typedef DevicePtr<char> GpuAddress;
@@ -154,9 +154,9 @@ public:
 
   DevicePtr<cuda::Transformation3D> LookupTransformation(Transformation3D const *const host_ptr);
 
-  DevicePtr<cuda::Vector<CudaDaughter_t>> LookupDaughters(Vector<Daughter_t> *const host_ptr);
+  DevicePtr<cuda::Vector<CudaDaughter_t>> LookupDaughters(vector_t<Daughter_t> *const host_ptr);
 
-  DevicePtr<CudaDaughter_t> LookupDaughterArray(Vector<Daughter_t> *const host_ptr);
+  DevicePtr<CudaDaughter_t> LookupDaughterArray(vector_t<Daughter_t> *const host_ptr);
 
 private:
   CudaManager();

@@ -59,8 +59,8 @@ class TessellatedStruct {
   using Facet_t = Tile<NVERT, T>;
 
   // Here we should be able to use vecgeom::Vector
-  template <typename U>
-  using vector_t = vecgeom::Vector<U>;
+  // template <typename U>
+  // using vector_t = vecgeom::Vector<U>;
 
   using BVHStructure = HybridManager2::HybridBoxAccelerationStructure;
 

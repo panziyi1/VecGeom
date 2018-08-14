@@ -563,7 +563,7 @@ public:
   */
   template <typename U>
   VECCORE_ATT_HOST_DEVICE
-  void PhaseSpace(const Vector<U> &masses, Vector<LorentzVector<T>> &daughters)
+  void PhaseSpace(const vector_t<U> &masses, vector_t<LorentzVector<T>> &daughters)
   {
     // Relativistic phase space
     LorentzVector<T> pa(*this);

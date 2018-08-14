@@ -56,14 +56,13 @@ bool logical_test()
     cout << "number of daughters don't match\n";
     test_ok = false;
   }
-  for (VPlacedVolume const **vol = daughters.begin(), **rvol = rdaughters.begin(), **volEnd = daughters.end(),
-                           **rvolEnd = rdaughters.end();
+  for (auto vol = daughters.begin(), rvol = rdaughters.begin(), volEnd = daughters.end(), rvolEnd = rdaughters.end();
        vol != volEnd && rvol != rvolEnd; ++vol, ++rvol) {
     if ((*vol)->GetLabel() != (*rvol)->GetLabel()) {
       cout << "label doesn't match\n";
       test_ok = false;
     }
-    if ((*vol)->GetTransformation() != (*rvol)->GetTransformation()) {
+    if (!(*((*vol)->GetTransformation()) == *((*rvol)->GetTransformation()))) {
       cout << "transformation doesn't match\n";
       test_ok = false;
     }

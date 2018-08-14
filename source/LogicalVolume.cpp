@@ -63,7 +63,7 @@ LogicalVolume::LogicalVolume(TRootIOCtor *)
       fSafetyEstimator(SimpleSafetyEstimator::Instance()), fNavigator(NewSimpleNavigator<>::Instance()), fDaughters()
 {
   fId = gIdCount++;
-  fDaughters = new Vector<Daughter>();
+  fDaughters = new vector_t<Daughter>();
 }
 
 LogicalVolume::LogicalVolume(char const *const label, VUnplacedVolume const *const unplaced_volume)
@@ -74,7 +74,7 @@ LogicalVolume::LogicalVolume(char const *const label, VUnplacedVolume const *con
   fId = gIdCount++;
   GeoManager::Instance().RegisterLogicalVolume(this);
   fLabel     = new std::string(label);
-  fDaughters = new Vector<Daughter>();
+  fDaughters = new vector_t<Daughter>();
 
   // if the definint unplaced volume is an assembly, we need to make the back connection
   // I have chosen this implicit method for user convenience (in disfavour of an explicit function call)
@@ -86,19 +86,11 @@ LogicalVolume::LogicalVolume(char const *const label, VUnplacedVolume const *con
 
 #else
 VECCORE_ATT_DEVICE
-LogicalVolume::LogicalVolume(VUnplacedVolume const *const unplaced_vol, Vector<Daughter> *GetDaughter)
+LogicalVolume::LogicalVolume(VUnplacedVolume const *const unplaced_vol, vector_t<Daughter> *GetDaughter)
     // Id for logical volumes is not needed on the device for CUDA
-    : fUnplacedVolume(unplaced_vol),
-      fId(-1),
-      fLabel(nullptr),
-      fUserExtensionPtr(nullptr),
-      fMaterialPtr(nullptr),
-      fMaterialCutsPtr(nullptr),
-      fBasketManagerPtr(nullptr),
-      fDaughters(GetDaughter),
-      fLevelLocator(nullptr),
-      fSafetyEstimator(SimpleSafetyEstimator::Instance()),
-      fNavigator(NewSimpleNavigator<>::Instance())
+    : fUnplacedVolume(unplaced_vol), fId(-1), fLabel(nullptr), fUserExtensionPtr(nullptr), fMaterialPtr(nullptr),
+      fMaterialCutsPtr(nullptr), fBasketManagerPtr(nullptr), fDaughters(GetDaughter), fLevelLocator(nullptr),
+      fSafetyEstimator(SimpleSafetyEstimator::Instance()), fNavigator(NewSimpleNavigator<>::Instance())
 {
 }
 
@@ -107,9 +99,9 @@ LogicalVolume::LogicalVolume(VUnplacedVolume const *const unplaced_vol, Vector<D
 LogicalVolume::~LogicalVolume()
 {
   delete fLabel;
-  for (Daughter *i = GetDaughters().begin(); i != GetDaughters().end(); ++i) {
-    // delete *i;
-  }
+  // for (auto i: GetDaughters()) {
+  // delete i;
+  // }
 #ifndef VECCORE_CUDA // this guard might have to be extended
   GeoManager::Instance().DeregisterLogicalVolume(fId);
 #endif
@@ -200,16 +192,16 @@ void LogicalVolume::PrintContent(const int indent) const
   Print(indent);
   if (fDaughters->size() > 0) {
     printf(":");
-    for (Daughter *i = fDaughters->begin(), *i_end = fDaughters->end(); i != i_end; ++i) {
-      (*i)->PrintContent(indent + 2);
+    for (auto i : GetDaughters()) {
+      i->PrintContent(indent + 2);
     }
   }
 }
 
 bool LogicalVolume::ContainsAssembly() const
 {
-  for (Daughter *i = GetDaughters().begin(); i != GetDaughters().end(); ++i) {
-    if ((*i)->GetUnplacedVolume()->IsAssembly()) {
+  for (auto i : GetDaughters()) {
+    if (i->GetUnplacedVolume()->IsAssembly()) {
       return true;
     }
   }
@@ -228,9 +220,9 @@ std::set<LogicalVolume *> LogicalVolume::GetSetOfDaughterLogicalVolumes() const
 std::ostream &operator<<(std::ostream &os, LogicalVolume const &vol)
 {
   os << *vol.GetUnplacedVolume() << " [";
-  for (Daughter *i = vol.GetDaughters().begin(); i != vol.GetDaughters().end(); ++i) {
+  for (auto i = vol.GetDaughters().begin(); i != vol.GetDaughters().end(); ++i) {
     if (i != vol.GetDaughters().begin()) os << ", ";
-    os << (**i);
+    os << (*i);
   }
   os << "]";
   return os;

@@ -6,9 +6,15 @@
 
 #include "base/Global.h"
 #include <initializer_list>
-#ifdef VECGEOM_ENABLE_CUDA
+#ifndef VECGEOM_ENABLE_CUDA
+
+#include <vector>
+template <typename U>
+using vector_t = std::vector<U>; // using std::vector
+
+#else // using vecgeom::Vector
+
 #include "backend/cuda/Interface.h"
-#endif
 
 namespace vecgeom {
 
@@ -303,4 +309,8 @@ public:
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // namespace vecgeom
 
+template <typename U>
+using vector_t = vecgeom::Vector<U>;
+
+#endif
 #endif // VECGEOM_BASE_CONTAINER_H_

@@ -19,8 +19,8 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 */
 
 struct MultiUnionStruct {
-  template <typename U>
-  using vector_t     = vecgeom::Vector<U>;
+  // template <typename U>
+  // using vector_t     = vecgeom::Vector<U>;
   using BVHStructure = HybridManager2::HybridBoxAccelerationStructure;
 
   vector_t<VPlacedVolume const *> fVolumes; ///< Component placed volumes

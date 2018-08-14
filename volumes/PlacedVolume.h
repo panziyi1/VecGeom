@@ -151,7 +151,7 @@ public:
   /// Returns daughter container of logical volume.
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
-  Vector<Daughter> const &GetDaughters() const { return logical_volume_->GetDaughters(); }
+  vector_t<Daughter> const &GetDaughters() const { return logical_volume_->GetDaughters(); }
 
   /// Returns name/label.
   VECCORE_ATT_HOST_DEVICE

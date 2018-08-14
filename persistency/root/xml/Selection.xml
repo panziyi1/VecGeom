@@ -26,14 +26,9 @@
 
   <class name="vecgeom::Vector3D<double>"/>
   <class name="vecgeom::Transformation3D"/>
-  <class name="vecgeom::VectorBase<const vecgeom::VPlacedVolume*>"/>
-  <class name="vecgeom::Vector<const vecgeom::VPlacedVolume*>"/>
-  <class name="vecgeom::VectorBase<double>"/>
-  <class name="vecgeom::Vector<double>"/>
-  <class name="vecgeom::VectorBase<double *>"/>
-  <class name="vecgeom::Vector<double *>"/>
-  <class name="std::vector<double *>"/>
-  <class name="std::vector<double>"/>
+  <class name="vector_t<const vecgeom::VPlacedVolume*>"/>
+  <class name="vector_t<double *>"/>
+  <class name="vector_t<double>"/>
 
   <class name="vecgeom::UnplacedBox"/>
   <class name="vecgeom::BoxStruct<double>"/>

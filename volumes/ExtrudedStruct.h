@@ -35,10 +35,6 @@ struct XtruSection {
 
 class ExtrudedStruct {
 
-  // template <typename U>
-  // using vector_t = vecgeom::Vector<U>;
-  template <typename U>
-  using vector_t = vecgeom::Vector<U>;
 
 public:
   bool fIsSxtru               = false;     ///< Flag for sxtru representation
@@ -179,7 +175,9 @@ public:
 #endif
     // TRIANGULATE POLYGON
 
-    VectorBase<FacetInd> facets(nvertices);
+    vector_t<FacetInd> facets;
+    facets.reserve(nvertices);
+
     // Fill a vector of vertex indices
     vector_t<size_t> vtx;
     for (size_t i = 0; i < nvertices; ++i)

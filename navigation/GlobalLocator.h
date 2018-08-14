@@ -44,7 +44,7 @@ VPlacedVolume const *LocateGlobalPoint(VPlacedVolume const *vol, Vector3D<Precis
   if (candvolume) {
     path.Push(candvolume);
     LogicalVolume const *lvol         = candvolume->GetLogicalVolume();
-    Vector<Daughter> const *daughters = lvol->GetDaughtersp();
+    vector_t<Daughter> const *daughters = lvol->GetDaughtersp();
 
     bool godeeper = true;
     while (daughters->size() > 0 && godeeper) {
@@ -86,7 +86,7 @@ VPlacedVolume const *LocateGlobalPointExclVolume(VPlacedVolume const *vol, VPlac
   if (candvolume) {
     path.Push(candvolume);
     LogicalVolume const *lvol         = candvolume->GetLogicalVolume();
-    Vector<Daughter> const *daughters = lvol->GetDaughtersp();
+    vector_t<Daughter> const *daughters = lvol->GetDaughtersp();
 
     bool godeeper = true;
     while (daughters->size() > 0 && godeeper) {

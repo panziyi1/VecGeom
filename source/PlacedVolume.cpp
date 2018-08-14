@@ -103,9 +103,9 @@ void VPlacedVolume::PrintContent(const int indent) const
   Print(indent);
   if (GetDaughters().size() > 0) {
     printf(":");
-    for (VPlacedVolume const **vol = GetDaughters().begin(), **volEnd = GetDaughters().end(); vol != volEnd; ++vol) {
+    for (auto vol : GetDaughters()) {
       printf("\n");
-      (*vol)->PrintContent(indent + 3);
+      vol->PrintContent(indent + 3);
     }
   }
 }
