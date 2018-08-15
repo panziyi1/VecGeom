@@ -31,8 +31,6 @@ public:
   // constructor inheritance;
   using Base::Base;
 
-  PlacedBox(TRootIOCtor *) : Base((TRootIOCtor *)nullptr) {}
-
   PlacedBox(char const *const label, LogicalVolume const *const logicalVolume,
             Transformation3D const *const transformation, vecgeom::PlacedBox const *const boundingBox)
       : Base(label, logicalVolume, transformation, boundingBox)

@@ -133,7 +133,10 @@ bool RootGeoManager::Export(const char *filename)
   std::cerr << "ROOT persistency not enable. You must define ROOT_PERSISTENCY flag during compilation\n";
   return false;
 #else
-
+  if (!GeoManager::Instance().IsClosed()) {
+    std::cout << "Geometry not closed. Closing it before exporting\n";
+    GeoManager::Instance().CloseGeometry();
+  }
   auto out_file = TFile::Open(filename, "RECREATE");
   if (!out_file) {
     std::cerr << "cannot open file " << filename << "\n";

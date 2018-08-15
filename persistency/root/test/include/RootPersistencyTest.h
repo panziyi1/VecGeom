@@ -2,7 +2,6 @@
 
 #include <iostream>
 
-#include "volumes/LogicalVolume.h"
-#include "volumes/UnplacedBox.h"
+#include "Classes.h"
 
 #include "management/RootGeoManager.h"

@@ -62,6 +62,9 @@ public:
   /// I/O constructor
   UnplacedHype(TRootIOCtor *) {}
 
+  VECCORE_ATT_HOST_DEVICE
+  UnplacedHype() : fHype() {}
+
   /// Getter for the structure storing hyperboloid data.
   VECCORE_ATT_HOST_DEVICE
   HypeStruct<double> const &GetStruct() const { return fHype; }

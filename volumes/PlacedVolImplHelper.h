@@ -29,8 +29,6 @@ public:
   using BaseVol::BaseVol;
   using BaseVol::GetLogicalVolume;
 
-  PlacedVolumeImplHelper(TRootIOCtor *) : BaseVol((TRootIOCtor *)nullptr) {}
-
   // destructor
   VECCORE_ATT_HOST_DEVICE
   virtual ~PlacedVolumeImplHelper() {}

@@ -130,6 +130,9 @@ protected:
   }
 
 public:
+  /// I/O constructor
+  TessellatedSection(TRootIOCtor *) {}
+
   /// Constructor:
   /// @param nfacets Number of facets in the section
   /// @param zmin Minimum Z position
