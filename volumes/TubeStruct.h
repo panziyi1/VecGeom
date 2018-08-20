@@ -163,6 +163,8 @@ public:
   }
 
 public:
+  TubeStruct(TRootIOCtor *) {}
+
   // constructors
   VECCORE_ATT_HOST_DEVICE
   TubeStruct(T const &_rmin, T const &_rmax, T const &_z, T const &_sphi, T const &_dphi)

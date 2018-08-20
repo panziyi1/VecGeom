@@ -32,6 +32,8 @@ public:
     DetectConvexity();
   }
 
+  UnplacedTube(TRootIOCtor *) : fTube((TRootIOCtor *)nullptr) {}
+
   VECCORE_ATT_HOST_DEVICE
   UnplacedTube(UnplacedTube const &other) : fTube(other.fTube) {}
 
@@ -166,6 +168,8 @@ public:
   using Kernel     = TubeImplementation<TubeType>;
   using BaseType_t = SIMDUnplacedVolumeImplHelper<TubeImplementation<TubeType>, UnplacedTube>;
   using BaseType_t::BaseType_t;
+
+  SUnplacedTube(TRootIOCtor *) : BaseType_t((TRootIOCtor *)nullptr) {}
 
   template <TranslationCode transCodeT, RotationCode rotCodeT>
   VECCORE_ATT_DEVICE

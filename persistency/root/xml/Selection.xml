@@ -24,6 +24,7 @@
 
 
   <class name="vecgeom::Vector3D<double>"/>
+  <class name="vecgeom::Vector3D<float>"/>
   <class name="vecgeom::Transformation3D"/>
   <class name="vector_t<const vecgeom::VPlacedVolume*>"/>
   <class name="vector_t<double>"/>
@@ -141,4 +142,71 @@
   <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::CutTubeImplementation,-1, -1>"/>
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::CutTubeImplementation, -1, -1>"/>
 
+
+  <class name="vecgeom::UnplacedAssembly"/>
+  <class name="vecgeom::PlacedAssembly"/>
+
+
+  <class name="vecgeom::UnplacedTube"/>
+  <class name="vecgeom::SIMDUnplacedVolumeImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::UniversalTube>,vecgeom::UnplacedTube>"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::UniversalTube>,vecgeom::UnplacedTube>"/>
+  <class name="vecgeom::PlacedTube"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::SUnplacedTube<vecgeom::TubeTypes::UniversalTube>,vecgeom::PlacedTube>"/>
+  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::UniversalTube>,-1,-1>"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::UniversalTube>,-1,-1>" />
+  <class name="vecgeom::SUnplacedTube<vecgeom::TubeTypes::UniversalTube>"/>
+  <class name="vecgeom::SPlacedTube<vecgeom::SUnplacedTube<vecgeom::TubeTypes::UniversalTube>>"/>
+
+
+  <!-- <class name="vecgeom::UnplacedBooleanVolume<vecgeom::BooleanOperation::kUnion>"/>
+  <class name="vecgeom::BooleanStruct"/>
+  <class name="vecgeom::BooleanImplementation<vecgeom::BooleanOperation::kUnion>"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::BooleanImplementation<vecgeom::BooleanOperation::kUnion>,-1,-1>"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedBooleanVolume<vecgeom::BooleanOperation::kUnion>,vecgeom::VPlacedVolume>"/>
+  <class name="vecgeom::PlacedBooleanVolume<vecgeom::BooleanOperation::kUnion>"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::BooleanImplementation<vecgeom::BooleanOperation::kUnion>,-1,-1>"/>
+  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::BooleanImplementation<vecgeom::BooleanOperation::kUnion>,vecgeom::VUnplacedVolume>"/> -->
+
+
+  <class name="vecgeom::UnplacedCone"/>
+  <class name="vecgeom::ConeStruct<double>"/>
+  <class name="vecgeom::SIMDUnplacedVolumeImplHelper<vecgeom::ConeImplementation<vecgeom::ConeTypes::UniversalCone>,vecgeom::UnplacedCone>"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::ConeImplementation<vecgeom::ConeTypes::UniversalCone>,vecgeom::UnplacedCone>"/>
+  <class name="vecgeom::PlacedCone"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::SUnplacedCone<vecgeom::ConeTypes::UniversalCone>,vecgeom::PlacedCone>"/>
+  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::ConeImplementation<vecgeom::ConeTypes::UniversalCone>,-1,-1>"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::ConeImplementation<vecgeom::ConeTypes::UniversalCone>,-1,-1>" />
+  <class name="vecgeom::SUnplacedCone<vecgeom::ConeTypes::UniversalCone>"/>
+  <class name="vecgeom::SPlacedCone<vecgeom::SUnplacedCone<vecgeom::ConeTypes::UniversalCone>>"/>
+
+
+  <class name="vecgeom::UnplacedExtruded"/>
+  <class name="vecgeom::ExtrudedStruct">
+    <field name="fZPlanes" comment="[fNSection]"/>
+  </class>
+  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::ExtrudedImplementation,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::ExtrudedImplementation,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::PlacedExtruded"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedExtruded,vecgeom::VPlacedVolume>"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::ExtrudedImplementation,-1,-1>"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::ExtrudedImplementation,-1,-1>"/>
+  <class name="vecgeom::PolygonalShell"/>
+  <class name="vecgeom::PlanarPolygon"/>
+  <class name="vecgeom::SOA3D<double>">
+    <field name="fX" comment="[fSize]"/>
+    <field name="fY" comment="[fSize]"/>
+    <field name="fZ" comment="[fSize]"/>
+  </class>
+  <class name="vecgeom::TessellatedStruct<3,double>"/>
+  <class name="vecgeom::Container3D<vecgeom::SOA3D<double>>"/>
+  <class name="vecgeom::HybridManager2::HybridBoxAccelerationStructure"/>
+  <class name="vecgeom::TessellatedStruct<3,double>::GridCell"/>
+  <class name="vecgeom::TessellatedStruct<3,double>::GridHelper">
+    <field name="fGrid" comment="[fNcells]"/>
+  </class>
+  <class name="vecgeom::Tile<3,double>"/>
+  <class name="veccore::BitSet"/>
+  <class name="veccore::VariableSizeObjectInterface<veccore::BitSet,unsigned char>"/>
+  <class name="veccore::VariableSizeObj<unsigned char>"/>
+  
 </lcgdict>

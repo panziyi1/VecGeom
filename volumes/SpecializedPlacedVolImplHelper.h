@@ -439,6 +439,7 @@ public:
       : CommonHelper_t(other->GetName(), other->GetLogicalVolume(), other->GetTransformation())
   {
   }
+  LoopSpecializedVolImplHelper(TRootIOCtor *) : CommonHelper_t((TRootIOCtor *)nullptr) {}
 
   virtual void SafetyToIn(SOA3D<Precision> const &points, Precision *const output) const override
   {

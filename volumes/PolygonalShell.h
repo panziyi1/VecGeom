@@ -13,7 +13,7 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 
 // a set of z-axis aligned rectangles
 // looking from the z - direction the rectangles form a convex or concave polygon
-class PolygonalShell : AlignedBase {
+class PolygonalShell : public AlignedBase {
 
 private:
   // the polygon (with friend access)

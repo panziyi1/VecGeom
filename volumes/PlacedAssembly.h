@@ -28,6 +28,9 @@ public:
       : VPlacedVolume(label, logicalVolume, transformation, nullptr)
   {
   } // the constructor
+
+  PlacedAssembly(TRootIOCtor *) : VPlacedVolume((TRootIOCtor *)nullptr) {}
+
 #else
   VECCORE_ATT_DEVICE PlacedAssembly(char const *const label, LogicalVolume const *const logical_volume,
                                     Transformation3D const *const transformation, PlacedBox const *const boundingBox,

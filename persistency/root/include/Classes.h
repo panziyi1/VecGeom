@@ -20,3 +20,8 @@
 #include "volumes/Hype.h"
 #include "volumes/Orb.h"
 #include "volumes/CutTube.h"
+#include "volumes/PlacedAssembly.h"
+#include "volumes/Tube.h"
+#include "volumes/BooleanVolume.h"
+#include "volumes/Cone.h"
+#include "volumes/Extruded.h"

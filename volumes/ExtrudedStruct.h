@@ -39,6 +39,7 @@ class ExtrudedStruct {
 public:
   bool fIsSxtru               = false;     ///< Flag for sxtru representation
   bool fInitialized           = false;     ///< Flag for initialization
+  int fNSection               = 0;
   double *fZPlanes            = nullptr;   ///< Z position of planes
   mutable double fCubicVolume = 0.;        ///< Cubic volume
   mutable double fSurfaceArea = 0.;        ///< Surface area
@@ -56,6 +57,8 @@ public:
   /** @brief Dummy constructor */
   VECCORE_ATT_HOST_DEVICE
   ExtrudedStruct() {}
+
+  ExtrudedStruct(TRootIOCtor *) : fTslHelper((TRootIOCtor *)nullptr) {}
 
   /** @brief Constructor providing polygone vertices and sections */
   VECCORE_ATT_HOST_DEVICE
@@ -104,6 +107,7 @@ public:
   {
     if (fInitialized) return;
     assert(nsections > 1 && nvertices > 2);
+    fNSection        = nsections;
     fZPlanes         = new double[nsections];
     fZPlanes[0]      = sections[0].fOrigin.z();
     bool degenerated = false;

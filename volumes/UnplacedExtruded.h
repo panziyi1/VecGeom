@@ -29,6 +29,8 @@ public:
   VECCORE_ATT_HOST_DEVICE
   UnplacedExtruded() : fXtru() {}
 
+  UnplacedExtruded(TRootIOCtor *) : fXtru((TRootIOCtor *)nullptr) {}
+
   /** @brief Constructor providing polygone vertices and sections */
   VECCORE_ATT_HOST_DEVICE
   UnplacedExtruded(int nvertices, XtruVertex2 const *vertices, int nsections, XtruSection const *sections)

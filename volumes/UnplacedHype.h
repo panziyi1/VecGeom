@@ -60,7 +60,7 @@ public:
   }
 
   /// I/O constructor
-  UnplacedHype(TRootIOCtor *) {}
+  UnplacedHype(TRootIOCtor *) : fHype() {}
 
   VECCORE_ATT_HOST_DEVICE
   UnplacedHype() : fHype() {}
@@ -370,6 +370,8 @@ class SUnplacedHype : public SIMDUnplacedVolumeImplHelper<HypeImplementation<Hyp
 public:
   using BaseType_t = SIMDUnplacedVolumeImplHelper<HypeImplementation<HypeType>, UnplacedHype>;
   using BaseType_t::BaseType_t;
+
+  SUnplacedHype(TRootIOCtor *) : BaseType_t((TRootIOCtor *)nullptr) {}
 
   template <TranslationCode transCodeT, RotationCode rotCodeT>
   VECCORE_ATT_DEVICE

@@ -46,6 +46,7 @@ private:
   ConeStruct<Precision> fCone;
 
 public:
+  UnplacedCone(TRootIOCtor *) : fCone((TRootIOCtor *)nullptr) {}
   VECCORE_ATT_HOST_DEVICE
   UnplacedCone(Precision rmin1, Precision rmax1, Precision rmin2, Precision rmax2, Precision dz, Precision phimin,
                Precision deltaphi)
@@ -286,6 +287,8 @@ public:
   using Kernel     = ConeImplementation<ConeType>;
   using BaseType_t = SIMDUnplacedVolumeImplHelper<ConeImplementation<ConeType>, UnplacedCone>;
   using BaseType_t::BaseType_t;
+
+  SUnplacedCone(TRootIOCtor *) : BaseType_t((TRootIOCtor *)nullptr) {}
 
   template <TranslationCode transCodeT, RotationCode rotCodeT>
   VECCORE_ATT_DEVICE

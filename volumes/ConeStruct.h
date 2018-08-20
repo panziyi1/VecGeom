@@ -413,6 +413,8 @@ struct ConeStruct {
 
     // DetectConvexity();
   }
+
+  ConeStruct(TRootIOCtor *) {}
 };
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // namespace vecgeom

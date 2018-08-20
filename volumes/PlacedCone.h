@@ -46,6 +46,8 @@ public:
   }
 #endif
 
+  PlacedCone(TRootIOCtor *) : VPlacedVolume((TRootIOCtor *)nullptr) {}
+
   VECCORE_ATT_HOST_DEVICE
   virtual ~PlacedCone() {}
 

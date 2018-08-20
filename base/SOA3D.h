@@ -36,7 +36,8 @@ class SOA3D : Container3D<SOA3D<T>> {
 
 private:
   bool fAllocated;
-  size_t fSize, fCapacity;
+  unsigned int fSize;
+  size_t fCapacity;
   T *fX, *fY, *fZ;
 
 public:

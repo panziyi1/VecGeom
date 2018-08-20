@@ -75,6 +75,7 @@ class TessellatedStruct {
   The cell just stores an array of indices for the facets intersecting it. The cell coordinates are known by the
   GridHelper data structure owning it.
   */
+public:
   struct GridCell {
     vector_t<int> fArray; ///< Array of facet indices
     bool fUsed = false;   ///< Flag for cell usage
@@ -209,6 +210,9 @@ private:
   }
 
 public:
+  /// I/O constructor
+  TessellatedStruct(TRootIOCtor *) {}
+
   /// Default constructor.
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
