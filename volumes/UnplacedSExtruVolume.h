@@ -23,6 +23,9 @@ private:
 
 public:
   using Kernel = SExtruImplementation;
+  
+  /// I/O constructor
+  UnplacedSExtruVolume(TRootIOCtor *) : fPolyShell() {}
 
   VECCORE_ATT_HOST_DEVICE
   UnplacedSExtruVolume(int nvertices, double *x, double *y, Precision lowerz, Precision upperz)

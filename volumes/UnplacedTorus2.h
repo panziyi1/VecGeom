@@ -59,6 +59,11 @@ private:
   }
 
 public:
+  UnplacedTorus2(TRootIOCtor *)
+      : fTorus((TRootIOCtor *)nullptr), fPhiWedge((TRootIOCtor *)nullptr), fBoundingTube((TRootIOCtor *)nullptr)
+  {
+  }
+
   VECCORE_ATT_HOST_DEVICE
   UnplacedTorus2(Precision const &_rmin, Precision const &_rmax, Precision const &_rtor, Precision const &_sphi,
                  Precision const &_dphi)

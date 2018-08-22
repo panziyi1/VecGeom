@@ -71,6 +71,9 @@ public:
     DetectConvexity();
   }
 
+  // I/O constructor
+  UnplacedPolycone(TRootIOCtor *) : fPolycone() {}
+
   // the constructor
   VECCORE_ATT_HOST_DEVICE
   UnplacedPolycone(Precision phistart, Precision deltaphi, int Nz, Precision const *z, Precision const *rmin,

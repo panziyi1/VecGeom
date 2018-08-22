@@ -36,7 +36,7 @@ struct PolyconeStruct {
 
   vector_t<PolyconeSection> fSections;
   vector_t<double> fZs;
-  PolyconeHistorical *fOriginal_parameters;
+  PolyconeHistorical *fOriginal_parameters = nullptr;
 
   VECCORE_ATT_HOST_DEVICE
   bool CheckContinuity(const double rOuter[], const double rInner[], const double zPlane[],

@@ -23,12 +23,17 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 
 class PolyconeHistorical {
 public:
+  double fHStart_angle   = 0.;
+  double fHOpening_angle = 0.;
+  int fHNum_z_planes     = 0;
+  double *fHZ_values     = nullptr;
+  double *fHRmin         = nullptr;
+  double *fHRmax         = nullptr;
+
   VECCORE_ATT_HOST_DEVICE
-  PolyconeHistorical() : fHStart_angle(0.), fHOpening_angle(0.), fHNum_z_planes(0), fHZ_values(0), fHRmin(0), fHRmax(0)
-  {
-  }
+  PolyconeHistorical() {}
   VECCORE_ATT_HOST_DEVICE
-  PolyconeHistorical(int z_planes) : fHStart_angle(0.), fHOpening_angle(0.), fHNum_z_planes(z_planes)
+  PolyconeHistorical(int z_planes) : fHNum_z_planes(z_planes)
   {
     fHZ_values = new double[z_planes];
     fHRmin     = new double[z_planes];
@@ -87,13 +92,6 @@ public:
 
     return *this;
   }
-
-  double fHStart_angle;
-  double fHOpening_angle;
-  int fHNum_z_planes;
-  double *fHZ_values;
-  double *fHRmin;
-  double *fHRmax;
 };
 }
 }

@@ -34,6 +34,8 @@ struct TorusStruct2 {
   evolution::Wedge fPhiWedge;
   GenericUnplacedTube fBoundingTube;
 
+  TorusStruct2(TRootIOCtor *) : fBoundingTube((TRootIOCtor *)nullptr) {}
+
   VECCORE_ATT_HOST_DEVICE
   TorusStruct2(const T rmin, const T rmax, const T rtor, const T sphi, const T dphi)
       : fRmin(rmin), fRmax(rmax), fRtor(rtor), fSphi(sphi), fDphi(dphi), fRmin2(rmin * rmin), fRmax2(rmax * rmax),

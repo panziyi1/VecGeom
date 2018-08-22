@@ -209,4 +209,93 @@
   <class name="veccore::VariableSizeObjectInterface<veccore::BitSet,unsigned char>"/>
   <class name="veccore::VariableSizeObj<unsigned char>"/>
   
+  
+  <class name="vecgeom::UnplacedMultiUnion"/>
+  <class name="vecgeom::MultiUnionStruct">
+    <field name="fNeighbours" comment="[fNboxes]"/>
+    <field name="fNneighbours" comment="[fNboxes]"/>
+    <field name="fLast" transient="true"/>
+    <field name="fBuffer" transient="true"/>
+  </class>
+  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::MultiUnionImplementation,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::MultiUnionImplementation,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::PlacedMultiUnion"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::MultiUnionImplementation,-1,-1>"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::MultiUnionImplementation,-1,-1>"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedMultiUnion,vecgeom::VPlacedVolume>"/>
+
+  <class name="vecgeom::UnplacedPolycone"/>
+  <class name="vecgeom::PolyconeStruct<double>"/>
+  <class name="vecgeom::PolyconeHistorical">
+    <field name="fHZ_values" comment="[fHNum_z_planes]"/>  
+    <field name="fHRmin" comment="[fHNum_z_planes]"/>  
+    <field name="fHRmax" comment="[fHNum_z_planes]"/>  
+  </class>
+  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::PolyconeImplementation,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::PolyconeImplementation,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::PlacedPolycone"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::PolyconeImplementation,-1,-1>"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::PolyconeImplementation,-1,-1>"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedPolycone,vecgeom::VPlacedVolume>"/>
+
+
+  <!-- <class name="vecgeom::UnplacedPolyhedron"/>
+  <class name="vecgeom::PolyhedronStruct<double>"/>
+  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::PolyhedronImplementation<EInnerRadii::kGeneric,EPhiCutout::kGeneric>,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::PolyhedronImplementation<EInnerRadii::kGeneric,EPhiCutout::kGeneric>,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::PlacedPolyhedron"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::PolyhedronImplementation<EInnerRadii::kTrue,EPhiCutout::kTrue>,-1,-1>"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedPolyhedron,vecgeom::VPlacedVolume>"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::PolyhedronImplementation<EInnerRadii::kTrue,EPhiCutout::kTrue>,-1,-1>"/> -->
+
+
+  <class name="vecgeom::UnplacedScaledShape"/>
+  <class name="vecgeom::ScaledShapeStruct<double>"/>
+  <class name="vecgeom::Scale3D"/>
+  <class name="vecgeom::SIMDUnplacedVolumeImplHelper<vecgeom::ScaledShapeImplementation,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::ScaledShapeImplementation,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::PlacedScaledShape"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::ScaledShapeImplementation,-1,-1>"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::ScaledShapeImplementation,-1,-1>"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedScaledShape,vecgeom::VPlacedVolume>"/>
+
+
+  <class name="vecgeom::UnplacedSExtruVolume"/>
+  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::SExtruImplementation,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::SExtruImplementation,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::PlacedSExtru"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::SExtruImplementation,-1,-1>"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::SExtruImplementation,-1,-1>"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedSExtruVolume,vecgeom::VPlacedVolume>"/>
+  
+  <class name="vecgeom::UnplacedTessellated"/>
+  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::TessellatedImplementation,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::TessellatedImplementation,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::PlacedTessellated"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::TessellatedImplementation,-1,-1>"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TessellatedImplementation,-1,-1>"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedTessellated,vecgeom::VPlacedVolume>"/>
+
+
+  <class name="vecgeom::UnplacedTet"/>
+  <class name="vecgeom::TetStruct<double>"/>
+  <class name="vecgeom::TetStruct<double>::Plane"/>
+  <class name="vecgeom::SIMDUnplacedVolumeImplHelper<vecgeom::TetImplementation,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::TetImplementation,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::PlacedTet"/>
+  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::TetImplementation,-1, -1>"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TetImplementation, -1, -1>"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedTet, vecgeom::VPlacedVolume>"/>
+
+
+  <class name="vecgeom::UnplacedTorus2"/>
+  <class name="vecgeom::TorusStruct2<double>"/>
+  <class name="vecgeom::Wedge"/>
+  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::TorusImplementation2,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::TorusImplementation2,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::PlacedTorus2"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::TorusImplementation2,-1,-1>"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TorusImplementation2,-1,-1>"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedTorus2,vecgeom::VPlacedVolume>"/>
+
 </lcgdict>

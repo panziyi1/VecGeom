@@ -53,6 +53,8 @@ private:
                                       // convention is that it points inwards
 
 public:
+  Wedge(TRootIOCtor *) {}
+
   VECCORE_ATT_HOST_DEVICE
   Wedge(Precision angle, Precision zeroangle = 0);
 

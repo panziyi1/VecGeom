@@ -33,6 +33,7 @@ struct MultiUnionStruct {
 #ifndef VECCORE_CUDA
   mutable std::atomic<size_t> fLast; ///< Last located component for opportunistic relocation
 #endif
+  unsigned int fNboxes = 0;
   size_t **fNeighbours = nullptr; ///< Array of lists of neigbours
   size_t *fNneighbours = nullptr; ///< Number of neighbours for each component
 
@@ -84,24 +85,24 @@ struct MultiUnionStruct {
     // This method prepares the navigation structure
     using Boxes_t           = ABBoxManager::ABBoxContainer_t;
     using BoxCorner_t       = ABBoxManager::ABBox_s;
-    size_t nboxes           = fVolumes.size();
-    BoxCorner_t *boxcorners = new BoxCorner_t[2 * nboxes];
+    fNboxes                 = fVolumes.size();
+    BoxCorner_t *boxcorners = new BoxCorner_t[2 * fNboxes];
     Vector3D<double> amin, amax;
-    for (size_t i = 0; i < nboxes; ++i)
+    for (size_t i = 0; i < fNboxes; ++i)
       ABBoxManager::ComputeABBox(fVolumes[i], &boxcorners[2 * i], &boxcorners[2 * i + 1]);
     Boxes_t boxes = &boxcorners[0];
-    fNavHelper    = HybridManager2::Instance().BuildStructure(boxes, nboxes);
+    fNavHelper    = HybridManager2::Instance().BuildStructure(boxes, fNboxes);
     // Compute the lists of possibly overlapping neighbours
-    fNeighbours  = new size_t *[nboxes];
-    fNneighbours = new size_t[nboxes];
-    memset(fNneighbours, 0, nboxes * sizeof(size_t));
-    fBuffer = new size_t[nboxes * nboxes];
-    for (size_t i = 0; i < nboxes; ++i) {
-      fNeighbours[i] = fBuffer + i * nboxes;
+    fNeighbours  = new size_t *[fNboxes];
+    fNneighbours = new size_t[fNboxes];
+    memset(fNneighbours, 0, fNboxes * sizeof(size_t));
+    fBuffer = new size_t[fNboxes * fNboxes];
+    for (size_t i = 0; i < fNboxes; ++i) {
+      fNeighbours[i] = fBuffer + i * fNboxes;
     }
     size_t newsize = 0;
-    for (size_t i = 0; i < nboxes - 1; ++i) {
-      for (size_t j = i + 1; j < nboxes; ++j) {
+    for (size_t i = 0; i < fNboxes - 1; ++i) {
+      for (size_t j = i + 1; j < fNboxes; ++j) {
         if (ABBoxOverlap(boxcorners[2 * i], boxcorners[2 * i + 1], boxcorners[2 * j], boxcorners[2 * j + 1])) {
           fNeighbours[i][fNneighbours[i]++] = j;
           fNeighbours[j][fNneighbours[j]++] = i;
@@ -112,7 +113,7 @@ struct MultiUnionStruct {
     // Compacting buffer of neighbours
     size_t *buffer  = new size_t[newsize];
     size_t *nextloc = buffer;
-    for (size_t i = 0; i < nboxes; ++i) {
+    for (size_t i = 0; i < fNboxes; ++i) {
       memcpy(nextloc, fNeighbours[i], fNneighbours[i] * sizeof(size_t));
       fNeighbours[i] = nextloc;
       nextloc += fNneighbours[i];

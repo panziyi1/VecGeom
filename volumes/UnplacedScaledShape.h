@@ -56,6 +56,8 @@ public:
   ScaledShapeStruct<double> fScaled; /* The scaled shape structure */
 
 public:
+  UnplacedScaledShape(TRootIOCtor *) : fScaled() {}
+
   /// Dummy ctor
   VECCORE_ATT_HOST_DEVICE
   UnplacedScaledShape() : fScaled() { fGlobalConvexity = fScaled.fPlaced->GetUnplacedVolume()->IsConvex(); }
