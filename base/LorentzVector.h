@@ -348,7 +348,7 @@ public:
     return *this;
   }
 
-// Inplace binary operators
+  // Inplace binary operators
 
 #define LORENTZVECTOR_TEMPLATE_INPLACE_BINARY_OP(OPERATOR)                                               \
   VECCORE_ATT_HOST_DEVICE                                                                                \
@@ -489,9 +489,9 @@ public:
       phi   = RNG::Instance().uniform() * kTwoPi;
       theta = RNG::Instance().uniform() * kPi;
     }
-    double mass2                          = Mag2();
+    double mass2 = Mag2();
     if (mass2 > -1e-6 && mass2 < 0) mass2 = 0;
-    double dmass                          = masses[0] + masses[1];
+    double dmass = masses[0] + masses[1];
     if (mass2 * (1. + 1.e-7) < dmass * dmass || (mass2 == 0 && dmass == 0)) {
       if (dmass != 0)
         std::cout << "WARNING::LorentzVector::TwoBodyDecay: daughters' mass square " << dmass * dmass
@@ -512,12 +512,12 @@ public:
     if (en1 < masses[0])
       en1 = masses[0];
     else
-      p1      = sqrt((en1 + masses[0]) * (en1 - masses[0]));
+      p1 = sqrt((en1 + masses[0]) * (en1 - masses[0]));
     double p2 = 0;
     if (en2 < masses[1])
       en2 = masses[1];
     else
-      p2     = sqrt((en2 + masses[1]) * (en2 - masses[1]));
+      p2 = sqrt((en2 + masses[1]) * (en2 - masses[1]));
     double p = 0.5 * (p1 + p2);
     // debug
     if (fabs(p1 - p2) / mass > 1e-4)
@@ -586,10 +586,10 @@ public:
       if (j < ndec - 2) {
         for (int i = j + 2; i < ndec; ++i)
           mass2 += masses[i];
-        double dm          = 0;
-        double pam2        = pa.Mag2();
+        double dm   = 0;
+        double pam2 = pa.Mag2();
         if (pam2 < 0) pam2 = 0;
-        double freen       = sqrt(pam2) - masses[j] - mass2;
+        double freen = sqrt(pam2) - masses[j] - mass2;
         if (mass2 > 0)
           dm = freen *
                std::pow(RNG::Instance().uniform(), masses[j] / (mass2 - 0.5 * (masses[ndec - 1] + masses[ndec - 2])));
@@ -691,7 +691,7 @@ LORENTZVECTOR_SCALAR_BOOLEAN_LOGICAL_OP(||)
 
 static const LorentzVector<double> LorentzMetric(-1, -1, -1, 1);
 
-} // End inline namespace
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif // VECGEOM_BASE_LORENTZVECTOR_H_

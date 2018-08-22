@@ -43,14 +43,14 @@ private:
 
 protected:
   bool fGlobalConvexity = false;
-  bool fIsAssembly = false; // indicates if this volume is an assembly
+  bool fIsAssembly      = false; // indicates if this volume is an assembly
 
 public:
   // alias for the globally selected VectorType
   using Real_v = vecgeom::VectorBackend::Real_v;
 
-//  VECCORE_ATT_HOST_DEVICE
-//  VUnplacedVolume() {}
+  //  VECCORE_ATT_HOST_DEVICE
+  //  VUnplacedVolume() {}
 
   VECCORE_ATT_HOST_DEVICE
   virtual ~VUnplacedVolume() {}

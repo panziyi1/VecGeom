@@ -35,10 +35,9 @@ struct XtruSection {
 
 class ExtrudedStruct {
 
-
 public:
-  bool fIsSxtru               = false;     ///< Flag for sxtru representation
-  bool fInitialized           = false;     ///< Flag for initialization
+  bool fIsSxtru               = false; ///< Flag for sxtru representation
+  bool fInitialized           = false; ///< Flag for initialization
   int fNSection               = 0;
   double *fZPlanes            = nullptr;   ///< Z position of planes
   mutable double fCubicVolume = 0.;        ///< Cubic volume

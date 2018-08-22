@@ -27,7 +27,7 @@ struct BoxStruct {
   VECCORE_ATT_HOST_DEVICE
   BoxStruct(const T dx, const T dy, const T dz) : fDimensions(dx, dy, dz) {}
 };
-}
-} // end
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif

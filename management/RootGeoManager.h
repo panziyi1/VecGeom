@@ -207,7 +207,7 @@ private:
   // return length unit
   double LUnit() const { return fUnitsInMM ? CMTOMM : 1.; }
 };
-}
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif // VECGEOM_MANAGEMENT_ROOTMANAGER_H_

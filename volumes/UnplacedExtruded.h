@@ -20,7 +20,6 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 
 class UnplacedExtruded : public LoopUnplacedVolumeImplHelper<ExtrudedImplementation>, public AlignedBase {
 
-
 private:
   ExtrudedStruct fXtru; ///< Structure storing the data for the tessellated solid
 

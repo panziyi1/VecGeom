@@ -473,7 +473,7 @@ void Wedge::DistanceToOut(Vector3D<typename Backend::precision_v> const &point,
   // std::cerr << "c1 " << comp1 <<" d1="<<distWedge1<<" "<<point<< "\n";
   // std::cerr << "c2 " << comp2 <<" d2=" <<distWedge2<<" "<<point<<"\n";
 }
-}
-} // end of namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif /* VECGEOM_VOLUMES_WEDGE_H_ */

@@ -309,7 +309,7 @@ inline void LogicalVolume::SetRegion(Region *region, bool pushdown)
   }
 }
 
-} // End inline namespace
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif // VECGEOM_VOLUMES_LOGICALVOLUME_H_

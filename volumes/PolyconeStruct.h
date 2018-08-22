@@ -80,12 +80,12 @@ struct PolyconeStruct {
     }
 
     /* Creating a new temporary Reduced polycone with desired data elements,
-    *  which makes sure that denominator will never be zero (hence avoiding FPE(division by zero)),
-    *  while calculating slope.
-    *
-    *  This will be the minimum polycone,i.e. no extra section which
-    *  affect its shape
-    */
+     *  which makes sure that denominator will never be zero (hence avoiding FPE(division by zero)),
+     *  while calculating slope.
+     *
+     *  This will be the minimum polycone,i.e. no extra section which
+     *  affect its shape
+     */
 
     for (size_t j = 0; j < rOut.size();) {
 
@@ -215,7 +215,7 @@ struct PolyconeStruct {
     }
 
     double prevZ = zPlaneR[0], prevRmax = 0, prevRmin = 0;
-    int dirZ                          = 1;
+    int dirZ = 1;
     if (zPlaneR[1] < zPlaneR[0]) dirZ = -1;
 
     for (unsigned int i = 0; i < numZPlanes; ++i) {
@@ -391,7 +391,7 @@ struct PolyconeStruct {
   VECCORE_ATT_HOST_DEVICE
   PolyconeStruct() {}
 };
-}
-}
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif

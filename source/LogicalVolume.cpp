@@ -256,7 +256,7 @@ DevicePtr<cuda::LogicalVolume> LogicalVolume::CopyToGpu(DevicePtr<cuda::VUnplace
 
 #endif // VECGEOM_CUDA_INTERFACE
 
-} // End impl namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
 
 #ifdef VECCORE_CUDA
 
@@ -265,8 +265,8 @@ namespace cxx {
 template size_t DevicePtr<cuda::LogicalVolume>::SizeOf();
 template void DevicePtr<cuda::LogicalVolume>::Construct(DevicePtr<cuda::VUnplacedVolume> const,
                                                         DevicePtr<cuda::Vector<cuda::VPlacedVolume const *>>) const;
-}
+} // namespace cxx
 
 #endif // VECCORE_CUDA
 
-} // End global namespace
+} // namespace vecgeom

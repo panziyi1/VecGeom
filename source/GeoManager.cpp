@@ -390,5 +390,5 @@ __attribute__((noinline)) void GeoManager::getAllPathForLogicalVolume(LogicalVol
 template void GeoManager::getAllPathForLogicalVolume(LogicalVolume const *lvol, std::list<NavigationState *> &c) const;
 template void GeoManager::getAllPathForLogicalVolume(LogicalVolume const *lvol,
                                                      std::vector<NavigationState *> &c) const;
-}
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom

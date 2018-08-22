@@ -23,7 +23,7 @@ namespace vecgeom {
 namespace cuda {
 // forward declare a global function
 extern __global__ void InitDeviceCompactPlacedVolBufferPtr(void *gpu_ptr);
-}
+} // namespace cuda
 
 inline namespace cxx {
 
@@ -226,7 +226,7 @@ bool CudaManager::AllocateCollectionOnCoproc(const char *verbose_title, const Co
 
   // record a GPU memory location for each object in the collection to be copied
   for (auto i : data) {
-    memory_map[ToCpuAddress(i)]                                   = gpu_address;
+    memory_map[ToCpuAddress(i)] = gpu_address;
     if (isforplacedvol) fGPUtoCPUmapForPlacedVolumes[gpu_address] = i;
     gpu_address += i->DeviceSizeOf();
   }
@@ -460,5 +460,5 @@ void CudaManager::PrintGeometry() const
 //   CudaFree(z_gpu);
 //   CudaFree(soa3d_gpu);
 // }
-}
+} // namespace cxx
 } // End namespace vecgeom

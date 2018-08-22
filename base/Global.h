@@ -81,7 +81,7 @@ namespace EInside {
 VECGEOM_GLOBAL vecgeom::Inside_t kInside  = 1;
 VECGEOM_GLOBAL vecgeom::Inside_t kSurface = 2;
 VECGEOM_GLOBAL vecgeom::Inside_t kOutside = 3;
-}
+} // namespace EInside
 
 namespace details {
 template <typename DataType, typename Target>
@@ -94,7 +94,7 @@ struct UseIfSameType<DataType, DataType> {
   VECCORE_ATT_HOST_DEVICE
   static DataType const *Get(DataType *ptr) { return ptr; }
 };
-}
+} // namespace details
 
 // some static MACROS
 #define VECGEOM_MAXDAUGHTERS 2000 // macro mainly used to allocated static (stack) arrays/workspaces
@@ -146,7 +146,7 @@ bool ToBool<bool>(bool mask)
     }                                                                                       \
   }
 
-} // end inline namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
 
 // defining an infinite length constant
 template <typename T>
@@ -174,7 +174,7 @@ T NonZero(T const &x)
   return x + CopySign(T(1.0e-30), x);
 }
 
-} // End global namespace
+} // namespace vecgeom
 
 // ROOT persistency
 class TRootIOCtor;

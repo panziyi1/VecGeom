@@ -29,7 +29,7 @@ VECGEOM_DEVICE_FORWARD_DECLARE(void InitDeviceCompactPlacedVolBufferPtr(void *);
 namespace globaldevicegeomdata {
 VECCORE_ATT_DEVICE
 VPlacedVolume *&GetCompactPlacedVolBuffer();
-}
+} // namespace globaldevicegeomdata
 
 #ifndef VECCORE_CUDA
 inline
@@ -212,7 +212,7 @@ inline VPlacedVolume const *CudaManager::LookupPlacedCPUPtr(const void *address)
   assert(cpu_ptr != NULL);
   return cpu_ptr;
 }
-}
-} // End global namespace
+} // namespace cxx
+} // namespace vecgeom
 
 #endif // VECGEOM_MANAGEMENT_CUDAMANAGER_H_

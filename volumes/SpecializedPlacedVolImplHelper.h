@@ -105,14 +105,14 @@ public:
   {
   }
 #endif
-  using PlacedShape_t::SafetyToOut;
-  using PlacedShape_t::DistanceToOut;
-  using PlacedShape_t::UnplacedContains;
   using PlacedShape_t::Contains;
-  using PlacedShape_t::SafetyToIn;
   using PlacedShape_t::DistanceToIn;
+  using PlacedShape_t::DistanceToOut;
   using PlacedShape_t::Inside;
   using PlacedShape_t::PlacedShape_t;
+  using PlacedShape_t::SafetyToIn;
+  using PlacedShape_t::SafetyToOut;
+  using PlacedShape_t::UnplacedContains;
 
   virtual int MemorySize() const override { return sizeof(*this); }
 
@@ -228,7 +228,7 @@ static void ContainsLoopKernel(typename Specialization::UnplacedStruct_t const &
     Specialization::template Contains<Real_v>(shapestruct, trans.Transform<transC, rotC>(point), result);
     // vecCore::StoreMask(result, output);
     // StoreMask has problem -> see VECCORE-21
-    for (size_t j   = 0; j < vecCore::VectorSize<Real_v>(); ++j)
+    for (size_t j = 0; j < vecCore::VectorSize<Real_v>(); ++j)
       output[i + j] = vecCore::MaskLaneAt(result, j);
   }
 }
@@ -246,7 +246,7 @@ static void InsideLoopKernel(typename Specialization::UnplacedStruct_t const &sh
     Index_t result;
     Specialization::template Inside<Real_v>(shapestruct, trans.Transform<transC, rotC>(point), result);
     // TODO: make a proper store here
-    for (size_t j   = 0; j < vecCore::VectorSize<Index_t>(); ++j)
+    for (size_t j = 0; j < vecCore::VectorSize<Index_t>(); ++j)
       output[i + j] = vecCore::LaneAt<Index_t>(result, j);
   }
 }
@@ -293,15 +293,14 @@ class SIMDSpecializedVolImplHelper : public CommonSpecializedVolImplHelper<Speci
   using CommonHelper_t = CommonSpecializedVolImplHelper<Specialization, transC, rotC>;
 
 public:
-  using CommonHelper_t::SafetyToOut;
-  using CommonHelper_t::DistanceToOut;
-  using CommonHelper_t::UnplacedContains;
-  using CommonHelper_t::Contains;
-  using CommonHelper_t::SafetyToIn;
-  using CommonHelper_t::DistanceToIn;
-  using CommonHelper_t::Inside;
   using CommonHelper_t::CommonHelper_t;
-
+  using CommonHelper_t::Contains;
+  using CommonHelper_t::DistanceToIn;
+  using CommonHelper_t::DistanceToOut;
+  using CommonHelper_t::Inside;
+  using CommonHelper_t::SafetyToIn;
+  using CommonHelper_t::SafetyToOut;
+  using CommonHelper_t::UnplacedContains;
 
   SIMDSpecializedVolImplHelper(VPlacedVolume const *other)
       : CommonHelper_t(other->GetName(), other->GetLogicalVolume(), other->GetTransformation())
@@ -309,7 +308,6 @@ public:
   }
 
   SIMDSpecializedVolImplHelper(TRootIOCtor *) : CommonHelper_t((TRootIOCtor *)nullptr) {}
-
 
   VECCORE_ATT_HOST_DEVICE
   virtual ~SIMDSpecializedVolImplHelper() {}
@@ -426,14 +424,14 @@ class LoopSpecializedVolImplHelper : public CommonSpecializedVolImplHelper<Speci
   using UnplacedVolume_t = typename Specialization::UnplacedVolume_t;
 
 public:
-  using CommonHelper_t::SafetyToOut;
-  using CommonHelper_t::DistanceToOut;
-  using CommonHelper_t::UnplacedContains;
-  using CommonHelper_t::Contains;
-  using CommonHelper_t::SafetyToIn;
-  using CommonHelper_t::DistanceToIn;
-  using CommonHelper_t::Inside;
   using CommonHelper_t::CommonHelper_t;
+  using CommonHelper_t::Contains;
+  using CommonHelper_t::DistanceToIn;
+  using CommonHelper_t::DistanceToOut;
+  using CommonHelper_t::Inside;
+  using CommonHelper_t::SafetyToIn;
+  using CommonHelper_t::SafetyToOut;
+  using CommonHelper_t::UnplacedContains;
 
   LoopSpecializedVolImplHelper(VPlacedVolume const *other)
       : CommonHelper_t(other->GetName(), other->GetLogicalVolume(), other->GetTransformation())

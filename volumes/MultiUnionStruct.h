@@ -60,8 +60,8 @@ struct MultiUnionStruct {
   VECCORE_ATT_HOST_DEVICE
   void AddNode(VPlacedVolume const *volume)
   {
-    using vecCore::math::Min;
     using vecCore::math::Max;
+    using vecCore::math::Min;
     Vector3D<double> amin, amax;
     ABBoxManager::ComputeABBox(volume, &amin, &amax);
     fMinExtent.Set(Min(fMinExtent.x(), amin.x()), Min(fMinExtent.y(), amin.y()), Min(fMinExtent.z(), amin.z()));
@@ -124,7 +124,7 @@ struct MultiUnionStruct {
 
 }; // End struct
 
-} // End impl namespace
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif /* VECGEOM_VOLUMES_MULTIUNIONSTRUCT_H_ */

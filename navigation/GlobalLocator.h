@@ -43,7 +43,7 @@ VPlacedVolume const *LocateGlobalPoint(VPlacedVolume const *vol, Vector3D<Precis
   }
   if (candvolume) {
     path.Push(candvolume);
-    LogicalVolume const *lvol         = candvolume->GetLogicalVolume();
+    LogicalVolume const *lvol           = candvolume->GetLogicalVolume();
     vector_t<Daughter> const *daughters = lvol->GetDaughtersp();
 
     bool godeeper = true;
@@ -85,7 +85,7 @@ VPlacedVolume const *LocateGlobalPointExclVolume(VPlacedVolume const *vol, VPlac
   }
   if (candvolume) {
     path.Push(candvolume);
-    LogicalVolume const *lvol         = candvolume->GetLogicalVolume();
+    LogicalVolume const *lvol           = candvolume->GetLogicalVolume();
     vector_t<Daughter> const *daughters = lvol->GetDaughtersp();
 
     bool godeeper = true;
@@ -217,8 +217,8 @@ inline bool HasSamePath(Vector3D<Precision> const &globalpoint, NavigationState 
   return HasSamePath(globalpoint, m, currentstate, newstate);
 }
 
-} // end GlobalLocator namespace
-}
-} // end namespaces
+} // namespace GlobalLocator
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif /* NAVIGATION_GLOBALLOCATOR_H_ */

@@ -108,7 +108,7 @@ private:
   bool fAllocated;
 
 public:
-  using value_type = Type;
+  using value_type      = Type;
   using const_reference = const Type &;
 
   VectorBase(TRootIOCtor *) {}

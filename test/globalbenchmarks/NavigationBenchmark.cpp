@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
   vecgeom::volumeUtilities::FillGlobalPointsAndDirectionsForLogicalVolume(startVolume, locpts, points, dirs, bias, np);
 
   Precision *maxSteps = (Precision *)vecCore::AlignedAlloc(32, sizeof(Precision) * np);
-  for (int i    = 0; i < np; ++i)
+  for (int i = 0; i < np; ++i)
     maxSteps[i] = 10. * RNG::Instance().uniform();
 
   // Must be validated before being benchmarked

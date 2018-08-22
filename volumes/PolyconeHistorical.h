@@ -93,7 +93,7 @@ public:
     return *this;
   }
 };
-}
-}
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif /* VOLUMES_POLYCONEHISTORICAL_H_ */

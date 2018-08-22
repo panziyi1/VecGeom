@@ -526,7 +526,7 @@ DevicePtr<cuda::SOA3D<T>> SOA3D<T>::CopyToGpu(DevicePtr<T> xGpu, DevicePtr<T> yG
 }
 
 #endif // VECGEOM_CUDA_INTERFACE
-}
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif // VECGEOM_BASE_SOA3D_H_

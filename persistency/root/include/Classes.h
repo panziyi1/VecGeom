@@ -9,7 +9,6 @@
 #include "navigation/VSafetyEstimator.h"
 #include "navigation/SimpleLevelLocator.h"
 
-
 #include "volumes/Box.h"
 #include "volumes/Paraboloid.h"
 #include "volumes/Parallelepiped.h"

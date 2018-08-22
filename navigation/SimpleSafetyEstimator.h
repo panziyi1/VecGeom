@@ -86,7 +86,7 @@ public:
 
     // safety to daughters; brute force but each function (possibly) vectorized
     vector_t<Daughter> const *daughters = pvol->GetLogicalVolume()->GetDaughtersp();
-    auto numberdaughters              = daughters->size();
+    auto numberdaughters                = daughters->size();
     for (decltype(numberdaughters) d = 0; d < numberdaughters; ++d) {
       VPlacedVolume const *daughter = daughters->operator[](d);
       daughter->SafetyToInMinimize(localpoints, safeties);
@@ -142,7 +142,7 @@ public:
 #endif
 
 }; // end class
-}
-} // end namespaces
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif /* NAVIGATION_SIMPLESAFETYESTIMATOR_H_ */

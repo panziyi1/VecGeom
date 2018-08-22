@@ -357,7 +357,7 @@ struct Maker<UnplacedSphere> {
   static UnplacedSphere *MakeInstance(Precision pRmin, Precision pRmax, Precision pSPhi, Precision pDPhi,
                                       Precision pSTheta, Precision pDTheta);
 };
-}
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif // VECGEOM_VOLUMES_UNPLACEDSPHERE_H_

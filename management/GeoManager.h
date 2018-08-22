@@ -347,7 +347,7 @@ UnplacedShape_t *GeoManager::MakeInstance(Argtypes... args)
 {
   return Maker<UnplacedShape_t>::MakeInstance(args...);
 }
-}
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif // VECGEOM_MANAGEMENT_GEOMANAGER_H_

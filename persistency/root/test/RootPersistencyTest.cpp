@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
   LogicalVolume tet("tet", &tetUnplaced);
   LogicalVolume torus("torus", &torusUnplaced);
 
-  Transformation3D placement = Transformation3D(5, 5, 5);
+  Transformation3D placement  = Transformation3D(5, 5, 5);
   Transformation3D placement2 = Transformation3D(0, 0, 0, 90, 0, 0);
   Transformation3D origin(0, 0, 0);
 

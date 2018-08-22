@@ -455,8 +455,8 @@ void Wedge::DistanceToOut(Vector3D<Real_v> const &point, Vector3D<Real_v> const 
     vecCore::MaskedAssign(distWedge2, cmp2 && tmp > 0., tmp);
   }
 }
-}
-}
-} // end of namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace evolution
+} // namespace vecgeom
 
 #endif /* VECGEOM_VOLUMES_WEDGE_H_ */
