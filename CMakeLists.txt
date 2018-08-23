@@ -659,6 +659,9 @@ set(VECGEOM_SRCS
   source/UnplacedCutTube.cpp
   source/UnplacedGenTrap.cpp
 
+  source/NewSimpleNavigator.cpp
+  source/SimpleSafetyEstimator.cpp
+  source/SimpleLevelLocator.cpp
   source/LogicalVolume.cpp
   source/PlacedPolyhedron.cpp
   source/PlacedPolycone.cpp

@@ -15,6 +15,11 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 
 //! a simple safety estimator based on a brute force (O(N)) approach
 class SimpleSafetyEstimator : public VSafetyEstimatorHelper<SimpleSafetyEstimator> {
+private:
+  VECCORE_ATT_DEVICE
+  SimpleSafetyEstimator() {}
+
+  static SimpleSafetyEstimator *fgInstance; // required to be defined as class attribute
 
 public:
   static constexpr const char *gClassNameString = "SimpleSafetyEstimator";
@@ -131,10 +136,17 @@ public:
   }
 
 #ifndef VECCORE_CUDA
+  SimpleSafetyEstimator(TRootIOCtor *)
+  {
+    if (fgInstance != nullptr)
+      throw std::runtime_error("SimpleSafetyEstimator(TRootIOCtor *) already called, it should be a singleton");
+
+    fgInstance = this;
+  }
   static VSafetyEstimator *Instance()
   {
-    static SimpleSafetyEstimator instance;
-    return &instance;
+    if (fgInstance == nullptr) fgInstance = new SimpleSafetyEstimator();
+    return fgInstance;
   }
 #else
   VECCORE_ATT_DEVICE

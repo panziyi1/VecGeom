@@ -58,6 +58,8 @@ class TSimpleLevelLocator : public VLevelLocator {
 private:
   TSimpleLevelLocator() {}
 
+  static TSimpleLevelLocator *fgInstance; // required to be defined as class attribute
+
   // the actual implementation kernel
   // the template "ifs" should be optimized away
   // arguments are pointers to allow for nullptr
@@ -131,10 +133,17 @@ public:
   static std::string GetClassName() { return "SimpleLevelLocator"; }
   virtual std::string GetName() const override { return GetClassName(); }
 
+  TSimpleLevelLocator(TRootIOCtor *)
+  {
+    if (fgInstance != nullptr)
+      throw std::runtime_error("TSimpleLevelLocator(TRootIOCtor *) already called, it should be a singleton");
+
+    fgInstance = this;
+  }
   static VLevelLocator const *GetInstance()
   {
-    static TSimpleLevelLocator instance;
-    return &instance;
+    if (fgInstance == nullptr) fgInstance = new TSimpleLevelLocator();
+    return fgInstance;
   }
 
 }; // end class declaration
@@ -147,7 +156,7 @@ inline std::string TSimpleLevelLocator<true>::GetClassName()
   return "SimpleAssemblyLevelLocator";
 }
 using SimpleAssemblyLevelLocator = TSimpleLevelLocator<true>;
-}
-} // end namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif /* NAVIGATION_SIMPLELEVELLOCATOR_H_ */

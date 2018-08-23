@@ -3,7 +3,7 @@
 using namespace std;
 using namespace vecgeom;
 
-int main(int argc, char *argv[])
+void write()
 {
   cout << "\033[1;34m///// Running RootPersistencyTest /////\033[0m" << endl << endl;
 
@@ -171,8 +171,12 @@ int main(int argc, char *argv[])
 
   RootGeoManager::Instance().Export("vecgeom_export.root");
 
-  cout << endl << "\033[1;30m---------------------\033[0;34m" << endl;
+  cout << "\033[0m" << endl;
+  GeoManager::Instance().Clear();
+}
 
+void read()
+{
   cout << "reading from vecgeom_export.root\n" << endl;
 
   RootGeoManager::Instance().Import("vecgeom_export.root");
@@ -194,5 +198,44 @@ int main(int argc, char *argv[])
   cout << endl << endl;
   GeomCppExporter::Instance().DumpGeometry(std::cout);
   GeoManager::Instance().Clear();
-  return 0;
+}
+
+void usage(std::string name)
+{
+  cerr << "Usage: " << name << " [mode]\n"
+       << "Available modes:\n"
+       << "\tw -> write geometry to root file\n"
+       << "\tr -> read geometry from root file\n"
+       << "\tno args -> executes write and read in sequence" << endl;
+}
+
+int main(int argc, char *argv[])
+{
+  if (argc == 1) {
+    string exe_name(argv[0]);
+
+    auto term_status = system((exe_name + " w").c_str());
+    if ((WIFEXITED(term_status) == 0 || WEXITSTATUS(term_status) != 0)) return 2;
+
+    cout << endl << "\033[1;30m---------------------\033[0;34m" << endl;
+
+    term_status = system((exe_name + " r").c_str());
+    if ((WIFEXITED(term_status) == 0 || WEXITSTATUS(term_status) != 0)) return 3;
+
+  } else if (argc == 2) {
+    switch (argv[1][0]) {
+    case 'w':
+      write();
+      return 0;
+    case 'r':
+      read();
+      return 0;
+    default:
+      usage(argv[0]);
+    }
+
+  } else {
+    usage(argv[0]);
+  }
+  return 1;
 }

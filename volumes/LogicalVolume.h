@@ -101,7 +101,7 @@ public:
 #ifndef VECCORE_CUDA
 
   /// I/O constructor
-  LogicalVolume(TRootIOCtor *);
+  LogicalVolume(TRootIOCtor *) {};
 
   /// Standard constructor taking a name and an unplaced volume
   LogicalVolume(char const *const label, VUnplacedVolume const *const unplaced_vol);

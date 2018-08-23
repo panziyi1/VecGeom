@@ -5,8 +5,9 @@
 #include "management/GeoManager.h"
 
 #include "navigation/VNavigator.h"
-#include "navigation/VLevelLocator.h"
 #include "navigation/VSafetyEstimator.h"
+#include "navigation/NewSimpleNavigator.h"
+#include "navigation/SimpleSafetyEstimator.h"
 #include "navigation/SimpleLevelLocator.h"
 
 #include "volumes/Box.h"

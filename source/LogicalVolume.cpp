@@ -27,43 +27,9 @@
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-// NOTE: This is in the wrong place (but SimpleSafetyEstimator does not yet have a source file).
-#ifdef VECCORE_CUDA
-VECCORE_ATT_DEVICE
-SimpleSafetyEstimator *gSimpleSafetyEstimator = nullptr;
-
-VECCORE_ATT_DEVICE
-VSafetyEstimator *SimpleSafetyEstimator::Instance()
-{
-  if (gSimpleSafetyEstimator == nullptr) gSimpleSafetyEstimator = new SimpleSafetyEstimator();
-  return gSimpleSafetyEstimator;
-}
-#endif
-
-#ifdef VECCORE_CUDA
-VECCORE_ATT_DEVICE
-VNavigator *gSimpleNavigator = nullptr;
-
-template <>
-VECCORE_ATT_DEVICE
-VNavigator *NewSimpleNavigator<false>::Instance()
-{
-  if (gSimpleNavigator == nullptr) gSimpleNavigator = new NewSimpleNavigator();
-  return gSimpleNavigator;
-}
-#endif
-
 int LogicalVolume::gIdCount = 0;
 
 #ifndef VECCORE_CUDA
-
-LogicalVolume::LogicalVolume(TRootIOCtor *)
-    : fLabel(nullptr), fUserExtensionPtr(nullptr), fMaterialPtr(nullptr), fMaterialCutsPtr(nullptr),
-      fBasketManagerPtr(nullptr), fLevelLocator(SimpleAssemblyLevelLocator::GetInstance()),
-      fSafetyEstimator(SimpleSafetyEstimator::Instance()), fNavigator(NewSimpleNavigator<>::Instance()), fDaughters()
-{
-}
-
 LogicalVolume::LogicalVolume(char const *const label, VUnplacedVolume const *const unplaced_volume)
     : fUnplacedVolume(unplaced_volume), fId(0), fLabel(nullptr), fUserExtensionPtr(nullptr), fMaterialPtr(nullptr),
       fMaterialCutsPtr(nullptr), fBasketManagerPtr(nullptr), fLevelLocator(SimpleAssemblyLevelLocator::GetInstance()),

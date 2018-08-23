@@ -8,9 +8,6 @@
     <field name="fMaterialCutsPtr" transient="true"/>
     <field name="fBasketManagerPtr" transient="true"/>
     <field name="fRegion" transient="true"/>
-    <field name="fLevelLocator" transient="true"/>
-    <field name="fSafetyEstimator" transient="true"/>
-    <field name="fNavigator" transient="true"/>
   </class>
   <class name="vecgeom::VPlacedVolume"/>
 
@@ -96,6 +93,7 @@
   <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedGenTrap, vecgeom::VPlacedVolume>"/>
   <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::GenTrapImplementation,-1, -1>"/>
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::GenTrapImplementation, -1, -1>"/>
+
 
   <class name="vecgeom::UnplacedTrapezoid"/>
   <class name="vecgeom::TrapezoidStruct<double>"/>
@@ -224,6 +222,7 @@
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::MultiUnionImplementation,-1,-1>"/>
   <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedMultiUnion,vecgeom::VPlacedVolume>"/>
 
+
   <class name="vecgeom::UnplacedPolycone"/>
   <class name="vecgeom::PolyconeStruct<double>"/>
   <class name="vecgeom::PolyconeHistorical">
@@ -268,6 +267,7 @@
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::SExtruImplementation,-1,-1>"/>
   <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedSExtruVolume,vecgeom::VPlacedVolume>"/>
   
+
   <class name="vecgeom::UnplacedTessellated"/>
   <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::TessellatedImplementation,vecgeom::VUnplacedVolume>"/>
   <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::TessellatedImplementation,vecgeom::VUnplacedVolume>"/>
@@ -297,5 +297,18 @@
   <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::TorusImplementation2,-1,-1>"/>
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TorusImplementation2,-1,-1>"/>
   <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedTorus2,vecgeom::VPlacedVolume>"/>
+
+
+  <class name="vecgeom::VNavigator"/>
+  <class name="vecgeom::NewSimpleNavigator<false>"/>
+  <class name="vecgeom::VNavigatorHelper<vecgeom::NewSimpleNavigator<false>,false>"/>
+
+  <class name="vecgeom::VSafetyEstimator"/>
+  <class name="vecgeom::SimpleSafetyEstimator"/>
+  <class name="vecgeom::VSafetyEstimatorHelper<vecgeom::SimpleSafetyEstimator>"/>
+
+  <class name="vecgeom::VLevelLocator"/>
+  <class name="vecgeom::SimpleAssemblyLevelLocator"/>
+  <class name="vecgeom::TSimpleLevelLocator<true>"/>
 
 </lcgdict>
