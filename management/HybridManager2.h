@@ -60,6 +60,9 @@ private:
   // keeps/registers an acceleration structure for logical volumes
   std::vector<HybridBoxAccelerationStructure const *> fStructureHolder;
 
+  HybridManager2() {}
+  static HybridManager2 *fgInstance;
+
 public:
   // initialized the helper structure for a given logical volume
   void InitStructure(LogicalVolume const *lvol);
@@ -73,11 +76,17 @@ public:
       InitStructure(lvol);
     }
   }
+  HybridManager2(TRootIOCtor *)
+  {
+    if (fgInstance != nullptr)
+      throw std::runtime_error("HybridManager2(TRootIOCtor *) already called, it should be a singleton");
 
+    fgInstance = this;
+  }
   static HybridManager2 &Instance()
   {
-    static HybridManager2 manager;
-    return manager;
+    if (fgInstance == nullptr) fgInstance = new HybridManager2();
+    return *fgInstance;
   }
 
   // removed/deletes the helper structure for a given logical volume
@@ -147,7 +156,7 @@ private:
   }
 
 }; // end class
-}
-} // end namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif

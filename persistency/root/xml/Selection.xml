@@ -305,6 +305,9 @@
   <class name="vecgeom::SimpleABBoxNavigator<false>"/>
   <class name="vecgeom::ABBoxManager"/>
   <class name="vecgeom::VNavigatorHelper<vecgeom::SimpleABBoxNavigator<false>,false>"/>
+  <class name="vecgeom::HybridNavigator<false>"/>
+  <class name="vecgeom::HybridManager2"/>
+  <class name="vecgeom::VNavigatorHelper<vecgeom::HybridNavigator<false>,false>"/>
 
 
   <class name="vecgeom::VSafetyEstimator"/>
@@ -315,9 +318,7 @@
 
 
   <class name="vecgeom::VLevelLocator"/>
-  <class name="vecgeom::SimpleAssemblyLevelLocator"/>
   <class name="vecgeom::TSimpleLevelLocator<true>"/>
-  <class name="vecgeom::SimpleABBoxLevelLocator"/>
   <class name="vecgeom::TSimpleABBoxLevelLocator<true>"/>
   <class name="vecgeom::TSimpleABBoxLevelLocator<false>"/>
 

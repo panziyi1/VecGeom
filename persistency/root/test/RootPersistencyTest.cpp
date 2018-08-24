@@ -160,18 +160,23 @@ void write()
 
   VPlacedVolume *worldPlaced = world.Place();
 
-  GeoManager::Instance().SetWorld(worldPlaced);
+  GeoManager::Instance().SetWorldAndClose(worldPlaced);
 
-  for (auto &lvol : vecgeom::GeoManager::Instance().GetLogicalVolumesMap()) {
+  for (auto &lvol : GeoManager::Instance().GetLogicalVolumesMap()) {
     if (lvol.second->GetDaughtersp()->size() < 4) {
-      lvol.second->SetNavigator(vecgeom::NewSimpleNavigator<>::Instance());
+      lvol.second->SetNavigator(NewSimpleNavigator<>::Instance());
     } else if (lvol.second->GetDaughtersp()->size() < 10) {
-      lvol.second->SetNavigator(vecgeom::SimpleABBoxNavigator<>::Instance());
-    } // else{
-    //   lvol.second->SetNavigator(vecgeom::HybridNavigator<>::Instance());
-    //   vecgeom::HybridManager2::Instance().InitStructure((lvol.second));
-    // }
-    lvol.second->SetLevelLocator(vecgeom::SimpleABBoxLevelLocator::GetInstance());
+      lvol.second->SetNavigator(SimpleABBoxNavigator<>::Instance());
+    } else {
+      lvol.second->SetNavigator(HybridNavigator<>::Instance());
+      HybridManager2::Instance().InitStructure((lvol.second));
+    }
+
+    if (lvol.second->ContainsAssembly()) {
+      lvol.second->SetLevelLocator(SimpleAssemblyAwareABBoxLevelLocator::GetInstance());
+    } else {
+      lvol.second->SetLevelLocator(SimpleABBoxLevelLocator::GetInstance());
+    }
   }
 
   GeoManager::Instance().GetWorld()->PrintContent();

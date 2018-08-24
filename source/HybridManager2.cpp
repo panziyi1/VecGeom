@@ -22,6 +22,8 @@
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
+HybridManager2 *HybridManager2::fgInstance = nullptr;
+
 void HybridManager2::InitStructure(LogicalVolume const *lvol)
 {
   auto numregisteredlvols = GeoManager::Instance().GetRegisteredVolumesCount();

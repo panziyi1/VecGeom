@@ -12,6 +12,7 @@
 #include "navigation/SimpleABBoxNavigator.h"
 #include "navigation/SimpleABBoxSafetyEstimator.h"
 #include "navigation/SimpleABBoxLevelLocator.h"
+#include "navigation/HybridNavigator2.h"
 
 #include "volumes/Box.h"
 #include "volumes/Paraboloid.h"

@@ -36,12 +36,14 @@ template <bool MotherIsConvex = false>
 class HybridNavigator : public VNavigatorHelper<HybridNavigator<MotherIsConvex>, MotherIsConvex> {
 
 private:
-  HybridManager2 &fAccelerationManager;
+  HybridManager2 *fAccelerationManager = nullptr;
   HybridNavigator()
       : VNavigatorHelper<HybridNavigator<MotherIsConvex>, MotherIsConvex>(SimpleABBoxSafetyEstimator::Instance()),
-        fAccelerationManager(HybridManager2::Instance())
+        fAccelerationManager(&HybridManager2::Instance())
   {
   }
+
+  static HybridNavigator *fgInstance;
 
   static VPlacedVolume const *LookupDaughter(LogicalVolume const *lvol, int const daughterIndex)
   {
@@ -74,7 +76,7 @@ private:
     constexpr auto kVS = vecCore::VectorSize<Float_v>();
     size_t count       = 0;
     int numberOfNodes, size;
-    auto boxes_v                = fAccelerationManager.GetABBoxes_v(accstructure, size, numberOfNodes);
+    auto boxes_v                = fAccelerationManager->GetABBoxes_v(accstructure, size, numberOfNodes);
     auto const *nodeToDaughters = accstructure.fNodeToDaughters;
     for (size_t index = 0, nodeindex = 0; index < size_t(size) * 2; index += 2 * (kVS + 1), nodeindex += kVS) {
       Bool_v inside, inside_d;
@@ -118,7 +120,7 @@ private:
     sign[1] = invdir.y() < 0;
     sign[2] = invdir.z() < 0;
     int numberOfNodes, size;
-    auto boxes_v                = fAccelerationManager.GetABBoxes_v(accstructure, size, numberOfNodes);
+    auto boxes_v                = fAccelerationManager->GetABBoxes_v(accstructure, size, numberOfNodes);
     constexpr auto kVS          = vecCore::VectorSize<HybridManager2::Float_v>();
     auto const *nodeToDaughters = accstructure.fNodeToDaughters;
     for (size_t index = 0, nodeindex = 0; index < size_t(size) * 2; index += 2 * (kVS + 1), nodeindex += kVS) {
@@ -205,7 +207,7 @@ public:
                                           VPlacedVolume const *&hitcandidate) const override
   {
     if (lvol->GetDaughtersp()->size() == 0) return false;
-    auto &accstructure = *fAccelerationManager.GetAccStructure(lvol);
+    auto &accstructure = *fAccelerationManager->GetAccStructure(lvol);
 
     BVHSortedIntersectionsLooper(accstructure, localpoint, localdir, [&](HybridManager2::BoxIdDistancePair_t hitbox) {
       // only consider those hitboxes which are within potential reach of this step
@@ -222,17 +224,27 @@ public:
     });
     return false;
   }
+  HybridNavigator(TRootIOCtor *)
+  {
+    if (fgInstance != nullptr)
+      throw std::runtime_error("HybridNavigator(TRootIOCtor *) already called, it should be a singleton");
 
+    fgInstance = this;
+  }
   static VNavigator *Instance()
   {
-    static HybridNavigator instance;
-    return &instance;
+    if (fgInstance == nullptr) fgInstance = new HybridNavigator();
+    return fgInstance;
   }
 
   static constexpr const char *gClassNameString = "HybridNavigator";
   typedef SimpleABBoxSafetyEstimator SafetyEstimator_t;
 };
-}
-} // End global namespace
+
+template <bool MotherIsConvex>
+HybridNavigator<MotherIsConvex> *HybridNavigator<MotherIsConvex>::fgInstance;
+
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif
