@@ -162,6 +162,18 @@ void write()
 
   GeoManager::Instance().SetWorld(worldPlaced);
 
+  for (auto &lvol : vecgeom::GeoManager::Instance().GetLogicalVolumesMap()) {
+    if (lvol.second->GetDaughtersp()->size() < 4) {
+      lvol.second->SetNavigator(vecgeom::NewSimpleNavigator<>::Instance());
+    } else if (lvol.second->GetDaughtersp()->size() < 10) {
+      lvol.second->SetNavigator(vecgeom::SimpleABBoxNavigator<>::Instance());
+    } // else{
+    //   lvol.second->SetNavigator(vecgeom::HybridNavigator<>::Instance());
+    //   vecgeom::HybridManager2::Instance().InitStructure((lvol.second));
+    // }
+    lvol.second->SetLevelLocator(vecgeom::SimpleABBoxLevelLocator::GetInstance());
+  }
+
   GeoManager::Instance().GetWorld()->PrintContent();
 
   cout << endl << "placed vol count: " << GeoManager::Instance().GetPlacedVolumesCount() << endl;

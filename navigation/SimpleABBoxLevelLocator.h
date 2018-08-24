@@ -27,8 +27,10 @@ template <bool IsAssemblyAware = false>
 class TSimpleABBoxLevelLocator : public VLevelLocator {
 
 private:
-  ABBoxManager &fAccelerationStructure;
-  TSimpleABBoxLevelLocator() : fAccelerationStructure(ABBoxManager::Instance()) {}
+  ABBoxManager *fAccelerationStructure = nullptr;
+  TSimpleABBoxLevelLocator() : fAccelerationStructure(&ABBoxManager::Instance()) {}
+
+  static TSimpleABBoxLevelLocator *fgInstance; // required to be defined as class attribute
 
   // the actual implementation kernel
   // the template "ifs" should be optimized away
@@ -40,7 +42,7 @@ private:
                                                         Vector3D<Precision> &daughterlocalpoint) const
   {
     int size;
-    ABBoxManager::ABBoxContainer_v alignedbboxes = fAccelerationStructure.GetABBoxes_v(lvol, size);
+    ABBoxManager::ABBoxContainer_v alignedbboxes = fAccelerationStructure->GetABBoxes_v(lvol, size);
 
     auto daughters = lvol->GetDaughtersp();
     // here the loop is over groups of bounding boxes
@@ -78,7 +80,7 @@ public:
   {
     return LevelLocateKernel<false, false>(lvol, nullptr, localpoint, nullptr, pvol, daughterlocalpoint);
     //    int size;
-    //    ABBoxManager::ABBoxContainer_v alignedbboxes = fAccelerationStructure.GetABBoxes_v(lvol, size);
+    //    ABBoxManager::ABBoxContainer_v alignedbboxes = fAccelerationStructure->GetABBoxes_v(lvol, size);
 
     //    auto daughters = lvol->GetDaughtersp();
     //    // here the loop is over groups of bounding boxes
@@ -115,7 +117,7 @@ public:
     VPlacedVolume const *pvol;
     return LevelLocateKernel<false, true>(lvol, nullptr, localpoint, &outstate, pvol, daughterlocalpoint);
     //    int size;
-    //    ABBoxManager::ABBoxContainer_v alignedbboxes = fAccelerationStructure.GetABBoxes_v(lvol, size);
+    //    ABBoxManager::ABBoxContainer_v alignedbboxes = fAccelerationStructure->GetABBoxes_v(lvol, size);
 
     //    auto daughters = lvol->GetDaughtersp();
     //    // here the loop is over groups of bounding boxes
@@ -151,7 +153,7 @@ public:
   {
     return LevelLocateKernel<true, false>(lvol, exclvol, localpoint, nullptr, pvol, daughterlocalpoint);
     //    int size;
-    //    ABBoxManager::ABBoxContainer_v alignedbboxes = fAccelerationStructure.GetABBoxes_v(lvol, size);
+    //    ABBoxManager::ABBoxContainer_v alignedbboxes = fAccelerationStructure->GetABBoxes_v(lvol, size);
 
     //    auto daughters = lvol->GetDaughtersp();
     //    // here the loop is over groups of bounding boxes
@@ -184,10 +186,17 @@ public:
   static std::string GetClassName() { return "SimpleABBoxLevelLocator"; }
   virtual std::string GetName() const override { return GetClassName(); }
 
+  TSimpleABBoxLevelLocator(TRootIOCtor *)
+  {
+    if (fgInstance != nullptr)
+      throw std::runtime_error("TSimpleABBoxLevelLocator(TRootIOCtor *) already called, it should be a singleton");
+
+    fgInstance = this;
+  }
   static VLevelLocator const *GetInstance()
   {
-    static TSimpleABBoxLevelLocator instance;
-    return &instance;
+    if (fgInstance == nullptr) fgInstance = new TSimpleABBoxLevelLocator();
+    return fgInstance;
   }
 
 }; // end class declaration
@@ -203,7 +212,7 @@ using SimpleAssemblyAwareABBoxLevelLocator = TSimpleABBoxLevelLocator<true>;
 //                                                 const
 //{
 //    int size;
-//    ABBoxManager::ABBoxContainer_v alignedbboxes = fAccelerationStructure.GetABBoxes_v(lvol, size);
+//    ABBoxManager::ABBoxContainer_v alignedbboxes = fAccelerationStructure->GetABBoxes_v(lvol, size);
 
 //    auto daughters = lvol->GetDaughtersp();
 //    // here the loop is over groups of bounding boxes
@@ -237,7 +246,7 @@ inline std::string TSimpleABBoxLevelLocator<true>::GetClassName()
 {
   return "SimpleAssemblyAwareABBoxLevelLocator";
 }
-}
-} // end namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif /* NAVIGATION_SIMPLEABBOXLEVELLOCATOR_H_ */

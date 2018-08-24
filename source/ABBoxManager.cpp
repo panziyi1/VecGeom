@@ -11,6 +11,8 @@
 namespace vecgeom {
 inline namespace cxx {
 
+ABBoxManager *ABBoxManager::fgInstance = nullptr;
+
 /** Splitted Aligned bounding boxes
  *
  *  This function will calculate the "numOfSlices" num of aligned bounding
@@ -247,5 +249,5 @@ void ABBoxManager::RemoveABBoxes(LogicalVolume const *lvol)
 {
   if (fVolToABBoxesMap[lvol->id()] != nullptr) delete[] fVolToABBoxesMap[lvol->id()];
 }
-}
-}
+} // namespace cxx
+} // namespace vecgeom

@@ -9,6 +9,9 @@
 #include "navigation/NewSimpleNavigator.h"
 #include "navigation/SimpleSafetyEstimator.h"
 #include "navigation/SimpleLevelLocator.h"
+#include "navigation/SimpleABBoxNavigator.h"
+#include "navigation/SimpleABBoxSafetyEstimator.h"
+#include "navigation/SimpleABBoxLevelLocator.h"
 
 #include "volumes/Box.h"
 #include "volumes/Paraboloid.h"

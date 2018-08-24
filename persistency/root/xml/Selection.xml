@@ -302,13 +302,23 @@
   <class name="vecgeom::VNavigator"/>
   <class name="vecgeom::NewSimpleNavigator<false>"/>
   <class name="vecgeom::VNavigatorHelper<vecgeom::NewSimpleNavigator<false>,false>"/>
+  <class name="vecgeom::SimpleABBoxNavigator<false>"/>
+  <class name="vecgeom::ABBoxManager"/>
+  <class name="vecgeom::VNavigatorHelper<vecgeom::SimpleABBoxNavigator<false>,false>"/>
+
 
   <class name="vecgeom::VSafetyEstimator"/>
   <class name="vecgeom::SimpleSafetyEstimator"/>
   <class name="vecgeom::VSafetyEstimatorHelper<vecgeom::SimpleSafetyEstimator>"/>
+  <class name="vecgeom::SimpleABBoxSafetyEstimator"/>
+  <class name="vecgeom::VSafetyEstimatorHelper<vecgeom::SimpleABBoxSafetyEstimator>"/>
+
 
   <class name="vecgeom::VLevelLocator"/>
   <class name="vecgeom::SimpleAssemblyLevelLocator"/>
   <class name="vecgeom::TSimpleLevelLocator<true>"/>
+  <class name="vecgeom::SimpleABBoxLevelLocator"/>
+  <class name="vecgeom::TSimpleABBoxLevelLocator<true>"/>
+  <class name="vecgeom::TSimpleABBoxLevelLocator<false>"/>
 
 </lcgdict>

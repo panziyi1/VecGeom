@@ -20,12 +20,14 @@ class SimpleABBoxSafetyEstimator : public VSafetyEstimatorHelper<SimpleABBoxSafe
 
 private:
   // we keep a reference to the ABBoxManager ( avoids calling Instance() on this guy all the time )
-  ABBoxManager &fABBoxManager;
+  ABBoxManager *fABBoxManager = nullptr;
 
   SimpleABBoxSafetyEstimator()
-      : VSafetyEstimatorHelper<SimpleABBoxSafetyEstimator>(), fABBoxManager(ABBoxManager::Instance())
+      : VSafetyEstimatorHelper<SimpleABBoxSafetyEstimator>(), fABBoxManager(&ABBoxManager::Instance())
   {
   }
+
+  static SimpleABBoxSafetyEstimator *fgInstance; // required to be defined as class attribute
 
   // convert index to physical daugher
   VPlacedVolume const *LookupDaughter(LogicalVolume const *lvol, int id) const
@@ -81,7 +83,7 @@ private:
     if (safety > 0. && lvol->GetDaughtersp()->size() > 0) {
       int size;
 
-      ABBoxManager::ABBoxContainer_v bboxes = fABBoxManager.GetABBoxes_v(lvol, size);
+      ABBoxManager::ABBoxContainer_v bboxes = fABBoxManager->GetABBoxes_v(lvol, size);
       // calculate squared bounding box safeties in vectorized way
       auto ncandidates = GetSafetyCandidates_v(localpoint, bboxes, size, boxsafetylist, safetysqr);
       // not sorting the candidate list ( which one could do )
@@ -132,8 +134,8 @@ public:
   virtual Real_v ComputeSafetyForLocalPoint(Vector3D<Real_v> const &localpoint, VPlacedVolume const *pvol,
                                             Bool_v m) const override
   {
-    using vecCore::LaneAt;
     using vecCore::AssignLane;
+    using vecCore::LaneAt;
     Real_v safety(0.);
     if (!vecCore::MaskEmpty(m)) {
       // SIMD safety to mother
@@ -175,7 +177,7 @@ public:
 
     // get bounding boxes (they are the same for all tracks)
     int numberofboxes;
-    auto bboxes = fABBoxManager.GetABBoxes_v(lvol, numberofboxes);
+    auto bboxes = fABBoxManager->GetABBoxes_v(lvol, numberofboxes);
 
     // now loop over particles
     for (int i = 0, ntracks = localpoints.size(); i < ntracks; ++i) {
@@ -208,14 +210,22 @@ public:
     }
   }
 
+  SimpleABBoxSafetyEstimator(TRootIOCtor *)
+  {
+    if (fgInstance != nullptr)
+      throw std::runtime_error("SimpleABBoxSafetyEstimator(TRootIOCtor *) already called, it should be a singleton");
+
+    fgInstance = this;
+  }
+
   static VSafetyEstimator *Instance()
   {
-    static SimpleABBoxSafetyEstimator instance;
-    return &instance;
+    if (fgInstance == nullptr) fgInstance = new SimpleABBoxSafetyEstimator();
+    return fgInstance;
   }
 
 }; // end class
-}
-} // end namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif /* NAVIGATION_SIMPLEABBOXSAFETYESTIMATOR_H_ */

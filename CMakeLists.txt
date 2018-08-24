@@ -662,6 +662,9 @@ set(VECGEOM_SRCS
   source/NewSimpleNavigator.cpp
   source/SimpleSafetyEstimator.cpp
   source/SimpleLevelLocator.cpp
+  source/SimpleABBoxNavigator.cpp
+  source/SimpleABBoxSafetyEstimator.cpp
+  source/SimpleABBoxLevelLocator.cpp
   source/LogicalVolume.cpp
   source/PlacedPolyhedron.cpp
   source/PlacedPolycone.cpp

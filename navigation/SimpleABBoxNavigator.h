@@ -20,13 +20,14 @@ template <bool MotherIsConvex = false>
 class SimpleABBoxNavigator : public VNavigatorHelper<SimpleABBoxNavigator<MotherIsConvex>, MotherIsConvex> {
 
 private:
-  ABBoxManager &fABBoxManager;
+  ABBoxManager *fABBoxManager = nullptr;
   SimpleABBoxNavigator()
       : VNavigatorHelper<SimpleABBoxNavigator<MotherIsConvex>, MotherIsConvex>(SimpleABBoxSafetyEstimator::Instance()),
-        fABBoxManager(ABBoxManager::Instance())
+        fABBoxManager(&ABBoxManager::Instance())
   {
   }
 
+  static SimpleABBoxNavigator *fgInstance; // required to be defined as class attribute
   // convert index to physical daugher
   VPlacedVolume const *LookupDaughter(LogicalVolume const *lvol, int id) const
   {
@@ -107,7 +108,7 @@ public:
     if (lvol->GetDaughtersp()->size() == 0) return false;
 
     int size;
-    ABBoxManager::ABBoxContainer_v bboxes = fABBoxManager.GetABBoxes_v(lvol, size);
+    ABBoxManager::ABBoxContainer_v bboxes = fABBoxManager->GetABBoxes_v(lvol, size);
     auto ncandidates                      = GetHitCandidates_v(lvol, localpoint, localdir, bboxes, size, hitlist);
 
     // sort candidates according to their bounding volume hit distance
@@ -148,16 +149,23 @@ public:
     return false;
   }
 
+  SimpleABBoxNavigator(TRootIOCtor *)
+  {
+    if (fgInstance != nullptr)
+      throw std::runtime_error("SimpleABBoxNavigator(TRootIOCtor *) already called, it should be a singleton");
+
+    fgInstance = this;
+  }
   static VNavigator *Instance()
   {
-    static SimpleABBoxNavigator instance;
-    return &instance;
+    if (fgInstance == nullptr) fgInstance = new SimpleABBoxNavigator();
+    return fgInstance;
   }
 
   static constexpr const char *gClassNameString = "SimpleABBoxNavigator";
   typedef SimpleABBoxSafetyEstimator SafetyEstimator_t;
 }; // end of class
-}
-} // end namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif /* NAVIGATION_SIMPLEABBOXNAVIGATOR_H_ */

@@ -61,16 +61,25 @@ private:
   std::vector<ABBoxContainer_t> fVolToABBoxesMap;
   std::vector<ABBoxContainer_v> fVolToABBoxesMap_v;
 
+  ABBoxManager() {}
+  static ABBoxManager *fgInstance; // required to be defined as class attribute
 public:
   // computes the aligned bounding box for a certain placed volume
   static void ComputeABBox(VPlacedVolume const *pvol, ABBox_s *lower, ABBox_s *upper);
   static void ComputeSplittedABBox(VPlacedVolume const *pvol, std::vector<ABBox_s> &lower, std::vector<ABBox_s> &upper,
                                    int numOfSlices);
 
+  ABBoxManager(TRootIOCtor *)
+  {
+    if (fgInstance != nullptr)
+      throw std::runtime_error("ABBoxManager(TRootIOCtor *) already called, it should be a singleton");
+
+    fgInstance = this;
+  }
   static ABBoxManager &Instance()
   {
-    static ABBoxManager instance;
-    return instance;
+    if (fgInstance == nullptr) fgInstance = new ABBoxManager();
+    return *fgInstance;
   }
 
   // initialize ABBoxes for a certain logical volume
@@ -132,5 +141,5 @@ stream &operator<<(stream &s, std::vector<ABBoxManager::BoxIdDistancePair_t> con
   }
   return s;
 }
-}
-} // end namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
