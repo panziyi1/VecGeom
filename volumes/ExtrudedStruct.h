@@ -178,8 +178,12 @@ public:
 #endif
     // TRIANGULATE POLYGON
 
+#ifndef VECGEOM_ENABLE_CUDA
     vector_t<FacetInd> facets;
     facets.reserve(nvertices);
+#else
+    VectorBase<FacetInd> facets(nvertices);
+#endif
 
     // Fill a vector of vertex indices
     vector_t<size_t> vtx;

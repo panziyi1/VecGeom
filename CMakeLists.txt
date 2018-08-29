@@ -118,6 +118,15 @@ if (CTEST)
   set (DATA_DOWNLOAD ON)
 endif()
 
+if(ROOT_PERSISTENCY AND NOT ROOT)
+  message(STATUS "ROOT persistency requires ROOT. Turning ROOT_PERSISTENCY OFF")
+  set(ROOT_PERSISTENCY OFF)
+endif()
+if(ROOT_PERSISTENCY AND CUDA)
+  message(STATUS "ROOT persistency is not supported for CUDA builds. Turning ROOT_PERSISTENCY OFF")
+  set(ROOT_PERSISTENCY OFF)
+endif()
+
 ################################################################################
 
 if (CUDA)
@@ -954,11 +963,6 @@ if(GDML)
   option(GDMLDEBUG "Enable additional debug information in GDML module" OFF)
   add_subdirectory(persistency/gdml)
 endif() # GDML
-
-if(ROOT_PERSISTENCY AND NOT ROOT)
-  message(STATUS "ROOT persistency requires ROOT. Turning ROOT_PERSISTENCY OFF")
-  set(ROOT_PERSISTENCY OFF)
-endif()
 
 if(ROOT_PERSISTENCY)
   add_subdirectory(persistency/root)
