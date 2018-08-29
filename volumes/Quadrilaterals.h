@@ -42,6 +42,14 @@ public:
   VECCORE_ATT_HOST_DEVICE
   Quadrilaterals(int size);
 
+  Quadrilaterals(TRootIOCtor *)
+      : fPlanes((TRootIOCtor *)nullptr), fSideVectors{{(TRootIOCtor *)nullptr},
+                                                      {(TRootIOCtor *)nullptr},
+                                                      {(TRootIOCtor *)nullptr},
+                                                      {(TRootIOCtor *)nullptr}}
+  {
+  }
+
   VECCORE_ATT_HOST_DEVICE
   ~Quadrilaterals();
 

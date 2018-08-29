@@ -69,11 +69,10 @@ VPlacedVolume *UnplacedPolyhedron::Create(LogicalVolume const *const logical_vol
 {
   UnplacedPolyhedron const *unplaced = static_cast<UnplacedPolyhedron const *>(logical_volume->GetUnplacedVolume());
 
-  EInnerRadii innerRadii = unplaced->HasInnerRadii() ? EInnerRadii::kTrue : EInnerRadii::kFalse;
+  int innerRadii = unplaced->HasInnerRadii() ? EInnerRadii::kTrue : EInnerRadii::kFalse;
 
-  EPhiCutout phiCutout = unplaced->HasPhiCutout()
-                             ? (unplaced->HasLargePhiCutout() ? EPhiCutout::kLarge : EPhiCutout::kTrue)
-                             : EPhiCutout::kFalse;
+  int phiCutout = unplaced->HasPhiCutout() ? (unplaced->HasLargePhiCutout() ? EPhiCutout::kLarge : EPhiCutout::kTrue)
+                                           : EPhiCutout::kFalse;
 
 #ifndef VECCORE_CUDA
 // for the moment we do not propagate placement specialization
@@ -612,7 +611,7 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedPolyhedron::CopyToGpu() const
 
 #endif
 
-} // End impl namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
 
 #ifdef VECCORE_CUDA
 
@@ -624,7 +623,7 @@ template void DevicePtr<cuda::UnplacedPolyhedron>::Construct(Precision phiStart,
                                                              DevicePtr<Precision> rMin,
                                                              DevicePtr<Precision> rMax) const;
 
-} // End cxx namespace
+} // namespace cxx
 
 #endif
 

@@ -27,6 +27,14 @@
   <class name="vector_t<double>"/>
 
 
+  <class name="vecgeom::Array<double>">
+    <field name="fData" comment="[fSize]"/>
+  </class>
+  <class name="vecgeom::Array<bool>">
+    <field name="fData" comment="[fSize]"/>
+  </class>
+
+
   <class name="vecgeom::UnplacedBox"/>
   <class name="vecgeom::BoxStruct<double>"/>
   <class name="vecgeom::SIMDUnplacedVolumeImplHelper<vecgeom::BoxImplementation>"/>
@@ -239,14 +247,22 @@
   <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedPolycone,vecgeom::VPlacedVolume>"/>
 
 
-  <!-- <class name="vecgeom::UnplacedPolyhedron"/>
+  <class name="vecgeom::UnplacedPolyhedron"/>
   <class name="vecgeom::PolyhedronStruct<double>"/>
-  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::PolyhedronImplementation<EInnerRadii::kGeneric,EPhiCutout::kGeneric>,vecgeom::VUnplacedVolume>"/>
-  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::PolyhedronImplementation<EInnerRadii::kGeneric,EPhiCutout::kGeneric>,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::Array<vecgeom::ZSegment>">
+    <field name="fData" comment="[fSize]"/>
+  </class>
+  <class name="vecgeom::ZSegment"/>
+  <class name="vecgeom::Quadrilaterals"/>
+  <class name="vecgeom::Planes"/>
+  <class name="vecgeom::AOS3D<double>"/>
+  <class name="vecgeom::Container3D<vecgeom::AOS3D<double>>"/>
+  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::PolyhedronImplementation<vecgeom::Polyhedron::EInnerRadii::kGeneric,vecgeom::Polyhedron::EPhiCutout::kGeneric>,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::PolyhedronImplementation<vecgeom::Polyhedron::EInnerRadii::kGeneric,vecgeom::Polyhedron::EPhiCutout::kGeneric>,vecgeom::VUnplacedVolume>"/>
   <class name="vecgeom::PlacedPolyhedron"/>
-  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::PolyhedronImplementation<EInnerRadii::kTrue,EPhiCutout::kTrue>,-1,-1>"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::PolyhedronImplementation<vecgeom::Polyhedron::EInnerRadii::kTrue,vecgeom::Polyhedron::EPhiCutout::kTrue>,-1,-1>"/>
   <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedPolyhedron,vecgeom::VPlacedVolume>"/>
-  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::PolyhedronImplementation<EInnerRadii::kTrue,EPhiCutout::kTrue>,-1,-1>"/> -->
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::PolyhedronImplementation<vecgeom::Polyhedron::EInnerRadii::kTrue,vecgeom::Polyhedron::EPhiCutout::kTrue>,-1,-1>"/>
 
 
   <class name="vecgeom::UnplacedScaledShape"/>

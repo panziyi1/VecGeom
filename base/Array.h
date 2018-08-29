@@ -16,8 +16,8 @@ template <typename Type>
 class Array : public AlignedBase {
 
 private:
-  Type *fData;
   int fSize;
+  Type *fData;
   bool fAllocated;
 
 public:
@@ -86,7 +86,7 @@ public:
 
 template <typename Type>
 VECCORE_ATT_HOST_DEVICE
-Array<Type>::Array() : fData(NULL), fSize(0), fAllocated(false)
+Array<Type>::Array() : fSize(0), fData(NULL), fAllocated(false)
 {
 }
 
@@ -107,7 +107,7 @@ Array<Type>::Array(Array<Type> const &other) : fData(NULL), fAllocated(true)
 template <typename Type>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
-Array<Type>::Array(Type *data, int initSize) : fData(data), fSize(initSize), fAllocated(false)
+Array<Type>::Array(Type *data, int initSize) : fSize(initSize), fData(data), fAllocated(false)
 {
 }
 
@@ -163,7 +163,7 @@ Array<Type> &Array<Type>::operator=(Array<Type> const &other)
 #endif
   return *this;
 }
-}
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif // VECGEOM_BASE_ARRAY_H_

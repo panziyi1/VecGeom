@@ -77,16 +77,16 @@ void write()
   double z[]    = {-1, -0.5, 0.5, 10};
   UnplacedPolycone pconUnplaced(0, kTwoPi, 4, z, rmin, rmax);
 
-  // double RMINVec0[2];
-  // RMINVec0[0] = 1;
-  // RMINVec0[1] = 1;
-  // double RMAXVec0[2];
-  // RMAXVec0[0] = 2;
-  // RMAXVec0[1] = 2;
-  // double Z_Values0[2];
-  // Z_Values0[0] = -1;
-  // Z_Values0[1] = 1;
-  // auto polyhUnplaced = new UnplacedPolyhedron(0.0, kPi, 2, 2, Z_Values0, RMINVec0, RMAXVec0);
+  double RMINVec0[2];
+  RMINVec0[0] = 1;
+  RMINVec0[1] = 1;
+  double RMAXVec0[2];
+  RMAXVec0[0] = 2;
+  RMAXVec0[1] = 2;
+  double Z_Values0[2];
+  Z_Values0[0]       = -1;
+  Z_Values0[1]       = 1;
+  auto polyhUnplaced = new UnplacedPolyhedron(0.0, kPi, 2, 2, Z_Values0, RMINVec0, RMAXVec0);
 
   UnplacedScaledShape scaledUnplaced(tubeUnplaced, 0.5, 1.3, 1.);
 
@@ -123,7 +123,7 @@ void write()
   LogicalVolume xtru("xtru", ExtrudedMultiLayer(false));
   LogicalVolume multiu("multiu", &multiuUnplaced);
   LogicalVolume pcon("pcon", &pconUnplaced);
-  // LogicalVolume polyh("polyh", polyhUnplaced);
+  LogicalVolume polyh("polyh", polyhUnplaced);
   LogicalVolume scaled("scaled", &scaledUnplaced);
   LogicalVolume sextru("sextru", &sextruUnplaced);
   LogicalVolume tsl("tsl", &tslUnplaced);
@@ -151,7 +151,7 @@ void write()
   world.PlaceDaughter(&xtru, &placement2);
   world.PlaceDaughter(&multiu, &placement);
   world.PlaceDaughter(&pcon, &placement2);
-  // world.PlaceDaughter(&polyh, &placement2);
+  world.PlaceDaughter(&polyh, &placement2);
   world.PlaceDaughter(&scaled, &placement);
   world.PlaceDaughter(&sextru, &placement);
   world.PlaceDaughter(&tsl, &origin);

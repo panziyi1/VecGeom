@@ -16,24 +16,24 @@ namespace vecgeom {
 VECGEOM_DEVICE_FORWARD_DECLARE(class UnplacedPolyhedron;);
 VECGEOM_DEVICE_DECLARE_CONV(class, UnplacedPolyhedron);
 
-template <typename Stream>
-Stream &operator<<(Stream &st, EInnerRadii a)
-{
-  if (a == EInnerRadii::kFalse) st << "EInnerRadii::kFalse";
-  if (a == EInnerRadii::kGeneric) st << "EInnerRadii::kGeneric";
-  if (a == EInnerRadii::kTrue) st << "EInnerRadii::kTrue";
-  return st;
-}
+// template <typename Stream>
+// Stream &operator<<(Stream &st, int a)
+// {
+//   if (a == Polyhedron::EInnerRadii::kFalse) st << "EInnerRadii::kFalse";
+//   if (a == Polyhedron::EInnerRadii::kGeneric) st << "EInnerRadii::kGeneric";
+//   if (a == Polyhedron::EInnerRadii::kTrue) st << "EInnerRadii::kTrue";
+//   return st;
+// }
 
-template <typename Stream>
-Stream &operator<<(Stream &st, EPhiCutout a)
-{
-  if (a == EPhiCutout::kFalse) st << "EPhiCutout::kFalse";
-  if (a == EPhiCutout::kGeneric) st << "EPhiCutout::kGeneric";
-  if (a == EPhiCutout::kTrue) st << "EPhiCutout::kTrue";
-  if (a == EPhiCutout::kLarge) st << "EPhiCutout::kLarge";
-  return st;
-}
+// template <typename Stream>
+// Stream &operator<<(Stream &st, int a)
+// {
+//   if (a == EPhiCutout::kFalse) st << "EPhiCutout::kFalse";
+//   if (a == EPhiCutout::kGeneric) st << "EPhiCutout::kGeneric";
+//   if (a == EPhiCutout::kTrue) st << "EPhiCutout::kTrue";
+//   if (a == EPhiCutout::kLarge) st << "EPhiCutout::kLarge";
+//   return st;
+// }
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
@@ -363,8 +363,8 @@ private:
 
 }; // End class UnplacedPolyhedron
 
-} // End inline namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
 
-} // End global namespace
+} // namespace vecgeom
 
 #endif // VECGEOM_VOLUMES_UNPLACEDPOLYHEDRON_H_

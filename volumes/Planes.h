@@ -40,6 +40,8 @@ public:
   VECCORE_ATT_DEVICE Planes(Precision *a, Precision *b, Precision *c, Precision *d, int size);
 #endif
 
+  Planes(TRootIOCtor *) : fNormals(), fDistances() {}
+
   VECCORE_ATT_HOST_DEVICE
   ~Planes();
 
@@ -317,8 +319,8 @@ Real_v Planes::Distance(Vector3D<Real_v> const &point) const
   return bestDistance;
 }
 
-} // End inline namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
 
-} // End global namespace
+} // namespace vecgeom
 
 #endif // VECGEOM_VOLUMES_PLANES_H_

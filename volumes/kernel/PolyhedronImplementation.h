@@ -16,8 +16,7 @@ namespace vecgeom {
 
 // VECGEOM_DEVICE_FORWARD_DECLARE(struct PolyhedronImplementation;);
 
-VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE_2v(struct, PolyhedronImplementation, Polyhedron::EInnerRadii,
-                                        Polyhedron::EInnerRadii::kGeneric, Polyhedron::EPhiCutout,
+VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE_2v(struct, PolyhedronImplementation, int, Polyhedron::EInnerRadii::kGeneric, int,
                                         Polyhedron::EPhiCutout::kGeneric);
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
@@ -25,7 +24,7 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 class PlacedPolyhedron;
 class UnplacedPolyhedron;
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 struct PolyhedronImplementation {
 
   using PlacedShape_t    = PlacedPolyhedron;
@@ -226,19 +225,19 @@ namespace {
 // SW (19.6.2015): switching to UniversalTube as Phi section was not
 // correctly treated with a hollow tube
 // TODO: this could be CORRECTLY put back for optimization
-template <Polyhedron::EInnerRadii innerRadiiT>
+template <int innerRadiiT>
 struct HasInnerRadiiTraits {
   /// If polyhedron has inner radii, use a hollow tube
   typedef TubeImplementation<TubeTypes::UniversalTube> TubeKernels;
 };
 
 template <>
-struct HasInnerRadiiTraits<Polyhedron::EInnerRadii::kFalse> {
+struct HasInnerRadiiTraits<-1> {
   /// If polyhedron has no inner radii, use a non-hollow tube
   typedef TubeImplementation<TubeTypes::UniversalTube> TubeKernels;
 };
 
-template <Polyhedron::EInnerRadii innerRadiiT>
+template <int innerRadiiT>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
 bool TreatInner(bool hasInnerRadius)
@@ -249,12 +248,12 @@ bool TreatInner(bool hasInnerRadius)
 template <>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
-bool TreatInner<Polyhedron::EInnerRadii::kFalse>(bool /*hasInnerRadius*/)
+bool TreatInner<-1>(bool /*hasInnerRadius*/)
 {
   return false;
 }
 
-template <Polyhedron::EPhiCutout phiCutoutT>
+template <int phiCutoutT>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
 bool TreatPhi(bool /*hasPhiCutout*/)
@@ -265,7 +264,7 @@ bool TreatPhi(bool /*hasPhiCutout*/)
 template <>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
-bool TreatPhi<Polyhedron::EPhiCutout::kFalse>(bool /*hasPhiCutout*/)
+bool TreatPhi<-1>(bool /*hasPhiCutout*/)
 {
   return false;
 }
@@ -273,12 +272,12 @@ bool TreatPhi<Polyhedron::EPhiCutout::kFalse>(bool /*hasPhiCutout*/)
 template <>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
-bool TreatPhi<Polyhedron::EPhiCutout::kGeneric>(bool hasPhiCutout)
+bool TreatPhi<0>(bool hasPhiCutout)
 {
   return hasPhiCutout;
 }
 
-template <Polyhedron::EPhiCutout phiCutoutT>
+template <int phiCutoutT>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
 bool LargePhiCutout(bool largePhiCutout)
@@ -289,7 +288,7 @@ bool LargePhiCutout(bool largePhiCutout)
 template <>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
-bool LargePhiCutout<Polyhedron::EPhiCutout::kTrue>(bool /*largePhiCutout*/)
+bool LargePhiCutout<1>(bool /*largePhiCutout*/)
 {
   return false;
 }
@@ -297,7 +296,7 @@ bool LargePhiCutout<Polyhedron::EPhiCutout::kTrue>(bool /*largePhiCutout*/)
 template <>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
-bool LargePhiCutout<Polyhedron::EPhiCutout::kLarge>(bool /*largePhiCutout*/)
+bool LargePhiCutout<2>(bool /*largePhiCutout*/)
 {
   return true;
 }
@@ -331,7 +330,7 @@ int FindZSegmentKernel<Precision>(Precision const *begin, Precision const *end, 
 }
 } // End anonymous namespace
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 template <typename Real_v>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
@@ -341,7 +340,7 @@ int PolyhedronImplementation<innerRadiiT, phiCutoutT>::FindZSegment(UnplacedStru
   return FindZSegmentKernel<Real_v>(&unplaced.fZPlanes[0], &unplaced.fZPlanes[0] + unplaced.fZPlanes.size(), pointZ);
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 template <typename Real_v>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
@@ -369,7 +368,7 @@ int PolyhedronImplementation<innerRadiiT, phiCutoutT>::FindPhiSegment(UnplacedSt
   return index;
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 template <typename Real_v>
 VECCORE_ATT_HOST_DEVICE
 Real_v PolyhedronImplementation<innerRadiiT, phiCutoutT>::DistanceToInZSegment(UnplacedStruct_t const &unplaced,
@@ -406,7 +405,7 @@ Real_v PolyhedronImplementation<innerRadiiT, phiCutoutT>::DistanceToInZSegment(U
   return distance;
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 template <typename Real_v>
 VECCORE_ATT_HOST_DEVICE
 Real_v PolyhedronImplementation<innerRadiiT, phiCutoutT>::DistanceToOutZSegment(UnplacedStruct_t const &unplaced,
@@ -446,7 +445,7 @@ Real_v PolyhedronImplementation<innerRadiiT, phiCutoutT>::DistanceToOutZSegment(
   return distance;
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
 Precision PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarSafetyToZSegmentSquared(
@@ -560,7 +559,7 @@ Precision PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarSafetyToZSegm
   return safetySquared;
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 template <bool pointInsideT>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
@@ -617,7 +616,7 @@ void PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarDistanceToEndcaps(
   distance = distanceTest;
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
 void PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarSafetyToEndcapsSquared(UnplacedStruct_t const &unplaced,
@@ -656,7 +655,7 @@ void PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarSafetyToEndcapsSqu
   distanceSquared = distanceTestSquared;
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 template <typename Real_v>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
@@ -675,7 +674,7 @@ vecCore::Mask_v<Real_v> PolyhedronImplementation<innerRadiiT, phiCutoutT>::InPhi
   return pointSeg0 && pointSeg1;
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 VECCORE_ATT_HOST_DEVICE
 bool PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarSegmentContainsKernel(UnplacedStruct_t const &unplaced,
                                                                                     Vector3D<Precision> const &point,
@@ -699,7 +698,7 @@ bool PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarSegmentContainsKer
   return true;
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 VECCORE_ATT_HOST_DEVICE
 bool PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarContainsKernel(UnplacedStruct_t const &unplaced,
                                                                              Vector3D<Precision> const &point)
@@ -753,7 +752,7 @@ bool PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarContainsKernel(Unp
 }
 
 // TODO: check this code -- maybe unify with previous function
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 VECCORE_ATT_HOST_DEVICE
 Inside_t PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarInsideKernel(UnplacedStruct_t const &unplaced,
                                                                                Vector3D<Precision> const &point)
@@ -813,7 +812,7 @@ Inside_t PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarInsideKernel(U
   return EInside::kInside;
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 VECCORE_ATT_HOST_DEVICE
 Inside_t PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarInsideSegBorder(UnplacedStruct_t const &unplaced,
                                                                                   Vector3D<Precision> const &point,
@@ -853,7 +852,7 @@ Inside_t PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarInsideSegBorde
   return EInside::kSurface;
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 VECCORE_ATT_HOST_DEVICE
 Inside_t PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarInsideSegPhi(UnplacedStruct_t const &unplaced,
                                                                                Vector3D<Precision> const &point,
@@ -895,7 +894,7 @@ Inside_t PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarInsideSegPhi(U
   return EInside::kInside;
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 VECCORE_ATT_HOST_DEVICE
 Precision PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarDistanceToInKernel(
     UnplacedStruct_t const &unplaced, Vector3D<Precision> const &point, Vector3D<Precision> const &direction,
@@ -968,7 +967,7 @@ Precision PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarDistanceToInK
   return (distance >= tubeDistance - 1E-6) ? distance : vecgeom::InfinityLength<Precision>();
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 VECCORE_ATT_HOST_DEVICE
 Precision PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarSafetyKernel(UnplacedStruct_t const &unplaced,
                                                                                 Vector3D<Precision> const &point,
@@ -1015,7 +1014,7 @@ Precision PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarSafetyKernel(
   return safety;
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 VECCORE_ATT_HOST_DEVICE
 bool PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarNormalKernel(UnplacedStruct_t const &unplaced,
                                                                            Vector3D<Precision> const &point,
@@ -1087,7 +1086,7 @@ bool PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarNormalKernel(Unpla
   return true;
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 VECCORE_ATT_HOST_DEVICE
 Precision PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarDistanceToOutKernel(
     UnplacedStruct_t const &unplaced, Vector3D<Precision> const &point, Vector3D<Precision> const &direction,
@@ -1138,7 +1137,7 @@ Precision PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarDistanceToOut
   return distance;
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 template <typename Real_v, typename Bool_v>
 VECCORE_ATT_HOST_DEVICE
 void PolyhedronImplementation<innerRadiiT, phiCutoutT>::UnplacedContains(UnplacedStruct_t const &unplaced,
@@ -1148,7 +1147,7 @@ void PolyhedronImplementation<innerRadiiT, phiCutoutT>::UnplacedContains(Unplace
   inside = ScalarContainsKernel(unplaced, point);
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 template <typename Real_v, typename Bool_v>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
@@ -1160,7 +1159,7 @@ void PolyhedronImplementation<innerRadiiT, phiCutoutT>::Contains(UnplacedStruct_
   inside = ScalarContainsKernel(unplaced, point);
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 template <typename Real_v, typename Inside_t>
 VECCORE_ATT_HOST_DEVICE
 void PolyhedronImplementation<innerRadiiT, phiCutoutT>::Inside(UnplacedStruct_t const &unplaced,
@@ -1171,7 +1170,7 @@ void PolyhedronImplementation<innerRadiiT, phiCutoutT>::Inside(UnplacedStruct_t 
   inside = ScalarInsideKernel(unplaced, point);
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 template <typename Real_v>
 VECCORE_ATT_HOST_DEVICE
 void PolyhedronImplementation<innerRadiiT, phiCutoutT>::DistanceToIn(UnplacedStruct_t const &unplaced,
@@ -1182,7 +1181,7 @@ void PolyhedronImplementation<innerRadiiT, phiCutoutT>::DistanceToIn(UnplacedStr
   distance = ScalarDistanceToInKernel(unplaced, point, direction, stepMax);
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 template <typename Real_v>
 VECCORE_ATT_HOST_DEVICE
 void PolyhedronImplementation<innerRadiiT, phiCutoutT>::DistanceToOut(UnplacedStruct_t const &unplaced,
@@ -1194,7 +1193,7 @@ void PolyhedronImplementation<innerRadiiT, phiCutoutT>::DistanceToOut(UnplacedSt
   distance = ScalarDistanceToOutKernel(unplaced, point, direction, stepMax);
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 template <typename Real_v>
 VECCORE_ATT_HOST_DEVICE
 void PolyhedronImplementation<innerRadiiT, phiCutoutT>::SafetyToIn(UnplacedStruct_t const &unplaced,
@@ -1204,7 +1203,7 @@ void PolyhedronImplementation<innerRadiiT, phiCutoutT>::SafetyToIn(UnplacedStruc
   safety = ScalarSafetyKernel(unplaced, point, false);
 }
 
-template <Polyhedron::EInnerRadii innerRadiiT, Polyhedron::EPhiCutout phiCutoutT>
+template <int innerRadiiT, int phiCutoutT>
 template <typename Real_v>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
