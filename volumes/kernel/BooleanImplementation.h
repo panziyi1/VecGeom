@@ -15,12 +15,12 @@ VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE_1v(struct, BooleanImplementation, BooleanOp
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-template <BooleanOperation Op>
+template <int Op> // template <BooleanOperation Op>
 class PlacedBooleanVolume;
-template <BooleanOperation Op>
+template <int Op> // template <BooleanOperation Op>
 class UnplacedBooleanVolume;
 
-template <BooleanOperation boolOp>
+template <int boolOp> // template <BooleanOperation boolOp>
 struct BooleanImplementation {
   using PlacedShape_t    = PlacedBooleanVolume<boolOp>;
   using UnplacedVolume_t = UnplacedBooleanVolume<boolOp>;
@@ -37,13 +37,15 @@ struct BooleanImplementation {
  * TEMPLATE SPECIALIZATION FOR SUBTRACTION
  */
 template <>
-struct BooleanImplementation<kSubtraction> {
+struct BooleanImplementation<2> {
   using PlacedShape_t    = PlacedBooleanVolume<kSubtraction>;
   using UnplacedVolume_t = UnplacedBooleanVolume<kSubtraction>;
   using UnplacedStruct_t = BooleanStruct;
 
   VECCORE_ATT_HOST_DEVICE
-  static void PrintType() { /*printf("SpecializedBooleanVolume<%i, %i, %i>", kSubtraction, transCodeT, rotCodeT);*/}
+  static void PrintType()
+  { /*printf("SpecializedBooleanVolume<%i, %i, %i>", kSubtraction, transCodeT, rotCodeT);*/
+  }
 
   template <typename Stream>
   static void PrintType(Stream &s)
@@ -287,9 +289,9 @@ struct BooleanImplementation<kSubtraction> {
 
 }; // End struct BooleanImplementation
 
-} // End impl namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
 
-} // End global namespace
+} // namespace vecgeom
 
 // include stuff for boolean union
 #include "BooleanUnionImplementation.h"

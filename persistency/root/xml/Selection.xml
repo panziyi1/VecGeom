@@ -155,15 +155,16 @@
   <class name="vecgeom::SUnplacedTube<vecgeom::TubeTypes::UniversalTube>"/>
   <class name="vecgeom::SPlacedTube<vecgeom::SUnplacedTube<vecgeom::TubeTypes::UniversalTube>>"/>
 
-
-  <!-- <class name="vecgeom::UnplacedBooleanVolume<vecgeom::BooleanOperation::kUnion>"/>
+  <class name="vecgeom::UnplacedBooleanVolume<0>"/>
   <class name="vecgeom::BooleanStruct"/>
-  <class name="vecgeom::BooleanImplementation<vecgeom::BooleanOperation::kUnion>"/>
-  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::BooleanImplementation<vecgeom::BooleanOperation::kUnion>,-1,-1>"/>
-  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedBooleanVolume<vecgeom::BooleanOperation::kUnion>,vecgeom::VPlacedVolume>"/>
-  <class name="vecgeom::PlacedBooleanVolume<vecgeom::BooleanOperation::kUnion>"/>
-  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::BooleanImplementation<vecgeom::BooleanOperation::kUnion>,-1,-1>"/>
-  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::BooleanImplementation<vecgeom::BooleanOperation::kUnion>,vecgeom::VUnplacedVolume>"/> -->
+  <class name="vecgeom::BooleanImplementation<0>"/>
+  <class name="vecgeom::BooleanImplementation<vecgeom::kUnion>"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::BooleanImplementation<0>,-1,-1>"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::BooleanImplementation<0>,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedBooleanVolume<0>,vecgeom::VPlacedVolume>"/>
+  <class name="vecgeom::PlacedBooleanVolume<0>"/>
+  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::BooleanImplementation<0>,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::BooleanImplementation<0>,-1,-1>"/>
 
 
   <class name="vecgeom::UnplacedCone"/>

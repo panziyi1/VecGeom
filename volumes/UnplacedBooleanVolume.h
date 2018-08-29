@@ -66,6 +66,8 @@ public:
 #endif
   }
 
+  UnplacedBooleanVolume(TRootIOCtor *) : fBoolean((TRootIOCtor *)nullptr) {}
+
   virtual int MemorySize() const override { return sizeof(*this); }
 
 #ifdef VECGEOM_CUDA_INTERFACE

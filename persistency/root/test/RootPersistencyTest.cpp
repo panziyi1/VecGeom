@@ -50,11 +50,11 @@ void write()
 
   auto tubeUnplaced = GeoManager::MakeInstance<UnplacedTube>(45, 50, 50, 0, 2 * kPi);
 
-  // double L = 10.;
-  // LogicalVolume ltube("tube", new GenericUnplacedTube(0., 0.9 * L / 4., L, 0., vecgeom::kTwoPi));
-  // auto upperhole = ltube.Place(new Transformation3D(-L / 4, -L / 4, 0.));
-  // auto lowerhole = ltube.Place(new Transformation3D(L / 4, L / 4, 0.));
-  // UnplacedBooleanVolume<BooleanOperation::kUnion> holesUnplaced(kUnion, upperhole, lowerhole);
+  double L = 10.;
+  LogicalVolume ltube("tube", new GenericUnplacedTube(0., 0.9 * L / 4., L, 0., vecgeom::kTwoPi));
+  auto upperhole = ltube.Place(new Transformation3D(-L / 4, -L / 4, 0.));
+  auto lowerhole = ltube.Place(new Transformation3D(L / 4, L / 4, 0.));
+  UnplacedBooleanVolume<kUnion> holesUnplaced(kUnion, upperhole, lowerhole);
 
   auto coneUnplaced = GeoManager::MakeInstance<UnplacedCone>(10, 20, 15, 25, 100, 0, 2. * M_PI);
 
@@ -118,7 +118,7 @@ void write()
   LogicalVolume orb("orb", &orbUnplaced);
   LogicalVolume cutt("cutt", cuttUnplaced);
   LogicalVolume tube("tube", tubeUnplaced);
-  // LogicalVolume holes("holes", &holesUnplaced);
+  LogicalVolume holes("holes", &holesUnplaced);
   LogicalVolume cone("cone", coneUnplaced);
   LogicalVolume xtru("xtru", ExtrudedMultiLayer(false));
   LogicalVolume multiu("multiu", &multiuUnplaced);
@@ -146,7 +146,7 @@ void write()
   world.PlaceDaughter(&cutt, &placement2);
   world.PlaceDaughter(assPlaced);
   world.PlaceDaughter(&tube, &placement2);
-  // world.PlaceDaughter(&holes, new Transformation3D(-L / 2, -L / 2, 0.));
+  world.PlaceDaughter(&holes, new Transformation3D(-L / 2, -L / 2, 0.));
   world.PlaceDaughter(&cone, &placement);
   world.PlaceDaughter(&xtru, &placement2);
   world.PlaceDaughter(&multiu, &placement);

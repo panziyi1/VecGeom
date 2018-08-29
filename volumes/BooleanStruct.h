@@ -5,7 +5,8 @@
 namespace vecgeom {
 
 // Declare types shared by cxx and cuda.
-enum BooleanOperation { kUnion, kIntersection, kSubtraction };
+enum BooleanOperationEnum { kUnion = 0, kIntersection = 1, kSubtraction = 2 };
+typedef int BooleanOperation;
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
@@ -17,21 +18,22 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
  * the placement is with respect to the left volume
  */
 struct BooleanStruct {
-  VPlacedVolume const *fLeftVolume;
-  VPlacedVolume const *fRightVolume;
-  BooleanOperation const fOp;
-  mutable double fCapacity    = -1;
-  mutable double fSurfaceArea = -1;
+  VPlacedVolume const *fLeftVolume  = nullptr;
+  VPlacedVolume const *fRightVolume = nullptr;
+  BooleanOperation const fOp        = -1;
+  mutable double fCapacity          = -1;
+  mutable double fSurfaceArea       = -1;
 
   VECCORE_ATT_HOST_DEVICE
   BooleanStruct(BooleanOperation op, VPlacedVolume const *left, VPlacedVolume const *right)
       : fLeftVolume(left), fRightVolume(right), fOp(op)
   {
   }
+  BooleanStruct(TRootIOCtor *) {}
 }; // End struct
 
-} // End impl namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
 
-} // End global namespace
+} // namespace vecgeom
 
 #endif /* VECGEOM_VOLUMES_BOOLEANSTRUCT_H_ */

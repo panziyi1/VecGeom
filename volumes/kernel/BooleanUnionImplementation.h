@@ -21,13 +21,15 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
  * partial template specialization for UNION implementation
  */
 template <>
-struct BooleanImplementation<kUnion> {
+struct BooleanImplementation<0> {
   using PlacedShape_t    = PlacedBooleanVolume<kUnion>;
   using UnplacedVolume_t = UnplacedBooleanVolume<kUnion>;
   using UnplacedStruct_t = BooleanStruct;
 
   VECCORE_ATT_HOST_DEVICE
-  static void PrintType() { /* printf("SpecializedBooleanVolume<%i, %i, %i>", kUnion, transCodeT, rotCodeT); */}
+  static void PrintType()
+  { /* printf("SpecializedBooleanVolume<%i, %i, %i>", kUnion, transCodeT, rotCodeT); */
+  }
 
   template <typename Stream>
   static void PrintType(Stream &st, int transCodeT = translation::kGeneric, int rotCodeT = rotation::kGeneric)
@@ -259,8 +261,8 @@ struct BooleanImplementation<kUnion> {
 
 }; // End struct BooleanImplementation
 
-} // End impl namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
 
-} // End global namespace
+} // namespace vecgeom
 
 #endif /* BooleanImplementation_H_ */

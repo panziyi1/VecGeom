@@ -18,13 +18,15 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
  * partial template specialization for UNION implementation
  */
 template <>
-struct BooleanImplementation<kIntersection> {
+struct BooleanImplementation<1> {
   using PlacedShape_t    = PlacedBooleanVolume<kIntersection>;
   using UnplacedVolume_t = UnplacedBooleanVolume<kIntersection>;
   using UnplacedStruct_t = BooleanStruct;
 
   VECCORE_ATT_HOST_DEVICE
-  static void PrintType() { /* printf("SpecializedBooleanVolume<%i, %i, %i>", kIntersection, transCodeT, rotCodeT); */}
+  static void PrintType()
+  { /* printf("SpecializedBooleanVolume<%i, %i, %i>", kIntersection, transCodeT, rotCodeT); */
+  }
 
   template <typename Stream>
   static void PrintType(Stream &s)
@@ -116,7 +118,7 @@ struct BooleanImplementation<kIntersection> {
       d2 = unplaced.fRightVolume->PlacedDistanceToOut(hitpoint, dir, stepMax);
 
       // if we are close to a boundary continue
-      if (d1 < 2 * kTolerance) inleft  = false; // Backend::kFalse;
+      if (d1 < 2 * kTolerance) inleft = false;  // Backend::kFalse;
       if (d2 < 2 * kTolerance) inright = false; // Backend::kFalse;
 
       // otherwise exit
@@ -272,8 +274,8 @@ struct BooleanImplementation<kIntersection> {
   }
 }; // End struct BooleanImplementation
 
-} // End impl namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
 
-} // End global namespace
+} // namespace vecgeom
 
 #endif /* BooleanImplementation_H_ */
