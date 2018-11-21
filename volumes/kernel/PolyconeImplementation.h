@@ -48,7 +48,8 @@ struct PolyconeImplementation {
   template <typename Stream>
   static void PrintType(Stream &st, int transCodeT = translation::kGeneric, int rotCodeT = rotation::kGeneric)
   {
-    st << "SpecializedPolycone<" << transCodeT << "," << rotCodeT << ">";
+    // TODO: putting "UniversalCone" for the moment; we need to properly report on the real type
+    st << "SpecializedPolycone<" << transCodeT << "," << rotCodeT << "," << "ConeTypes::UniversalCone" << ">";
   }
 
   template <typename Stream>

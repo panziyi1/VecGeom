@@ -56,7 +56,7 @@ struct BooleanImplementation<kSubtraction> {
   template <typename Stream>
   static void PrintType(Stream &st, int transCodeT = translation::kGeneric, int rotCodeT = rotation::kGeneric)
   {
-    st << "SpecializedBooleanVolume<kSubtraction" << transCodeT << "," << rotCodeT << ">";
+    st << "SpecializedBooleanVolume<kSubtraction" << "," << transCodeT << "," << rotCodeT << ">";
   }
 
   template <typename Stream>
