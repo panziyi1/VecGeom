@@ -21,7 +21,6 @@ cd $i
 echo "executing ../NavigationKernelBenchmarker ${geomfile} ${i}"
 cp ../NavigationKernelBenchmarker .
 cp ../NavigationSpecializerTest .
-cp ../${geomfile} .
 
 ./NavigationKernelBenchmarker ${geomfile} $i
 ./NavigationSpecializerTest ${geomfile} $i --loopunroll

@@ -22,10 +22,13 @@ int main(int argc, char *argv[])
   vecgeom::RootGeoManager::Instance().LoadRootGeometry(argv[1]);
 
   // we assume a naming convention as in NavigationKernelBenchmarker
+  std::string geomfilename(argv[1]);
+  std::string geomfilename_nopath(geomfilename.substr(1 + geomfilename.find_last_of("\\/")));
+
   std::stringstream instatestream;
-  instatestream << "states_" << argv[1] << "_" << argv[2] << ".bin";
+  instatestream << "states_" << geomfilename_nopath << "_" << argv[2] << ".bin";
   std::stringstream outstatestream;
-  outstatestream << "outstates_" << argv[1] << "_" << argv[2] << "_simple.bin";
+  outstatestream << "outstates_" << geomfilename_nopath << "_" << argv[2] << "_simple.bin";
 
   vecgeom::NavigationSpecializer specializer(instatestream.str(), outstatestream.str());
   for (auto i = 3; i < argc; i++) {

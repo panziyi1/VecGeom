@@ -339,7 +339,7 @@ void TabulatedTransData::EmitVectorGlobalTransformationCode(std::ostream &outstr
   outstream << "auto index = PathToIndex( in_states[trackindex] );\n";
   outstream << "// caching this index in internal navigationstate for later reuse\n";
   outstream << "// we know that is safe to do this because of static analysis (never do this in user code)\n";
-  outstream << "internal[trackindex]->SetCacheValue(index);\n";
+  // outstream << "internal[trackindex]->SetCacheValue(index);\n";
   for (size_t i = 0; i < 3; ++i) {
     if (fTransCoefficients[i].size() > 0 && !(fTransIsConstant[i])) {
       outstream << fVecTransVariableName[i] << "[i] = " << fTransVariableName[i] << ";\n";
@@ -1611,13 +1611,13 @@ void NavigationSpecializer::DumpStaticTreatGlobalToLocalTransformationFunction(s
       << "template <typename T>\n VECGEOM_FORCE_INLINE\n static void DoGlobalToLocalTransformation(NavigationState "
          "const &in_state,"
       << "Vector3D<T> const &globalpoint, Vector3D<T> const &globaldir,"
-      << "Vector3D<T> &localpoint, Vector3D<T> &localdir, NavigationState * internal)  {\n";
+      << "Vector3D<T> &localpoint, Vector3D<T> &localdir)  {\n";
 
   outstream << "auto index = PathToIndex( &in_state );\n";
   // TODO: check if we have to do anything at all ( check for unity )
   outstream << "// caching this index in internal navigationstate for later reuse\n";
   outstream << "// we know that is safe to do this because of static analysis (never do this in user code)\n";
-  outstream << "internal->SetCacheValue(index);\n";
+  // outstream << "internal->SetCacheValue(index);\n";
   fGlobalTransData.EmitScalarGlobalTransformationCode(outstream);
   outstream << "}\n";
 }
@@ -1628,7 +1628,7 @@ void NavigationSpecializer::DumpStaticTreatGlobalToLocalTransformationsFunction(
             << "VECGEOM_FORCE_INLINE\n static void DoGlobalToLocalTransformations(NavigationState const ** in_states,"
             << "SOA3D<Precision> const &globalpoints,"
             << "SOA3D<Precision> const &globaldirs, unsigned int from_index,"
-            << "Vector3D<T> &localpoint, Vector3D<T> &localdir, NavigationState ** internal) {\n";
+            << "Vector3D<T> &localpoint, Vector3D<T> &localdir) {\n";
 
   // TODO: check if we have to do anything at all ( check for unity )
 
@@ -1822,7 +1822,7 @@ void NavigationSpecializer::DumpRelocateMethod(std::ostream &outstream) const
     outstream << "if( out_state.Top() == in_state.Top() ){\n";
   }
   outstream << "// this was probably calculated before \n";
-  outstream << "auto pathindex = out_state.GetCacheValue();\n";
+  outstream << "auto pathindex = -1;"; // out_state.GetCacheValue();\n";
   outstream << "if(pathindex < 0){ pathindex = PathToIndex(&in_state);\n }";
 
   for (size_t i = 0; i < fTransitionOrder.size(); ++i) {
