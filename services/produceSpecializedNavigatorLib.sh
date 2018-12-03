@@ -33,5 +33,5 @@ cd ${assemblydir}
 ../LibraryGenerator $@
 mkdir build
 cd build
-cmake -DVecGeom_DIR=${VECGEOM_INSTALL_DIR}/lib/CMake/VecGeom ../
+cmake -DVecGeom_DIR=${VECGEOM_INSTALL_DIR}/lib/cmake/VecGeom ../
 make

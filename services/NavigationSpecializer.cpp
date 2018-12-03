@@ -1943,7 +1943,7 @@ void NavigationSpecializer::DumpRelocateMethod(std::ostream &outstream) const
       outstream << "GlobalLocator::LocateGlobalPoint(nextvol, "
                    "nextvol->GetTransformation()->Transform(pointafterboundary), out_state, false);\n";
 
-      outstream << "assert(in_state.Distance(out_state) != 0 && \" error relocating when entering \")\n";
+      outstream << "assert(in_state.Distance(out_state) != 0 && \" error relocating when entering \");\n";
       outstream << "}\n";
     }
   }
