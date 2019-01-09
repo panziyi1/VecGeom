@@ -129,13 +129,13 @@ void FillRandomDirections(TrackContainer &dirs)
  */
 template <typename TrackContainer>
 VECGEOM_FORCE_INLINE
-void FillBiasedDirections(VPlacedVolume const &volume, TrackContainer const &points, Precision bias,
+bool FillBiasedDirections(VPlacedVolume const &volume, TrackContainer const &points, Precision bias,
                           TrackContainer &dirs)
 {
   assert(bias >= 0. && bias <= 1.);
 
   if (bias > 0. && volume.GetDaughters().size() == 0) {
-    printf("\nFillBiasedDirections ERROR:\n bias=%f requested, but no daughter volumes found.\n", bias);
+    printf("\nFillBiasedDirections INFO:\n bias=%f ignored since no daughter volumes found.\n", bias);
     //// should throw exception, but for now just abort
     // printf("FillBiasedDirections: aborting...\n");
     // exit(1);
@@ -165,20 +165,16 @@ void FillBiasedDirections(VPlacedVolume const &volume, TrackContainer const &poi
   while (static_cast<Precision>(n_hits) / static_cast<Precision>(size) > bias) {
     // while (n_hits > 0) {
     tries++;
-    if (tries % 1000000 == 0) {
+    if (tries % 10000 == 0) {
       printf("%s line %i: Warning: %i tries to reduce bias... volume=%s. Please check.\n", __FILE__, __LINE__, tries,
              volume.GetLabel().c_str());
+      return false;
     }
 
     int track         = static_cast<int>(static_cast<Precision>(size) * RNG::Instance().uniform());
     int internaltries = 0;
     while (hit[track]) {
-      if (internaltries % 2) {
-        dirs.set(track, SampleDirection());
-      } else {
-        // try inversing direction
-        dirs.set(track, -dirs[track]);
-      }
+      dirs.set(track, SampleDirection());
       internaltries++;
       if (!IsHittingAnyDaughter(points[track], dirs[track], *volume.GetLogicalVolume())) {
         n_hits--;
@@ -213,6 +209,7 @@ void FillBiasedDirections(VPlacedVolume const &volume, TrackContainer const &poi
         printf("%s line %i: Warning: %i tries to increase bias... volume=%s, current bias=%i/%i=%f.  Please check.\n",
                __FILE__, __LINE__, tries, volume.GetLabel().c_str(), n_hits, size,
                static_cast<Precision>(n_hits) / static_cast<Precision>(size));
+        return false;
       }
 
       // SW: a potentially much faster algorithm is the following:
@@ -250,6 +247,7 @@ void FillBiasedDirections(VPlacedVolume const &volume, TrackContainer const &poi
     printf("WARNING: NUMBER OF DIRECTORY SAMPLING TRIES EXCEEDED MAXIMUM; N_HITS %d; ACHIEVED BIAS %lf \n", n_hits,
            n_hits / (1. * size));
   }
+  return true;
 }
 
 /**
@@ -258,12 +256,13 @@ void FillBiasedDirections(VPlacedVolume const &volume, TrackContainer const &poi
  */
 template <typename TrackContainer>
 VECGEOM_FORCE_INLINE
-void FillBiasedDirections(LogicalVolume const &volume, TrackContainer const &points, const Precision bias,
+bool FillBiasedDirections(LogicalVolume const &volume, TrackContainer const &points, const Precision bias,
                           TrackContainer &dirs)
 {
   VPlacedVolume const *const placed = volume.Place();
-  FillBiasedDirections(*placed, points, bias, dirs);
+  bool success                      = FillBiasedDirections(*placed, points, bias, dirs);
   delete placed;
+  return success;
 }
 
 VECGEOM_FORCE_INLINE
@@ -289,7 +288,7 @@ Precision UncontainedCapacity(VPlacedVolume const &volume)
  */
 template <typename TrackContainer>
 VECGEOM_FORCE_INLINE
-void FillUncontainedPoints(VPlacedVolume const &volume, TrackContainer &points)
+bool FillUncontainedPoints(VPlacedVolume const &volume, TrackContainer &points)
 {
   static double lastUncontCap = 0.0;
   double uncontainedCapacity  = UncontainedCapacity(volume);
@@ -301,6 +300,7 @@ void FillUncontainedPoints(VPlacedVolume const &volume, TrackContainer &points)
     std::cout << "\nVolUtil: FillUncontPts: ERROR: Volume provided <" << volume.GetLabel()
               << "> does not have uncontained capacity!  Aborting.\n";
     assert(false);
+    return false;
   }
 
   const int size = points.capacity();
@@ -323,6 +323,7 @@ void FillUncontainedPoints(VPlacedVolume const &volume, TrackContainer &points)
         if (tries % 1000000 == 0) {
           printf("%s line %i: Warning: %i tries to find uncontained points... volume=%s.  Please check.\n", __FILE__,
                  __LINE__, tries, volume.GetLabel().c_str());
+          return false;
         }
 
         point = offset + SamplePoint(dim);
@@ -340,15 +341,17 @@ void FillUncontainedPoints(VPlacedVolume const &volume, TrackContainer &points)
       }
     } while (contained);
   }
+  return true;
 }
 
 template <typename TrackContainer>
 VECGEOM_FORCE_INLINE
-void FillUncontainedPoints(LogicalVolume const &volume, TrackContainer &points)
+bool FillUncontainedPoints(LogicalVolume const &volume, TrackContainer &points)
 {
   VPlacedVolume const *const placed = volume.Place();
-  FillUncontainedPoints(*placed, points);
+  bool success                      = FillUncontainedPoints(*placed, points);
   delete placed;
+  return success;
 }
 
 /**
@@ -586,7 +589,7 @@ void FillRandomPoints(Vector3D<Precision> const &dim, TrackContainer &points)
  *
  */
 template <typename TrackContainer>
-inline void FillGlobalPointsAndDirectionsForLogicalVolume(LogicalVolume const *lvol, TrackContainer &localpoints,
+inline bool FillGlobalPointsAndDirectionsForLogicalVolume(LogicalVolume const *lvol, TrackContainer &localpoints,
                                                           TrackContainer &globalpoints, TrackContainer &directions,
                                                           Precision fraction, int np)
 {
@@ -596,65 +599,70 @@ inline void FillGlobalPointsAndDirectionsForLogicalVolume(LogicalVolume const *l
 
   std::list<NavigationState *> allpaths;
   GeoManager::Instance().getAllPathForLogicalVolume(lvol, allpaths);
+  if (allpaths.size() == 0) {
+    printf("VolumeUtilities: FillGlobalPointsAndDirectionsForLogicalVolume()... ERROR condition detected.\n");
+    return false;
+  }
 
-  NavigationState *s1       = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
-  NavigationState *s2       = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
   int virtuallyhitsdaughter = 0;
   int reallyhitsdaughter    = 0;
-  if (allpaths.size() > 0) {
-    // get one representative of such a logical volume
-    VPlacedVolume const *pvol = allpaths.front()->Top();
+  bool success              = false;
+  bool hasdaughters         = lvol->GetDaughters().size() > 0;
+  // get one representative of such a logical volume
+  VPlacedVolume const *pvol = allpaths.front()->Top();
 
-    // generate points which are in lvol but not in its daughters
-    FillUncontainedPoints(*pvol, localpoints);
+  // generate points which are in lvol but not in its daughters
+  success = FillUncontainedPoints(*pvol, localpoints);
+  if (!success) return false;
 
-    // now have the points in the local reference frame of the logical volume
-    FillBiasedDirections(*lvol, localpoints, fraction, directions);
+  // now have the points in the local reference frame of the logical volume
+  success |= FillBiasedDirections(*lvol, localpoints, fraction, directions);
+  if (!success) return false;
 
-    // transform points to global frame
-    globalpoints.resize(globalpoints.capacity());
-    int placedcount = 0;
+  // transform points to global frame
+  globalpoints.resize(globalpoints.capacity());
+  int placedcount = 0;
 
-    while (placedcount < np) {
-      std::list<NavigationState *>::iterator iter = allpaths.begin();
-      while (placedcount < np && iter != allpaths.end()) {
-        // this is matrix linking local and global reference frame
-        Transformation3D m;
-        (*iter)->TopMatrix(m);
+  NavigationState *s1 = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
+  NavigationState *s2 = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
+  while (placedcount < np) {
+    std::list<NavigationState *>::iterator iter = allpaths.begin();
+    while (placedcount < np && iter != allpaths.end()) {
+      // this is matrix linking local and global reference frame
+      Transformation3D m;
+      (*iter)->TopMatrix(m);
 
-        bool hitsdaughter = IsHittingAnyDaughter(localpoints[placedcount], directions[placedcount], *lvol);
-        if (hitsdaughter) virtuallyhitsdaughter++;
-        globalpoints.set(placedcount, m.InverseTransform(localpoints[placedcount]));
-        directions.set(placedcount, m.InverseTransformDirection(directions[placedcount]));
+      bool hitsdaughter =
+          (hasdaughters) ? IsHittingAnyDaughter(localpoints[placedcount], directions[placedcount], *lvol) : false;
+      if (hitsdaughter) virtuallyhitsdaughter++;
+      globalpoints.set(placedcount, m.InverseTransform(localpoints[placedcount]));
+      directions.set(placedcount, m.InverseTransformDirection(directions[placedcount]));
 
-        // do extensive cross tests
-        s1->Clear();
-        s2->Clear();
-        SimpleNavigator nav;
-        nav.LocatePoint(GeoManager::Instance().GetWorld(), globalpoints[placedcount], *s1, true);
-        assert(s1->Top()->GetLogicalVolume() == lvol);
-        double step = vecgeom::kInfLength;
-        nav.FindNextBoundaryAndStep(globalpoints[placedcount], directions[placedcount], *s1, *s2, vecgeom::kInfLength,
-                                    step);
+      // do extensive cross tests
+      s1->Clear();
+      s2->Clear();
+      SimpleNavigator nav;
+      nav.LocatePoint(GeoManager::Instance().GetWorld(), globalpoints[placedcount], *s1, true);
+      assert(s1->Top()->GetLogicalVolume() == lvol);
+      double step = vecgeom::kInfLength;
+      nav.FindNextBoundaryAndStep(globalpoints[placedcount], directions[placedcount], *s1, *s2, vecgeom::kInfLength,
+                                  step);
 #ifdef DEBUG
-        if (!hitsdaughter) assert(s1->Distance(*s2) > s2->GetCurrentLevel() - s1->GetCurrentLevel());
+      if (!hitsdaughter) assert(s1->Distance(*s2) > s2->GetCurrentLevel() - s1->GetCurrentLevel());
 #endif
-        if (hitsdaughter)
-          if (s1->Distance(*s2) == s2->GetCurrentLevel() - s1->GetCurrentLevel()) {
-            reallyhitsdaughter++;
-          }
+      if (hitsdaughter)
+        if (s1->Distance(*s2) == s2->GetCurrentLevel() - s1->GetCurrentLevel()) {
+          reallyhitsdaughter++;
+        }
 
-        placedcount++;
-        iter++;
-      }
+      placedcount++;
+      iter++;
     }
-  } else {
-    // an error message
-    printf("VolumeUtilities: FillGlobalPointsAndDirectionsForLogicalVolume()... ERROR condition detected.\n");
   }
   printf(" really hits %d, virtually hits %d ", reallyhitsdaughter, virtuallyhitsdaughter);
   NavigationState::ReleaseInstance(s1);
   NavigationState::ReleaseInstance(s2);
+  return true;
 }
 
 // same as above; logical volume is given by name
@@ -830,7 +838,8 @@ bool IntersectionExist(Vector3D<Precision> const lowercornerFirstBox, Vector3D<P
 VECGEOM_FORCE_INLINE
 bool IntersectionExist(Vector3D<Precision> const lowercornerFirstBox, Vector3D<Precision> const uppercornerFirstBox,
                        Vector3D<Precision> const lowercornerSecondBox, Vector3D<Precision> const uppercornerSecondBox,
-                       Transformation3D const *transformFirstBox, Transformation3D const *transformSecondBox, bool aux)
+                       Transformation3D const *transformFirstBox, Transformation3D const *transformSecondBox,
+                       bool /*aux*/)
 {
 
   // Required variables
@@ -858,9 +867,9 @@ bool IntersectionExist(Vector3D<Precision> const lowercornerFirstBox, Vector3D<P
   Vector3D<Precision> Bz = transformSecondBox->InverseTransformDirection(Vector3D<Precision>(0., 0., 1.));
 
   /** Needs to handle total 15 cases for 3D.
-  *   Literature can be found at following link
-  *   http://www.jkh.me/files/tutorials/Separating%20Axis%20Theorem%20for%20Oriented%20Bounding%20Boxes.pdf
-  */
+   *   Literature can be found at following link
+   *   http://www.jkh.me/files/tutorials/Separating%20Axis%20Theorem%20for%20Oriented%20Bounding%20Boxes.pdf
+   */
 
   // Case 1:
   // L = Ax
@@ -982,7 +991,7 @@ bool IntersectionExist(Vector3D<Precision> const lowercornerFirstBox, Vector3D<P
 }
 
 } // end namespace volumeUtilities
-}
-} // end global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif /* VOLUME_UTILITIES_H_ */
