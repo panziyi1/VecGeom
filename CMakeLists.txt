@@ -704,6 +704,7 @@ set(VECGEOM_SRCS
   source/MessageLogger.cpp
 
   services/NavigationSpecializer.cpp
+  services/SpecNavServices.cpp
 
   source/ResultComparator.cpp
   source/ReducedPolycone.cpp
@@ -1314,6 +1315,7 @@ install(FILES
 foreach(FOLDER base benchmarking management navigation volumes backend)
   install(DIRECTORY ${FOLDER} DESTINATION ${INSTALL_INCLUDE_DIR})
 endforeach()
+install(DIRECTORY services DESTINATION ${INSTALL_INCLUDE_DIR} FILES_MATCHING PATTERN "*.h")
 
 string(REPLACE "." ";" SYSTEM_VERSION_LIST ${CMAKE_SYSTEM_VERSION})
 list(GET SYSTEM_VERSION_LIST 0 SYSTEM_VERSION_MAJOR)
