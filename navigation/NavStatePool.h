@@ -142,9 +142,15 @@ public:
 
   int capacity() const { return fCapacity; }
 
+  void clear()
+  {
+    for (int i = 0; i < fCapacity; ++i)
+      operator[](i)->Clear();
+  }
+
 private: // protected methods
 #ifdef VECGEOM_ENABLE_CUDA
-  // This constructor used to build NavStatePool at the GPU.  BufferGPU
+         // This constructor used to build NavStatePool at the GPU.  BufferGPU
   VECCORE_ATT_DEVICE
   NavStatePool(int size, int depth, char *fBufferGPU)
       : fCapacity(size), fDepth(depth), fBuffer(fBufferGPU), fGPUPointer(NULL)
@@ -207,7 +213,7 @@ inline void NavStatePool::CopyFromGpu()
   }
 } // end CopyFunction
 #endif
-}
-} // end Global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif /* NAVSTATEPOOL_H_ */
