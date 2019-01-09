@@ -10,6 +10,7 @@
 #include "volumes/LogicalVolume.h"
 #include "navigation/NavigationState.h"
 #include "navigation/NavStatePool.h"
+#include "management/GeoManager.h"
 #include <iostream>
 #include <list>
 #include <set>
@@ -661,7 +662,7 @@ void NavigationSpecializer::AnalyseLogicalVolume()
     std::cerr << "Error reading state files ... aborting\n";
     std::exit(1);
   }
-  std::cout << "Read " << npointsin << " states to analyse\n";
+  if (fVerbosity > 0) std::cout << "Read " << npointsin << " states to analyse\n";
   AnalyseTargetPaths(inpool, outpool);
 }
 
@@ -698,19 +699,22 @@ void NavigationSpecializer::AnalyseIndexCorrelations(std::list<NavigationState *
         for (auto &path : paths) {
           realcombinations.insert(std::pair<size_t, size_t>(path->ValueAt(level1.first), path->ValueAt(level2.first)));
         }
-        std::cerr << level1.first << ";" << level2.first << " : COMB " << combinationcount << " vs REAL COMB "
-                  << realcombinations.size() << "\n";
+        if (fVerbosity > 0)
+          std::cerr << level1.first << ";" << level2.first << " : COMB " << combinationcount << " vs REAL COMB "
+                    << realcombinations.size() << "\n";
 
         if (combinationcount != realcombinations.size()) {
           // look if the redundancy is trivially decomposable ( which should be the case when the number of real
           // combinations is divisible
           // by the size of level1 ( and hence level 2)
           if (combinationcount / fIndexMap[level2.first].size() == realcombinations.size()) {
-            std::cerr << " level1 and level2 are trivially correlated --> mark as removal candidate\n";
+            if (fVerbosity > 0)
+              std::cerr << " level1 and level2 are trivially correlated --> mark as removal candidate\n";
             removalcandidates.push_back(level2.first);
           } else {
-            std::cerr << " level " << level1.first << " and level " << level2.first
-                      << " are not trivially correlated --> need to implement a more sophisticated indexmap\n";
+            if (fVerbosity > 0)
+              std::cerr << " level " << level1.first << " and level " << level2.first
+                        << " are not trivially correlated --> need to implement a more sophisticated indexmap\n";
           }
         }
       }
@@ -756,9 +760,7 @@ void NavigationSpecializer::AnalysePaths(std::list<NavigationState *> const &pat
     }
   }
   //
-  if (samelevel)
-    std::cerr << "all " << paths.size() << " paths have the same level " << level << "\n";
-  else {
+  if (!samelevel) {
     std::cerr << "paths have different levels --> NOT SUPPORTED AT THE MOMENT \n";
     return;
   }
@@ -843,9 +845,11 @@ void NavigationSpecializer::AnalysePaths(std::list<NavigationState *> const &pat
   }
 
   // print out result
-  for (int i = 0; i < 3; ++i) {
-    if (transalwayszero[i]) {
-      std::cerr << " trans[" << i << "] is zero\n";
+  if (fVerbosity > 0) {
+    for (int i = 0; i < 3; ++i) {
+      if (transalwayszero[i]) {
+        std::cerr << " trans[" << i << "] is zero\n";
+      }
     }
   }
 
@@ -910,18 +914,20 @@ void NavigationSpecializer::AnalysePaths(std::list<NavigationState *> const &pat
     }
   }
 
-  for (int i = 0; i < 9; ++i) {
-    if (rotalwayszero[i]) {
-      std::cerr << " rot[" << i << "] is zero\n";
-    }
-    if (rotalwaysone[i]) {
-      std::cerr << " rot[" << i << "] is one\n";
-    }
-    if (rotalwaysminusone[i]) {
-      std::cerr << " rot[" << i << "] is minus one\n";
-    }
-    if (rotalwaysminusoneorone[i]) {
-      std::cerr << " rot[" << i << "] is minus one or one\n";
+  if (fVerbosity > 0) {
+    for (int i = 0; i < 9; ++i) {
+      if (rotalwayszero[i]) {
+        std::cerr << " rot[" << i << "] is zero\n";
+      }
+      if (rotalwaysone[i]) {
+        std::cerr << " rot[" << i << "] is one\n";
+      }
+      if (rotalwaysminusone[i]) {
+        std::cerr << " rot[" << i << "] is minus one\n";
+      }
+      if (rotalwaysminusoneorone[i]) {
+        std::cerr << " rot[" << i << "] is minus one or one\n";
+      }
     }
   }
 
@@ -979,12 +985,12 @@ void NavigationSpecializer::AnalysePaths(std::list<NavigationState *> const &pat
   }
 
   fGlobalTransData.Analyse();
-  fGlobalTransData.Print();
+  if (fVerbosity > 0) fGlobalTransData.Print();
   fGlobalTransData.EmitTableDeclaration(fStaticArraysInitStream);
   fGlobalTransData.EmitTableDefinition(fClassName, fStaticArraysDefinitions);
   std::stringstream ss;
   fGlobalTransData.EmitScalarGlobalTransformationCode(ss);
-  std::cout << ss.str() << "\n";
+  if (fVerbosity > 0) std::cout << ss.str() << "\n";
 }
 
 template <typename T>
@@ -994,7 +1000,7 @@ std::vector<size_t> sort_indexes(const std::vector<T> &v)
   // initialize original index locations
   std::vector<size_t> idx(v.size());
   for (size_t i = 0; i != idx.size(); ++i)
-    idx[i]      = i;
+    idx[i] = i;
 
   // sort indexes based on comparing values in v
   std::sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) { return v[i1].first > v[i2].first; });
@@ -1009,7 +1015,7 @@ std::vector<size_t> sort_indexes(const std::vector<T> &v, const std::vector<size
   // initialize original index locations
   std::vector<size_t> idx(v.size());
   for (size_t i = 0; i != idx.size(); ++i)
-    idx[i]      = i;
+    idx[i] = i;
 
   // sort indexes based on comparing values in v then in v2
   std::sort(idx.begin(), idx.end(), [&v, &v2](size_t i1, size_t i2) {
@@ -1027,7 +1033,7 @@ void NavigationSpecializer::AnalyseTargetPaths(NavStatePool const &inpool, NavSt
   // the purpose of this function is to generate a list of possible target states
   // including their corresponding matrix transformations
   // the information produced here shall accelerate the relocation step of navigation
-  std::cerr << " --- ANALYSIS OF PATH TRANSITIONS ---- \n";
+  if (fVerbosity > 0) std::cerr << " --- ANALYSIS OF PATH TRANSITIONS ---- \n";
 
   // analyse global matrix and generate static data with right index
   bool rotalwayszero[9]          = {true, true, true, true, true, true, true, true, true};
@@ -1052,9 +1058,11 @@ void NavigationSpecializer::AnalyseTargetPaths(NavStatePool const &inpool, NavSt
   for (auto j = decltype(outpool.capacity()){0}; j < outpool.capacity(); ++j) {
     std::stringstream pathstringstream2;
     auto *navstate = outpool[j];
+    auto top       = navstate->Top();
+    if (top == nullptr) top = GeoManager::Instance().GetWorld();
     navstate->printValueSequence(pathstringstream2);
-    pset.insert(navstate->Top());
-    if (navstate->Top() != nullptr) lset.insert(navstate->Top()->GetLogicalVolume());
+    pset.insert(top);
+    lset.insert(top->GetLogicalVolume());
     pathset.insert(pathstringstream2.str());
 
     std::stringstream pathstringstream1;
@@ -1073,11 +1081,11 @@ void NavigationSpecializer::AnalyseTargetPaths(NavStatePool const &inpool, NavSt
 
       // shape-type
       std::stringstream type;
-      navstate->Top()->PrintType(type);
+      top->PrintType(type);
       transitionindex = fTransitionTargetTypes.size();
       fTransitionTargetTypes.push_back(FinalDepthShapeType_t(navstate->GetCurrentLevel(), type.str()));
 
-      fTargetVolIds.push_back(navstate->Top()->id());
+      fTargetVolIds.push_back(top->id());
       transitioncounter.push_back(0);
     } else {
       transitionindex = std::distance(fTransitionStrings.begin(), found);
@@ -1166,41 +1174,43 @@ void NavigationSpecializer::AnalyseTargetPaths(NavStatePool const &inpool, NavSt
                            << "][" << fTransitionStrings.size() << "];\n";
   //
 
-  std::cerr << "analysis for delta matrices\n";
-  for (int i = 0; i < 9; ++i) {
-    if (rotalwayszero[i]) {
-      std::cerr << " rot[" << i << "] is zero\n";
+  if (fVerbosity > 0) {
+    std::cerr << "analysis for delta matrices\n";
+    for (int i = 0; i < 9; ++i) {
+      if (rotalwayszero[i]) {
+        std::cerr << " rot[" << i << "] is zero\n";
+      }
+      if (rotalwaysone[i]) {
+        std::cerr << " rot[" << i << "] is one\n";
+      }
+      if (rotalwaysminusone[i]) {
+        std::cerr << " rot[" << i << "] is minus one\n";
+      }
+      if (rotalwaysminusoneorone[i]) {
+        std::cerr << " rot[" << i << "] is minus one or one\n";
+      }
     }
-    if (rotalwaysone[i]) {
-      std::cerr << " rot[" << i << "] is one\n";
-    }
-    if (rotalwaysminusone[i]) {
-      std::cerr << " rot[" << i << "] is minus one\n";
-    }
-    if (rotalwaysminusoneorone[i]) {
-      std::cerr << " rot[" << i << "] is minus one or one\n";
-    }
-  }
 
-  std::cerr << " size of diffset " << fTransitionStrings.size() << "\n";
-  std::cerr << " size of matrixset " << matrixstrings.size() << "\n";
-  std::cerr << " size of target pset " << pset.size() << "\n";
-  std::cerr << " size of target lset " << lset.size() << "\n";
-  std::cerr << " size of target state set " << pathset.size() << "\n";
-  std::cerr << " total combinations " << crossset.size() << "\n";
-  std::cerr << " normalized per input state " << crossset.size() / (1. * pathset.size()) << "\n";
+    std::cerr << " size of diffset " << fTransitionStrings.size() << "\n";
+    std::cerr << " size of matrixset " << matrixstrings.size() << "\n";
+    std::cerr << " size of target pset " << pset.size() << "\n";
+    std::cerr << " size of target lset " << lset.size() << "\n";
+    std::cerr << " size of target state set " << pathset.size() << "\n";
+    std::cerr << " total combinations " << crossset.size() << "\n";
+    std::cerr << " normalized per input state " << crossset.size() / (1. * pathset.size()) << "\n";
 
-  for (auto &s : crossset) {
-    std::cerr << s << "\n";
-  }
+    for (auto &s : crossset) {
+      std::cerr << s << "\n";
+    }
 
-  size_t index = 0;
-  for (auto &s : fTransitionStrings) {
-    std::cerr << s << "\t" << transitioncounter[index] << "\n";
-    index++;
-  }
-  for (auto &s : matrixstrings) {
-    std::cerr << s << "\n";
+    size_t index = 0;
+    for (auto &s : fTransitionStrings) {
+      std::cerr << s << "\t" << transitioncounter[index] << "\n";
+      index++;
+    }
+    for (auto &s : matrixstrings) {
+      std::cerr << s << "\n";
+    }
   }
   //  for (auto &s : mapping) {
   //    std::cerr << s << "\n";
@@ -1213,12 +1223,14 @@ void NavigationSpecializer::AnalyseTargetPaths(NavStatePool const &inpool, NavSt
   fTransitionOrder = sort_indexes(fTransitionTargetTypes, transitioncounter);
 
   // std::sort(fTransitionTargetTypes.begin(), fTransitionTargetTypes.end());
-  std::cerr << "transition order\n";
-  for (auto &tp : fTransitionTargetTypes) {
-    std::cerr << tp.first << " " << tp.second << "\n";
-  }
-  for (auto &tp : fTransitionOrder) {
-    std::cerr << tp << "\n";
+  if (fVerbosity > 0) {
+    std::cerr << "transition order\n";
+    for (auto &tp : fTransitionTargetTypes) {
+      std::cerr << tp.first << " " << tp.second << "\n";
+    }
+    for (auto &tp : fTransitionOrder) {
+      std::cerr << tp << "\n";
+    }
   }
 
   // generate the static variable data for the transition matrices one by one
@@ -1441,8 +1453,10 @@ void NavigationSpecializer::DumpLocalSafetyFunctionDeclaration(std::ostream &out
     looplist.push_back(std::pair<std::string, size_t>(currenttype, count));
 
     // print some info about the loop list
-    for (auto &pair : looplist) {
-      std::cerr << "## " << pair.first << " " << pair.second << "\n";
+    if (fVerbosity > 0) {
+      for (auto &pair : looplist) {
+        std::cerr << "## " << pair.first << " " << pair.second << "\n";
+      }
     }
 
     if (fUnrollLoops) {
@@ -1568,8 +1582,10 @@ void NavigationSpecializer::DumpLocalVectorSafetyFunctionDeclarationPerSIMDVecto
       }
       looplist.push_back(std::pair<std::string, size_t>(currenttype, count));
       // print some info about the loop list
-      for (auto &pair : looplist) {
-        std::cerr << "## " << pair.first << " " << pair.second << "\n";
+      if (fVerbosity > 0) {
+        for (auto &pair : looplist) {
+          std::cerr << "## " << pair.first << " " << pair.second << "\n";
+        }
       }
 
       // emit smaller loops
@@ -1768,8 +1784,10 @@ void NavigationSpecializer::DumpFoo(std::ostream &outstream) const
     looplist.push_back(std::pair<std::string, size_t>(currenttype, count));
 
     // print some info about the loop list
-    for (auto &pair : looplist) {
-      std::cerr << "## " << pair.first << " " << pair.second << "\n";
+    if (fVerbosity > 0) {
+      for (auto &pair : looplist) {
+        std::cerr << "## " << pair.first << " " << pair.second << "\n";
+      }
     }
 
     if (fUnrollLoops) {
@@ -1846,10 +1864,11 @@ void NavigationSpecializer::DumpRelocateMethod(std::ostream &outstream) const
     }
     if ((downcount > 0) && !(upcount || horizcount)) {
       // filter out pure down states
-      std::cerr << "not doing" << transitionstring << "\n";
+      if (fVerbosity > 0) std::cerr << "not doing" << transitionstring << "\n";
       continue;
     } else {
-      std::cerr << transitionstring << " has " << downcount << ";" << upcount << ";" << horizcount << "\n";
+      if (fVerbosity > 0)
+        std::cerr << transitionstring << " has " << downcount << ";" << upcount << ";" << horizcount << "\n";
     }
 
     outstream << "{\n";
@@ -2003,4 +2022,4 @@ void NavigationSpecializer::DumpLocalHitDetectionFunction(std::ostream &outstrea
   outstream << "}\n";
 }
 
-} // end namespace
+} // namespace vecgeom

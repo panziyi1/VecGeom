@@ -87,7 +87,7 @@ private:
   bool fTransIsConstant[3]        = {true, true, true}; // indicates if this component is a constant for all entries
   bool fRotIsConstant[9]          = {true, true, true, true, true,
                             true, true, true, true}; // indicates if this component is a constant for all entries
-  std::vector<std::string> fTransVariableName;       // variable names which are set according to SOA/AOS choices etc
+  std::vector<std::string> fTransVariableName; // variable names which are set according to SOA/AOS choices etc
   std::vector<std::string> fRotVariableName;
   std::vector<std::string> fVecTransVariableName; // variable names which are set according to SOA/AOS choices etc
   std::vector<std::string> fVecRotVariableName;
@@ -121,15 +121,8 @@ class NavigationSpecializer {
 public:
   // is this class a singleton ??
   NavigationSpecializer(std::string instatefile, std::string outstatefile)
-      : fLogicalVolumeName(), fClassName(), fInStateFileName(instatefile), fOutStateFileName(outstatefile),
-        fLogicalVolume(nullptr), fGeometryDepth(0), fIndexMap(), fStaticArraysInitStream(), fStaticArraysDefinitions(),
-        fTransformationCode(), fVectorTransformVariables(),
-        fVectorTransformationCode(), // to collect the many-path/SIMD transformation statements
-        fTransformVariables(),       // stores the list of relevant transformation variables
-        fUnrollLoops(false),         // whether to manually unroll all loops
-        fUseBaseNavigator(false),    // whether to use the DaughterDetection from another navigator ( makes sense when
-                                     // combined with voxel techniques )
-        fBaseNavigator(), fGlobalTransData("globalTrans", true) // init 12 vectors : 3 for translation, 9 for rotation
+      : fInStateFileName(instatefile), fOutStateFileName(outstatefile),
+        fGlobalTransData("globalTrans", true) // init 12 vectors : 3 for translation, 9 for rotation
         {};
 
   // produce a specialized SafetyEstimator class for a given logical volume
@@ -204,6 +197,8 @@ public:
     fBaseNavigator    = nav;
   }
 
+  void SetVerbosity(int level) { fVerbosity = level; }
+
   typedef std::pair<int, std::string> FinalDepthShapeType_t;
 
 private:
@@ -212,9 +207,10 @@ private:
   std::string fClassName;
   std::string fInStateFileName;
   std::string fOutStateFileName;
-  LogicalVolume const *fLogicalVolume;
-  unsigned int fGeometryDepth; // the depth of instances of fLogicalVolumes in the geometry hierarchy ( must be unique )
-  unsigned int fNumberOfPossiblePaths;
+  LogicalVolume const *fLogicalVolume = nullptr;
+  unsigned int fGeometryDepth =
+      0; // the depth of instances of fLogicalVolumes in the geometry hierarchy ( must be unique )
+  unsigned int fNumberOfPossiblePaths = 0;
   PathLevelIndexMap_t fIndexMap;                // in memory structure; used to map a NavigationState object to an index
   std::stringstream fStaticArraysInitStream;    // stream to collect code for the static arrays
   std::stringstream fStaticArraysDefinitions;   // stream to collect code for constexpr static array definitions
@@ -223,32 +219,33 @@ private:
   std::stringstream fVectorTransformVariables;  // to collect relevant vector variables for transformation
   std::stringstream fVectorTransformationCode;  // to collect the many-path/SIMD transformation statements
   std::vector<std::string> fTransformVariables; // stores the list of relevant transformation variables
-  bool fUnrollLoops;                            // whether to manually unroll all loops
-  bool fUseBaseNavigator; // whether to use the DaughterDetection from another navigator ( makes sense when combined
-                          // with voxel techniques )
+  bool fUnrollLoops      = false;               // whether to manually unroll all loops
+  bool fUseBaseNavigator = false;               // whether to use the DaughterDetection from another navigator
+                                                // ( makes sense when combined with voxel techniques )
+  int fVerbosity = 1;                           // verbosity level
   std::string fBaseNavigator;
 
   std::stringstream fDeltaTransformationCode;
-  std::vector<std::string>
-      fTransitionTransformVariables; // stores the vector of relevant variables for the relocation transformations
+  std::vector<std::string> fTransitionTransformVariables; // stores the vector of relevant variables for
+                                                          // the relocation transformations
 
   //
   std::vector<std::string> fTransitionStrings;
   std::vector<FinalDepthShapeType_t> fTransitionTargetTypes; // the vector of possible relocation target types
-  std::vector<size_t> fTransitionOrder; // the vector keeping the order of indices of relocation transitions (
-                                        // as stored in fTransitionTargetsTypes )
-  std::vector<NavigationState::Value_t>
-      fTargetVolIds; // the ids of the target volumes ( to quickly fetch a representative volume pointer )
+  std::vector<size_t> fTransitionOrder; // the vector keeping the order of indices of relocation transitions
+                                        // ( as stored in fTransitionTargetsTypes )
+  std::vector<NavigationState::Value_t> fTargetVolIds; // the ids of the target volumes
+                                                       // ( to quickly fetch a representative volume pointer )
 
   std::vector<std::vector<int>>
       fPathxTargetToMatrixTable; // an in - memory table to fetch the correct transition matrix index
   std::stringstream fPathxTargetToMatrixTableStringStream; // string represenation of the above
 
   // caching the transformation numbers --> to build a SOA/AOS form
-  TabulatedTransData fGlobalTransData;
+  TabulatedTransData fGlobalTransData; // init 12 vectors : 3 for translation, 9 for rotation
 
 }; // end class
-}
-} // end namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif /* VECGEOM_SERVICES_NAVIGATIONSPECIALIZER_H_ */
