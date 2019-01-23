@@ -174,7 +174,7 @@ private:
 
   void DumpSafetyFunctionDeclaration(std::ostream &);
   void DumpVectorSafetyFunctionDeclaration(std::ostream &);
-  void DumpTransformationAsserts(std::ostream &);
+  void DumpTransformationAsserts(std::ostream &) const;
 
   void DumpLocalHitDetectionFunction(std::ostream &) const;
 
@@ -196,6 +196,8 @@ public:
     fUseBaseNavigator = true;
     fBaseNavigator    = nav;
   }
+
+  void SetDebug(bool flag) { fDebug = flag; }
 
   void SetVerbosity(int level) { fVerbosity = level; }
 
@@ -222,6 +224,7 @@ private:
   bool fUnrollLoops      = false;               // whether to manually unroll all loops
   bool fUseBaseNavigator = false;               // whether to use the DaughterDetection from another navigator
                                                 // ( makes sense when combined with voxel techniques )
+  bool fDebug    = false;                       // generate debugging code
   int fVerbosity = 1;                           // verbosity level
   std::string fBaseNavigator;
 
