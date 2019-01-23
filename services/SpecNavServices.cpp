@@ -70,6 +70,8 @@ void GenerateCMakeFile(std::ostream &ss)
   ss << "include_directories(${VECGEOM_INCLUDE_DIR})\n";
   ss << "# include stuff that was included by VecGeom during build\n";
   ss << "include_directories(${VECGEOM_EXTERNAL_INCLUDES})\n";
+  ss << "set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} ${VECGEOM_CXX_FLAGS}\")\n";
+
   ss << "message(STATUS \"COMPILING WITH ${CMAKE_CXX_FLAGS}\")\n";
 
   ss << "if(APPLE)\n";
