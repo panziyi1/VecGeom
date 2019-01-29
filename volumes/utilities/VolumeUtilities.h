@@ -65,6 +65,17 @@ inline bool IsHittingAnyDaughter(Vector3D<Precision> const &point, Vector3D<Prec
   return false;
 }
 
+/** @brief Is the point inside any of the daughters of a volume? */
+VECGEOM_FORCE_INLINE
+bool IsInsideAnyDaughter(Vector3D<Precision> const &point, LogicalVolume const &volume)
+{
+  for (size_t daughter = 0; daughter < volume.GetDaughters().size(); ++daughter) {
+    bool inside = volume.GetDaughters()[daughter]->Inside(point) != vecgeom::EnumInside::kOutside;
+    if (inside) return true;
+  }
+  return false;
+}
+
 /**
  * @brief Returns a random point, based on a sampling rectangular volume.
  * @details Mostly used for benchmarks and navigation tests
@@ -572,6 +583,76 @@ void FillRandomPoints(Vector3D<Precision> const &dim, TrackContainer &points)
                    points);
 }
 
+/** This function will generate local points just entering a volume, as if they were pushed by the navigator.
+    The new point should not be in a daughter volume */
+template <typename TrackContainer>
+bool FillUncontainedLocalPointsAndDirectionsEnteringVolume(LogicalVolume const &volume, TrackContainer &localpoints,
+                                                           TrackContainer &localdirs, int istart, int np)
+{
+  constexpr Precision tolerance = 1.e-7;
+  const int size                = istart + np;
+  localpoints.resize(size);
+
+  int ngen        = 0;
+  Precision scale = 1.2; // 20% larger than the bounding box
+
+  Vector3D<Precision> lower, upper;
+  volume.GetUnplacedVolume()->Extent(lower, upper);
+  const Vector3D<Precision> offset = 0.5 * (upper + lower);
+  const Vector3D<Precision> dim    = 0.5 * (upper - lower);
+
+  for (int i = 0; i < np; ++i) {
+    // generate point outside the volume
+    int ntries   = 0;
+    bool success = false;
+    Vector3D<Precision> point;
+    Vector3D<Precision> dir;
+
+    while (!success) {
+      ntries++;
+      if (ntries > 1000) {
+        std::cerr << " *** FillUncontainedLocalPointsAndDirectionsEnteringVolume: failed for volume: "
+                  << volume.GetName() << std::endl;
+        return false;
+      }
+
+      // Generate point outside
+      do {
+        point = offset + SamplePoint(dim, scale);
+      } while (volume.GetUnplacedVolume()->Contains(point));
+
+      // generate random direction that hits the volume and does not enter a daughter
+      Precision dist = vecgeom::kInfLength;
+      int ntriesdir  = 0;
+      do {
+        // direction sampling, propagation & check relocated point
+        ntriesdir++;
+        if (ntriesdir > 100) break;
+        dir  = SampleDirection();
+        dist = volume.GetUnplacedVolume()->DistanceToIn(point, dir, vecgeom::kInfLength);
+        // If not hitting volume re-sample direction
+        if (dist == vecgeom::kInfLength) continue;
+        // Now propagate with dist + tolerance and check if any daughter contains the new point
+        Vector3D<Precision> normal;
+        bool validnorm = volume.GetUnplacedVolume()->Normal(point + dist * dir, normal);
+        Precision eps  = tolerance;
+        // Add angle correction
+        eps += (validnorm) ? -kTolerance / normal.Dot(dir) : 0.;
+        Vector3D<Precision> propagated = point + (dist + eps) * dir;
+        if (!volume.GetUnplacedVolume()->Contains(propagated) || IsInsideAnyDaughter(propagated, volume))
+          // cannot enter the volume being hit -> re-sample direction
+          continue;
+        success = true;
+        point   = propagated;
+      } while (!success);
+    }
+    localpoints.set(i, point);
+    localdirs.set(i, dir);
+    ngen++;
+  }
+  return true;
+}
+
 /**
  * @brief Generates _uncontained_ global points and directions based
  *   on a logical volume.
@@ -603,6 +684,7 @@ inline bool FillGlobalPointsAndDirectionsForLogicalVolume(LogicalVolume const *l
     printf("VolumeUtilities: FillGlobalPointsAndDirectionsForLogicalVolume()... ERROR condition detected.\n");
     return false;
   }
+  printf("   = Number of paths to volume %s:  %zu\n", lvol->GetName(), allpaths.size());
 
   int virtuallyhitsdaughter = 0;
   int reallyhitsdaughter    = 0;
@@ -613,10 +695,15 @@ inline bool FillGlobalPointsAndDirectionsForLogicalVolume(LogicalVolume const *l
 
   // generate points which are in lvol but not in its daughters
   success = FillUncontainedPoints(*pvol, localpoints);
-  if (!success) return false;
+  if (success) {
+    // now have the points in the local reference frame of the logical volume
+    success = FillBiasedDirections(*lvol, localpoints, fraction, directions);
+  }
 
-  // now have the points in the local reference frame of the logical volume
-  success |= FillBiasedDirections(*lvol, localpoints, fraction, directions);
+  if (!success) {
+    // Try MC propagating to entry point
+    success = FillUncontainedLocalPointsAndDirectionsEnteringVolume(*lvol, localpoints, directions, 0, np);
+  }
   if (!success) return false;
 
   // transform points to global frame
