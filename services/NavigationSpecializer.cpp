@@ -51,7 +51,7 @@ auto printlambda = [](std::string name, std::vector<double> const &v, std::ostre
   size_t numberofelements = v.size();
   size_t counter          = 0;
   for (auto e : v) {
-    outstream << std::setprecision(35) << e;
+    outstream << std::defaultfloat << std::setprecision(17) << e;
     if (counter < numberofelements - 1) outstream << ", ";
     counter++;
   }
@@ -61,7 +61,7 @@ auto printlambda = [](std::string name, std::vector<double> const &v, std::ostre
 // print one element static variables
 auto printlambdasingle = [](std::string name, double e, std::ostream &outstream) {
   outstream << "  static constexpr double " << name << "= ";
-  outstream << std::setprecision(35) << e;
+  outstream << std::defaultfloat << std::setprecision(17) << e;
   outstream << ";\n";
 };
 
@@ -451,10 +451,19 @@ void NavigationSpecializer::DumpConstructor(std::ostream &outstream) const
   if (fUseBaseNavigator) {
     // declaration of base navigator
     std::string basenavtype(fBaseNavigator + "<>");
-    outstream << basenavtype << " const & fBaseNavigator;\n";
-    outstream << fClassName << "() : fBaseNavigator((" << basenavtype << " const &)*" << basenavtype
+    outstream << "  " << basenavtype << " const & fBaseNavigator;\n";
+    outstream << "  " << fClassName << "() : fBaseNavigator((" << basenavtype << " const &)*" << basenavtype
               << "::Instance()) {}\n";
   }
+  if (fUseDebugNavigator) {
+    // declaration of base navigator
+    std::string debugnavtype(fDebugNavigator + "<>");
+    outstream << "  " << debugnavtype << " const & fDebugNavigator;\n";
+    outstream << "  " << fClassName << "() : fDebugNavigator((" << debugnavtype << " const &)*" << debugnavtype
+              << "::Instance()) {}\n";
+  }
+  // virtual destructor
+  outstream << "  virtual ~" << fClassName << "() {}\n\n";
 }
 
 void NavigationSpecializer::DumpClassClosing(std::ostream &outstream)
@@ -464,24 +473,27 @@ void NavigationSpecializer::DumpClassClosing(std::ostream &outstream)
 
 void NavigationSpecializer::DumpIncludeFiles(std::ostream &outstream)
 {
-  outstream << "#include \"navigation/VNavigator.h\"\n";
-  outstream << "#include \"navigation/NavigationState.h\"\n";
-  outstream << "#include \"base/Transformation3D.h\"\n";
-  outstream << "#include \"management/GeoManager.h\"\n";
+  outstream << "#include <navigation/VNavigator.h>\n";
+  outstream << "#include <navigation/NavigationState.h>\n";
+  outstream << "#include <base/Transformation3D.h>\n";
+  outstream << "#include <management/GeoManager.h>\n";
   // outstream << "#include <Vc/Vc>\n";
   outstream << "// more relevant includes to be figures out ... \n";
   // for the moment I am putting some hard coded lists
   // we should rather figure out how to generate this dynamically
-  outstream << "#include \"volumes/Box.h\"\n";
-  outstream << "#include \"volumes/Trapezoid.h\"\n";
-  outstream << "#include \"volumes/Tube.h\"\n";
-  outstream << "#include \"volumes/Polycone.h\"\n";
-  outstream << "#include \"volumes/Polyhedron.h\"\n";
-  outstream << "#include \"volumes/Trd.h\"\n";
-  outstream << "#include \"volumes/Cone.h\"\n";
-  outstream << "#include \"volumes/BooleanVolume.h\"\n";
+  outstream << "#include <volumes/Box.h>\n";
+  outstream << "#include <volumes/Trapezoid.h>\n";
+  outstream << "#include <volumes/Tube.h>\n";
+  outstream << "#include <volumes/Polycone.h>\n";
+  outstream << "#include <volumes/Polyhedron.h>\n";
+  outstream << "#include <volumes/Trd.h>\n";
+  outstream << "#include <volumes/Cone.h>\n";
+  outstream << "#include <volumes/BooleanVolume.h>\n";
 
-  outstream << "#include \"navigation/SimpleSafetyEstimator.h\"\n";
+  outstream << "#include <navigation/SimpleSafetyEstimator.h>\n";
+  if (fUseDebugNavigator) {
+    outstream << "#include <navigation/" << fDebugNavigator << ".h>\n";
+  }
 }
 
 void NavigationSpecializer::DumpNamespaceOpening(std::ostream &outstream)
@@ -499,9 +511,9 @@ void NavigationSpecializer::DumpNamespaceClosing(std::ostream &outstream)
 void NavigationSpecializer::DumpPrivateClassDefinitions(std::ostream &outstream)
 {
   outstream << "private:\n";
-  DumpPathToIndexFunction(outstream);
   DumpStaticConstExprData(outstream);
   DumpConstructor(outstream);
+  DumpPathToIndexFunction(outstream);
 }
 
 void NavigationSpecializer::DumpStaticInstanceFunction(std::ostream &outstream)
@@ -584,6 +596,7 @@ void NavigationSpecializer::DumpPublicClassDefinitions(std::ostream &outstream)
   DumpStaticPrepareOutstateFunction(outstream);
   DumpLocalHitDetectionFunction(outstream);
   DumpRelocateMethod(outstream);
+  DumpCheckRelocationMethod(outstream);
 
   // these were commented out
   // DumpSafetyFunctionDeclaration(outstream);
@@ -1173,7 +1186,7 @@ void NavigationSpecializer::AnalyseTargetPaths(NavStatePool const &inpool, NavSt
     if (i < fNumberOfPossiblePaths - 1) fStaticArraysInitStream << ",";
   }
   fStaticArraysInitStream << "};\n";
-  fStaticArraysDefinitions << "    constexpr short " << fClassName << "::deltamatrixmapping[" << fNumberOfPossiblePaths
+  fStaticArraysDefinitions << "  constexpr short " << fClassName << "::deltamatrixmapping[" << fNumberOfPossiblePaths
                            << "][" << fTransitionStrings.size() << "];\n";
   //
 
@@ -1735,15 +1748,12 @@ void NavigationSpecializer::DumpTransformationAsserts(std::ostream &outstream) c
   outstream << "\n";
   outstream << "    // piece of code which can be activated to check correctness of table lookup plus transformation\n";
   // outstream << "#ifdef " << fClassName << "_CHECK_TRANSFORMATION\n";
+  outstream << "    using vecCore::math::Abs;\n";
+  outstream << "    using vecCore::math::Max;\n";
   outstream << "    Transformation3D checkmatrix;\n";
   outstream << "    in_state.TopMatrix(checkmatrix);\n";
-  outstream << "    Vector3D<Precision> crosschecklocalpoint = checkmatrix.Transform(globalpoint);\n";
-  outstream
-      << "    assert( std::abs(crosschecklocalpoint[0] - localpoint[0]) < 1E-9 && \"error in transformation\");\n";
-  outstream
-      << "    assert( std::abs(crosschecklocalpoint[1] - localpoint[1]) < 1E-9 && \"error in transformation\");\n";
-  outstream
-      << "    assert( std::abs(crosschecklocalpoint[2] - localpoint[2]) < 1E-9 && \"error in transformation\");\n";
+  outstream << "    Vector3D<Precision> localcheck = checkmatrix.Transform(globalpoint);\n";
+  outstream << "    assert( (localcheck - localpoint).Abs().Max() < 1E-9 && \"error in transformation\");\n";
   // outstream << "#endif\n";
   outstream << "\n";
 }
@@ -1770,6 +1780,7 @@ void NavigationSpecializer::DumpFoo(std::ostream &outstream) const
   auto daughters  = fLogicalVolume->GetDaughtersp();
   auto ndaughters = daughters->size();
   if (ndaughters > 0) {
+    outstream << "    hitcandidate = nullptr;\n";
     outstream << "    auto daughters = lvol->GetDaughtersp();\n";
 
     // first pass to separate list of polymorphic shapes into separated loops over the same kind
@@ -1835,8 +1846,38 @@ void NavigationSpecializer::DumpFoo(std::ostream &outstream) const
       //      }
     }
   }
+  if (fUseDebugNavigator) {
+    outstream << "    // crosscheck with the debug navigator\n";
+    outstream << "    Precision stepcheck = 0.;\n";
+    outstream << "    VPlacedVolume const *checkcandidate = nullptr;\n";
+    // outstream << "    NavigationState *check_state =
+    // NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());\n";
+    outstream << "    bool hit = fDebugNavigator." << fDebugNavigator
+              << "<>::CheckDaughterIntersections(lvol, localpoint, localdir, in_state, out_state, "
+                 "stepcheck, checkcandidate);\n";
+    outstream << "    assert(hitcandidate == checkcandidate && \"(EEE) hit candidate not same as reference!\");\n";
+    outstream << "    assert(Abs(step - stepcheck) < 1E-8 && \" (EEE) step not same as reference!\");\n";
+
+    // outstream << "    NavigationState::ReleaseInstance(scheck);\n";
+  }
+
   outstream << "    return false;\n";
   outstream << "\n";
+}
+
+void NavigationSpecializer::DumpCheckRelocationMethod(std::ostream &outstream) const
+{
+  if (!fDebug) return;
+  outstream << "  void CheckRelocation(Vector3D<Precision> const &pointafterboundary, NavigationState const "
+               "&__restrict__ in_state, NavigationState const &__restrict__ out_state, "
+               "NavigationState &__restrict__ check_state) const\n{\n";
+  outstream << "    // cross-check against standard relocator\n";
+  outstream << "    using Base = VNavigatorHelper<" << fClassName << ","
+            << fLogicalVolume->GetUnplacedVolume()->IsConvex() << ">;\n";
+  outstream << "    Base::Relocate(pointafterboundary, in_state, check_state);\n";
+  outstream << "    assert(out_state.Distance(check_state) == 0 && \"(EEE) out_state not cross-checked\");\n";
+  outstream << "    NavigationState::ReleaseInstance(&check_state);\n";
+  outstream << "  }\n\n";
 }
 
 void NavigationSpecializer::DumpRelocateMethod(std::ostream &outstream) const
@@ -1845,16 +1886,23 @@ void NavigationSpecializer::DumpRelocateMethod(std::ostream &outstream) const
   outstream << "  VECGEOM_FORCE_INLINE\n";
   outstream << "  virtual void Relocate(Vector3D<Precision> const &pointafterboundary, NavigationState const "
                "&__restrict__ in_state, "
-               "NavigationState &__restrict__ out_state) const override {\n";
+               "NavigationState &__restrict__ out_state) const override\n{\n";
   outstream << "    // this means that we are leaving the mother\n";
   outstream << "    // alternatively we could use nextvolumeindex like before\n";
+  if (fUseDebugNavigator) {
+    outstream << "    // Crosscheck: backup out_state\n";
+    outstream
+        << "    NavigationState *check_state = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());\n";
+    outstream << "    out_state.CopyTo(check_state);\n";
+  }
 
   if (fLogicalVolume->GetDaughtersp()->size() > 0) {
     outstream << "    if( out_state.Top() == in_state.Top() ) {\n";
   }
-  outstream << "      // this was probably calculated before \n";
-  outstream << "      auto pathindex = -1;\n"; // out_state.GetCacheValue();\n";
-  outstream << "      if(pathindex < 0) { pathindex = PathToIndex(&in_state); }\n";
+  // outstream << "      // this was probably calculated before \n";
+  // outstream << "      auto pathindex = -1;\n"; // out_state.GetCacheValue();\n";
+  // outstream << "      if(pathindex < 0) { pathindex = PathToIndex(&in_state); }\n";
+  outstream << "      auto pathindex = PathToIndex(&in_state);\n";
 
   for (size_t i = 0; i < fTransitionOrder.size(); ++i) {
     size_t transitionid    = fTransitionOrder[i];
@@ -1929,6 +1977,9 @@ void NavigationSpecializer::DumpRelocateMethod(std::ostream &outstream) const
         downstate = true;
       }
     }
+    if (fUseDebugNavigator) {
+      outstream << "          CheckRelocation(pointafterboundary, in_state, out_state, *check_state);\n";
+    }
     outstream << "          return;\n";
     outstream << "        }\n";
     outstream << "      }\n";
@@ -1965,6 +2016,9 @@ void NavigationSpecializer::DumpRelocateMethod(std::ostream &outstream) const
     }
     if (alldowntransitionsaretrivial) {
       outstream << "    // we don't do anything; the outstate should already be correct in any case\n";
+      if (fUseDebugNavigator) {
+        outstream << "    CheckRelocation(pointafterboundary, in_state, out_state, *check_state);\n";
+      }
       outstream << "    return;\n";
       outstream << "  }\n";
     } else {
@@ -1980,8 +2034,8 @@ void NavigationSpecializer::DumpRelocateMethod(std::ostream &outstream) const
       outstream << "  }\n";
     }
   }
-  outstream << "}\n";
-  outstream << "\n";
+  outstream << "  NavigationState::ReleaseInstance(check_state);\n";
+  outstream << "}\n\n";
 }
 
 void NavigationSpecializer::DumpLocalHitDetectionFunction(std::ostream &outstream) const

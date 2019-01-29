@@ -167,6 +167,7 @@ private:
   void DumpLocalSafetyFunctionDeclaration(std::ostream &);
 
   void DumpRelocateMethod(std::ostream &) const;
+  void DumpCheckRelocationMethod(std::ostream &) const;
 
   void DumpLocalVectorSafetyFunctionDeclaration(std::ostream &);
 
@@ -197,6 +198,13 @@ public:
     fBaseNavigator    = nav;
   }
 
+  void SetDebugNavigator(std::string const &nav)
+  {
+    fUseDebugNavigator = true;
+    fDebugNavigator    = nav;
+    fDebug             = true;
+  }
+
   void SetDebug(bool flag) { fDebug = flag; }
 
   void SetVerbosity(int level) { fVerbosity = level; }
@@ -224,9 +232,11 @@ private:
   bool fUnrollLoops      = false;               // whether to manually unroll all loops
   bool fUseBaseNavigator = false;               // whether to use the DaughterDetection from another navigator
                                                 // ( makes sense when combined with voxel techniques )
-  bool fDebug    = false;                       // generate debugging code
-  int fVerbosity = 1;                           // verbosity level
-  std::string fBaseNavigator;
+  bool fUseDebugNavigator = false;              // whether to cross-check all answers from another navigator
+  bool fDebug             = false;              // generate debugging code
+  int fVerbosity          = 1;                  // verbosity level
+  std::string fBaseNavigator;                   // use base nafigator for daughter crossing
+  std::string fDebugNavigator;                  // use debug navigator for cross-checking
 
   std::stringstream fDeltaTransformationCode;
   std::vector<std::string> fTransitionTransformVariables; // stores the vector of relevant variables for
