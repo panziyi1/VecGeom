@@ -38,7 +38,8 @@ struct PolyhedronImplementation {
   template <typename Stream>
   static void PrintType(Stream &s, int transCodeT = translation::kGeneric, int rotCodeT = rotation::kGeneric)
   {
-    s << "SpecializedPolyhedron<" << transCodeT << "," << rotCodeT << ">";
+    s << "SpecializedPolyhedron<" << transCodeT << "," << rotCodeT << ",EInnerRadii(" << int(innerRadiiT)
+      << "),EPhiCutout(" << int(phiCutoutT) << ")>";
   }
 
   template <typename Stream>
@@ -541,7 +542,7 @@ Precision PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarSafetyToZSegm
 
   // Otherwise check the outer shell
   // TODO: we need to check segment.outer.size() > 0
-  Precision safetySquaredOuter                     = InfinityLength<Precision>();
+  Precision safetySquaredOuter = InfinityLength<Precision>();
   if (segment.outer.size() > 0) safetySquaredOuter = segment.outer.ScalarDistanceSquared(phiIndex, point);
 
   // And finally the inner
@@ -777,9 +778,9 @@ Inside_t PolyhedronImplementation<innerRadiiT, phiCutoutT>::ScalarInsideKernel(U
   // have identical Z. In this case, if the point is close within tolerance
   // to such section, the returned index has to be the first of the 2, so that
   // all navigation functions start by checking the degenerated segment.
-  int zIndex                                            = FindZSegment<Precision>(unplaced, point[2]);
+  int zIndex = FindZSegment<Precision>(unplaced, point[2]);
   if (zIndex > (unplaced.fZSegments.size() - 1)) zIndex = unplaced.fZSegments.size() - 1;
-  if (zIndex < 0) zIndex                                = 0;
+  if (zIndex < 0) zIndex = 0;
 
   ZSegment const &segment = unplaced.fZSegments[zIndex];
 
@@ -1215,7 +1216,7 @@ void PolyhedronImplementation<innerRadiiT, phiCutoutT>::SafetyToOut(UnplacedStru
   safety = ScalarSafetyKernel(unplaced, point, true);
 }
 
-} // End inline namespace
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif // VECGEOM_VOLUMES_KERNEL_POLYHEDRONIMPLEMENTATION_H_
