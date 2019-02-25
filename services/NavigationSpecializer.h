@@ -129,14 +129,14 @@ public:
   // currently this is only done using the SimpleEstimator base algorithm
   // TODO: we could template here on some base algorithm in general and we could
   // specialize voxel algorithms and the like
-  void ProduceSpecializedNavigator(LogicalVolume const *, std::ostream &);
+  bool ProduceSpecializedNavigator(LogicalVolume const *, std::ostream &);
 
 private:
   typedef std::map<size_t, std::map<size_t, size_t>> PathLevelIndexMap_t;
 
   // analysis functions
-  void AnalyseLogicalVolume();
-  void AnalysePaths(std::list<NavigationState *> const & /* inpaths */);
+  bool AnalyseLogicalVolume();
+  bool AnalysePaths(std::list<NavigationState *> const & /* inpaths */);
   void AnalyseTargetPaths(NavStatePool const &, NavStatePool const &);
   // void GeneratePathClassifierCode(std::list<std::pair<int, std::set<NavigationState::Value_t>>> const
   // &pathclassification,

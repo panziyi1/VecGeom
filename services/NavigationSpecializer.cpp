@@ -627,7 +627,7 @@ void NavigationSpecializer::DumpStaticConstExprVariableDefinitions(std::ostream 
   outstream << "\n";
 }
 
-void NavigationSpecializer::ProduceSpecializedNavigator(LogicalVolume const *lvol, std::ostream &outstream)
+bool NavigationSpecializer::ProduceSpecializedNavigator(LogicalVolume const *lvol, std::ostream &outstream)
 {
   // start with the analysis
   fLogicalVolume = lvol;
@@ -637,7 +637,11 @@ void NavigationSpecializer::ProduceSpecializedNavigator(LogicalVolume const *lvo
   fClassName         = fLogicalVolumeName + "Navigator";
   // fClassName = "GeneratedNavigator";
 
-  AnalyseLogicalVolume();
+  bool success = AnalyseLogicalVolume();
+  if (!success) {
+    std::cerr << "=== EEE ===    Unable to generate specialized navigator for volume " << lvol->GetName() << std::endl;
+    return false;
+  }
 
   DumpDisclaimer(outstream);
   DumpIncludeFiles(outstream);
@@ -647,16 +651,18 @@ void NavigationSpecializer::ProduceSpecializedNavigator(LogicalVolume const *lvo
   DumpClassClosing(outstream);
   DumpStaticConstExprVariableDefinitions(outstream);
   DumpNamespaceClosing(outstream);
+  return true;
 }
 
-void NavigationSpecializer::AnalyseLogicalVolume()
+bool NavigationSpecializer::AnalyseLogicalVolume()
 {
   // generate all possible geometry paths for this volume
   std::list<NavigationState *> allpaths;
   GeoManager::Instance().getAllPathForLogicalVolume(fLogicalVolume, allpaths);
   fNumberOfPossiblePaths = allpaths.size();
 
-  AnalysePaths(allpaths);
+  bool success = AnalysePaths(allpaths);
+  if (!success) return false;
 
   // analyse path transitions
   // try to read from generated outpaths ( add error handling these files do not exist )
@@ -667,7 +673,7 @@ void NavigationSpecializer::AnalyseLogicalVolume()
 
   if (npointsin != npointsout || ndepthin != ndepthout || ndepthin != GeoManager::Instance().getMaxDepth()) {
     std::cerr << "Error reading state files ... aborting\n";
-    std::exit(1);
+    return false;
   }
   NavStatePool inpool(npointsin, GeoManager::Instance().getMaxDepth());
   NavStatePool outpool(npointsout, GeoManager::Instance().getMaxDepth());
@@ -675,10 +681,11 @@ void NavigationSpecializer::AnalyseLogicalVolume()
   auto s2 = outpool.FromFile(fOutStateFileName);
   if (s1 != npointsin || s2 != npointsin) {
     std::cerr << "Error reading state files ... aborting\n";
-    std::exit(1);
+    return false;
   }
   if (fVerbosity > 0) std::cout << "Read " << npointsin << " states to analyse\n";
   AnalyseTargetPaths(inpool, outpool);
+  return true;
 }
 
 void NavigationSpecializer::AddToIndexMap(size_t level, size_t keyvalue)
@@ -762,7 +769,7 @@ size_t NavigationSpecializer::PathToIndex(NavigationState const *state)
   return finalindex;
 }
 
-void NavigationSpecializer::AnalysePaths(std::list<NavigationState *> const &paths)
+bool NavigationSpecializer::AnalysePaths(std::list<NavigationState *> const &paths)
 {
 
   // analyse level
@@ -777,7 +784,7 @@ void NavigationSpecializer::AnalysePaths(std::list<NavigationState *> const &pat
   //
   if (!samelevel) {
     std::cerr << "paths have different levels --> NOT SUPPORTED AT THE MOMENT \n";
-    return;
+    return false;
   }
 
   // in-memory - table lookup
@@ -818,15 +825,15 @@ void NavigationSpecializer::AnalysePaths(std::list<NavigationState *> const &pat
     std::cerr << "maxindex " << maxindex << "  vs " << paths.size() << "\n";
     std::cerr << "redundency of factor " << (maxindex + 1) / (paths.size())
               << " detected --> ask for an implementation !!\n";
-    return;
+    return false;
   }
   if (minindex != 0) {
     std::cerr << "minindex not zero\n";
-    return;
+    return false;
   }
   if (maxindex != paths.size() - 1) {
     std::cerr << "maxindex not size - 1\n";
-    return;
+    return false;
   }
 
   // analyse global matrix and generate static data with right index
@@ -1007,6 +1014,7 @@ void NavigationSpecializer::AnalysePaths(std::list<NavigationState *> const &pat
   std::stringstream ss;
   fGlobalTransData.EmitScalarGlobalTransformationCode(ss);
   if (fVerbosity > 0) std::cout << ss.str() << "\n";
+  return true;
 }
 
 template <typename T>
@@ -1780,6 +1788,10 @@ void NavigationSpecializer::DumpFoo(std::ostream &outstream) const
   auto daughters  = fLogicalVolume->GetDaughtersp();
   auto ndaughters = daughters->size();
   if (ndaughters > 0) {
+    if (fUseDebugNavigator) {
+      outstream << "    static bool gDebug = false;\n";
+      outstream << "    Precision stepbak = step;\n";
+    }
     outstream << "    hitcandidate = nullptr;\n";
     outstream << "    auto daughters = lvol->GetDaughtersp();\n";
 
@@ -1823,9 +1835,10 @@ void NavigationSpecializer::DumpFoo(std::ostream &outstream) const
         outstream << "      auto ddistance = ((" << shapetype << "*) daughter)->" << shapetype
                   << "::DistanceToIn(localpoint, localdir, step);\n";
 
-        outstream << "      bool valid = (ddistance < step && !IsInf(ddistance));\n";
+        outstream << "      bool valid = (ddistance < step && !IsInf(ddistance)) &&"
+                     " !((ddistance <= 0.) && in_state && in_state->GetLastExited() == daughter);\n";
         outstream << "      hitcandidate = valid ? daughter : hitcandidate;\n";
-        outstream << "      step = valid ? ddistance : step;";
+        outstream << "      step = valid ? ddistance : step;\n";
         outstream << "    }\n";
       }
     } else {
@@ -1848,16 +1861,23 @@ void NavigationSpecializer::DumpFoo(std::ostream &outstream) const
   }
   if (fUseDebugNavigator) {
     outstream << "    // crosscheck with the debug navigator\n";
-    outstream << "    Precision stepcheck = 0.;\n";
+    outstream << "    Precision stepcheck = stepbak;\n";
     outstream << "    VPlacedVolume const *checkcandidate = nullptr;\n";
     // outstream << "    NavigationState *check_state =
     // NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());\n";
     outstream << "    bool hit = fDebugNavigator." << fDebugNavigator
               << "<>::CheckDaughterIntersections(lvol, localpoint, localdir, in_state, out_state, "
                  "stepcheck, checkcandidate);\n";
+    outstream << "    if (!gDebug && (hitcandidate != checkcandidate || Abs(step - stepcheck) > 1E-8)) {\n";
+    outstream << "      printf(\"Error in volume " << fLogicalVolume->GetName() << "\\n\");\n";
+    outstream << "      step = stepbak;\n";
+    outstream << "      gDebug = true;\n";
+    outstream
+        << "      CheckDaughterIntersections(lvol, localpoint, localdir, in_state, out_state, step, hitcandidate);\n";
+    outstream << "    }\n";
+    outstream << "    gDebug = false;\n";
     outstream << "    assert(hitcandidate == checkcandidate && \"(EEE) hit candidate not same as reference!\");\n";
     outstream << "    assert(Abs(step - stepcheck) < 1E-8 && \" (EEE) step not same as reference!\");\n";
-
     // outstream << "    NavigationState::ReleaseInstance(scheck);\n";
   }
 
@@ -2034,7 +2054,9 @@ void NavigationSpecializer::DumpRelocateMethod(std::ostream &outstream) const
       outstream << "  }\n";
     }
   }
-  outstream << "  NavigationState::ReleaseInstance(check_state);\n";
+  if (fUseDebugNavigator) {
+    outstream << "  NavigationState::ReleaseInstance(check_state);\n";
+  }
   outstream << "}\n\n";
 }
 
@@ -2068,9 +2090,9 @@ void NavigationSpecializer::DumpLocalHitDetectionFunction(std::ostream &outstrea
   // the bool return type indicates if out_state was already modified; this may happen in assemblies;
   // in this case we don't need to copy the in_state to the out state later on
   outstream << "  virtual bool CheckDaughterIntersections(LogicalVolume const *lvol, Vector3D<Precision> const & "
-               "localpoint, Vector3D<Precision> const & localdir,                                           "
+               "localpoint, Vector3D<Precision> const & localdir, "
                "NavigationState const * in_state, NavigationState * out_state, Precision &step, VPlacedVolume const *& "
-               "hitcandidate) const override {\n";
+               "hitcandidate) const override\n  {\n";
   if (!needdaughtertreatment) {
     // empty function; do nothing
     outstream << "    return false;\n";
