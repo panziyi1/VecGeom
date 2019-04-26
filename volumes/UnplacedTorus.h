@@ -209,7 +209,7 @@ public:
   Precision Capacity() const override { return volume(); }
 
   VECCORE_ATT_HOST_DEVICE
-  virtual bool Normal(Vector3D<Precision> const &point, Vector3D<Precision> &normal) const override;
+  bool Normal(Vector3D<Precision> const &point, Vector3D<Precision> &normal) const override;
 
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
@@ -231,7 +231,7 @@ public:
   std::string GetEntityType() const { return "Torus"; }
 
   template <TranslationCode transCodeT, RotationCode rotCodeT>
-  VECCORE_ATT_HOST_DEVICE
+  VECCORE_ATT_DEVICE
   static VPlacedVolume *Create(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
 #ifdef VECCORE_CUDA
                                const int id,

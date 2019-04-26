@@ -10,7 +10,6 @@
 #include "base/Vector3D.h"
 #include "ApproxEqual.h"
 #include "volumes/Torus.h"
-#include "volumes/SpecializedTorus.h"
 
 #include <cmath>
 using vecgeom::kPi;
@@ -65,6 +64,9 @@ bool testTorus()
   // Check torus roots
 
   Torus_t t1("Solid Torus #1", 0, Rmax, Rtor, 0, vecgeom::kTwoPi);
+  // Check name
+  assert(!strcmp(t1.GetName(), "Solid Torus #1"));
+
   Torus_t t2("Hole cutted Torus #2", Rmin, Rmax, Rtor, 0, kPi / 2.); // kPi/4., kPi/2.);
   Torus_t tn2("tn2", Rmin, Rmax, Rtor, vecgeom::kPi / 2., vecgeom::kPi / 2.);
   Torus_t tn3("tn3", Rmin, Rmax, Rtor, vecgeom::kPi / 2., 3 * vecgeom::kPi / 2.);
@@ -85,24 +87,24 @@ bool testTorus()
   // std::cout<<"In="<<cmsEECool3->Inside(Vec_t(1230.993171, 1078.075896, -2.947036))<<"
   // Rtor="<<std::sqrt(1230.99*1230.99+1078.07*1078.07)<<std::endl;
   assert(cmsEECool3->Inside(Vec_t(1230.993171, 1078.075896, -2.947036)) == vecgeom::EInside::kInside);
-  //<<<<<<< HEAD
-  //=======
-  Torus_t *cmsEECool30 = new Torus_t("cmsEECool30", 0, 0.7, 164, 0.09599, 1.4312);
-  temp1                = Vec_t(0.958700, -0.284408, 0.002748);
-  temp1                = temp1 / (temp1.Mag());
-  std::cout.precision(20);
-  std::cout << "DIn=" << cmsEECool30->DistanceToIn(Vec_t(-652.200808, 359.142298, -1.826441), temp1)
-            << " temp1=" << temp1.Mag() << std::endl; // 689.407 / 689.407 / 689.407 / 687.745
-  std::cout << 332858192.02587622404 * (-3.0) << " dif=" << -998574576.07762873173 - 332858192.02587622404 * (-3.0)
-            << std::endl;
-   std::cout.precision(20);
-  //>>>>>>> 3be6ba49... Torus ported to new structures
+  // //=======
+  // Torus_t *cmsEECool30 = new Torus_t("cmsEECool30", 0, 0.7, 164, 0.09599, 1.4312);
+  // temp1                = Vec_t(0.958700, -0.284408, 0.002748);
+  // temp1                = temp1 / (temp1.Mag());
+  // std::cout.precision(20);
+  // std::cout << "DIn=" << cmsEECool30->DistanceToIn(Vec_t(-652.200808, 359.142298, -1.826441), temp1)
+  //           << " temp1=" << temp1.Mag() << std::endl; // 689.407 / 689.407 / 689.407 / 687.745
+  // std::cout << 332858192.02587622404 * (-3.0) << " dif=" << -998574576.07762873173 - 332858192.02587622404 * (-3.0)
+  //           << std::endl;
+  //  std::cout.precision(20);
+  // //=======
 
   Vec_t p1t6(60.73813233071262, -27.28494547459707, 37.47827539879173);
 
   Vec_t vt6(0.3059312222729116, 0.8329513862588347, -0.461083588265824);
 
   Vec_t p2t6(70.75950555416668, -3.552713678800501e-15, 22.37458414788935);
+
 
   // Check cubic volume
 
@@ -195,15 +197,27 @@ bool testTorus()
   assert(ApproxEqual(Dist, 80) && ApproxEqual(normal, vy));
   Dist  = t1.DistanceToOut(ponrmin, vmy);
   valid = t1.Normal(ponrmin + Dist * vmy, normal);
-  assert(ApproxEqual(Dist, 100));
+  assert(ApproxEqual(Dist, 100) && ApproxEqual(normal, vmy));
 
   // std::cout << "(vz + Vec_t(0.00001, 0.000001, 0): " << (vz + Vec_t(0.00001, 0.000001, 0)) << '\n';
   // std::cout << "Vec_t(0.00001, 0.000001, 0)).Unit() = " << (vz + Vec_t(0.00001, 0.000001, 0)).Unit() << '\n';
   Dist = t1.DistanceToOut(Vec_t(100, 0, 0), (vz + Vec_t(0.00001, 0.000001, 0)).Unit());
   // std::cout << "t1.DistanceToOut(100,0,0,vz,...) = " << Dist << " n=" << norm << std::endl;
   assert(ApproxEqual(Dist, 90));
+
   // std::cout << "Dist=t2.DistanceToOut(ponphi12,vy) = " << Dist << ", n=" << norm << ", -vy = " << -vy << std::endl;
   // std::cout << "norm: " << norm << '\n';
+  ptest = Vec_t(20, 0, 0);
+  Dist = t2.DistanceToOut(ptest, vmy);
+  valid = t2.Normal(ptest + Dist * vmy, normal);
+  std::cout << "\nBug: ptest="<< ptest <<", vmy="<< vmy <<", t2.DistanceToOut(ptest, vmy) = " << Dist << std::endl;
+  //assert(ApproxEqual(Dist, 0) && ApproxEqual(normal, vmy));
+  ptest = Vec_t(0, 20, 0);
+  Dist = t2.DistanceToOut(ptest, vmy);
+  valid = t2.Normal(ptest + Dist * vmy, normal);
+  //std::cout << "ptest="<< ptest <<", vmy="<< vmy <<", t2.DistanceToOut(ptest, vmy) = " << Dist <<", normal="<< normal << std::endl;
+  assert(ApproxEqual(Dist,10) && ApproxEqual(normal, (vmx+vmy).Unit()));
+
   Dist = t2.DistanceToOut(Vec_t(7.07106781186547524400844362, 7.07106781186547524400844362, 0), vmx);
   // std::cout << "Dist = t2.DistanceToOut(Vec_t(7.07106781186547524400844362, 7.07106781186547524400844362, 0), vmx,
   // normal, convex) = " << Dist << std::endl;
@@ -234,10 +248,8 @@ bool testTorus()
   //    assert(ApproxEqual(Dist,50));
 
   // DistanceToIn(P,V)
-  // std::cout << "LOGT pbigx: " << pbigx << '\n';
-  // std::cout << "LOGT vmx: " << vmx << '\n';
   Dist = t1.DistanceToIn(pbigx, vmx);
-  // std::cout << "LOGT Dist = t1.DistanceToIn(pbigx, vmx): " << Dist << '\n';
+  //std::cout << t1 <<"\n pbigx="<< pbigx <<", vmx="<< vmx <<", t1.D2In(pbigx, vmx): " << Dist << '\n';
   assert(ApproxEqual(Dist, 50));
   Dist = t1.DistanceToIn(pbigmx, vx);
   assert(ApproxEqual(Dist, 50));
@@ -284,7 +296,7 @@ bool testTorus()
   Dist = t3.DistanceToIn(ponrtor, vmy);
   assert(ApproxEqual(Dist, 40));
   Dist = t3.DistanceToIn(ponrtor, vz);
-  std::cout<<" ponrtor="<< ponrtor <<", vz="<< vz <<", DistToIn="<< Dist <<"\n"; 
+  //std::cout<<" ponrtor="<< ponrtor <<", vz="<< vz <<", DistToIn="<< Dist <<"\n"; 
   assert(ApproxEqual(Dist, 40));
   Dist = t3.DistanceToIn(ponrtor, vmz);
   assert(ApproxEqual(Dist, 40));
