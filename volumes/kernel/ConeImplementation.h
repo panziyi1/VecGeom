@@ -520,7 +520,11 @@ struct ConeImplementation {
       Float_t pRMin = cone.fTanRMin * point.z() + (cone.fRmin1 + cone.fRmin2) * 0.5; // cone.fRminAv;
       return (rho - pRMin) * cone.fInvSecRMin;
     } else {
-      Float_t pRMax = cone.fTanRMax * point.z() + (cone.fRmax1 + cone.fRmax2) * 0.5; // cone.fRmaxAv;
+    	Float_t pRMax(0.);
+    	if (cone.fOriginalRmax1 == cone.fOriginalRmax2)
+    	    pRMax = Real_v(cone.fOriginalRmax1);
+    	else
+    		pRMax = cone.fTanRMax * point.z() + (cone.fRmax1 + cone.fRmax2) * 0.5; // cone.fRmaxAv;
       return (pRMax - rho) * cone.fInvSecRMax;
     }
   }
