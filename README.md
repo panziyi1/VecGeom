@@ -1,73 +1,58 @@
-Installation
-============
+Overview
+========
 
-VecGeom uses [CMake](http://www.cmake.org/) for configuration and GMake for building.
+What is VecGeom ?
+-----------------
+VecGeom is a library of that provides geometrical shape primitives, 
+ways to describe a model geometry and to navigate within it, 
+tailored for use in cutting edge particle transport simulation
 
-Quick start
------------
+Shape primitives have the full set of methods for intersection, 
+distance to nearest boundary of volume required for navigation of tracks 
+for particle transport simulations.  
+A distinguishing feature of VecGeom is that it provides methods with SIMD
+signatures to cope with multiple tracks in one call, for all appropriate 
+methods of the shape/solid primitives.
 
-Configure and build VecGeom using default parameters, installing into the build directory:
+List of topics from Google document
+- How we create geometry objects via factories, 
+- The roles of ‘unplaced’, ‘placed’ and ‘specialised’ classes
+- The struct describing each shape
+- Navigation techniques/features
 
-    mkdir build
-    cd build
-    cmake ../ -DCMAKE_INSTALL_PREFIX=`pwd`
-    make install
+Geometry volume primitives 
+---------------------------
+### Unplaced volumes (solids) 
+An unplaced volume represents a geometry shape (primitive) and offers
+interfaces to query distance, location, containment, etc. 
 
-Requirements
-------------
+The volume is typically placed in its "natural" system of coordinates, e.g. a  the center of coordinates for a sphere and for a 
+rectangular parallelilepiped ('box') are at their centers.
 
-### Configuration
-CMake >= 2.8.8.
+This is the same concept as Geant4 'solids' (G4VSolid) and TGeo 'shape' (TGeoShape).
 
-### Compilation
-A C++11 compatible compiler is required.
-The library has been tested to compile with (but is not necessarily limited to):
+### Placed volumes (solids) and specialisations
+A placed volume represents a geometry shape which has been located 
+with either at a different position or with a rotation or both.
+It is the primary object from which a geometry model of a setup is created. 
 
-- GCC >= 4.7.3
-- Clang >= 3.4
-- ICC >= 14.0.2
+For reasons of efficiency different versions exist for each combination, 
+depending on whether or not a translation or a rotation exists.
 
-### Dependencies
+### How we create geometry objects via factories
+These different specialisations of placed volume can be created using a factor 
 
-#### Vc
-If Vc is used as the backend for SIMD instructions, CMake must be able to find the package. The Vc library is an [open source project](http://code.compeng.uni-frankfurt.de/projects/vc/).
+[ Creating a shape/solid optimally in VecGeom ]
 
-Tested to compile with Vc >= 1.0
+### The struct describing each shape
 
-#### Cilk Plus
-When using Intel's Cilk Plus for SIMD instructions, CMake must be configured to compile with ICC.
+How to create a geometry setup in VecGeom
+-----------------------------------------
+### Logical volumes
 
-#### CUDA
-For CUDA support, an nVIDIA GPU with [compute capability](http://en.wikipedia.org/wiki/CUDA#Supported_GPUs) >= 2.0 must be available, and the [CUDA Toolkit](https://developer.nvidia.com/cuda-downloads) must be installed.
+Navigation techniques/features
+------------------------------
 
-Tested to compile with CUDA >= 7.0 on GTX series >= 500.
 
-CMake options
--------------
 
-    OPTION [Default]
-      Description.
 
-    BACKEND [Vc]
-      Specifies the backend used to generate CPU instructions. Available backends are:
-      - Vc
-      - Cilk
-      - Scalar
-
-    CUDA [OFF]
-      Enable CUDA support.
-
-    CUDA_ARCH [20]
-      nVidia GPU architecture for which CUDA will be compiled. Will be passed directly to NVCC as -arch=<CUDA_ARCH>.
-
-    BENCHMARK [OFF]
-      Enables the benchmarking module. Will support a number of targets to benchmark against depending on which optional dependencies are activated. Flags that affect this are:
-      - CUDA
-      - ROOT
-      - GEANT4
-
-    ROOT [OFF]
-      Look for a ROOT installation to include ROOT interfacing modules and enable ROOT as a benchmarking case.
-
-    GEANT4 [OFF]
-      Enable Geant4 as a benchmarking case.
