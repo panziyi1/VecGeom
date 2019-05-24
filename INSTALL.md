@@ -30,7 +30,7 @@ The library has been tested to compile with (but is not necessarily limited to):
 ### Dependencies
 
 #### Vc
-If Vc is used as the backend for SIMD instructions, CMake must be able to find the package. The Vc library is an [open source project](http://code.compeng.uni-frankfurt.de/projects/vc/).
+If Vc is used as the backend for SIMD instructions, CMake must be able to find the package. The Vc library is an [open source project](https://github.com/VcDevel/Vc).
 
 Tested to compile with Vc >= 1.0
 
