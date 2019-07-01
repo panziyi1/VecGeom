@@ -190,7 +190,8 @@ if (BUILTIN_VECCORE)
       )
 
       FILE(GLOB VecCoreHeaders string(${globpattern}))
-
+      message(STATUS "${VecCoreHeaders}")
+      
       add_custom_target(${target})
       add_custom_command(
               OUTPUT ${VecCoreHeaders}
