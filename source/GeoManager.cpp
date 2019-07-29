@@ -143,6 +143,7 @@ void GeoManager::CompactifyMemory()
     }
   }
 
+  using namespace BooleanOp;
   for (auto v : fLogicalVolumesMap) {
 
     // check if this is a boolean type

@@ -27,13 +27,13 @@ protected:
   SOA3D<Precision> fVertices; // a vector of vertices with links between
                               // note that the z component will hold the slopes between 2 links
                               // We assume a clockwise order of points
-  vector_t<Precision> fShiftedXJ;
-  vector_t<Precision> fShiftedYJ;
-  vector_t<Precision> fLengthSqr;    // the lenghts of each segment
-  vector_t<Precision> fInvLengthSqr; // the inverse square lengths of each segment
-  vector_t<Precision> fA;            // the "a"=x coefficient in the plane equation
-  vector_t<Precision> fB;            // the "b"=y coefficient in the plane equation
-  vector_t<Precision> fD;            // the "d" coefficient in the plane equation
+  Vector<Precision> fShiftedXJ;
+  Vector<Precision> fShiftedYJ;
+  Vector<Precision> fLengthSqr;    // the lenghts of each segment
+  Vector<Precision> fInvLengthSqr; // the inverse square lengths of each segment
+  Vector<Precision> fA;            // the "a"=x coefficient in the plane equation
+  Vector<Precision> fB;            // the "b"=y coefficient in the plane equation
+  Vector<Precision> fD;            // the "d" coefficient in the plane equation
 
   bool fIsConvex;  // convexity property to be calculated a construction time
   Precision fMinX; // the extent of the polygon

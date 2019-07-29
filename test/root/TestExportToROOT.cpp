@@ -37,6 +37,7 @@ using namespace vecgeom;
 // create a VecGeom geometry
 LogicalVolume const *make3LevelBooleanSubtraction()
 {
+  using namespace BooleanOp;
   // components for boolean solid
   UnplacedBox const *motherbox       = new UnplacedBox(5., 5., 5.);
   UnplacedTube const *subtractedtube = new GenericUnplacedTube(0.5, 2., 2., 0, kTwoPi);

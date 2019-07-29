@@ -55,6 +55,7 @@ void GeomCppExporter::ScanGeometry(VPlacedVolume const *const volume, std::list<
                                    std::list<Transformation3D const *> &tlist)
 {
   // if not yet treated
+  using namespace BooleanOp;
   if (std::find(lvlist.cbegin(), lvlist.cend(), volume->GetLogicalVolume()) == lvlist.cend() &&
       std::find(boollvlist.cbegin(), boollvlist.cend(), volume->GetLogicalVolume()) == boollvlist.cend()) {
     if (auto v = dynamic_cast<PlacedBooleanVolume<kUnion> const *>(volume)) {
@@ -194,6 +195,7 @@ void GeomCppExporter::DumpLogicalVolumes(std::ostream &dumps, std::ostream &exte
                                          std::ostream &lvoldefinitions, std::list<LogicalVolume const *> const &lvlist)
 {
 
+  using namespace BooleanOp;
   static unsigned int counter = 0;
   for (auto l : lvlist) {
     // register logical volume

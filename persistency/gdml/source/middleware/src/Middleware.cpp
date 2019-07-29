@@ -576,11 +576,11 @@ bool Middleware::processSolid(XERCES_CPP_NAMESPACE_QUALIFIER DOMNode const *aDOM
     } else if (name == "paraboloid") {
       return processParaboloid(aDOMNode);
     } else if (name == "intersection") {
-      return processBoolean<vecgeom::BooleanOperation::kIntersection>(aDOMNode);
+      return processBoolean<vecgeom::BooleanOp::kIntersection>(aDOMNode);
     } else if (name == "subtraction") {
-      return processBoolean<vecgeom::BooleanOperation::kSubtraction>(aDOMNode);
+      return processBoolean<vecgeom::BooleanOp::kSubtraction>(aDOMNode);
     } else if (name == "union") {
-      return processBoolean<vecgeom::BooleanOperation::kUnion>(aDOMNode);
+      return processBoolean<vecgeom::BooleanOp::kUnion>(aDOMNode);
     } else if (name == "multiUnion") {
       return processMultiUnion(aDOMNode);
     } else if (name == "hype") {

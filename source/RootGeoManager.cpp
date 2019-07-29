@@ -588,6 +588,7 @@ VUnplacedVolume *RootGeoManager::Convert(TGeoShape const *const shape)
     VPlacedVolume *const rightplaced = (new LogicalVolume("inner_virtual", rightunplaced))->Place(righttrans);
 
     // now it depends on concrete type
+    using namespace BooleanOp;
     if (boolnode->GetBooleanOperator() == TGeoBoolNode::kGeoSubtraction) {
       unplaced_volume =
           GeoManager::MakeInstance<UnplacedBooleanVolume<kSubtraction>>(kSubtraction, leftplaced, rightplaced);

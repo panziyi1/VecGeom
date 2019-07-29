@@ -20,10 +20,10 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 
 struct MultiUnionStruct {
   // template <typename U>
-  // using vector_t     = vecgeom::Vector<U>;
+  // using Vector     = vecgeom::Vector<U>;
   using BVHStructure = HybridManager2::HybridBoxAccelerationStructure;
 
-  vector_t<VPlacedVolume const *> fVolumes; ///< Component placed volumes
+  Vector<VPlacedVolume const *> fVolumes; ///< Component placed volumes
   BVHStructure *fNavHelper = nullptr;       ///< Navigation helper using bounding boxes
 
   Vector3D<double> fMinExtent;      ///< Minimum extent

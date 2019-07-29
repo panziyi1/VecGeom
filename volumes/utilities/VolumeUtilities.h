@@ -273,7 +273,7 @@ Precision UncontainedCapacity(VPlacedVolume const &volume)
   Precision momCapacity = const_cast<VPlacedVolume &>(volume).Capacity();
   Precision dauCapacity = 0.;
   unsigned int kk       = 0;
-  for (vector_t<Daughter>::const_iterator j = volume.GetDaughters().cbegin(), jEnd = volume.GetDaughters().cend();
+  for (Vector<Daughter>::const_iterator j = volume.GetDaughters().cbegin(), jEnd = volume.GetDaughters().cend();
        j != jEnd; ++j, ++kk) {
     dauCapacity += const_cast<VPlacedVolume *>(*j)->Capacity();
   }
@@ -332,7 +332,7 @@ void FillUncontainedPoints(VPlacedVolume const &volume, TrackContainer &points)
 
       contained = false;
       int kk    = 0;
-      for (vector_t<Daughter>::const_iterator j = volume.GetDaughters().cbegin(), jEnd = volume.GetDaughters().cend();
+      for (Vector<Daughter>::const_iterator j = volume.GetDaughters().cbegin(), jEnd = volume.GetDaughters().cend();
            j != jEnd; ++j, ++kk) {
         if ((*j)->Contains(points[i])) {
           contained = true;
@@ -464,7 +464,7 @@ void FillContainedPoints(VPlacedVolume const &volume, const double bias, TrackCo
   for (int i = 0; i < size; ++i) {
     points.set(i, offset + SamplePoint(dim));
     // measure bias, which is the fraction of points contained in daughters
-    for (vector_t<Daughter>::const_iterator v = volume.GetDaughters().cbegin(), v_end = volume.GetDaughters().cend();
+    for (Vector<Daughter>::const_iterator v = volume.GetDaughters().cbegin(), v_end = volume.GetDaughters().cend();
          v != v_end; ++v) {
       bool inside = (placed) ? (*v)->Contains(points[i]) : (*v)->UnplacedContains(points[i]);
       if (inside) {
@@ -490,7 +490,7 @@ void FillContainedPoints(VPlacedVolume const &volume, const double bias, TrackCo
 
       points.set(i, offset + SamplePoint(dim));
       contained = false;
-      for (vector_t<Daughter>::const_iterator v = volume.GetDaughters().cbegin(), v_end = volume.GetDaughters().end();
+      for (Vector<Daughter>::const_iterator v = volume.GetDaughters().cbegin(), v_end = volume.GetDaughters().end();
            v != v_end; ++v) {
         bool inside = (placed) ? (*v)->Contains(points[i]) : (*v)->UnplacedContains(points[i]);
         if (inside) {
@@ -529,7 +529,7 @@ void FillContainedPoints(VPlacedVolume const &volume, const double bias, TrackCo
         contained = true;
       } else {
         const Vector3D<Precision> sample = offset + SamplePoint(dim);
-        for (vector_t<Daughter>::const_iterator v     = volume.GetDaughters().cbegin(),
+        for (Vector<Daughter>::const_iterator v     = volume.GetDaughters().cbegin(),
                                                 v_end = volume.GetDaughters().cend();
              v != v_end; ++v) {
           bool inside = (placed) ? (*v)->Contains(sample) : (*v)->UnplacedContains(sample);

@@ -6,15 +6,9 @@
 
 #include "base/Global.h"
 #include <initializer_list>
-#ifndef VECGEOM_ENABLE_CUDA
-
-#include <vector>
-template <typename U>
-using vector_t = std::vector<U>; // using std::vector
-
-#else // using vecgeom::Vector
-
+#ifdef VECGEOM_ENABLE_CUDA
 #include "backend/cuda/Interface.h"
+#endif
 
 namespace vecgeom {
 
@@ -63,54 +57,20 @@ struct AllocTrait<T *> {
   VECCORE_ATT_HOST_DEVICE
   static void Destroy(T ** /*arr*/, size_t /*nElem*/) {}
 };
-
-template <class T>
-struct remove_const {
-  typedef T type;
-};
-template <class T>
-struct remove_const<const T> {
-  typedef T type;
-};
-
-template <class T>
-struct remove_volatile {
-  typedef T type;
-};
-template <class T>
-struct remove_volatile<volatile T> {
-  typedef T type;
-};
-
-template <class T>
-struct remove_cv {
-  typedef typename std::remove_volatile<typename std::remove_const<T>::type>::type type;
-};
-
-template <class T>
-struct is_pointer_helper : std::false_type {
-};
-template <class T>
-struct is_pointer_helper<T *> : std::true_type {
-};
-template <class T>
-struct is_pointer : is_pointer_helper<typename remove_cv<T>::type> {
-};
-
 } // namespace Internal
 
 template <typename Type>
 class VectorBase {
 
 private:
-  Type *fData;
-  size_t fSize, fMemorySize;
-  bool fAllocated;
+  Type *fData = nullptr;
+  size_t fSize = 0, fMemorySize = 0;
+  bool fAllocated = false;
 
 public:
-  using value_type      = Type;
-  using const_reference = const Type &;
+  using value_type = Type;
 
+  /// I/O constructor
   VectorBase(TRootIOCtor *) {}
 
   VECCORE_ATT_HOST_DEVICE
@@ -220,16 +180,6 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
-  void resize(size_t newsize)
-  {
-    Type value;
-    // if (Internal::is_pointer<Type>::value) value = nullptr;
-    value = 0; // changed otherwise doesn't work with Vector<double>
-    resize(newsize, value);
-  }
-
-  VECCORE_ATT_HOST_DEVICE
-  VECGEOM_FORCE_INLINE
   void resize(size_t newsize, Type value)
   {
     if (newsize <= fSize) {
@@ -288,7 +238,6 @@ public:
   using VectorBase<Type>::VectorBase;
   using typename VectorBase<Type>::iterator;
   using typename VectorBase<Type>::const_iterator;
-  using typename VectorBase<Type>::const_reference;
 
   VECCORE_ATT_HOST_DEVICE
   Vector &operator=(Vector const &other)
@@ -309,8 +258,4 @@ public:
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // namespace vecgeom
 
-template <typename U>
-using vector_t = vecgeom::Vector<U>;
-
-#endif
 #endif // VECGEOM_BASE_CONTAINER_H_

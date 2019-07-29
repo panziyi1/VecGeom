@@ -60,7 +60,7 @@ class TessellatedStruct {
 
   // Here we should be able to use vecgeom::Vector
   // template <typename U>
-  // using vector_t = vecgeom::Vector<U>;
+  // using Vector = vecgeom::Vector<U>;
 
   using BVHStructure = HybridManager2::HybridBoxAccelerationStructure;
 
@@ -77,7 +77,7 @@ class TessellatedStruct {
   */
 public:
   struct GridCell {
-    vector_t<int> fArray; ///< Array of facet indices
+    Vector<int> fArray; ///< Array of facet indices
     bool fUsed = false;   ///< Flag for cell usage
 
     /// Default constructor for a grid cell.
@@ -102,7 +102,7 @@ public:
     Vector3D<T> fMinExtent;         ///< Minimum extent
     Vector3D<T> fMaxExtent;         ///< Maximum extent
     Vector3D<T> fInvExtSize;        ///< Inverse extent size
-    vector_t<Vector3D<T>> fAllVert; ///< Full list of vertices
+    Vector<Vector3D<T>> fAllVert; ///< Full list of vertices
 
     /// Default constructor for the grid helper structure.
     GridHelper() {}
@@ -180,11 +180,11 @@ public:
   // Here we have a pointer to the aligned bbox structure
   // ABBoxanager *fABBoxManager;
 
-  vector_t<int> fCluster;                                  ///< Cluster of facets storing just the indices
-  vector_t<int> fCandidates;                               ///< Candidates for the current cluster
-  vector_t<Vector3D<T>> fVertices;                         ///< Vector of unique vertices
-  vector_t<Facet_t *> fFacets;                             ///< Vector of triangular facets
-  vector_t<TessellatedCluster<NVERT, Real_v> *> fClusters; ///< Vector of facet clusters
+  Vector<int> fCluster;                                  ///< Cluster of facets storing just the indices
+  Vector<int> fCandidates;                               ///< Candidates for the current cluster
+  Vector<Vector3D<T>> fVertices;                         ///< Vector of unique vertices
+  Vector<Facet_t *> fFacets;                             ///< Vector of triangular facets
+  Vector<TessellatedCluster<NVERT, Real_v> *> fClusters; ///< Vector of facet clusters
   BitSet *fSelected          = nullptr;                    ///< Facets already in clusters
   int fNcldist[kVecSize + 1] = {0};                        ///< Distribution of number of cluster size
 

@@ -15,15 +15,15 @@ VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE_1v(struct, BooleanImplementation, BooleanOp
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-template <int Op> // template <BooleanOperation Op>
+template <BooleanOperation Op>
 class PlacedBooleanVolume;
-template <int Op> // template <BooleanOperation Op>
+template <BooleanOperation Op>
 class UnplacedBooleanVolume;
 
-template <int boolOp> // template <BooleanOperation boolOp>
+template <BooleanOperation Op>
 struct BooleanImplementation {
-  using PlacedShape_t    = PlacedBooleanVolume<boolOp>;
-  using UnplacedVolume_t = UnplacedBooleanVolume<boolOp>;
+  using PlacedShape_t    = PlacedBooleanVolume<Op>;
+  using UnplacedVolume_t = UnplacedBooleanVolume<Op>;
   using UnplacedStruct_t = BooleanStruct;
 
   // empty since functionality will be implemented in
@@ -37,9 +37,9 @@ struct BooleanImplementation {
  * TEMPLATE SPECIALIZATION FOR SUBTRACTION
  */
 template <>
-struct BooleanImplementation<2> {
-  using PlacedShape_t    = PlacedBooleanVolume<kSubtraction>;
-  using UnplacedVolume_t = UnplacedBooleanVolume<kSubtraction>;
+struct BooleanImplementation<BooleanOp::kSubtraction> {
+  using PlacedShape_t    = PlacedBooleanVolume<BooleanOp::kSubtraction>;
+  using UnplacedVolume_t = UnplacedBooleanVolume<BooleanOp::kSubtraction>;
   using UnplacedStruct_t = BooleanStruct;
 
   VECCORE_ATT_HOST_DEVICE

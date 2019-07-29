@@ -5,7 +5,7 @@
 namespace vecgeom {
 
 // Declare types shared by cxx and cuda.
-enum BooleanOperationEnum { kUnion = 0, kIntersection = 1, kSubtraction = 2 };
+namespace BooleanOp { const int kUnion = 0, kIntersection = 1, kSubtraction = 2; }
 typedef int BooleanOperation;
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
@@ -20,7 +20,7 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 struct BooleanStruct {
   VPlacedVolume const *fLeftVolume  = nullptr;
   VPlacedVolume const *fRightVolume = nullptr;
-  BooleanOperation const fOp        = -1;
+  BooleanOperation const fOp               = -1;
   mutable double fCapacity          = -1;
   mutable double fSurfaceArea       = -1;
 

@@ -21,9 +21,9 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
  * partial template specialization for UNION implementation
  */
 template <>
-struct BooleanImplementation<0> {
-  using PlacedShape_t    = PlacedBooleanVolume<kUnion>;
-  using UnplacedVolume_t = UnplacedBooleanVolume<kUnion>;
+struct BooleanImplementation<BooleanOp::kUnion> {
+  using PlacedShape_t    = PlacedBooleanVolume<BooleanOp::kUnion>;
+  using UnplacedVolume_t = UnplacedBooleanVolume<BooleanOp::kUnion>;
   using UnplacedStruct_t = BooleanStruct;
 
   VECCORE_ATT_HOST_DEVICE

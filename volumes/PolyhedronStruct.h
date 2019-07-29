@@ -17,12 +17,6 @@
 #include "base/SOA3D.h"
 #include "volumes/TubeStruct.h"
 
-// These enums should be in the scope vecgeom::Polyhedron, but when used in the
-// shape implementation helper instantiations, nvcc gets confused:
-
-enum struct EInnerRadii { kFalse = -1, kGeneric = 0, kTrue = 1 };
-enum struct EPhiCutout { kFalse = -1, kGeneric = 0, kTrue = 1, kLarge = 2 };
-
 namespace vecgeom {
 
 VECGEOM_DEVICE_FORWARD_DECLARE(struct ZSegment;);
@@ -30,8 +24,8 @@ VECGEOM_DEVICE_DECLARE_CONV(struct, ZSegment);
 
 // Declare types shared by cxx and cuda.
 namespace Polyhedron {
-using ::EInnerRadii;
-using ::EPhiCutout;
+  namespace EInnerRadii { const int kFalse = -1, kGeneric = 0, kTrue = 1; }
+  namespace EPhiCutout { const int kFalse = -1, kGeneric = 0, kTrue = 1, kLarge = 2; }
 }
 
 inline namespace VECGEOM_IMPL_NAMESPACE {

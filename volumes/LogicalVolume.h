@@ -115,7 +115,7 @@ public:
 
 #else
   VECCORE_ATT_DEVICE
-  LogicalVolume(VUnplacedVolume const *const unplaced_vol, vector_t<Daughter> *GetDaughter);
+  LogicalVolume(VUnplacedVolume const *const unplaced_vol, Vector<Daughter> *GetDaughter);
 #endif
 
   ~LogicalVolume();
@@ -129,18 +129,18 @@ public:
   /// Returns the list of daughter volumes
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
-  vector_t<Daughter> const &GetDaughters() const { return *fDaughters; }
+  Vector<Daughter> const &GetDaughters() const { return *fDaughters; }
 
   // will be deprecated in favour of better encapsulation of internal storage
   /// Returns pointer to the list of daughter volumes
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
-  vector_t<Daughter> const *GetDaughtersp() const { return fDaughters; }
+  Vector<Daughter> const *GetDaughtersp() const { return fDaughters; }
 
   /// Returns pointer to the list of daughter volumes
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
-  vector_t<Daughter> *GetDaughtersp() { return fDaughters; }
+  Vector<Daughter> *GetDaughtersp() { return fDaughters; }
 
   //  VECCORE_ATT_HOST_DEVICE
   //  VECGEOM_FORCE_INLINE

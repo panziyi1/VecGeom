@@ -38,7 +38,7 @@ LogicalVolume::LogicalVolume(char const *const label, VUnplacedVolume const *con
   fId = gIdCount++;
   GeoManager::Instance().RegisterLogicalVolume(this);
   fLabel     = new std::string(label);
-  fDaughters = new vector_t<Daughter>();
+  fDaughters = new Vector<Daughter>();
 
   // if the definint unplaced volume is an assembly, we need to make the back connection
   // I have chosen this implicit method for user convenience (in disfavour of an explicit function call)
@@ -50,7 +50,7 @@ LogicalVolume::LogicalVolume(char const *const label, VUnplacedVolume const *con
 
 #else
 VECCORE_ATT_DEVICE
-LogicalVolume::LogicalVolume(VUnplacedVolume const *const unplaced_vol, vector_t<Daughter> *GetDaughter)
+LogicalVolume::LogicalVolume(VUnplacedVolume const *const unplaced_vol, Vector<Daughter> *GetDaughter)
     // Id for logical volumes is not needed on the device for CUDA
     : fUnplacedVolume(unplaced_vol), fId(-1), fLabel(nullptr), fUserExtensionPtr(nullptr), fMaterialPtr(nullptr),
       fMaterialCutsPtr(nullptr), fBasketManagerPtr(nullptr), fDaughters(GetDaughter), fLevelLocator(nullptr),

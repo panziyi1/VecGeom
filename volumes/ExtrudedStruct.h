@@ -46,10 +46,10 @@ public:
   TessellatedStruct<3, double> fTslHelper; ///< Tessellated helper
 #ifndef VECGEOM_ENABLE_CUDA
   bool fUseTslSections = false;                        ///< Use tessellated section helper
-  vector_t<TessellatedSection<double> *> fTslSections; ///< Tessellated sections
+  Vector<TessellatedSection<double> *> fTslSections; ///< Tessellated sections
 #endif
-  vector_t<XtruVertex2> fVertices; ///< Polygone vertices
-  vector_t<XtruSection> fSections; ///< Vector of sections
+  Vector<XtruVertex2> fVertices; ///< Polygone vertices
+  Vector<XtruSection> fSections; ///< Vector of sections
   PlanarPolygon fPolygon;          ///< Planar polygon
 
 public:
@@ -179,14 +179,14 @@ public:
     // TRIANGULATE POLYGON
 
 #ifndef VECGEOM_ENABLE_CUDA
-    vector_t<FacetInd> facets;
+    Vector<FacetInd> facets;
     facets.reserve(nvertices);
 #else
     VectorBase<FacetInd> facets(nvertices);
 #endif
 
     // Fill a vector of vertex indices
-    vector_t<size_t> vtx;
+    Vector<size_t> vtx;
     for (size_t i = 0; i < nvertices; ++i)
       vtx.push_back(i);
 
