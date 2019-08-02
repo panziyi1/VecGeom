@@ -362,7 +362,7 @@ struct AcceleratedDistanceToIn<Precision> {
       }
       // If a hit is found, the algorithm can return, since only one side can
       // be hit for a convex set of quadrilaterals
-      vecCore::MaskedAssign(distanceTest, !valid, InfinityLength<Precision>());
+      vecCore::MaskedAssign(distanceTest, !valid, (Double_v)InfinityLength<Precision>());
       distance = Max(vecCore::ReduceMin(distanceTest), 0.);
       i        = n;
       return;
@@ -489,7 +489,7 @@ void AcceleratedDistanceToOut<Precision>(int &i, const int n, Planes const &plan
     }
   distanceToOutContinueOuter:
     if (vecCore::MaskEmpty(valid)) continue;
-    vecCore::MaskedAssign(distanceTest, !valid, InfinityLength<Precision>());
+    vecCore::MaskedAssign(distanceTest, !valid, (Double_v)InfinityLength<Precision>());
     distance = vecCore::ReduceMin(distanceTest);
   }
   distance = Max(0., distance);
