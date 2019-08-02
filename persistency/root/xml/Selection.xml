@@ -23,11 +23,26 @@
   <class name="vecgeom::Vector3D<double>"/>
   <class name="vecgeom::Vector3D<float>"/>
   <class name="vecgeom::Transformation3D"/>
-  <class name="vector_t<const vecgeom::VPlacedVolume*>"/>
-  <class name="vector_t<double>"/>
 
+  <class name="vecgeom::Vector<const vecgeom::VPlacedVolume*>"/>
+  <class name="vecgeom::VectorBase<const vecgeom::VPlacedVolume*>">
+    <field name="fData" comment="[fSize]"/>
+  </class>
+
+  <class name="vecgeom::Vector<double>" version="1"/>
+  <class name="vecgeom::VectorBase<double>">
+    <field name="fData" comment="[fSize]"/>
+  </class>
+
+  <class name="vecgeom::Vector<float>"/>
+  <class name="vecgeom::VectorBase<float>">
+    <field name="fData" comment="[fSize]"/>
+  </class>
 
   <class name="vecgeom::Array<double>">
+    <field name="fData" comment="[fSize]"/>
+  </class>
+  <class name="vecgeom::Array<float>">
     <field name="fData" comment="[fSize]"/>
   </class>
   <class name="vecgeom::Array<bool>">
@@ -44,6 +59,28 @@
   <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::BoxImplementation,-1, -1>"/>
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::BoxImplementation, -1, -1>"/>
 
+  <class name="vecgeom::VNavigator"/>
+  <class name="vecgeom::NewSimpleNavigator<false>"/>
+  <class name="vecgeom::VNavigatorHelper<vecgeom::NewSimpleNavigator<false>,false>"/>
+  <class name="vecgeom::SimpleABBoxNavigator<false>"/>
+  <class name="vecgeom::ABBoxManager"/>
+  <class name="vecgeom::VNavigatorHelper<vecgeom::SimpleABBoxNavigator<false>,false>"/>
+  <class name="vecgeom::HybridNavigator<false>"/>
+  <class name="vecgeom::HybridManager2"/>
+  <class name="vecgeom::VNavigatorHelper<vecgeom::HybridNavigator<false>,false>"/>
+
+
+  <class name="vecgeom::VSafetyEstimator"/>
+  <class name="vecgeom::SimpleSafetyEstimator"/>
+  <class name="vecgeom::VSafetyEstimatorHelper<vecgeom::SimpleSafetyEstimator>"/>
+  <class name="vecgeom::SimpleABBoxSafetyEstimator"/>
+  <class name="vecgeom::VSafetyEstimatorHelper<vecgeom::SimpleABBoxSafetyEstimator>"/>
+
+
+  <class name="vecgeom::VLevelLocator"/>
+  <class name="vecgeom::TSimpleLevelLocator<true>"/>
+  <class name="vecgeom::TSimpleABBoxLevelLocator<true>"/>
+  <class name="vecgeom::TSimpleABBoxLevelLocator<false>"/>
 
   <class name="vecgeom::UnplacedParaboloid"/>
   <class name="vecgeom::ParaboloidStruct<double>"/>
@@ -75,7 +112,6 @@
   <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedSphere, vecgeom::VPlacedVolume>"/>
   <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::SphereImplementation,-1, -1>"/>
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::SphereImplementation, -1, -1>"/>
-
 
   <class name="vecgeom::UnplacedTrd"/>
   <class name="vecgeom::TrdStruct<double>"/>
@@ -126,6 +162,7 @@
   <class name="vecgeom::SPlacedHype<vecgeom::SUnplacedHype<vecgeom::HypeTypes::UniversalHype>>"/>
 
 
+<!--
   <class name="vecgeom::UnplacedOrb"/>
   <class name="vecgeom::OrbStruct<double>"/>
   <class name="vecgeom::SIMDUnplacedVolumeImplHelper<vecgeom::OrbImplementation>"/>
@@ -314,29 +351,5 @@
   <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::TorusImplementation2,-1,-1>"/>
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TorusImplementation2,-1,-1>"/>
   <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedTorus2,vecgeom::VPlacedVolume>"/>
-
-
-  <class name="vecgeom::VNavigator"/>
-  <class name="vecgeom::NewSimpleNavigator<false>"/>
-  <class name="vecgeom::VNavigatorHelper<vecgeom::NewSimpleNavigator<false>,false>"/>
-  <class name="vecgeom::SimpleABBoxNavigator<false>"/>
-  <class name="vecgeom::ABBoxManager"/>
-  <class name="vecgeom::VNavigatorHelper<vecgeom::SimpleABBoxNavigator<false>,false>"/>
-  <class name="vecgeom::HybridNavigator<false>"/>
-  <class name="vecgeom::HybridManager2"/>
-  <class name="vecgeom::VNavigatorHelper<vecgeom::HybridNavigator<false>,false>"/>
-
-
-  <class name="vecgeom::VSafetyEstimator"/>
-  <class name="vecgeom::SimpleSafetyEstimator"/>
-  <class name="vecgeom::VSafetyEstimatorHelper<vecgeom::SimpleSafetyEstimator>"/>
-  <class name="vecgeom::SimpleABBoxSafetyEstimator"/>
-  <class name="vecgeom::VSafetyEstimatorHelper<vecgeom::SimpleABBoxSafetyEstimator>"/>
-
-
-  <class name="vecgeom::VLevelLocator"/>
-  <class name="vecgeom::TSimpleLevelLocator<true>"/>
-  <class name="vecgeom::TSimpleABBoxLevelLocator<true>"/>
-  <class name="vecgeom::TSimpleABBoxLevelLocator<false>"/>
-
+-->
 </lcgdict>

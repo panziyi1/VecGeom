@@ -8,17 +8,17 @@ bool unplaced_test()
   cout << "///// Running unplaced_test /////" << endl << endl;
 
   auto box  = new UnplacedBox(.05, .06, .07);
-  auto par  = new UnplacedParaboloid(.08, .09, .10);
-  auto pal  = new UnplacedParallelepiped(.11, .12, .13, 14, 15, 16);
+//  auto par  = new UnplacedParaboloid(.08, .09, .10);
+//  auto pal  = new UnplacedParallelepiped(.11, .12, .13, 14, 15, 16);
   auto box2 = new UnplacedBox(.17, .18, .19);
 
   cout << "writing on unplaced.root" << endl << endl;
 
   TFile fo("unplaced.root", "RECREATE");
 
-  fo.WriteObject(par, "par_saved");
+//  fo.WriteObject(par, "par_saved");
   fo.WriteObject(box, "box_saved");
-  fo.WriteObject(pal, "pal_saved");
+//  fo.WriteObject(pal, "pal_saved");
   fo.WriteObject(box2, "box2_saved");
 
   fo.Close();
@@ -29,13 +29,13 @@ bool unplaced_test()
   TFile fi("unplaced.root");
 
   UnplacedBox *rbox;
-  UnplacedParaboloid *rpar;
-  UnplacedParallelepiped *rpal;
+ // UnplacedParaboloid *rpar;
+//  UnplacedParallelepiped *rpal;
   UnplacedBox *rbox2;
 
   fi.GetObject("box_saved", rbox);
-  fi.GetObject("par_saved", rpar);
-  fi.GetObject("pal_saved", rpal);
+//  fi.GetObject("par_saved", rpar);
+//  fi.GetObject("pal_saved", rpal);
   fi.GetObject("box2_saved", rbox2);
   // testing
   bool all_test_ok = true;
@@ -59,6 +59,7 @@ bool unplaced_test()
   }
 
   // [2]
+/*
   cout << "[2] comparing UnplacedParaboloid\n\n"
        << ">> before\n",
       par->Print();
@@ -93,7 +94,7 @@ bool unplaced_test()
     cout << "! test not passed\n\n" << endl;
     all_test_ok = false;
   }
-
+*/
   // [4]
   cout << "[4] comparing UnplacedBox box2\n\n"
        << ">> before\n",

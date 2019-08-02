@@ -46,7 +46,6 @@ option(COVERAGE_TESTING "Enable coverage testing flags." OFF)
 option(CTEST "Enable CTest when building." ON)
 option(VALIDATION "Enable validation tests from CMS geometry." OFF)
 option(PLANESHELL "Enable the use of PlaneShell class for the trapezoid." ON)
-option(QUADRILATERAL_ACCELERATION "Enable SIMD vectorization when looping over quadrilaterals (in Polyhedron)." ON)
 option(DISTANCE_DEBUG "Enable comparison of calculated distances againt ROOT/Geant4 behind the scenes" OFF)
 option(INPLACE_TRANSFORMATIONS "Put transformation as members rather than pointers into PlacedVolume objects" ON)
 option(USE_INDEXEDNAVSTATES "Use indices rather than volume pointers in NavigationState objects" ON)
@@ -491,10 +490,6 @@ if (COVERAGE_TESTING)
 endif()
 
 # Forward CMake options
-if (QUADRILATERAL_ACCELERATION)
-  set(VECGEOM_DEFINITIONS
-      "${VECGEOM_DEFINITIONS} -DVECGEOM_QUADRILATERALS_VC")
-endif()
 if (BENCHMARK)
   set(VECGEOM_DEFINITIONS
       "${VECGEOM_DEFINITIONS} -DVECGEOM_BENCHMARK")
@@ -668,12 +663,6 @@ set(VECGEOM_SRCS
   source/UnplacedCutTube.cpp
   source/UnplacedGenTrap.cpp
 
-  source/NewSimpleNavigator.cpp
-  source/SimpleSafetyEstimator.cpp
-  source/SimpleLevelLocator.cpp
-  source/SimpleABBoxNavigator.cpp
-  source/SimpleABBoxSafetyEstimator.cpp
-  source/SimpleABBoxLevelLocator.cpp
   source/LogicalVolume.cpp
   source/PlacedPolyhedron.cpp
   source/PlacedPolycone.cpp

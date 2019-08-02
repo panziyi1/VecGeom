@@ -31,6 +31,7 @@ void write()
   UnplacedGenTrap gentrpUnplaced(verticesx1, verticesy1, 5);
 
   auto hypeUnplaced = GeoManager::MakeInstance<UnplacedHype>(10, 20, kPi / 4, kPi / 3, 50);
+/*
   UnplacedOrb orbUnplaced(9.);
 
   double thb  = 3 * kPi / 4;
@@ -105,7 +106,7 @@ void write()
   UnplacedTet tetUnplaced = UnplacedTet(p0, p1, p2, p3);
 
   UnplacedTorus2 torusUnplaced(1.2, 3.1, 5., 0, kTwoPi);
-
+*/
   LogicalVolume world("world", &boxUnplaced);
   LogicalVolume box("box", &boxUnplaced);
   LogicalVolume par("par", &parUnplaced);
@@ -115,6 +116,7 @@ void write()
   LogicalVolume trap("trap", trapUnplaced);
   LogicalVolume gentrp("gentrp", &gentrpUnplaced);
   LogicalVolume hype("hype", hypeUnplaced);
+/*
   LogicalVolume orb("orb", &orbUnplaced);
   LogicalVolume cutt("cutt", cuttUnplaced);
   LogicalVolume tube("tube", tubeUnplaced);
@@ -129,6 +131,7 @@ void write()
   LogicalVolume tsl("tsl", &tslUnplaced);
   LogicalVolume tet("tet", &tetUnplaced);
   LogicalVolume torus("torus", &torusUnplaced);
+*/
 
   Transformation3D placement  = Transformation3D(5, 5, 5);
   Transformation3D placement2 = Transformation3D(0, 0, 0, 90, 0, 0);
@@ -142,6 +145,7 @@ void write()
   world.PlaceDaughter(&trap, &placement);
   world.PlaceDaughter(&gentrp, &placement);
   world.PlaceDaughter(&hype, &placement2);
+/*
   world.PlaceDaughter(&orb, &placement2);
   world.PlaceDaughter(&cutt, &placement2);
   world.PlaceDaughter(assPlaced);
@@ -157,11 +161,12 @@ void write()
   world.PlaceDaughter(&tsl, &origin);
   world.PlaceDaughter(&tet, &placement);
   world.PlaceDaughter(&torus, &placement2);
-
+*/
   VPlacedVolume *worldPlaced = world.Place();
 
   GeoManager::Instance().SetWorldAndClose(worldPlaced);
 
+/*
   for (auto &lvol : GeoManager::Instance().GetLogicalVolumesMap()) {
     if (lvol.second->GetDaughtersp()->size() < 4) {
       lvol.second->SetNavigator(NewSimpleNavigator<>::Instance());
@@ -178,14 +183,14 @@ void write()
       lvol.second->SetLevelLocator(SimpleABBoxLevelLocator::GetInstance());
     }
   }
-
+*/
   GeoManager::Instance().GetWorld()->PrintContent();
 
   cout << endl << "placed vol count: " << GeoManager::Instance().GetPlacedVolumesCount() << endl;
   cout << "registered vol count: " << GeoManager::Instance().GetRegisteredVolumesCount() << endl;
 
   cout << endl << "\033[0;31mwriting on vecgeom_export.root\n" << endl;
-
+  
   RootGeoManager::Instance().Export("vecgeom_export.root");
 
   cout << "\033[0m" << endl;
@@ -194,7 +199,7 @@ void write()
 
 void read()
 {
-  cout << "reading from vecgeom_export.root\n" << endl;
+  cout << endl << "\033[0;31mreading from vecgeom_export.root\n" << endl;
 
   RootGeoManager::Instance().Import("vecgeom_export.root");
   cout << "\033[0m" << endl;
@@ -202,18 +207,7 @@ void read()
   cout << endl << "placed vol count: " << GeoManager::Instance().GetPlacedVolumesCount() << endl;
   cout << "registered vol count: " << GeoManager::Instance().GetRegisteredVolumesCount() << endl << endl;
 
-  cout << "printing all logical vol: " << endl;
-  for (auto el : GeoManager::Instance().GetLogicalVolumesMap()) {
-    cout << el.first << ") ";
-    el.second->Print();
-    cout << endl;
-  }
-
-  cout << "\n\ntesting fPlacedVolumesMap is not empty:" << endl;
-  GeoManager::Instance().Convert(3)->Print();
-
-  cout << endl << endl;
-  GeomCppExporter::Instance().DumpGeometry(std::cout);
+  cout << "\033[0m" << endl;
   GeoManager::Instance().Clear();
 }
 
@@ -229,16 +223,9 @@ void usage(std::string name)
 int main(int argc, char *argv[])
 {
   if (argc == 1) {
-    string exe_name(argv[0]);
-
-    auto term_status = system((exe_name + " w").c_str());
-    if ((WIFEXITED(term_status) == 0 || WEXITSTATUS(term_status) != 0)) return 2;
-
-    cout << endl << "\033[1;30m---------------------\033[0;34m" << endl;
-
-    term_status = system((exe_name + " r").c_str());
-    if ((WIFEXITED(term_status) == 0 || WEXITSTATUS(term_status) != 0)) return 3;
-
+    write();
+    read();
+    return 0;
   } else if (argc == 2) {
     switch (argv[1][0]) {
     case 'w':

@@ -18,7 +18,7 @@ set(VECGEOM_DEFINITIONS_LIST "${VECGEOM_DEFINITIONS}")
 separate_arguments(VECGEOM_DEFINITIONS_LIST)
 
 #generating the dictionary
-REFLEX_GENERATE_DICTIONARY(RootPClasses include/Classes.h SELECTION xml/Selection.xml OPTIONS  ${VECGEOM_DEFINITIONS_LIST})
+REFLEX_GENERATE_DICTIONARY(RootPClasses include/Classes.h SELECTION xml/Selection.xml OPTIONS ${VECGEOM_DEFINITIONS_LIST})
 add_library(RootPClassesDict SHARED RootPClasses.cxx)
 set_target_properties(RootPClassesDict PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
 target_link_libraries(RootPClassesDict ${VECGEOM_LIBRARIES} ${ROOT_LIBRARIES})

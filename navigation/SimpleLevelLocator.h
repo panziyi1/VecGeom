@@ -58,8 +58,6 @@ class TSimpleLevelLocator : public VLevelLocator {
 private:
   TSimpleLevelLocator() {}
 
-  static TSimpleLevelLocator *fgInstance; // required to be defined as class attribute
-
   // the actual implementation kernel
   // the template "ifs" should be optimized away
   // arguments are pointers to allow for nullptr
@@ -134,16 +132,11 @@ public:
   virtual std::string GetName() const override { return GetClassName(); }
 
   TSimpleLevelLocator(TRootIOCtor *)
-  {
-    if (fgInstance != nullptr)
-      throw std::runtime_error("TSimpleLevelLocator(TRootIOCtor *) already called, it should be a singleton");
-
-    fgInstance = this;
-  }
+  {}
   static VLevelLocator const *GetInstance()
   {
-    if (fgInstance == nullptr) fgInstance = new TSimpleLevelLocator();
-    return fgInstance;
+    static TSimpleLevelLocator instance;
+    return &instance;
   }
 
 }; // end class declaration

@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
     GeoManager::Instance().SetWorldAndClose(worldLogical.Place());
 
     Benchmarker benchmarker(GeoManager::Instance().GetWorld());
-    benchmarker.SetVerbosity(2);
+    benchmarker.SetVerbosity(3);
     benchmarker.SetPoolMultiplier(1);
     benchmarker.SetRepetitions(nrep);
     benchmarker.SetPointCount(npoints);

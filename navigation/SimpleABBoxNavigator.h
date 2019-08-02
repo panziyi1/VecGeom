@@ -27,7 +27,6 @@ private:
   {
   }
 
-  static SimpleABBoxNavigator *fgInstance; // required to be defined as class attribute
   // convert index to physical daugher
   VPlacedVolume const *LookupDaughter(LogicalVolume const *lvol, int id) const
   {
@@ -149,17 +148,11 @@ public:
     return false;
   }
 
-  SimpleABBoxNavigator(TRootIOCtor *)
-  {
-    if (fgInstance != nullptr)
-      throw std::runtime_error("SimpleABBoxNavigator(TRootIOCtor *) already called, it should be a singleton");
-
-    fgInstance = this;
-  }
+  SimpleABBoxNavigator(TRootIOCtor *) {}
   static VNavigator *Instance()
   {
-    if (fgInstance == nullptr) fgInstance = new SimpleABBoxNavigator();
-    return fgInstance;
+    static SimpleABBoxNavigator instance;
+    return &instance;
   }
 
   static constexpr const char *gClassNameString = "SimpleABBoxNavigator";

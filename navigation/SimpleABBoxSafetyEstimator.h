@@ -27,8 +27,6 @@ private:
   {
   }
 
-  static SimpleABBoxSafetyEstimator *fgInstance; // required to be defined as class attribute
-
   // convert index to physical daugher
   VPlacedVolume const *LookupDaughter(LogicalVolume const *lvol, int id) const
   {
@@ -210,18 +208,12 @@ public:
     }
   }
 
-  SimpleABBoxSafetyEstimator(TRootIOCtor *)
-  {
-    if (fgInstance != nullptr)
-      throw std::runtime_error("SimpleABBoxSafetyEstimator(TRootIOCtor *) already called, it should be a singleton");
-
-    fgInstance = this;
-  }
+  SimpleABBoxSafetyEstimator(TRootIOCtor *) {}
 
   static VSafetyEstimator *Instance()
   {
-    if (fgInstance == nullptr) fgInstance = new SimpleABBoxSafetyEstimator();
-    return fgInstance;
+    static SimpleABBoxSafetyEstimator instance;
+    return &instance;
   }
 
 }; // end class

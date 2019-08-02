@@ -19,8 +19,6 @@ private:
   VECCORE_ATT_DEVICE
   SimpleSafetyEstimator() {}
 
-  static SimpleSafetyEstimator *fgInstance; // required to be defined as class attribute
-
 public:
   static constexpr const char *gClassNameString = "SimpleSafetyEstimator";
 
@@ -136,17 +134,11 @@ public:
   }
 
 #ifndef VECCORE_CUDA
-  SimpleSafetyEstimator(TRootIOCtor *)
-  {
-    if (fgInstance != nullptr)
-      throw std::runtime_error("SimpleSafetyEstimator(TRootIOCtor *) already called, it should be a singleton");
-
-    fgInstance = this;
-  }
+  SimpleSafetyEstimator(TRootIOCtor *) {}
   static VSafetyEstimator *Instance()
   {
-    if (fgInstance == nullptr) fgInstance = new SimpleSafetyEstimator();
-    return fgInstance;
+    static SimpleSafetyEstimator instance;
+    return &instance;
   }
 #else
   VECCORE_ATT_DEVICE

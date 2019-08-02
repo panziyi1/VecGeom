@@ -30,8 +30,6 @@ private:
   ABBoxManager *fAccelerationStructure = nullptr;
   TSimpleABBoxLevelLocator() : fAccelerationStructure(&ABBoxManager::Instance()) {}
 
-  static TSimpleABBoxLevelLocator *fgInstance; // required to be defined as class attribute
-
   // the actual implementation kernel
   // the template "ifs" should be optimized away
   // arguments are pointers to allow for nullptr
@@ -186,17 +184,11 @@ public:
   static std::string GetClassName() { return "SimpleABBoxLevelLocator"; }
   virtual std::string GetName() const override { return GetClassName(); }
 
-  TSimpleABBoxLevelLocator(TRootIOCtor *)
-  {
-    if (fgInstance != nullptr)
-      throw std::runtime_error("TSimpleABBoxLevelLocator(TRootIOCtor *) already called, it should be a singleton");
-
-    fgInstance = this;
-  }
+  TSimpleABBoxLevelLocator(TRootIOCtor *) {}
   static VLevelLocator const *GetInstance()
   {
-    if (fgInstance == nullptr) fgInstance = new TSimpleABBoxLevelLocator();
-    return fgInstance;
+    static TSimpleABBoxLevelLocator instance;
+    return &instance;
   }
 
 }; // end class declaration

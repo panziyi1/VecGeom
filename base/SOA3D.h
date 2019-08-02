@@ -36,7 +36,7 @@ class SOA3D : Container3D<SOA3D<T>> {
 
 private:
   bool fAllocated;
-  unsigned int fSize;
+  int fSize;
   size_t fCapacity;
   T *fX, *fY, *fZ;
 
@@ -278,7 +278,7 @@ void SOA3D<T>::reserve(size_t newCapacity)
   xNew  = AlignedAllocate<T>(fCapacity);
   yNew  = AlignedAllocate<T>(fCapacity);
   zNew  = AlignedAllocate<T>(fCapacity);
-  fSize = (fSize > fCapacity) ? fCapacity : fSize;
+  fSize = ((size_t)fSize > fCapacity) ? fCapacity : fSize;
   if (fX && fY && fZ) {
     copy(fX, fX + fSize, xNew);
     copy(fY, fY + fSize, yNew);

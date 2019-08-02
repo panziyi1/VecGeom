@@ -22,9 +22,10 @@ private:
   VECCORE_ATT_DEVICE
   NewSimpleNavigator()
       : VNavigatorHelper<class NewSimpleNavigator<MotherIsConvex>, MotherIsConvex>(SimpleSafetyEstimator::Instance()) {
-  } VECCORE_ATT_DEVICE virtual ~NewSimpleNavigator() {}
+  }
 
-  static NewSimpleNavigator *fgInstance; // required to be defined as class attribute
+  VECCORE_ATT_DEVICE virtual ~NewSimpleNavigator() {}
+
 public:
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
@@ -132,17 +133,12 @@ public:
   }
 
 #ifndef VECCORE_CUDA
-  NewSimpleNavigator(TRootIOCtor *)
-  {
-    if (fgInstance != nullptr)
-      throw std::runtime_error("NewSimpleNavigator(TRootIOCtor *) already called, it should be a singleton");
+  NewSimpleNavigator(TRootIOCtor *) {}
 
-    fgInstance = this;
-  }
   static VNavigator *Instance()
   {
-    if (fgInstance == nullptr) fgInstance = new NewSimpleNavigator();
-    return fgInstance;
+    static NewSimpleNavigator instance;
+    return &instance;
   }
 #else
   VECCORE_ATT_DEVICE
