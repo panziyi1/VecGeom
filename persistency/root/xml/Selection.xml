@@ -162,7 +162,6 @@
   <class name="vecgeom::SPlacedHype<vecgeom::SUnplacedHype<vecgeom::HypeTypes::UniversalHype>>"/>
 
 
-<!--
   <class name="vecgeom::UnplacedOrb"/>
   <class name="vecgeom::OrbStruct<double>"/>
   <class name="vecgeom::SIMDUnplacedVolumeImplHelper<vecgeom::OrbImplementation>"/>
@@ -189,7 +188,6 @@
   <class name="vecgeom::UnplacedAssembly"/>
   <class name="vecgeom::PlacedAssembly"/>
 
-
   <class name="vecgeom::UnplacedTube"/>
   <class name="vecgeom::SIMDUnplacedVolumeImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::UniversalTube>,vecgeom::UnplacedTube>"/>
   <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::UniversalTube>,vecgeom::UnplacedTube>"/>
@@ -199,18 +197,6 @@
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::UniversalTube>,-1,-1>" />
   <class name="vecgeom::SUnplacedTube<vecgeom::TubeTypes::UniversalTube>"/>
   <class name="vecgeom::SPlacedTube<vecgeom::SUnplacedTube<vecgeom::TubeTypes::UniversalTube>>"/>
-
-  <class name="vecgeom::UnplacedBooleanVolume<0>"/>
-  <class name="vecgeom::BooleanStruct"/>
-  <class name="vecgeom::BooleanImplementation<0>"/>
-  <class name="vecgeom::BooleanImplementation<vecgeom::kUnion>"/>
-  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::BooleanImplementation<0>,-1,-1>"/>
-  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::BooleanImplementation<0>,vecgeom::VUnplacedVolume>"/>
-  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedBooleanVolume<0>,vecgeom::VPlacedVolume>"/>
-  <class name="vecgeom::PlacedBooleanVolume<0>"/>
-  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::BooleanImplementation<0>,vecgeom::VUnplacedVolume>"/>
-  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::BooleanImplementation<0>,-1,-1>"/>
-
 
   <class name="vecgeom::UnplacedCone"/>
   <class name="vecgeom::ConeStruct<double>"/>
@@ -222,6 +208,33 @@
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::ConeImplementation<vecgeom::ConeTypes::UniversalCone>,-1,-1>" />
   <class name="vecgeom::SUnplacedCone<vecgeom::ConeTypes::UniversalCone>"/>
   <class name="vecgeom::SPlacedCone<vecgeom::SUnplacedCone<vecgeom::ConeTypes::UniversalCone>>"/>
+
+  <class name="vecgeom::BooleanStruct"/>
+  <class name="vecgeom::UnplacedBooleanVolume<0>"/>
+  <class name="vecgeom::UnplacedBooleanVolume<1>"/>
+  <class name="vecgeom::UnplacedBooleanVolume<2>"/>
+  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::BooleanImplementation<0>,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::BooleanImplementation<1>,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::BooleanImplementation<2>,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::BooleanImplementation<0>,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::BooleanImplementation<1>,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::BooleanImplementation<2>,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::PlacedBooleanVolume<0>"/>
+  <class name="vecgeom::PlacedBooleanVolume<1>"/>
+  <class name="vecgeom::PlacedBooleanVolume<2>"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedBooleanVolume<0>,vecgeom::VPlacedVolume>"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedBooleanVolume<1>,vecgeom::VPlacedVolume>"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedBooleanVolume<2>,vecgeom::VPlacedVolume>"/>  
+  <class name="vecgeom::BooleanImplementation<0>"/>
+  <class name="vecgeom::BooleanImplementation<1>"/>
+  <class name="vecgeom::BooleanImplementation<2>"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::BooleanImplementation<0>,-1,-1>"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::BooleanImplementation<1>,-1,-1>"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::BooleanImplementation<2>,-1,-1>"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::BooleanImplementation<0>,-1,-1>"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::BooleanImplementation<1>,-1,-1>"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::BooleanImplementation<2>,-1,-1>"/>
+<!--
 
 
   <class name="vecgeom::UnplacedExtruded"/>

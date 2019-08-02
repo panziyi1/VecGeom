@@ -20,18 +20,13 @@ void write()
   auto trdUnplaced = GeoManager::MakeInstance<UnplacedTrd>(0.14999999999999999, 0.14999999999999999, 24.707000000000001,
                                                            24.707000000000001, 22.699999999999999);
 
+  auto hypeUnplaced = GeoManager::MakeInstance<UnplacedHype>(10, 20, kPi / 4, kPi / 3, 50);
+
   using vec3dd       = vecgeom::Vector3D<double>;
   vec3dd trapvert[8] = {vec3dd(-10.0, -20.0, -40.0), vec3dd(+10.0, -20.0, -40.0), vec3dd(-10.0, +20.0, -40.0),
                         vec3dd(+10.0, +20.0, -40.0), vec3dd(-30.0, -40.0, +40.0), vec3dd(+30.0, -40.0, +40.0),
                         vec3dd(-30.0, +40.0, +40.0), vec3dd(+30.0, +40.0, +40.0)};
   auto trapUnplaced  = GeoManager::MakeInstance<UnplacedTrapezoid>(trapvert);
-
-  double verticesx1[8] = {-3, -3, 3, 3, -2, -2, 2, 2};
-  double verticesy1[8] = {-3, 3, 3, -3, -2, 2, 2, -2};
-  UnplacedGenTrap gentrpUnplaced(verticesx1, verticesy1, 5);
-
-  auto hypeUnplaced = GeoManager::MakeInstance<UnplacedHype>(10, 20, kPi / 4, kPi / 3, 50);
-/*
   UnplacedOrb orbUnplaced(9.);
 
   double thb  = 3 * kPi / 4;
@@ -51,13 +46,21 @@ void write()
 
   auto tubeUnplaced = GeoManager::MakeInstance<UnplacedTube>(45, 50, 50, 0, 2 * kPi);
 
+  auto coneUnplaced = GeoManager::MakeInstance<UnplacedCone>(10, 20, 15, 25, 100, 0, 2. * M_PI);
+
   double L = 10.;
   LogicalVolume ltube("tube", new GenericUnplacedTube(0., 0.9 * L / 4., L, 0., vecgeom::kTwoPi));
   auto upperhole = ltube.Place(new Transformation3D(-L / 4, -L / 4, 0.));
   auto lowerhole = ltube.Place(new Transformation3D(L / 4, L / 4, 0.));
-  UnplacedBooleanVolume<kUnion> holesUnplaced(kUnion, upperhole, lowerhole);
+  UnplacedBooleanVolume<kUnion> unionUnplaced(kUnion, upperhole, lowerhole);
+  UnplacedBooleanVolume<kIntersection> intersectionUnplaced(kIntersection, upperhole, lowerhole);
+  UnplacedBooleanVolume<kSubtraction> subtractionUnplaced(kSubtraction, upperhole, lowerhole);
+/*
+  double verticesx1[8] = {-3, -3, 3, 3, -2, -2, 2, 2};
+  double verticesy1[8] = {-3, 3, 3, -3, -2, 2, 2, -2};
+  UnplacedGenTrap gentrpUnplaced(verticesx1, verticesy1, 5);
 
-  auto coneUnplaced = GeoManager::MakeInstance<UnplacedCone>(10, 20, 15, 25, 100, 0, 2. * M_PI);
+
 
   UnplacedMultiUnion multiuUnplaced;
   double sized = 10. * std::pow(0.5 / 10, 1. / 3.);
@@ -113,15 +116,17 @@ void write()
   LogicalVolume pal("pal", &palUnplaced);
   LogicalVolume sph("sph", &sphUnplaced);
   LogicalVolume trd("trd", trdUnplaced);
-  LogicalVolume trap("trap", trapUnplaced);
-  LogicalVolume gentrp("gentrp", &gentrpUnplaced);
   LogicalVolume hype("hype", hypeUnplaced);
-/*
+  LogicalVolume trap("trap", trapUnplaced);
   LogicalVolume orb("orb", &orbUnplaced);
   LogicalVolume cutt("cutt", cuttUnplaced);
   LogicalVolume tube("tube", tubeUnplaced);
-  LogicalVolume holes("holes", &holesUnplaced);
   LogicalVolume cone("cone", coneUnplaced);
+  LogicalVolume lunion("union", &unionUnplaced);
+  LogicalVolume lintersection("intersection", &intersectionUnplaced);
+  LogicalVolume lsubtraction("subtraction", &subtractionUnplaced);
+/*
+  LogicalVolume gentrp("gentrp", &gentrpUnplaced);
   LogicalVolume xtru("xtru", ExtrudedMultiLayer(false));
   LogicalVolume multiu("multiu", &multiuUnplaced);
   LogicalVolume pcon("pcon", &pconUnplaced);
@@ -142,16 +147,18 @@ void write()
   world.PlaceDaughter(&pal, &placement2);
   world.PlaceDaughter(&sph, &placement);
   world.PlaceDaughter(&trd, &placement);
-  world.PlaceDaughter(&trap, &placement);
-  world.PlaceDaughter(&gentrp, &placement);
   world.PlaceDaughter(&hype, &placement2);
-/*
+  world.PlaceDaughter(&trap, &placement);
   world.PlaceDaughter(&orb, &placement2);
   world.PlaceDaughter(&cutt, &placement2);
   world.PlaceDaughter(assPlaced);
   world.PlaceDaughter(&tube, &placement2);
-  world.PlaceDaughter(&holes, new Transformation3D(-L / 2, -L / 2, 0.));
   world.PlaceDaughter(&cone, &placement);
+  world.PlaceDaughter(&lunion, new Transformation3D(-L / 2, -L / 2, 0.));
+  world.PlaceDaughter(&lintersection, new Transformation3D(-L / 2, -L / 2, 0.));
+  world.PlaceDaughter(&lsubtraction, new Transformation3D(-L / 2, -L / 2, 0.));
+/*
+  world.PlaceDaughter(&gentrp, &placement);
   world.PlaceDaughter(&xtru, &placement2);
   world.PlaceDaughter(&multiu, &placement);
   world.PlaceDaughter(&pcon, &placement2);

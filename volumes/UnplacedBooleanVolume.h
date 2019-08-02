@@ -46,7 +46,7 @@ UnplacedMultiUnion *Flatten(VUnplacedVolume const *unplaced, size_t min_unions =
  * and B is only translated (not rotated) with respect to A
  *
  */
-template <BooleanOperation Op>
+template <int Op>
 class UnplacedBooleanVolume : public LoopUnplacedVolumeImplHelper<BooleanImplementation<Op>>, public AlignedBase {
 
 public:
@@ -110,7 +110,17 @@ public:
   std::string GetEntityType() const { return "BooleanVolume"; }
 
   VECCORE_ATT_HOST_DEVICE
-  virtual void Print() const override{};
+  virtual void Print() const override
+  {
+    static const char *op[3] = {"UnplacedBooleanVolume<kUnion>",
+                                "UnplacedBooleanVolume<kIntersection>",
+                                "UnplacedBooleanVolume<kSubtraction>"};
+    printf("%s", op[GetOp()]);
+    printf("\n   left:");
+    GetLeft()->Print(3);
+    printf("\n   right:");
+    GetRight()->Print(3);
+  }
 
   virtual void Print(std::ostream & /*os*/) const override{};
 
