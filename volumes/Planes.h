@@ -11,13 +11,6 @@
 #include "base/SOA3D.h"
 #include "volumes/kernel/GenericKernels.h"
 
-#if defined(VECGEOM_VC) && defined(VECGEOM_QUADRILATERALS_VC)
-#include <Vc/Vc>
-typedef Vc::Vector<vecgeom::Precision> VcPrecision;
-typedef Vc::Vector<vecgeom::Precision>::Mask VcBool;
-constexpr int kVectorSize = VcPrecision::Size;
-#endif
-
 namespace vecgeom {
 
 VECGEOM_DEVICE_FORWARD_DECLARE(class Planes;);
@@ -170,7 +163,6 @@ void AcceleratedContains(int & /*i*/, const int /*n*/, SOA3D<Precision> const & 
   return;
 }
 
-#if defined(VECGEOM_VC) && defined(VECGEOM_QUADRILATERALS_VC)
 template <>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
@@ -178,10 +170,17 @@ void AcceleratedContains<Precision>(int &i, const int n, SOA3D<Precision> const 
                                     Array<Precision> const &distances, Vector3D<Precision> const &point,
                                     vecCore::Mask_v<double> &result)
 {
-  for (; i < n - kVectorSize; i += kVectorSize) {
-    VcBool valid = VcPrecision(normals.x() + i) * point[0] + VcPrecision(normals.y() + i) * point[1] +
-                       VcPrecision(normals.z() + i) * point[2] + VcPrecision(&distances[0] + i) <
-                   0;
+  using Double_v = VectorBackend::Real_v;
+  constexpr int kVecSize = vecCore::VectorSize<Double_v>();
+
+  for (; i < n - kVecSize; i += kVecSize) {
+    Vector3D<Double_v> normals_v((Double_v&)(*(normals.x() + i)),
+                                 (Double_v&)(*(normals.y() + i)),
+                                 (Double_v&)(*(normals.z() + i)));
+    Double_v distance = normals_v.Dot(point) + (Double_v&)(distances[i]);
+
+    auto valid = distance < 0.0;
+
     result = vecCore::MaskFull(valid);
     if (!result) {
       i = n;
@@ -189,7 +188,6 @@ void AcceleratedContains<Precision>(int &i, const int n, SOA3D<Precision> const 
     }
   }
 }
-#endif
 
 } // End anonymous namespace
 
@@ -223,7 +221,6 @@ void AcceleratedInside(int & /*i*/, const int /*n*/, SOA3D<Precision> const & /*
   return;
 }
 
-#if defined(VECGEOM_VC) and defined(VECGEOM_QUADRILATERALS_VC)
 template <>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
@@ -231,13 +228,20 @@ void AcceleratedInside<Precision, Inside_t>(int &i, const int n, SOA3D<Precision
                                             Array<Precision> const &distances, Vector3D<Precision> const &point,
                                             Inside_t &result)
 {
-  for (; i < n - kVectorSize; i += kVectorSize) {
-    VcPrecision distance = VcPrecision(normals.x() + i) * point[0] + VcPrecision(normals.y() + i) * point[1] +
-                           VcPrecision(normals.z() + i) * point[2] + VcPrecision(&distances[0] + i);
+  using Double_v = VectorBackend::Real_v;
+  constexpr int kVecSize = vecCore::VectorSize<Double_v>();
+
+  for (; i < n - kVecSize; i += kVecSize) {
+    // This should do the trick no matter the backend (constructing Double_v from an aligned pointer)
+    Vector3D<Double_v> normals_v((Double_v&)(*(normals.x() + i)),
+                                 (Double_v&)(*(normals.y() + i)),
+                                 (Double_v&)(*(normals.z() + i)));
+    Double_v distance = normals_v.Dot(point) + (Double_v&)(distances[i]);
+
     // If point is outside tolerance of any plane, it is safe to return
     if (!vecCore::MaskEmpty(distance > kTolerance)) {
       result = EInside::kOutside;
-      i      = n;
+      i = n;
       break;
     }
     // If point is inside tolerance of all planes, keep looking
@@ -246,8 +250,6 @@ void AcceleratedInside<Precision, Inside_t>(int &i, const int n, SOA3D<Precision
     result = EInside::kSurface;
   }
 }
-#endif
-
 } // End anonymous namespace
 
 template <typename Real_v, typename Inside_v>

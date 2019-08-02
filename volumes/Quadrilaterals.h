@@ -319,7 +319,6 @@ struct AcceleratedDistanceToIn {
   }
 };
 
-#if defined(VECGEOM_VC) && defined(VECGEOM_QUADRILATERALS_VC)
 template <>
 struct AcceleratedDistanceToIn<Precision> {
 
@@ -329,39 +328,43 @@ struct AcceleratedDistanceToIn<Precision> {
   static void VectorLoop(int &i, const int n, Planes const &planes, Planes const (&sideVectors)[4],
                          Vector3D<Precision> const &point, Vector3D<Precision> const &direction, Precision &distance)
   {
-
+    using Double_v = VectorBackend::Real_v;
+    using Bool_v   = vecCore::Mask<Double_v>;
+    constexpr int kVecSize = vecCore::VectorSize<Double_v>();
+    
     // Explicitly vectorize over quadrilaterals using Vc
-    for (; i <= n - kVectorSize; i += kVectorSize) {
-      Vector3D<VcPrecision> plane(VcPrecision(planes.GetNormals().x() + i), VcPrecision(planes.GetNormals().y() + i),
-                                  VcPrecision(planes.GetNormals().z() + i));
-      VcPrecision dPlane(&planes.GetDistances()[0] + i);
-      VcPrecision distanceTest = plane.Dot(point) + dPlane;
+    for (; i <= n - kVecSize; i += kVecSize) {
+      Vector3D<Double_v> plane((Double_v&)(*(planes.GetNormals().x() + i)),
+                               (Double_v&)(*(planes.GetNormals().y() + i)),
+                               (Double_v&)(*(planes.GetNormals().z() + i)));
+      Double_v distanceTest = plane.Dot(point) + (Double_v&)(planes.GetDistances()[i]);
 
       // Check if the point is in front of/behind the plane according to the template parameter
-      VcBool valid = Flip<behindPlanesT>::FlipSign(distanceTest) > -kTolerance;
+      Bool_v valid = Flip<behindPlanesT>::FlipSign(distanceTest) > -kTolerance;
       if (vecCore::MaskEmpty(valid)) continue;
 
-      VcPrecision directionProjection = plane.Dot(direction);
+      Double_v directionProjection = plane.Dot(direction);
       valid &= Flip<!behindPlanesT>::FlipSign(directionProjection) > 0;
       if (vecCore::MaskEmpty(valid)) continue;
-      VcPrecision tiny = Vc::copysign(VcPrecision(1E-20), directionProjection);
+
+      Double_v tiny = vecCore::math::CopySign(Double_v(1E-20), directionProjection);
       distanceTest /= -(directionProjection + tiny);
-      Vector3D<VcPrecision> intersection = Vector3D<VcPrecision>(direction) * distanceTest + point;
+      Vector3D<Double_v> intersection = Vector3D<Double_v>(direction) * distanceTest + point;
 
       for (int j = 0; j < 4; ++j) {
-        Vector3D<VcPrecision> sideVector(VcPrecision(sideVectors[j].GetNormals().x() + i),
-                                         VcPrecision(sideVectors[j].GetNormals().y() + i),
-                                         VcPrecision(sideVectors[j].GetNormals().z() + i));
-        VcPrecision dSide(&sideVectors[j].GetDistances()[i]);
+        Vector3D<Double_v> sideVector((Double_v&)(*(sideVectors[j].GetNormals().x() + i)),
+                                      (Double_v&)(*(sideVectors[j].GetNormals().y() + i)),
+                                      (Double_v&)(*(sideVectors[j].GetNormals().z() + i)));
+        Double_v dSide((Double_v&)(sideVectors[j].GetDistances()[i]));
         valid &= sideVector.Dot(intersection) + dSide >= -kTolerance;
         // Where is your god now
         if (vecCore::MaskEmpty(valid)) goto distanceToInVcContinueOuter;
       }
       // If a hit is found, the algorithm can return, since only one side can
       // be hit for a convex set of quadrilaterals
-      distanceTest(!valid) = InfinityLength<Precision>();
-      distance             = Max(distanceTest.min(), 0.);
-      i                    = n;
+      vecCore::MaskedAssign(distanceTest, !valid, InfinityLength<Precision>());
+      distance = Max(vecCore::ReduceMin(distanceTest), 0.);
+      i        = n;
       return;
     // Continue label of outer loop
     distanceToInVcContinueOuter:;
@@ -369,7 +372,6 @@ struct AcceleratedDistanceToIn<Precision> {
     return;
   }
 };
-#endif
 
 } // End anonymous namespace
 
@@ -439,7 +441,6 @@ void AcceleratedDistanceToOut(int & /*i*/, const int /*n*/, Planes const & /*pla
   return;
 }
 
-#if defined(VECGEOM_VC) && defined(VECGEOM_QUADRILATERALS_VC)
 template <>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
@@ -447,17 +448,21 @@ void AcceleratedDistanceToOut<Precision>(int &i, const int n, Planes const &plan
                                          const Precision zMin, const Precision zMax, Vector3D<Precision> const &point,
                                          Vector3D<Precision> const &direction, Precision &distance)
 {
-
+  using Double_v = VectorBackend::Real_v;
+  using Bool_v   = vecCore::Mask<Double_v>;
+  constexpr int kVecSize = vecCore::VectorSize<Double_v>();
+  
   // Explicitly vectorize over quadrilaterals using Vc
-  for (; i <= n - kVectorSize; i += kVectorSize) {
-    Vector3D<VcPrecision> plane(VcPrecision(planes.GetNormals().x() + i), VcPrecision(planes.GetNormals().y() + i),
-                                VcPrecision(planes.GetNormals().z() + i));
-    VcPrecision dPlane(&planes.GetDistances()[0] + i);
-    VcPrecision distanceTest = plane.Dot(point) + dPlane;
+  for (; i <= n - kVecSize; i += kVecSize) {
+    Vector3D<Double_v> plane((Double_v&)(*(planes.GetNormals().x() + i)),
+                             (Double_v&)(*(planes.GetNormals().y() + i)),
+                             (Double_v&)(*(planes.GetNormals().z() + i)));
+    Double_v distanceTest = plane.Dot(point) + (Double_v&)(planes.GetDistances()[i]);
+
     // Check if the point is behind the plane
-    VcBool valid = distanceTest < kTolerance;
+    Bool_v valid = distanceTest < kTolerance;
     if (vecCore::MaskEmpty(valid)) continue;
-    VcPrecision directionProjection = plane.Dot(direction);
+    Double_v directionProjection = plane.Dot(direction);
     // Because the point is behind the plane, the direction must be along the
     // normal
     valid &= directionProjection > 0;
@@ -468,29 +473,28 @@ void AcceleratedDistanceToOut<Precision>(int &i, const int n, Planes const &plan
 
     if (zMin == zMax) { // need a careful treatment in case of degenerate Z planes
       // in this case need proper hit detection
-      Vector3D<VcPrecision> intersection = Vector3D<VcPrecision>(direction) * distanceTest + point;
+      Vector3D<Double_v> intersection = Vector3D<Double_v>(direction) * distanceTest + point;
       for (int j = 0; j < 4; ++j) {
-        Vector3D<VcPrecision> sideVector(VcPrecision(sideVectors[j].GetNormals().x() + i),
-                                         VcPrecision(sideVectors[j].GetNormals().y() + i),
-                                         VcPrecision(sideVectors[j].GetNormals().z() + i));
-        VcPrecision dSide(&sideVectors[j].GetDistances()[i]);
+        Vector3D<Double_v> sideVector((Double_v&)(*(sideVectors[j].GetNormals().x() + i)),
+                                      (Double_v&)(*(sideVectors[j].GetNormals().y() + i)),
+                                      (Double_v&)(*(sideVectors[j].GetNormals().z() + i)));
+        Double_v dSide((Double_v&)(sideVectors[j].GetDistances()[i]));
         valid &= sideVector.Dot(intersection) + dSide >= -kTolerance;
         // Where is your god now
-        if (vecCore::MaskEmpty(valid)) goto distanceToOutVcContinueOuter;
+        if (vecCore::MaskEmpty(valid)) goto distanceToOutContinueOuter;
       }
     } else {
-      VcPrecision zProjection = distanceTest * direction[2] + point[2];
+      Double_v zProjection = distanceTest * direction[2] + point[2];
       valid &= zProjection >= zMin && zProjection < zMax;
     }
-  distanceToOutVcContinueOuter:
+  distanceToOutContinueOuter:
     if (vecCore::MaskEmpty(valid)) continue;
-    distanceTest(!valid) = InfinityLength<Precision>();
-    distance             = distanceTest.min();
+    vecCore::MaskedAssign(distanceTest, !valid, InfinityLength<Precision>());
+    distance = vecCore::ReduceMin(distanceTest);
   }
   distance = Max(0., distance);
   return;
 }
-#endif
 
 } // End anonymous namespace
 
