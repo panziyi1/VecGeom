@@ -43,10 +43,10 @@ public:
   Quadrilaterals(int size);
 
   Quadrilaterals(TRootIOCtor *)
-      : fPlanes((TRootIOCtor *)nullptr), fSideVectors{{(TRootIOCtor *)nullptr},
-                                                      {(TRootIOCtor *)nullptr},
-                                                      {(TRootIOCtor *)nullptr},
-                                                      {(TRootIOCtor *)nullptr}}
+//      : fPlanes((TRootIOCtor *)nullptr), fSideVectors{{(TRootIOCtor *)nullptr},
+//                                                      {(TRootIOCtor *)nullptr},
+//                                                      {(TRootIOCtor *)nullptr},
+//                                                      {(TRootIOCtor *)nullptr}}
   {
   }
 

@@ -1,24 +1,5 @@
 <lcgdict>
   <class name="vecgeom::AlignedBase"/>
-  <class name="vecgeom::VUnplacedVolume"/>
-  <class name="vecgeom::LogicalVolume">
-    <field name="gIdCount" transient="true"/>
-    <field name="fUserExtensionPtr" transient="true"/>
-    <field name="fMaterialPtr" transient="true"/>
-    <field name="fMaterialCutsPtr" transient="true"/>
-    <field name="fBasketManagerPtr" transient="true"/>
-    <field name="fRegion" transient="true"/>
-  </class>
-  <class name="vecgeom::VPlacedVolume"/>
-
-
-  <class name="vecgeom::GeoManager">
-    <field name="fgInstance" transient="true"/>
-  </class>
-  <class name="std::map<unsigned int,vecgeom::VPlacedVolume*>"/>
-  <class name="std::map<unsigned int,vecgeom::LogicalVolume*>"/>
-  <class name="std::map<const vecgeom::VPlacedVolume*, unsigned int>"/>
-
 
   <class name="vecgeom::Vector3D<double>"/>
   <class name="vecgeom::Vector3D<float>"/>
@@ -49,6 +30,37 @@
     <field name="fData" comment="[fSize]"/>
   </class>
 
+  <class name="vecgeom::SOA3D<double>">
+    <field name="fX" comment="[fSize]"/>
+    <field name="fY" comment="[fSize]"/>
+    <field name="fZ" comment="[fSize]"/>
+  </class>
+
+  <class name="vecgeom::AOS3D<double>"/>
+  <class name="vecgeom::Container3D<vecgeom::AOS3D<double>>"/>
+  <class name="vecgeom::Container3D<vecgeom::SOA3D<double>>"/>
+
+  <class name="vecgeom::Quadrilaterals"/>
+  <class name="vecgeom::Planes"/>
+
+  <class name="vecgeom::VUnplacedVolume"/>
+  <class name="vecgeom::VPlacedVolume"/>
+  <class name="vecgeom::LogicalVolume">
+    <field name="gIdCount" transient="true"/>
+    <field name="fUserExtensionPtr" transient="true"/>
+    <field name="fMaterialPtr" transient="true"/>
+    <field name="fMaterialCutsPtr" transient="true"/>
+    <field name="fBasketManagerPtr" transient="true"/>
+    <field name="fRegion" transient="true"/>
+  </class>
+
+  <class name="vecgeom::GeoManager">
+    <field name="fgInstance" transient="true"/>
+  </class>
+
+  <class name="std::map<unsigned int,vecgeom::VPlacedVolume*>"/>
+  <class name="std::map<unsigned int,vecgeom::LogicalVolume*>"/>
+  <class name="std::map<const vecgeom::VPlacedVolume*, unsigned int>"/>
 
   <class name="vecgeom::UnplacedBox"/>
   <class name="vecgeom::BoxStruct<double>"/>
@@ -234,8 +246,34 @@
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::BooleanImplementation<0>,-1,-1>"/>
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::BooleanImplementation<1>,-1,-1>"/>
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::BooleanImplementation<2>,-1,-1>"/>
+
+  <struct name="vecgeom::ZSegment"/>
+  <class name="vecgeom::UnplacedPolyhedron"/>
+  <class name="vecgeom::PolyhedronStruct<double>"/>
+  <class name="vecgeom::Array<vecgeom::ZSegment>">
+    <field name="fData" comment="[fSize]"/>
+  </class>
+  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::PolyhedronImplementation<vecgeom::Polyhedron::EInnerRadii::kGeneric,vecgeom::Polyhedron::EPhiCutout::kGeneric>,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::PolyhedronImplementation<vecgeom::Polyhedron::EInnerRadii::kGeneric,vecgeom::Polyhedron::EPhiCutout::kGeneric>,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::PlacedPolyhedron"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::PolyhedronImplementation<vecgeom::Polyhedron::EInnerRadii::kTrue,vecgeom::Polyhedron::EPhiCutout::kTrue>,-1,-1>"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedPolyhedron,vecgeom::VPlacedVolume>"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::PolyhedronImplementation<vecgeom::Polyhedron::EInnerRadii::kTrue,vecgeom::Polyhedron::EPhiCutout::kTrue>,-1,-1>"/>
 <!--
 
+  <class name="vecgeom::UnplacedPolycone"/>
+  <class name="vecgeom::PolyconeStruct<double>"/>
+  <class name="vecgeom::PolyconeHistorical">
+    <field name="fHZ_values" comment="[fHNum_z_planes]"/>  
+    <field name="fHRmin" comment="[fHNum_z_planes]"/>  
+    <field name="fHRmax" comment="[fHNum_z_planes]"/>  
+  </class>
+  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::PolyconeImplementation,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::PolyconeImplementation,vecgeom::VUnplacedVolume>"/>
+  <class name="vecgeom::PlacedPolycone"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::PolyconeImplementation,-1,-1>"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::PolyconeImplementation,-1,-1>"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedPolycone,vecgeom::VPlacedVolume>"/>
 
   <class name="vecgeom::UnplacedExtruded"/>
   <class name="vecgeom::ExtrudedStruct">
@@ -249,13 +287,7 @@
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::ExtrudedImplementation,-1,-1>"/>
   <class name="vecgeom::PolygonalShell"/>
   <class name="vecgeom::PlanarPolygon"/>
-  <class name="vecgeom::SOA3D<double>">
-    <field name="fX" comment="[fSize]"/>
-    <field name="fY" comment="[fSize]"/>
-    <field name="fZ" comment="[fSize]"/>
-  </class>
   <class name="vecgeom::TessellatedStruct<3,double>"/>
-  <class name="vecgeom::Container3D<vecgeom::SOA3D<double>>"/>
   <class name="vecgeom::HybridManager2::HybridBoxAccelerationStructure"/>
   <class name="vecgeom::TessellatedStruct<3,double>::GridCell"/>
   <class name="vecgeom::TessellatedStruct<3,double>::GridHelper">
@@ -280,39 +312,6 @@
   <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::MultiUnionImplementation,-1,-1>"/>
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::MultiUnionImplementation,-1,-1>"/>
   <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedMultiUnion,vecgeom::VPlacedVolume>"/>
-
-
-  <class name="vecgeom::UnplacedPolycone"/>
-  <class name="vecgeom::PolyconeStruct<double>"/>
-  <class name="vecgeom::PolyconeHistorical">
-    <field name="fHZ_values" comment="[fHNum_z_planes]"/>  
-    <field name="fHRmin" comment="[fHNum_z_planes]"/>  
-    <field name="fHRmax" comment="[fHNum_z_planes]"/>  
-  </class>
-  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::PolyconeImplementation,vecgeom::VUnplacedVolume>"/>
-  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::PolyconeImplementation,vecgeom::VUnplacedVolume>"/>
-  <class name="vecgeom::PlacedPolycone"/>
-  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::PolyconeImplementation,-1,-1>"/>
-  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::PolyconeImplementation,-1,-1>"/>
-  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedPolycone,vecgeom::VPlacedVolume>"/>
-
-
-  <class name="vecgeom::UnplacedPolyhedron"/>
-  <class name="vecgeom::PolyhedronStruct<double>"/>
-  <class name="vecgeom::Array<vecgeom::ZSegment>">
-    <field name="fData" comment="[fSize]"/>
-  </class>
-  <class name="vecgeom::ZSegment"/>
-  <class name="vecgeom::Quadrilaterals"/>
-  <class name="vecgeom::Planes"/>
-  <class name="vecgeom::AOS3D<double>"/>
-  <class name="vecgeom::Container3D<vecgeom::AOS3D<double>>"/>
-  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::PolyhedronImplementation<vecgeom::Polyhedron::EInnerRadii::kGeneric,vecgeom::Polyhedron::EPhiCutout::kGeneric>,vecgeom::VUnplacedVolume>"/>
-  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::PolyhedronImplementation<vecgeom::Polyhedron::EInnerRadii::kGeneric,vecgeom::Polyhedron::EPhiCutout::kGeneric>,vecgeom::VUnplacedVolume>"/>
-  <class name="vecgeom::PlacedPolyhedron"/>
-  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::PolyhedronImplementation<vecgeom::Polyhedron::EInnerRadii::kTrue,vecgeom::Polyhedron::EPhiCutout::kTrue>,-1,-1>"/>
-  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedPolyhedron,vecgeom::VPlacedVolume>"/>
-  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::PolyhedronImplementation<vecgeom::Polyhedron::EInnerRadii::kTrue,vecgeom::Polyhedron::EPhiCutout::kTrue>,-1,-1>"/>
 
 
   <class name="vecgeom::UnplacedScaledShape"/>

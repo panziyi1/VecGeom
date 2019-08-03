@@ -506,7 +506,10 @@ void UnplacedPolyhedron::Print() const
 {
   printf("UnplacedPolyhedron {%i sides, phi %f to %f, %i segments}", fPoly.fSideCount, GetPhiStart() * kRadToDeg,
          GetPhiEnd() * kRadToDeg, fPoly.fZSegments.size());
-  printf("}");
+  for (int i = 0, iMax = fPoly.fZSegments.size(); i < iMax; ++i) {
+    printf(" {Outer[%d]: ", i); fPoly.fZSegments[i].outer.Print(); printf("}");
+    printf(" {Inner[%d]: ", i); fPoly.fZSegments[i].inner.Print(); printf("}");
+  }
 }
 
 VECCORE_ATT_HOST_DEVICE

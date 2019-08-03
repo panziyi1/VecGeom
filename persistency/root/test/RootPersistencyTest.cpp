@@ -55,7 +55,23 @@ void write()
   UnplacedBooleanVolume<kUnion> unionUnplaced(kUnion, upperhole, lowerhole);
   UnplacedBooleanVolume<kIntersection> intersectionUnplaced(kIntersection, upperhole, lowerhole);
   UnplacedBooleanVolume<kSubtraction> subtractionUnplaced(kSubtraction, upperhole, lowerhole);
+
+  double RMINVec0[2];
+  RMINVec0[0] = 1;
+  RMINVec0[1] = 1;
+  double RMAXVec0[2];
+  RMAXVec0[0] = 2;
+  RMAXVec0[1] = 2;
+  double Z_Values0[2];
+  Z_Values0[0]       = -1;
+  Z_Values0[1]       = 1;
+  auto polyhUnplaced = new UnplacedPolyhedron(0.0, kPi, 2, 2, Z_Values0, RMINVec0, RMAXVec0);
 /*
+  double rmin[] = {0.1, 0., 0., 0.2};
+  double rmax[] = {1., 2., 2., 1.5};
+  double z[]    = {-1, -0.5, 0.5, 10};
+  UnplacedPolycone pconUnplaced(0, kTwoPi, 4, z, rmin, rmax);
+
   double verticesx1[8] = {-3, -3, 3, 3, -2, -2, 2, 2};
   double verticesy1[8] = {-3, 3, 3, -3, -2, 2, 2, -2};
   UnplacedGenTrap gentrpUnplaced(verticesx1, verticesy1, 5);
@@ -76,21 +92,6 @@ void write()
   }
   multiuUnplaced.Close();
 
-  double rmin[] = {0.1, 0., 0., 0.2};
-  double rmax[] = {1., 2., 2., 1.5};
-  double z[]    = {-1, -0.5, 0.5, 10};
-  UnplacedPolycone pconUnplaced(0, kTwoPi, 4, z, rmin, rmax);
-
-  double RMINVec0[2];
-  RMINVec0[0] = 1;
-  RMINVec0[1] = 1;
-  double RMAXVec0[2];
-  RMAXVec0[0] = 2;
-  RMAXVec0[1] = 2;
-  double Z_Values0[2];
-  Z_Values0[0]       = -1;
-  Z_Values0[1]       = 1;
-  auto polyhUnplaced = new UnplacedPolyhedron(0.0, kPi, 2, 2, Z_Values0, RMINVec0, RMAXVec0);
 
   UnplacedScaledShape scaledUnplaced(tubeUnplaced, 0.5, 1.3, 1.);
 
@@ -125,12 +126,12 @@ void write()
   LogicalVolume lunion("union", &unionUnplaced);
   LogicalVolume lintersection("intersection", &intersectionUnplaced);
   LogicalVolume lsubtraction("subtraction", &subtractionUnplaced);
+  //LogicalVolume pcon("pcon", &pconUnplaced);
+  LogicalVolume polyh("polyh", polyhUnplaced);
 /*
   LogicalVolume gentrp("gentrp", &gentrpUnplaced);
   LogicalVolume xtru("xtru", ExtrudedMultiLayer(false));
   LogicalVolume multiu("multiu", &multiuUnplaced);
-  LogicalVolume pcon("pcon", &pconUnplaced);
-  LogicalVolume polyh("polyh", polyhUnplaced);
   LogicalVolume scaled("scaled", &scaledUnplaced);
   LogicalVolume sextru("sextru", &sextruUnplaced);
   LogicalVolume tsl("tsl", &tslUnplaced);
@@ -157,12 +158,12 @@ void write()
   world.PlaceDaughter(&lunion, new Transformation3D(-L / 2, -L / 2, 0.));
   world.PlaceDaughter(&lintersection, new Transformation3D(-L / 2, -L / 2, 0.));
   world.PlaceDaughter(&lsubtraction, new Transformation3D(-L / 2, -L / 2, 0.));
+  //world.PlaceDaughter(&pcon, &placement2);
+  world.PlaceDaughter(&polyh, &placement2);
 /*
   world.PlaceDaughter(&gentrp, &placement);
   world.PlaceDaughter(&xtru, &placement2);
   world.PlaceDaughter(&multiu, &placement);
-  world.PlaceDaughter(&pcon, &placement2);
-  world.PlaceDaughter(&polyh, &placement2);
   world.PlaceDaughter(&scaled, &placement);
   world.PlaceDaughter(&sextru, &placement);
   world.PlaceDaughter(&tsl, &origin);
@@ -198,6 +199,7 @@ void write()
 
   cout << endl << "\033[0;31mwriting on vecgeom_export.root\n" << endl;
   
+  gDebug = 2;
   RootGeoManager::Instance().Export("vecgeom_export.root");
 
   cout << "\033[0m" << endl;
@@ -208,6 +210,7 @@ void read()
 {
   cout << endl << "\033[0;31mreading from vecgeom_export.root\n" << endl;
 
+  gDebug = 2;
   RootGeoManager::Instance().Import("vecgeom_export.root");
   cout << "\033[0m" << endl;
   GeoManager::Instance().GetWorld()->PrintContent();
