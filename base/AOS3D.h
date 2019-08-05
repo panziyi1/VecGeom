@@ -24,7 +24,8 @@ class AOS3D : Container3D<AOS3D<T>> {
 
 private:
   bool fAllocated;
-  size_t fSize, fCapacity;
+  int fSize;
+  size_t fCapacity;
   Vector3D<T> *fContent;
 
   typedef Vector3D<T> Vec_t;

@@ -36,13 +36,17 @@
     <field name="fZ" comment="[fSize]"/>
   </class>
 
-  <class name="vecgeom::AOS3D<double>"/>
+  <class name="vecgeom::AOS3D<double>">
+    <field name="fContent" comment="[fSize]"/>
+  </class>
+
   <class name="vecgeom::Container3D<vecgeom::AOS3D<double>>"/>
   <class name="vecgeom::Container3D<vecgeom::SOA3D<double>>"/>
 
   <class name="vecgeom::Quadrilaterals"/>
   <class name="vecgeom::Planes"/>
-
+  <class name="vecgeom::Wedge"/>
+  
   <class name="vecgeom::VUnplacedVolume"/>
   <class name="vecgeom::VPlacedVolume"/>
   <class name="vecgeom::LogicalVolume">
@@ -253,6 +257,8 @@
   <class name="vecgeom::Array<vecgeom::ZSegment>">
     <field name="fData" comment="[fSize]"/>
   </class>
+  <class name="std::vector<vecgeom::Quadrilaterals>"/>
+
   <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::PolyhedronImplementation<vecgeom::Polyhedron::EInnerRadii::kGeneric,vecgeom::Polyhedron::EPhiCutout::kGeneric>,vecgeom::VUnplacedVolume>"/>
   <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::PolyhedronImplementation<vecgeom::Polyhedron::EInnerRadii::kGeneric,vecgeom::Polyhedron::EPhiCutout::kGeneric>,vecgeom::VUnplacedVolume>"/>
   <class name="vecgeom::PlacedPolyhedron"/>
@@ -356,7 +362,6 @@
 
   <class name="vecgeom::UnplacedTorus2"/>
   <class name="vecgeom::TorusStruct2<double>"/>
-  <class name="vecgeom::Wedge"/>
   <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::TorusImplementation2,vecgeom::VUnplacedVolume>"/>
   <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::TorusImplementation2,vecgeom::VUnplacedVolume>"/>
   <class name="vecgeom::PlacedTorus2"/>

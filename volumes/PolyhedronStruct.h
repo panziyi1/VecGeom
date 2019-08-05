@@ -39,6 +39,7 @@ struct ZSegment {
 
   VECCORE_ATT_HOST_DEVICE
   bool hasInnerRadius() const { return inner.size() > 0; }
+  ZSegment(TRootIOCtor *rio) : outer(rio), phi(rio), inner(rio) {}
 };
 
 // a plain and lightweight struct to encapsulate data members of a polyhedron
