@@ -71,17 +71,6 @@ bool vector_test()
   std::cout << "  Inner:" << azseg[0].inner << std::endl;
   std::cout << "  Phi:  " << azseg[0].phi << std::endl;
 
-  auto arrq = std::vector<vecgeom::Quadrilaterals>(1);
-  new (&arrq[0]) vecgeom::Quadrilaterals(4);
-  vecgeom::Quadrilaterals &quad1 = arrq[0];
-  arrq[0].Set(0, {-1,-1,-1}, {-1,1,-1}, {-1,1,1}, {-1,-1,1});
-  arrq[0].Set(1, {1,-1,-1}, {-1,-1,-1}, {-1,-1,1}, {1,-1,1});
-  arrq[0].Set(2, {1,1,-1}, {1,-1,-1}, {1,-1,1}, {1,1,1});
-  arrq[0].Set(3, {-1,1,-1}, {1,1,-1}, {1,1,1}, {-1,1,1});
-
-  std::cout << "Array<Quadrilaterals>:\n";
-  std::cout << "  Quad:" << arrq[0] << std::endl;
-
   cout << "writing on vec.root...\n\n" << endl;
   TFile fo("vec.root", "RECREATE");
   //gDebug = 10;
@@ -90,8 +79,7 @@ bool vector_test()
   fo.WriteObject(soa, "soa_saved");
   fo.WriteObject(planes, "planes_saved");
   fo.WriteObject(quads, "quads_saved");
-  //fo.WriteObject(&azseg, "azseg_saved");
-  fo.WriteObject(&arrq, "arrq_saved");
+  fo.WriteObject(&azseg, "azseg_saved");
   fo.Close();
 
   cout << "reading from vec.root" << endl << endl;
@@ -103,10 +91,7 @@ bool vector_test()
   vecgeom::Planes *rplanes;
   vecgeom::Quadrilaterals *rquads;
   vecgeom::Array<vecgeom::ZSegment> *razseg;
-  std::vector<vecgeom::Quadrilaterals> *rarrq;
 
-   gDebug = 3;
-/*
   fi.GetObject("arr_saved", rarr);
   std::cout << "rvec: " << (*rarr)[0] << ", " << (*rarr)[1] << ", " << (*rarr)[2] << "\n";
   fi.GetObject("vec_saved", rvec);
@@ -119,14 +104,14 @@ bool vector_test()
   std::cout << "Planes: " << *rplanes << std::endl;
   fi.GetObject("quads_saved", rquads);
   std::cout << "Quads: " << *rquads << std::endl;
+  gDebug = 10;
   fi.GetObject("azseg_saved", razseg);
+  
   std::cout << "Array<ZSegment>:\n";
   std::cout << "  Outer:" << (*razseg)[0].outer << std::endl;
   std::cout << "  Inner:" << (*razseg)[0].inner << std::endl;
   std::cout << "  Phi:  " << (*razseg)[0].phi << std::endl;
-*/
-  fi.GetObject("arrq_saved", rarrq);
-  std::cout << "  Quad:" << (*rarrq)[0] << std::endl;
+
   return true;
   /*
 

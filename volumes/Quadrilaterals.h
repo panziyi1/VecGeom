@@ -42,7 +42,7 @@ public:
   VECCORE_ATT_HOST_DEVICE
   Quadrilaterals(int size);
 
-  Quadrilaterals(TRootIOCtor *rio)
+  Quadrilaterals(TRootIOCtor *rio = nullptr)
       : fPlanes(rio), fSideVectors{{rio}, {rio}, {rio}, {rio}}
   {
   }

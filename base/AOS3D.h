@@ -218,7 +218,7 @@ void AOS3D<T>::reserve(size_t newCapacity)
   fCapacity = newCapacity;
   Vec_t *contentNew;
   contentNew = AlignedAllocate<Vec_t>(fCapacity);
-  fSize      = (fSize > fCapacity) ? fCapacity : fSize;
+  fSize      = (fSize > (int)fCapacity) ? fCapacity : fSize;
   if (fContent) {
     copy(fContent, fContent + fSize, contentNew);
   }

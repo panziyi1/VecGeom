@@ -257,7 +257,6 @@
   <class name="vecgeom::Array<vecgeom::ZSegment>">
     <field name="fData" comment="[fSize]"/>
   </class>
-  <class name="std::vector<vecgeom::Quadrilaterals>"/>
 
   <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::PolyhedronImplementation<vecgeom::Polyhedron::EInnerRadii::kGeneric,vecgeom::Polyhedron::EPhiCutout::kGeneric>,vecgeom::VUnplacedVolume>"/>
   <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::PolyhedronImplementation<vecgeom::Polyhedron::EInnerRadii::kGeneric,vecgeom::Polyhedron::EPhiCutout::kGeneric>,vecgeom::VUnplacedVolume>"/>
