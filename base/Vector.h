@@ -69,7 +69,8 @@ private:
   bool fAllocated = false;
 
 public:
-  using value_type = Type;
+  using value_type      = Type;
+  using const_reference = const Type&;
 
   /// I/O constructor
   //VectorBase(TRootIOCtor *) : VectorBase(5) {}
@@ -181,7 +182,7 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
-  void resize(size_t newsize, Type value)
+  void resize(size_t newsize, Type value=Type())
   {
     if (newsize <= (size_t)fSize) {
       for (size_t i = newsize; i < (size_t)fSize; ++i) {

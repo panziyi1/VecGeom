@@ -73,10 +73,10 @@ bool vector_test()
 
   cout << "writing on vec.root...\n\n" << endl;
   TFile fo("vec.root", "RECREATE");
-  fo.WriteObject(arr, "arr_saved");
   gDebug = 3;
-  fo.WriteObject(vec, "vec_saved");
+  fo.WriteObject(arr, "arr_saved");
   gDebug = 0;
+  fo.WriteObject(vec, "vec_saved");
   fo.WriteObject(soa, "soa_saved");
   fo.WriteObject(planes, "planes_saved");
   fo.WriteObject(quads, "quads_saved");

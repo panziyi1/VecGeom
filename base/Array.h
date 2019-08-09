@@ -21,6 +21,9 @@ private:
   bool fAllocated;
 
 public:
+  using value_type      = Type;
+  using const_reference = const Type&;
+
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
   Array();

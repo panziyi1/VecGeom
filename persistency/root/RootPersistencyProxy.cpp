@@ -1,4 +1,5 @@
 #include "persistency/root/include/RootPersistencyProxy.h"
+#include <base/Array.h>
 
 template <class T>
 void SetCollectionProxy()
@@ -26,4 +27,5 @@ void RootPersistencyProxy()
   // SetCollectionProxy<std::vector<double>>();
   // SetCollectionProxy<std::vector<double *>>();
   SetCollectionProxy<std::vector<double *>>();
+  // SetCollectionProxy<vecgeom::Array<double>>();
 }
