@@ -73,9 +73,10 @@ bool vector_test()
 
   cout << "writing on vec.root...\n\n" << endl;
   TFile fo("vec.root", "RECREATE");
-  //gDebug = 10;
   fo.WriteObject(arr, "arr_saved");
+  gDebug = 3;
   fo.WriteObject(vec, "vec_saved");
+  gDebug = 0;
   fo.WriteObject(soa, "soa_saved");
   fo.WriteObject(planes, "planes_saved");
   fo.WriteObject(quads, "quads_saved");
@@ -104,14 +105,15 @@ bool vector_test()
   std::cout << "Planes: " << *rplanes << std::endl;
   fi.GetObject("quads_saved", rquads);
   std::cout << "Quads: " << *rquads << std::endl;
-  gDebug = 10;
+  /*
+  gDebug = 2;  
   fi.GetObject("azseg_saved", razseg);
   
   std::cout << "Array<ZSegment>:\n";
   std::cout << "  Outer:" << (*razseg)[0].outer << std::endl;
   std::cout << "  Inner:" << (*razseg)[0].inner << std::endl;
   std::cout << "  Phi:  " << (*razseg)[0].phi << std::endl;
-
+  */
   return true;
   /*
 

@@ -14,11 +14,11 @@ get_target_property(VECGEOM_INCLUDE_DIR vecgeom INCLUDE_DIRECTORIES)
 list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS}) #see https://root.cern.ch/how/integrate-root-my-project-cmake
 include(${ROOT_USE_FILE})
 
-set(VECGEOM_DEFINITIONS_LIST "${VECGEOM_DEFINITIONS}")
+set(VECGEOM_DEFINITIONS_LIST "${VECGEOM_DEFINITIONS} --debug")
 separate_arguments(VECGEOM_DEFINITIONS_LIST)
 
 #generating the dictionary
-REFLEX_GENERATE_DICTIONARY(RootPClasses include/Classes.h SELECTION xml/Selection.xml OPTIONS ${VECGEOM_DEFINITIONS_LIST})
+REFLEX_GENERATE_DICTIONARY(RootPClasses include/Classes.h SELECTION xml/Selection.xml OPTIONS ${VECGEOM_DEFINITIONS_LIST} )
 add_library(RootPClassesDict SHARED RootPClasses.cxx)
 set_target_properties(RootPClassesDict PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
 target_link_libraries(RootPClassesDict ${VECGEOM_LIBRARIES} ${ROOT_LIBRARIES})
