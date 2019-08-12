@@ -1,26 +1,26 @@
 <lcgdict>
-  <class name="vecgeom::AlignedBase" version="2"/>
+  <class name="vecgeom::AlignedBase" ClassVersion="2"/>
 
-  <class name="vecgeom::Vector3D<double>" version="2"/>
-  <class name="vecgeom::Vector3D<float>" version="2"/>
-  <class name="vecgeom::Transformation3D" version="2"/>
+  <class name="vecgeom::Vector3D<double>" ClassVersion="2"/>
+  <class name="vecgeom::Vector3D<float>" ClassVersion="2"/>
+  <class name="vecgeom::Transformation3D" ClassVersion="2"/>
 
-  <class name="vecgeom::Vector<const vecgeom::VPlacedVolume*>" version="2"/>
-  <class name="vecgeom::VectorBase<const vecgeom::VPlacedVolume*>" version="2">
+  <class name="vecgeom::Vector<const vecgeom::VPlacedVolume*>" ClassVersion="2"/>
+  <class name="vecgeom::VectorBase<const vecgeom::VPlacedVolume*>" ClassVersion="2">
     <field name="fData" comment="[fSize]"/>
   </class>
 
-  <class name="vecgeom::Vector<double>" version="2"/>
-  <class name="vecgeom::VectorBase<double>" version="2">
+  <class name="vecgeom::Vector<double>" ClassVersion="2"/>
+  <class name="vecgeom::VectorBase<double>" ClassVersion="2">
     <field name="fData" comment="[fSize]"/>
   </class>
 
-  <class name="vecgeom::Vector<float>" version="2"/>
-  <class name="vecgeom::VectorBase<float>" version="2">
+  <class name="vecgeom::Vector<float>" ClassVersion="2"/>
+  <class name="vecgeom::VectorBase<float>" ClassVersion="2">
     <field name="fData" comment="[fSize]"/>
   </class>
 
-  <class name="vecgeom::Array<double>" version="2">
+  <class name="vecgeom::Array<double>" ClassVersion="2">
     <field name="fData" comment="[fSize]"/>
   </class>
 <!--  
@@ -35,29 +35,29 @@
     <![CDATA[ std::cout << \" Wow, made it...\";]]>
   </ioread>
 
-  <class name="vecgeom::Array<float>" version="2">
+  <class name="vecgeom::Array<float>" ClassVersion="2">
     <field name="fData" comment="[fSize]"/>
   </class>
-  <class name="vecgeom::Array<bool>" version="2">
+  <class name="vecgeom::Array<bool>" ClassVersion="2">
     <field name="fData" comment="[fSize]"/>
   </class>
 
-  <class name="vecgeom::SOA3D<double>" version="2">
+  <class name="vecgeom::SOA3D<double>" ClassVersion="2">
     <field name="fX" comment="[fSize]"/>
     <field name="fY" comment="[fSize]"/>
     <field name="fZ" comment="[fSize]"/>
   </class>
 
-  <class name="vecgeom::AOS3D<double>" version="2">
+  <class name="vecgeom::AOS3D<double>" ClassVersion="2">
     <field name="fContent" comment="[fSize]"/>
   </class>
 
-  <class name="vecgeom::Container3D<vecgeom::AOS3D<double>>" version="2"/>
-  <class name="vecgeom::Container3D<vecgeom::SOA3D<double>>" version="2"/>
+  <class name="vecgeom::Container3D<vecgeom::AOS3D<double>>" ClassVersion="2"/>
+  <class name="vecgeom::Container3D<vecgeom::SOA3D<double>>" ClassVersion="2"/>
 
-  <class name="vecgeom::Quadrilaterals" version="2"/>
-  <class name="vecgeom::Planes" version="2"/>
-  <class name="vecgeom::Wedge" version="2"/>
+  <class name="vecgeom::Quadrilaterals" ClassVersion="2"/>
+  <class name="vecgeom::Planes" ClassVersion="2"/>
+  <class name="vecgeom::Wedge" ClassVersion="2"/>
   
   <class name="vecgeom::VUnplacedVolume"/>
   <class name="vecgeom::VPlacedVolume"/>
