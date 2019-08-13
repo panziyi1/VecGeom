@@ -51,9 +51,9 @@ void RootPersistencyProxy()
   // SetCollectionProxy<std::vector<double *>>();
   // SetCollectionProxy<vecgeom::Array<double>>();
 
-  SetCollectionProxy<vecgeom::Vector<const vecgeom::VPlacedVolume *>>("vector<const vecgeom::VPlacedVolume *>");
-  SetCollectionProxy<vecgeom::Vector<double>>("vector<double>");
-  SetCollectionProxy<vecgeom::Vector<double>>("vector<float>");
+  SetCollectionProxy<vecgeom::Vector<const vecgeom::VPlacedVolume *>>("list<const vecgeom::VPlacedVolume *>");
+  SetCollectionProxy<vecgeom::Vector<double>>("list<double>");
+  SetCollectionProxy<vecgeom::Vector<float>>("list<float>");
   // This is is unlikely to be stored correctly as ROOT can't know the number of double pointed to by the double*.
   // (it is *unlikely* to be just 1 as it is assumed for objects)
   // SetCollectionProxy<vecgeom::Vector<double *>>("vector<double *>");
