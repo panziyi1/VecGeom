@@ -147,6 +147,7 @@ void SetCollectionProxyImpl(const char *altname)
     auto proxy = cl->GetCollectionProxy();
     // Force initialization
     auto type = proxy->GetCollectionType();
+    (void)type; // silence unused variable warning.
     // fprintf(stderr, "Collection type is %d\n", type);
 
     auto streamer = dynamic_cast<TCollectionClassStreamer *>(cl->GetStreamer());
