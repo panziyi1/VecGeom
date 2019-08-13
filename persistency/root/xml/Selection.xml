@@ -24,7 +24,7 @@
     <field name="fData" comment="[fSize]"/>
   </class>
 <!--  
--->   
+ 
   <ioread sourceClass="vecgeom::Array<double>"
           source="int fSize; double *fData"
           version="[1-]"
@@ -34,7 +34,7 @@
           include="iostream">
     <![CDATA[ std::cout << \" Wow, made it...\";]]>
   </ioread>
-
+-->  
   <class name="vecgeom::Array<float>" ClassVersion="2">
     <field name="fData" comment="[fSize]"/>
   </class>
