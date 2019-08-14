@@ -534,8 +534,8 @@ public:
 #endif // VECGEOM_CUDA_INTERFACE
 
 }; // end Loop Helper
-}
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #ifndef __clang__
 #pragma GCC diagnostic pop

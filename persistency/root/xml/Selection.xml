@@ -276,7 +276,98 @@
   <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::PolyhedronImplementation<vecgeom::Polyhedron::EInnerRadii::kTrue,vecgeom::Polyhedron::EPhiCutout::kTrue>,-1,-1>"/>
   <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedPolyhedron,vecgeom::VPlacedVolume>"/>
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::PolyhedronImplementation<vecgeom::Polyhedron::EInnerRadii::kTrue,vecgeom::Polyhedron::EPhiCutout::kTrue>,-1,-1>"/>
+
+
+  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::BoxImplementation,0,512>" />
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::BoxImplementation,0,512>" />
+
+  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::BoxImplementation,-1,512>" />
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::BoxImplementation,-1,512>" />
+
+  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::ParaboloidImplementation,-1,512>" />
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::ParaboloidImplementation,-1,512>" />
+
+  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::SphereImplementation,-1,512>" />
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::SphereImplementation,-1,512>" />
+
+  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::ParallelepipedImplementation,0,266>" />
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::ParallelepipedImplementation,0,266>" />
+
+  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::HypeImplementation<vecgeom::HypeTypes::HollowHype>,0,266>" />
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::HypeImplementation<vecgeom::HypeTypes::HollowHype>,0,266>" />
+ 
+  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::CutTubeImplementation,0,266>" />
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::CutTubeImplementation,0,266>" />
+
+  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::OrbImplementation,0,266>" />
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::OrbImplementation,0,266>" />
+
+  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::HollowTube>,0,266>" />
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::HollowTube>,0,266>" />
+
+  <class name="vecgeom::SUnplacedTube<vecgeom::TubeTypes::HollowTube>" />
+  <class name="vecgeom::SUnplacedHype<vecgeom::HypeTypes::HollowHype>" />
+  <class name="vecgeom::SUnplacedCone<vecgeom::ConeTypes::HollowCone>" />
+  
+  <class name="vecgeom::SPlacedHype<vecgeom::SUnplacedHype<vecgeom::HypeTypes::HollowHype> >" />
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::SUnplacedHype<vecgeom::HypeTypes::HollowHype>,vecgeom::PlacedHype>" />
+
+  <class name="vecgeom::SIMDUnplacedVolumeImplHelper<vecgeom::ConeImplementation<vecgeom::ConeTypes::HollowCone>,vecgeom::UnplacedCone>" />
+
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::HypeImplementation<vecgeom::HypeTypes::HollowHype>,vecgeom::UnplacedHype>" />
+
+  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::ConeImplementation<vecgeom::ConeTypes::HollowCone>,0,266>" />
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::ConeImplementation<vecgeom::ConeTypes::HollowCone>,0,266>" />
+
+  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::ConeImplementation<vecgeom::ConeTypes::HollowCone>,-1,512>" />
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::ConeImplementation<vecgeom::ConeTypes::HollowCone>,-1,512>" />
+
+  <class name="vecgeom::SIMDUnplacedVolumeImplHelper<vecgeom::HypeImplementation<vecgeom::HypeTypes::HollowHype>,vecgeom::UnplacedHype>" />
+
+  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::UniversalTube>,-1,512>" />
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::UniversalTube>,-1,512>" />
+
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::BooleanImplementation<0>,-1,512>" />
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::BooleanImplementation<1>,-1,512>" />
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::BooleanImplementation<2>,-1,512>" />
+
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::BooleanImplementation<0>,-1,512>" />
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::BooleanImplementation<1>,-1,512>" />
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::BooleanImplementation<2>,-1,512>" />
+
+  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::TrdImplementation<vecgeom::TrdTypes::Trd2>,-1,512>" />
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::SUnplacedTrd<vecgeom::TrdTypes::Trd2>,vecgeom::PlacedTrd>" />
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TrdImplementation<vecgeom::TrdTypes::Trd2>,-1,512>" />
+  <class name="vecgeom::SPlacedTrd<vecgeom::SUnplacedTrd<vecgeom::TrdTypes::Trd2> >" />
+
+  <class name="vecgeom::SPlacedTube<vecgeom::SUnplacedTube<vecgeom::TubeTypes::HollowTube> >" />
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::SUnplacedTube<vecgeom::TubeTypes::HollowTube>,vecgeom::PlacedTube>" />
+  <class name="vecgeom::SIMDUnplacedVolumeImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::HollowTube>,vecgeom::UnplacedTube>" />
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::HollowTube>,vecgeom::UnplacedTube>" />
+
+  <class name="vecgeom::SPlacedCone<vecgeom::SUnplacedCone<vecgeom::ConeTypes::HollowCone> >" />
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::SUnplacedCone<vecgeom::ConeTypes::HollowCone>,vecgeom::PlacedCone>" />
+
+  <class name="vecgeom::cxx::SUnplacedImplAs<vecgeom::cxx::SUnplacedTrd<vecgeom::cxx::TrdTypes::Trd2>, vecgeom::cxx::UnplacedBox>" />
+  <class name="vecgeom::cxx::SUnplacedImplAs<vecgeom::cxx::UnplacedTrapezoid, vecgeom::cxx::SUnplacedTrd<vecgeom::cxx::TrdTypes::Trd2> >" />
+
+  <class name="vecgeom::cxx::SIMDSpecializedVolImplHelper<vecgeom::cxx::IndirectImplementation<vecgeom::cxx::SUnplacedImplAs<vecgeom::cxx::SUnplacedTrd<vecgeom::cxx::TrdTypes::Trd2>, vecgeom::cxx::UnplacedBox>, vecgeom::cxx::BoxImplementation>, -1, 512>" />
+  <class name="vecgeom::cxx::SIMDSpecializedVolImplHelper<vecgeom::cxx::IndirectImplementation<vecgeom::cxx::SUnplacedImplAs<vecgeom::cxx::UnplacedTrapezoid, vecgeom::cxx::SUnplacedTrd<vecgeom::cxx::TrdTypes::Trd2> >, vecgeom::cxx::TrdImplementation<vecgeom::cxx::TrdTypes::Trd2> >, -1, 512>" />
+
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::SUnplacedImplAs<vecgeom::SUnplacedTrd<vecgeom::TrdTypes::Trd2>,vecgeom::UnplacedBox>,vecgeom::VPlacedVolume>" />
+  <class name="vecgeom::PlacedImplAs<vecgeom::SUnplacedImplAs<vecgeom::SUnplacedTrd<vecgeom::TrdTypes::Trd2>,vecgeom::UnplacedBox> >" />
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::IndirectImplementation<vecgeom::SUnplacedImplAs<vecgeom::SUnplacedTrd<vecgeom::TrdTypes::Trd2>,vecgeom::UnplacedBox>,vecgeom::BoxImplementation>,-1,512>" />
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::TrdImplementation<vecgeom::TrdTypes::Trd2>,vecgeom::UnplacedTrd>" />
+  <class name="vecgeom::SIMDUnplacedVolumeImplHelper<vecgeom::TrdImplementation<vecgeom::TrdTypes::Trd2>,vecgeom::UnplacedTrd>" />
+  <class name="vecgeom::SUnplacedTrd<vecgeom::TrdTypes::Trd2>" />
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::SUnplacedImplAs<vecgeom::UnplacedTrapezoid,vecgeom::SUnplacedTrd<vecgeom::TrdTypes::Trd2> >,vecgeom::VPlacedVolume>" />
+
+  <class name="vecgeom::PlacedImplAs<vecgeom::SUnplacedImplAs<vecgeom::UnplacedTrapezoid,vecgeom::SUnplacedTrd<vecgeom::TrdTypes::Trd2> > >" />
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::IndirectImplementation<vecgeom::SUnplacedImplAs<vecgeom::UnplacedTrapezoid,vecgeom::SUnplacedTrd<vecgeom::TrdTypes::Trd2> >,vecgeom::TrdImplementation<vecgeom::TrdTypes::Trd2> >,-1,512>" />
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::ConeImplementation<vecgeom::ConeTypes::HollowCone>,vecgeom::UnplacedCone>" />
+
 <!--
+  <class name="" />
 
   <class name="vecgeom::UnplacedPolycone"/>
   <class name="vecgeom::PolyconeStruct<double>"/>

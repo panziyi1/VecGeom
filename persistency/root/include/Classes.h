@@ -37,3 +37,6 @@
 #include "volumes/Tessellated.h"
 #include "volumes/Tet.h"
 #include "volumes/Torus2.h"
+
+// Implementation details the I/O needs
+#include "volumes/UnplacedImplAs.h"
