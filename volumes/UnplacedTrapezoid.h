@@ -31,6 +31,8 @@
 #include "volumes/TrapezoidStruct.h" // the pure Trapezoid struct
 #include "volumes/kernel/TrapezoidImplementation.h"
 
+class TRootIOCtor;
+
 namespace vecgeom {
 
 VECGEOM_DEVICE_FORWARD_DECLARE(class UnplacedTrapezoid;);
@@ -64,6 +66,10 @@ public:
   // default constructor
   VECCORE_ATT_HOST_DEVICE
   UnplacedTrapezoid() : fTrap(0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.) { fGlobalConvexity = true; }
+
+  UnplacedTrapezoid(TRootIOCtor *) : UnplacedTrapezoid()
+  {
+  }
 
   /// \brief Fast constructor: all parameters from one array
   VECCORE_ATT_HOST_DEVICE

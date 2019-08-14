@@ -296,6 +296,11 @@ public:
   using BaseType_t = SIMDUnplacedVolumeImplHelper<TrdImplementation<TrdType>, UnplacedTrd>;
   using BaseType_t::BaseType_t;
 
+  /// I/O Constructor
+  SUnplacedTrd(TRootIOCtor *arg)
+  {
+  }
+
   template <TranslationCode transCodeT, RotationCode rotCodeT>
   VECCORE_ATT_DEVICE
   static VPlacedVolume *Create(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,

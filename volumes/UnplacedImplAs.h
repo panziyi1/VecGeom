@@ -11,6 +11,8 @@
 #include <cassert>
 #include <type_traits>
 
+class TRootIOCtor;
+
 namespace vecgeom {
 
 VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE_2t(class, SUnplacedImplAs, typename, typename);
@@ -25,6 +27,12 @@ class SUnplacedImplAs : public UnplacedBase {
 
 public:
   using UnplacedStruct_t = typename ImplementingUnplaced::UnplacedStruct_t;
+
+  SUnplacedImplAs(TRootIOCtor *arg) : UnplacedBase(arg), fImplPtr(nullptr)
+  {
+  }
+
+  SUnplacedImplAs() = delete;
 
   template <typename... Args>
   SUnplacedImplAs(Args... args) : UnplacedBase(args...)

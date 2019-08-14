@@ -19,6 +19,8 @@
 #pragma GCC diagnostic ignored "-Waggressive-loop-optimizations"
 #endif // __clang__
 
+class TRootIOCtor;
+
 namespace vecgeom {
 
 // putting a forward declaration by hand
