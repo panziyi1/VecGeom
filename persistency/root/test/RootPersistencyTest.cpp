@@ -66,51 +66,51 @@ void write()
   Z_Values0[0]       = -1;
   Z_Values0[1]       = 1;
   auto polyhUnplaced = new UnplacedPolyhedron(0.0, kPi, 2, 2, Z_Values0, RMINVec0, RMAXVec0);
-/*
-  double rmin[] = {0.1, 0., 0., 0.2};
-  double rmax[] = {1., 2., 2., 1.5};
-  double z[]    = {-1, -0.5, 0.5, 10};
-  UnplacedPolycone pconUnplaced(0, kTwoPi, 4, z, rmin, rmax);
+  /*
+    double rmin[] = {0.1, 0., 0., 0.2};
+    double rmax[] = {1., 2., 2., 1.5};
+    double z[]    = {-1, -0.5, 0.5, 10};
+    UnplacedPolycone pconUnplaced(0, kTwoPi, 4, z, rmin, rmax);
 
-  double verticesx1[8] = {-3, -3, 3, 3, -2, -2, 2, 2};
-  double verticesy1[8] = {-3, 3, 3, -3, -2, 2, 2, -2};
-  UnplacedGenTrap gentrpUnplaced(verticesx1, verticesy1, 5);
-
-
-
-  UnplacedMultiUnion multiuUnplaced;
-  double sized = 10. * std::pow(0.5 / 10, 1. / 3.);
-  for (size_t i = 0; i < 10; ++i) {
-    Vector3D<double> pos(RNG::Instance().uniform(-10., 10.), RNG::Instance().uniform(-10., 10.),
-                         RNG::Instance().uniform(-10., 10.));
-    double sizernd = RNG::Instance().uniform(0.8 * sized, 1.2 * sized);
-    Transformation3D trans(pos.x(), pos.y(), pos.z(), RNG::Instance().uniform(-180, 180),
-                           RNG::Instance().uniform(-180, 180), RNG::Instance().uniform(-180, 180));
-    trans.SetProperties();
-    UnplacedBox *box = new UnplacedBox(sizernd, sizernd, sizernd);
-    multiuUnplaced.AddNode(box, trans);
-  }
-  multiuUnplaced.Close();
+    double verticesx1[8] = {-3, -3, 3, 3, -2, -2, 2, 2};
+    double verticesy1[8] = {-3, 3, 3, -3, -2, 2, 2, -2};
+    UnplacedGenTrap gentrpUnplaced(verticesx1, verticesy1, 5);
 
 
-  UnplacedScaledShape scaledUnplaced(tubeUnplaced, 0.5, 1.3, 1.);
 
-  double x[12], y[12];
-  for (size_t i = 0; i < (size_t)12; ++i) {
-    x[i] = 5 * std::sin(i * (2. * M_PI) / 12);
-    y[i] = 5 * std::cos(i * (2. * M_PI) / 12);
-  }
-  UnplacedSExtruVolume sextruUnplaced(12, x, y, -5, 5);
+    UnplacedMultiUnion multiuUnplaced;
+    double sized = 10. * std::pow(0.5 / 10, 1. / 3.);
+    for (size_t i = 0; i < 10; ++i) {
+      Vector3D<double> pos(RNG::Instance().uniform(-10., 10.), RNG::Instance().uniform(-10., 10.),
+                           RNG::Instance().uniform(-10., 10.));
+      double sizernd = RNG::Instance().uniform(0.8 * sized, 1.2 * sized);
+      Transformation3D trans(pos.x(), pos.y(), pos.z(), RNG::Instance().uniform(-180, 180),
+                             RNG::Instance().uniform(-180, 180), RNG::Instance().uniform(-180, 180));
+      trans.SetProperties();
+      UnplacedBox *box = new UnplacedBox(sizernd, sizernd, sizernd);
+      multiuUnplaced.AddNode(box, trans);
+    }
+    multiuUnplaced.Close();
 
-  UnplacedTessellated tslUnplaced = UnplacedTessellated();
-  TessellatedOrb(10., 10, tslUnplaced);
-  tslUnplaced.Close();
 
-  Vector3D<double> p0(0., 0., 2.), p1(0., 0., 0.), p2(2., 0., 0.), p3(0., 2., 0.);
-  UnplacedTet tetUnplaced = UnplacedTet(p0, p1, p2, p3);
+    UnplacedScaledShape scaledUnplaced(tubeUnplaced, 0.5, 1.3, 1.);
 
-  UnplacedTorus2 torusUnplaced(1.2, 3.1, 5., 0, kTwoPi);
-*/
+    double x[12], y[12];
+    for (size_t i = 0; i < (size_t)12; ++i) {
+      x[i] = 5 * std::sin(i * (2. * M_PI) / 12);
+      y[i] = 5 * std::cos(i * (2. * M_PI) / 12);
+    }
+    UnplacedSExtruVolume sextruUnplaced(12, x, y, -5, 5);
+
+    UnplacedTessellated tslUnplaced = UnplacedTessellated();
+    TessellatedOrb(10., 10, tslUnplaced);
+    tslUnplaced.Close();
+
+    Vector3D<double> p0(0., 0., 2.), p1(0., 0., 0.), p2(2., 0., 0.), p3(0., 2., 0.);
+    UnplacedTet tetUnplaced = UnplacedTet(p0, p1, p2, p3);
+
+    UnplacedTorus2 torusUnplaced(1.2, 3.1, 5., 0, kTwoPi);
+  */
   LogicalVolume world("world", &boxUnplaced);
   LogicalVolume box("box", &boxUnplaced);
   LogicalVolume par("par", &parUnplaced);
@@ -126,18 +126,18 @@ void write()
   LogicalVolume lunion("union", &unionUnplaced);
   LogicalVolume lintersection("intersection", &intersectionUnplaced);
   LogicalVolume lsubtraction("subtraction", &subtractionUnplaced);
-  //LogicalVolume pcon("pcon", &pconUnplaced);
+  // LogicalVolume pcon("pcon", &pconUnplaced);
   LogicalVolume polyh("polyh", polyhUnplaced);
-/*
-  LogicalVolume gentrp("gentrp", &gentrpUnplaced);
-  LogicalVolume xtru("xtru", ExtrudedMultiLayer(false));
-  LogicalVolume multiu("multiu", &multiuUnplaced);
-  LogicalVolume scaled("scaled", &scaledUnplaced);
-  LogicalVolume sextru("sextru", &sextruUnplaced);
-  LogicalVolume tsl("tsl", &tslUnplaced);
-  LogicalVolume tet("tet", &tetUnplaced);
-  LogicalVolume torus("torus", &torusUnplaced);
-*/
+  /*
+    LogicalVolume gentrp("gentrp", &gentrpUnplaced);
+    LogicalVolume xtru("xtru", ExtrudedMultiLayer(false));
+    LogicalVolume multiu("multiu", &multiuUnplaced);
+    LogicalVolume scaled("scaled", &scaledUnplaced);
+    LogicalVolume sextru("sextru", &sextruUnplaced);
+    LogicalVolume tsl("tsl", &tslUnplaced);
+    LogicalVolume tet("tet", &tetUnplaced);
+    LogicalVolume torus("torus", &torusUnplaced);
+  */
 
   Transformation3D placement  = Transformation3D(5, 5, 5);
   Transformation3D placement2 = Transformation3D(0, 0, 0, 90, 0, 0);
@@ -158,48 +158,48 @@ void write()
   world.PlaceDaughter(&lunion, new Transformation3D(-L / 2, -L / 2, 0.));
   world.PlaceDaughter(&lintersection, new Transformation3D(-L / 2, -L / 2, 0.));
   world.PlaceDaughter(&lsubtraction, new Transformation3D(-L / 2, -L / 2, 0.));
-  //world.PlaceDaughter(&pcon, &placement2);
+  // world.PlaceDaughter(&pcon, &placement2);
   world.PlaceDaughter(&polyh, &placement2);
-/*
-  world.PlaceDaughter(&gentrp, &placement);
-  world.PlaceDaughter(&xtru, &placement2);
-  world.PlaceDaughter(&multiu, &placement);
-  world.PlaceDaughter(&scaled, &placement);
-  world.PlaceDaughter(&sextru, &placement);
-  world.PlaceDaughter(&tsl, &origin);
-  world.PlaceDaughter(&tet, &placement);
-  world.PlaceDaughter(&torus, &placement2);
-*/
+  /*
+    world.PlaceDaughter(&gentrp, &placement);
+    world.PlaceDaughter(&xtru, &placement2);
+    world.PlaceDaughter(&multiu, &placement);
+    world.PlaceDaughter(&scaled, &placement);
+    world.PlaceDaughter(&sextru, &placement);
+    world.PlaceDaughter(&tsl, &origin);
+    world.PlaceDaughter(&tet, &placement);
+    world.PlaceDaughter(&torus, &placement2);
+  */
   VPlacedVolume *worldPlaced = world.Place();
 
   GeoManager::Instance().SetWorldAndClose(worldPlaced);
 
-/*
-  for (auto &lvol : GeoManager::Instance().GetLogicalVolumesMap()) {
-    if (lvol.second->GetDaughtersp()->size() < 4) {
-      lvol.second->SetNavigator(NewSimpleNavigator<>::Instance());
-    } else if (lvol.second->GetDaughtersp()->size() < 10) {
-      lvol.second->SetNavigator(SimpleABBoxNavigator<>::Instance());
-    } else {
-      lvol.second->SetNavigator(HybridNavigator<>::Instance());
-      HybridManager2::Instance().InitStructure((lvol.second));
-    }
+  /*
+    for (auto &lvol : GeoManager::Instance().GetLogicalVolumesMap()) {
+      if (lvol.second->GetDaughtersp()->size() < 4) {
+        lvol.second->SetNavigator(NewSimpleNavigator<>::Instance());
+      } else if (lvol.second->GetDaughtersp()->size() < 10) {
+        lvol.second->SetNavigator(SimpleABBoxNavigator<>::Instance());
+      } else {
+        lvol.second->SetNavigator(HybridNavigator<>::Instance());
+        HybridManager2::Instance().InitStructure((lvol.second));
+      }
 
-    if (lvol.second->ContainsAssembly()) {
-      lvol.second->SetLevelLocator(SimpleAssemblyAwareABBoxLevelLocator::GetInstance());
-    } else {
-      lvol.second->SetLevelLocator(SimpleABBoxLevelLocator::GetInstance());
+      if (lvol.second->ContainsAssembly()) {
+        lvol.second->SetLevelLocator(SimpleAssemblyAwareABBoxLevelLocator::GetInstance());
+      } else {
+        lvol.second->SetLevelLocator(SimpleABBoxLevelLocator::GetInstance());
+      }
     }
-  }
-*/
+  */
   GeoManager::Instance().GetWorld()->PrintContent();
 
   cout << endl << "placed vol count: " << GeoManager::Instance().GetPlacedVolumesCount() << endl;
   cout << "registered vol count: " << GeoManager::Instance().GetRegisteredVolumesCount() << endl;
 
   cout << endl << "\033[0;31mwriting on vecgeom_export.root\n" << endl;
-  
-  gDebug = 2;
+
+  // gDebug = 2;
   RootGeoManager::Instance().Export("vecgeom_export.root");
 
   cout << "\033[0m" << endl;
@@ -210,7 +210,7 @@ void read()
 {
   cout << endl << "\033[0;31mreading from vecgeom_export.root\n" << endl;
 
-  gDebug = 2;
+  // gDebug = 2;
   RootGeoManager::Instance().Import("vecgeom_export.root");
   cout << "\033[0m" << endl;
   GeoManager::Instance().GetWorld()->PrintContent();

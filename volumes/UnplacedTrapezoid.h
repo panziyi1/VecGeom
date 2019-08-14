@@ -67,9 +67,7 @@ public:
   VECCORE_ATT_HOST_DEVICE
   UnplacedTrapezoid() : fTrap(0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.) { fGlobalConvexity = true; }
 
-  UnplacedTrapezoid(TRootIOCtor *) : UnplacedTrapezoid()
-  {
-  }
+  UnplacedTrapezoid(TRootIOCtor *) : UnplacedTrapezoid() {}
 
   /// \brief Fast constructor: all parameters from one array
   VECCORE_ATT_HOST_DEVICE

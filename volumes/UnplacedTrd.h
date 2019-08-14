@@ -297,9 +297,7 @@ public:
   using BaseType_t::BaseType_t;
 
   /// I/O Constructor
-  SUnplacedTrd(TRootIOCtor *arg)
-  {
-  }
+  SUnplacedTrd(TRootIOCtor *arg) {}
 
   template <TranslationCode transCodeT, RotationCode rotCodeT>
   VECCORE_ATT_DEVICE

@@ -28,9 +28,7 @@ class SUnplacedImplAs : public UnplacedBase {
 public:
   using UnplacedStruct_t = typename ImplementingUnplaced::UnplacedStruct_t;
 
-  SUnplacedImplAs(TRootIOCtor *arg) : UnplacedBase(arg), fImplPtr(nullptr)
-  {
-  }
+  SUnplacedImplAs(TRootIOCtor *arg) : UnplacedBase(arg), fImplPtr(nullptr) {}
 
   SUnplacedImplAs() = delete;
 
