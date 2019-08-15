@@ -1,4 +1,5 @@
 <lcgdict>
+  <class name="Vc_1::AlignedBase<16>" ClassVersion="2"/>
   <class name="vecgeom::AlignedBase" ClassVersion="2"/>
 
   <class name="vecgeom::Vector3D<double>" ClassVersion="2"/>

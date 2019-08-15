@@ -16,7 +16,6 @@ VECGEOM_DEVICE_DECLARE_CONV(class, AlignedBase);
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-/*
 #ifdef VECGEOM_VC
 // unfortunately the version macros have changed in Vc over time
 // so I am checking which one exist
@@ -38,8 +37,6 @@ class AlignedBase : public Vc::VectorAlignedBase {
     virtual ~AlignedBase() {}
   };
 #elif !defined(VECCORE_CUDA)
-*/
-#ifndef VECCORE_CUDA_1
 class AlignedBase {
 
 public:

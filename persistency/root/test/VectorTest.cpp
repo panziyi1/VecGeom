@@ -15,7 +15,9 @@ bool vector_test()
 
   RootPersistencyProxy(); // calling the proxy
 
-//  auto vec = new vecgeom::Array<double>(3);
+  auto vec3D = new vecgeom::Vector3D<double>(1.12, 2.23, 3.34);
+  std::cout << "Vector3D: " << *vec3D << std::endl;
+
   auto arr = new vecgeom::Array<double>(3);
   (*arr)[0] = 1.24;
   (*arr)[1] = 2.14;
@@ -73,9 +75,8 @@ bool vector_test()
 
   cout << "writing on vec.root...\n\n" << endl;
   TFile fo("vec.root", "RECREATE");
-  gDebug = 3;
+  fo.WriteObject(vec3D, "vec3D_saved");
   fo.WriteObject(arr, "arr_saved");
-  gDebug = 0;
   fo.WriteObject(vec, "vec_saved");
   fo.WriteObject(soa, "soa_saved");
   fo.WriteObject(planes, "planes_saved");
@@ -86,12 +87,16 @@ bool vector_test()
   cout << "reading from vec.root" << endl << endl;
   TFile fi("vec.root");
 
+  vecgeom::Vector3D<double> *rvec3D;
   vecgeom::Array<double> *rarr;
   vecgeom::Vector<double> *rvec;
   vecgeom::SOA3D<double> *rsoa;
   vecgeom::Planes *rplanes;
   vecgeom::Quadrilaterals *rquads;
   vecgeom::Array<vecgeom::ZSegment> *razseg;
+
+  fi.GetObject("vec3D_saved", rvec3D);
+  std::cout << "Vector3D: " << *rvec3D << std::endl;
 
   fi.GetObject("arr_saved", rarr);
   std::cout << "rvec: " << (*rarr)[0] << ", " << (*rarr)[1] << ", " << (*rarr)[2] << "\n";
@@ -105,15 +110,16 @@ bool vector_test()
   std::cout << "Planes: " << *rplanes << std::endl;
   fi.GetObject("quads_saved", rquads);
   std::cout << "Quads: " << *rquads << std::endl;
-  /*
-  gDebug = 2;  
+
+  //gDebug = 2;  
   fi.GetObject("azseg_saved", razseg);
+  // gDebug = 0;
   
   std::cout << "Array<ZSegment>:\n";
   std::cout << "  Outer:" << (*razseg)[0].outer << std::endl;
   std::cout << "  Inner:" << (*razseg)[0].inner << std::endl;
   std::cout << "  Phi:  " << (*razseg)[0].phi << std::endl;
-  */
+
   return true;
   /*
 
