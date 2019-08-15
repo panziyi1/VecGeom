@@ -5,6 +5,7 @@
 #include <TVirtualCollectionProxy.h>
 #include <TGenCollectionStreamer.h>
 #include <TCollectionProxyFactory.h>
+#include <TClassStreamer.h>
 
 template <typename Value_t>
 void Construct(void *m)
@@ -177,6 +178,20 @@ void SetCollectionProxyArray(const char *altname)
   SetCollectionProxyImpl<T, ForArray>(altname);
 }
 
+class EmptyClassStreamer : public TClassStreamer {
+public:
+  TClassStreamer *Generate() const override
+  {
+    // Virtual copy constructor.
+    return new EmptyClassStreamer(*this);
+  }
+
+  ~EmptyClassStreamer() override{};
+
+  virtual void operator()(TBuffer &, void *) override {}
+  virtual void Stream(TBuffer &, void *, const TClass *) override {}
+};
+
 void RootPersistencyProxy()
 {
   // SetCollectionProxy<std::vector<const vecgeom::VPlacedVolume *>>();
@@ -196,4 +211,7 @@ void RootPersistencyProxy()
   SetCollectionProxyArray<vecgeom::Array<double>>("list<double>");
   SetCollectionProxyArray<vecgeom::Array<vecgeom::ZSegment>>("list<vecgeom::ZSegment>");
   SetCollectionProxyArray<vecgeom::Array<bool>>("list<bool>");
+
+  TClass *cl = TClass::GetClass("vecgeom::AlignedBase");
+  if (cl) cl->AdoptStreamer(new EmptyClassStreamer());
 }
