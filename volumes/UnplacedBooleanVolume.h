@@ -132,7 +132,10 @@ public:
 #endif
                                VPlacedVolume *const placement = NULL);
 
+  VECCORE_ATT_HOST_DEVICE
   VPlacedVolume const *GetLeft() const { return fBoolean.fLeftVolume; }
+
+  VECCORE_ATT_HOST_DEVICE
   VPlacedVolume const *GetRight() const { return fBoolean.fRightVolume; }
 
 #ifndef VECCORE_CUDA
