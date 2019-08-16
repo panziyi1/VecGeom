@@ -50,7 +50,6 @@ public:
   VECCORE_ATT_HOST_DEVICE
   ~Quadrilaterals();
 
-  VECCORE_ATT_HOST_DEVICE
   Quadrilaterals(Quadrilaterals const &other) = default;
 
   VECCORE_ATT_HOST_DEVICE
