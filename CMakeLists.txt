@@ -664,6 +664,7 @@ set(VECGEOM_SRCS
   source/UnplacedGenTrap.cpp
 
   source/LogicalVolume.cpp
+  source/NewSimpleNavigator.cpp
   source/PlacedPolyhedron.cpp
   source/PlacedPolycone.cpp
   source/PlacedCone.cpp
@@ -698,6 +699,7 @@ set(VECGEOM_SRCS
   source/TessellatedHelpers.cpp
   source/Tile.cpp
   source/Scale3D.cpp
+  source/SimpleSafetyEstimator.cpp
   source/Transformation3D.cpp
   source/UnplacedAssembly.cpp
   source/UnplacedBox.cpp
