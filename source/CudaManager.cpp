@@ -360,15 +360,15 @@ void CudaManager::ScanGeometry(VPlacedVolume const *const volume)
     daughters_.insert(volume->GetLogicalVolume()->fDaughters);
   }
 
-  if (auto v = dynamic_cast<PlacedBooleanVolume<kUnion> const *>(volume)) {
+  if (auto v = dynamic_cast<PlacedBooleanVolume<vecgeom::BooleanOp::kUnion> const *>(volume)) {
     ScanGeometry(v->GetUnplacedVolume()->GetLeft());
     ScanGeometry(v->GetUnplacedVolume()->GetRight());
   }
-  if (auto v = dynamic_cast<PlacedBooleanVolume<kIntersection> const *>(volume)) {
+  if (auto v = dynamic_cast<PlacedBooleanVolume<vecgeom::BooleanOp::kIntersection> const *>(volume)) {
     ScanGeometry(v->GetUnplacedVolume()->GetLeft());
     ScanGeometry(v->GetUnplacedVolume()->GetRight());
   }
-  if (auto v = dynamic_cast<PlacedBooleanVolume<kSubtraction> const *>(volume)) {
+  if (auto v = dynamic_cast<PlacedBooleanVolume<vecgeom::BooleanOp::kSubtraction> const *>(volume)) {
     ScanGeometry(v->GetUnplacedVolume()->GetLeft());
     ScanGeometry(v->GetUnplacedVolume()->GetRight());
   }
