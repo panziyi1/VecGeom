@@ -38,7 +38,7 @@ static void DistanceToOutLoop(typename Implementation::UnplacedStruct_t const *s
                               double const *step_max, double *output)
 {
   using vecCore::FromPtr;
-  for (decltype(points.size()) i(offset); i < size; i += vecCore::VectorSize<Real_v>()) {
+  for (size_t i(offset); i < size; i += vecCore::VectorSize<Real_v>()) {
     Vector3D<Real_v> point(FromPtr<Real_v>(points.x() + i), FromPtr<Real_v>(points.y() + i),
                            FromPtr<Real_v>(points.z() + i));
     Vector3D<Real_v> dir(FromPtr<Real_v>(directions.x() + i), FromPtr<Real_v>(directions.y() + i),
