@@ -243,6 +243,10 @@
   <class name="vecgeom::SPlacedTube<vecgeom::SUnplacedTube<vecgeom::TubeTypes::UniversalTube>>" ClassVersion="1"/>
   <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::HollowTube>,0,266>" ClassVersion="1"/>
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::HollowTube>,0,266>" ClassVersion="1"/>
+  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::HollowTube>,-1,512>" ClassVersion="1"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::HollowTube>,-1,512>" ClassVersion="1"/>
+  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::HollowTube>,0,512>" ClassVersion="1"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::HollowTube>,0,512>" ClassVersion="1"/>
   <class name="vecgeom::SUnplacedTube<vecgeom::TubeTypes::HollowTube>" ClassVersion="1"/>
   <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::UniversalTube>,-1,512>" ClassVersion="1"/>
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TubeImplementation<vecgeom::TubeTypes::UniversalTube>,-1,512>" ClassVersion="1"/>
@@ -301,7 +305,8 @@
   <class name="vecgeom::PlacedPolycone" ClassVersion="1"/>
   <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::PolyconeImplementation<vecgeom::ConeTypes::UniversalCone>,-1,-1>" ClassVersion="1"/>
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::PolyconeImplementation<vecgeom::ConeTypes::UniversalCone>,-1,-1>" ClassVersion="1"/>
-  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::PolyconeImplementation<vecgeom::ConeTypes::UniversalCone>, -1, -1>" ClassVersion="1"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::PolyconeImplementation<vecgeom::ConeTypes::UniversalCone>,0, 266>" ClassVersion="1"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::PolyconeImplementation<vecgeom::ConeTypes::UniversalCone>,0,266>" ClassVersion="1"/>
   <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::SUnplacedPolycone<vecgeom::ConeTypes::UniversalCone>,vecgeom::PlacedPolycone>" ClassVersion="1"/>
   <class name="vecgeom::SPlacedPolycone<vecgeom::SUnplacedPolycone<vecgeom::ConeTypes::UniversalCone>>" ClassVersion="1"/>
   <class name="vecgeom::SUnplacedPolycone<vecgeom::ConeTypes::UniversalCone>" ClassVersion="1"/>
@@ -315,6 +320,10 @@
   <class name="vecgeom::PlacedScaledShape" ClassVersion="1"/>
   <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::ScaledShapeImplementation,-1,-1>" ClassVersion="1"/>
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::ScaledShapeImplementation,-1,-1>" ClassVersion="1"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::ScaledShapeImplementation,0,512>" ClassVersion="1"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::ScaledShapeImplementation,0,512>" ClassVersion="1"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::ScaledShapeImplementation,-1,512>" ClassVersion="1"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::ScaledShapeImplementation,-1,512>" ClassVersion="1"/>
   <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedScaledShape,vecgeom::VPlacedVolume>" ClassVersion="1"/>
 
   <!-- The tetrahedron -->
@@ -326,6 +335,8 @@
   <class name="vecgeom::PlacedTet" ClassVersion="1"/>
   <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::TetImplementation,-1, -1>" ClassVersion="1"/>
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TetImplementation, -1, -1>" ClassVersion="1"/>
+  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::TetImplementation,-1, 512>" ClassVersion="1"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TetImplementation, -1, 512>" ClassVersion="1"/>
   <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedTet, vecgeom::VPlacedVolume>" ClassVersion="1"/>
 
   <!-- The torus -->
@@ -347,6 +358,8 @@
   <class name="vecgeom::PlacedSExtru" ClassVersion="1"/>
   <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::SExtruImplementation,-1,-1>" ClassVersion="1"/>
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::SExtruImplementation,-1,-1>" ClassVersion="1"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::SExtruImplementation,-1,512>" ClassVersion="1"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::SExtruImplementation,-1,512>" ClassVersion="1"/>
   <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedSExtruVolume,vecgeom::VPlacedVolume>" ClassVersion="1"/>
 
   <!-- The tessellated volume --> 
@@ -377,6 +390,8 @@
   <class name="vecgeom::PlacedTessellated" ClassVersion="1"/>
   <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::TessellatedImplementation,-1,-1>" ClassVersion="1"/>
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TessellatedImplementation,-1,-1>" ClassVersion="1"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::TessellatedImplementation,0,512>" ClassVersion="1"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TessellatedImplementation,0,512>" ClassVersion="1"/>
   <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedTessellated,vecgeom::VPlacedVolume>" ClassVersion="1"/>
 
   <!-- The generic trapezoid -->
