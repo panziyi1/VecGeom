@@ -65,18 +65,19 @@ void write()
   double Z_Values0[2];
   Z_Values0[0]       = -1;
   Z_Values0[1]       = 1;
-  auto polyhUnplaced = new UnplacedPolyhedron(0.0, kPi, 2, 2, Z_Values0, RMINVec0, RMAXVec0);
-  /*
-    double rmin[] = {0.1, 0., 0., 0.2};
-    double rmax[] = {1., 2., 2., 1.5};
-    double z[]    = {-1, -0.5, 0.5, 10};
-    UnplacedPolycone pconUnplaced(0, kTwoPi, 4, z, rmin, rmax);
+  auto polyhUnplaced = GeoManager::MakeInstance<UnplacedPolyhedron>(0.0, kPi, 2, 2, Z_Values0, RMINVec0, RMAXVec0);
+  
+  double rmin[] = {0.1, 0., 0., 0.2};
+  double rmax[] = {1., 2., 2., 1.5};
+  double z[]    = {-1, -0.5, 0.5, 10};
+  auto pconUnplaced = GeoManager::MakeInstance<UnplacedPolycone>(0, kTwoPi, 4, z, rmin, rmax);
+/*
 
     double verticesx1[8] = {-3, -3, 3, 3, -2, -2, 2, 2};
     double verticesy1[8] = {-3, 3, 3, -3, -2, 2, 2, -2};
     UnplacedGenTrap gentrpUnplaced(verticesx1, verticesy1, 5);
 
-
+  
 
     UnplacedMultiUnion multiuUnplaced;
     double sized = 10. * std::pow(0.5 / 10, 1. / 3.);
@@ -126,7 +127,7 @@ void write()
   LogicalVolume lunion("union", &unionUnplaced);
   LogicalVolume lintersection("intersection", &intersectionUnplaced);
   LogicalVolume lsubtraction("subtraction", &subtractionUnplaced);
-  // LogicalVolume pcon("pcon", &pconUnplaced);
+  LogicalVolume pcon("pcon", pconUnplaced);
   LogicalVolume polyh("polyh", polyhUnplaced);
   /*
     LogicalVolume gentrp("gentrp", &gentrpUnplaced);
@@ -158,7 +159,7 @@ void write()
   world.PlaceDaughter(&lunion, new Transformation3D(-L / 2, -L / 2, 0.));
   world.PlaceDaughter(&lintersection, new Transformation3D(-L / 2, -L / 2, 0.));
   world.PlaceDaughter(&lsubtraction, new Transformation3D(-L / 2, -L / 2, 0.));
-  // world.PlaceDaughter(&pcon, &placement2);
+  world.PlaceDaughter(&pcon, &placement2);
   world.PlaceDaughter(&polyh, &placement2);
   /*
     world.PlaceDaughter(&gentrp, &placement);

@@ -1,6 +1,7 @@
 #include "persistency/root/include/RootPersistencyProxy.h"
 #include <base/Array.h>
 #include <volumes/PolyhedronStruct.h>
+#include <volumes/PolyconeSection.h>
 
 #include <TVirtualCollectionProxy.h>
 #include <TGenCollectionStreamer.h>
@@ -202,6 +203,7 @@ void RootPersistencyProxy()
   SetCollectionProxyPushBack<vecgeom::Vector<const vecgeom::VPlacedVolume *>>("list<const vecgeom::VPlacedVolume *>");
   SetCollectionProxyPushBack<vecgeom::Vector<double>>("list<double>");
   SetCollectionProxyPushBack<vecgeom::Vector<float>>("list<float>");
+  SetCollectionProxyPushBack<vecgeom::Vector<vecgeom::PolyconeSection>>("list<vecgeom::PolyconeSection>");
   // This is is unlikely to be stored correctly as ROOT can't know the number of double pointed to by the double*.
   // (it is *unlikely* to be just 1 as it is assumed for objects)
   // SetCollectionProxy<vecgeom::Vector<double *>>("vector<double *>");

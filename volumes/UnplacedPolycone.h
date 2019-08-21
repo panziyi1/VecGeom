@@ -258,6 +258,8 @@ public:
   using BaseType_t = LoopUnplacedVolumeImplHelper<PolyconeImplementation<PolyconeType>, UnplacedPolycone>;
   using BaseType_t::BaseType_t;
 
+  SUnplacedPolycone(TRootIOCtor *) : BaseType_t((TRootIOCtor *)nullptr) {}
+
   template <TranslationCode transCodeT, RotationCode rotCodeT>
   VECCORE_ATT_DEVICE
   static VPlacedVolume *Create(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,

@@ -48,6 +48,7 @@ public:
   {
   }
 #endif
+  PlacedPolycone(TRootIOCtor *) : VPlacedVolume((TRootIOCtor *)nullptr) {}
 
   VECCORE_ATT_HOST_DEVICE
   virtual ~PlacedPolycone() {}
