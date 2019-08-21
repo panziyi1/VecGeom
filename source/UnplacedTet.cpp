@@ -10,6 +10,8 @@
 #include "volumes/SpecializedTet.h"
 #include "base/RNG.h"
 #include <stdio.h>
+#include <iomanip>
+
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
@@ -106,27 +108,23 @@ void UnplacedTet::GetParametersList(int, double *aArray) const
 std::ostream &UnplacedTet::StreamInfo(std::ostream &os) const
 // Definition taken from UTet
 {
-  int oldprc = os.precision(16);
-  os << "-----------------------------------------------------------\n"
-     //  << "     *** Dump for solid - " << GetName() << " ***\n"
-     //  << "     ===================================================\n"
-
-     << " Solid type: UTet\n"
-     << " Parameters: \n"
-
-     //    << "       Anchor Point: " << fTet.fAnchor << " mm \n"
-     //    << "       Point P2: " << fTet.fP2 << " mm \n"
-     //    << "       Point P3: " << fTet.fP3 << " mm \n"
-     //    << "       Point P4: " << fTet.fP4 << " mm \n"
-     << "-----------------------------------------------------------\n";
-  os.precision(oldprc);
-
+  os << std::setprecision(16) << "UnplacedTet: V0" << fTet.fVertex[0]
+     << ", V1" << fTet.fVertex[1] << ", V2" << fTet.fVertex[2] << ", V3" << fTet.fVertex[3]
+     << std::endl;
   return os;
 }
 
-void UnplacedTet::Print() const {}
+void UnplacedTet::Print() const
+{
+  std::cout << std::setprecision(16) << "UnplacedTet: V0" << fTet.fVertex[0]
+            << ", V1" << fTet.fVertex[1] << ", V2" << fTet.fVertex[2] << ", V3" << fTet.fVertex[3]
+            << std::endl;
+}
 
-void UnplacedTet::Print(std::ostream &os) const {}
+void UnplacedTet::Print(std::ostream &os) const
+{
+  StreamInfo(os);
+}
 
 #ifndef VECCORE_CUDA
 SolidMesh *UnplacedTet::CreateMesh3D(Transformation3D const &trans, const size_t nFaces) const

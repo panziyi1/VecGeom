@@ -20,7 +20,7 @@ template <typename T = double>
 struct TetStruct {
 
   Vector3D<T> fVertex[4]; ///< Array of the tetrahedron vertices
-  struct {
+  struct TetPlanes {
     Vector3D<T> n; ///< Normal of the plane
     T d;           ///< Distance from  origin to the plane
   } fPlane[4];     ///< The tetrahedron face planes

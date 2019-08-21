@@ -71,6 +71,12 @@ void write()
   double rmax[] = {1., 2., 2., 1.5};
   double z[]    = {-1, -0.5, 0.5, 10};
   auto pconUnplaced = GeoManager::MakeInstance<UnplacedPolycone>(0, kTwoPi, 4, z, rmin, rmax);
+
+  UnplacedScaledShape scaledUnplaced(tubeUnplaced, 0.5, 1.3, 1.);
+
+  Vector3D<double> p0(0., 0., 2.), p1(0., 0., 0.), p2(2., 0., 0.), p3(0., 2., 0.);
+  UnplacedTet tetUnplaced = UnplacedTet(p0, p1, p2, p3);
+  UnplacedTorus2 torusUnplaced(1.2, 3.1, 5., 0, kTwoPi);
 /*
 
     double verticesx1[8] = {-3, -3, 3, 3, -2, -2, 2, 2};
@@ -94,7 +100,6 @@ void write()
     multiuUnplaced.Close();
 
 
-    UnplacedScaledShape scaledUnplaced(tubeUnplaced, 0.5, 1.3, 1.);
 
     double x[12], y[12];
     for (size_t i = 0; i < (size_t)12; ++i) {
@@ -107,10 +112,6 @@ void write()
     TessellatedOrb(10., 10, tslUnplaced);
     tslUnplaced.Close();
 
-    Vector3D<double> p0(0., 0., 2.), p1(0., 0., 0.), p2(2., 0., 0.), p3(0., 2., 0.);
-    UnplacedTet tetUnplaced = UnplacedTet(p0, p1, p2, p3);
-
-    UnplacedTorus2 torusUnplaced(1.2, 3.1, 5., 0, kTwoPi);
   */
   LogicalVolume world("world", &boxUnplaced);
   LogicalVolume box("box", &boxUnplaced);
@@ -129,15 +130,15 @@ void write()
   LogicalVolume lsubtraction("subtraction", &subtractionUnplaced);
   LogicalVolume pcon("pcon", pconUnplaced);
   LogicalVolume polyh("polyh", polyhUnplaced);
+  LogicalVolume scaled("scaled", &scaledUnplaced);
+  LogicalVolume tet("tet", &tetUnplaced);
+  LogicalVolume torus("torus", &torusUnplaced);
   /*
     LogicalVolume gentrp("gentrp", &gentrpUnplaced);
     LogicalVolume xtru("xtru", ExtrudedMultiLayer(false));
     LogicalVolume multiu("multiu", &multiuUnplaced);
-    LogicalVolume scaled("scaled", &scaledUnplaced);
     LogicalVolume sextru("sextru", &sextruUnplaced);
     LogicalVolume tsl("tsl", &tslUnplaced);
-    LogicalVolume tet("tet", &tetUnplaced);
-    LogicalVolume torus("torus", &torusUnplaced);
   */
 
   Transformation3D placement  = Transformation3D(5, 5, 5);
@@ -161,15 +162,15 @@ void write()
   world.PlaceDaughter(&lsubtraction, new Transformation3D(-L / 2, -L / 2, 0.));
   world.PlaceDaughter(&pcon, &placement2);
   world.PlaceDaughter(&polyh, &placement2);
+  world.PlaceDaughter(&scaled, &placement);
+  world.PlaceDaughter(&tet, &placement);
+  world.PlaceDaughter(&torus, &placement2);
   /*
     world.PlaceDaughter(&gentrp, &placement);
     world.PlaceDaughter(&xtru, &placement2);
     world.PlaceDaughter(&multiu, &placement);
-    world.PlaceDaughter(&scaled, &placement);
     world.PlaceDaughter(&sextru, &placement);
     world.PlaceDaughter(&tsl, &origin);
-    world.PlaceDaughter(&tet, &placement);
-    world.PlaceDaughter(&torus, &placement2);
   */
   VPlacedVolume *worldPlaced = world.Place();
 
