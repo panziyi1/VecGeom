@@ -2,6 +2,7 @@
 #include <base/Array.h>
 #include <volumes/PolyhedronStruct.h>
 #include <volumes/PolyconeSection.h>
+#include <volumes/TessellatedCluster.h>
 
 #include <TVirtualCollectionProxy.h>
 #include <TGenCollectionStreamer.h>
@@ -203,7 +204,11 @@ void RootPersistencyProxy()
   SetCollectionProxyPushBack<vecgeom::Vector<const vecgeom::VPlacedVolume *>>("list<const vecgeom::VPlacedVolume *>");
   SetCollectionProxyPushBack<vecgeom::Vector<double>>("list<double>");
   SetCollectionProxyPushBack<vecgeom::Vector<float>>("list<float>");
+  SetCollectionProxyPushBack<vecgeom::Vector<int>>("list<int>");
   SetCollectionProxyPushBack<vecgeom::Vector<vecgeom::PolyconeSection>>("list<vecgeom::PolyconeSection>");
+  SetCollectionProxyPushBack<vecgeom::Vector<vecgeom::Vector3D<double>>>("list<vecgeom::Vector3D<double>>");
+  SetCollectionProxyPushBack<vecgeom::Vector<vecgeom::Tile<3,double>*>>("list<vecgeom::Tile<3,double>*>");
+  SetCollectionProxyPushBack<vecgeom::Vector<vecgeom::TessellatedCluster<3,double>*>>("list<vecgeom::TessellatedCluster<3,double>*>");
   // This is is unlikely to be stored correctly as ROOT can't know the number of double pointed to by the double*.
   // (it is *unlikely* to be just 1 as it is assumed for objects)
   // SetCollectionProxy<vecgeom::Vector<double *>>("vector<double *>");

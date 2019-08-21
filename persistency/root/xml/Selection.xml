@@ -22,6 +22,16 @@
     <field name="fData" comment="[fSize]"/>
   </class>
 
+  <class name="vecgeom::Vector<int>" ClassVersion="1"/>
+  <class name="vecgeom::VectorBase<int>" ClassVersion="1">
+    <field name="fData" comment="[fSize]"/>
+  </class>
+
+  <class name="vecgeom::Vector<vecgeom::Vector3D<double>>" ClassVersion="1"/>
+  <class name="vecgeom::VectorBase<vecgeom::Vector3D<double>>" ClassVersion="1">
+    <field name="fData" comment="[fSize]"/>
+  </class>
+
   <class name="vecgeom::Array<double>" ClassVersion="1">
     <field name="fData" comment="[fSize]"/>
   </class>
@@ -158,20 +168,6 @@
   <class name="vecgeom::SIMDUnplacedVolumeImplHelper<vecgeom::TrdImplementation<vecgeom::TrdTypes::Trd2>,vecgeom::UnplacedTrd>" ClassVersion="1"/>
   <class name="vecgeom::SUnplacedTrd<vecgeom::TrdTypes::Trd2>" ClassVersion="1"/>
   <class name="vecgeom::cxx::SIMDSpecializedVolImplHelper<vecgeom::cxx::IndirectImplementation<vecgeom::cxx::SUnplacedImplAs<vecgeom::cxx::SUnplacedTrd<vecgeom::cxx::TrdTypes::Trd2>, vecgeom::cxx::UnplacedBox>, vecgeom::cxx::BoxImplementation>, -1, 512>" ClassVersion="1"/>
-
-  <!-- The generic trapezoid -->
-  <class name="vecgeom::UnplacedGenTrap" ClassVersion="1"/>
-  <class name="vecgeom::GenTrapStruct<double>" ClassVersion="1"/>
-  <class name="vecgeom::TessellatedSection<double>" ClassVersion="1"/>
-  <class name="vecgeom::SecondOrderSurfaceShell<4>" ClassVersion="1"/>
-  <class name="vecgeom::TessellatedCluster<4,double>" ClassVersion="1"/>
-  <class name="vecgeom::Tile<4,double>" ClassVersion="1"/>
-  <class name="vecgeom::SIMDUnplacedVolumeImplHelper<vecgeom::GenTrapImplementation>" ClassVersion="1"/>
-  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::GenTrapImplementation>" ClassVersion="1"/>
-  <class name="vecgeom::PlacedGenTrap" ClassVersion="1"/>
-  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedGenTrap, vecgeom::VPlacedVolume>" ClassVersion="1"/>
-  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::GenTrapImplementation,-1, -1>" ClassVersion="1"/>
-  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::GenTrapImplementation, -1, -1>" ClassVersion="1"/>
 
   <!-- The trapezoid -->
   <class name="vecgeom::UnplacedTrapezoid" ClassVersion="1"/>
@@ -353,6 +349,47 @@
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::SExtruImplementation,-1,-1>" ClassVersion="1"/>
   <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedSExtruVolume,vecgeom::VPlacedVolume>" ClassVersion="1"/>
 
+  <!-- The tessellated volume --> 
+  <class name="vecgeom::TessellatedStruct<3,double>" ClassVersion="1"/>
+  <class name="vecgeom::TessellatedStruct<3,double>::GridCell" ClassVersion="1"/>
+  <class name="vecgeom::TessellatedStruct<3,double>::GridHelper" ClassVersion="1">
+    <field name="fGrid" comment="[fNcells]"/>
+  </class>
+  <class name="vecgeom::Tile<3,double>" ClassVersion="1"/>
+  <class name="vecgeom::Tile<4,double>" ClassVersion="1"/>
+  <class name="vecgeom::Vector<vecgeom::Tile<3,double>*>" ClassVersion="1"/>
+  <class name="vecgeom::VectorBase<vecgeom::Tile<3,double>*>" ClassVersion="1">
+    <field name="fData" comment="[fSize]"/>
+  </class>
+  <class name="vecgeom::Vector<vecgeom::TessellatedCluster<3,double>*>" ClassVersion="1"/>
+  <class name="vecgeom::VectorBase<vecgeom::TessellatedCluster<3,double>*>" ClassVersion="1">
+    <field name="fData" comment="[fSize]"/>
+  </class>
+  <class name="vecgeom::TessellatedCluster<3,double>" ClassVersion="1"/>
+  <class name="vecgeom::TessellatedCluster<4,double>" ClassVersion="1"/>
+  <class name="vecgeom::TessellatedSection<double>" ClassVersion="1"/>
+  <class name="vecgeom::BitSet" ClassVersion="1"/>
+  <class name="vecgeom::VariableSizeObjectInterface<vecgeom::BitSet,unsigned char>" ClassVersion="1"/>
+  <class name="vecgeom::VariableSizeObj<unsigned char>" ClassVersion="1"/>
+  <class name="vecgeom::UnplacedTessellated" ClassVersion="1"/>
+  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::TessellatedImplementation,vecgeom::VUnplacedVolume>" ClassVersion="1"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::TessellatedImplementation,vecgeom::VUnplacedVolume>" ClassVersion="1"/>
+  <class name="vecgeom::PlacedTessellated" ClassVersion="1"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::TessellatedImplementation,-1,-1>" ClassVersion="1"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TessellatedImplementation,-1,-1>" ClassVersion="1"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedTessellated,vecgeom::VPlacedVolume>" ClassVersion="1"/>
+
+  <!-- The generic trapezoid -->
+  <class name="vecgeom::UnplacedGenTrap" ClassVersion="1"/>
+  <class name="vecgeom::GenTrapStruct<double>" ClassVersion="1"/>
+  <class name="vecgeom::SecondOrderSurfaceShell<4>" ClassVersion="1"/>
+  <class name="vecgeom::SIMDUnplacedVolumeImplHelper<vecgeom::GenTrapImplementation>" ClassVersion="1"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::GenTrapImplementation>" ClassVersion="1"/>
+  <class name="vecgeom::PlacedGenTrap" ClassVersion="1"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedGenTrap, vecgeom::VPlacedVolume>" ClassVersion="1"/>
+  <class name="vecgeom::SIMDSpecializedVolImplHelper<vecgeom::GenTrapImplementation,-1, -1>" ClassVersion="1"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::GenTrapImplementation, -1, -1>" ClassVersion="1"/>
+
   <!-- The Booleans -->
   <class name="vecgeom::BooleanStruct" ClassVersion="1"/>
   <class name="vecgeom::UnplacedBooleanVolume<0>" ClassVersion="1"/>
@@ -398,8 +435,9 @@
   <class name="vecgeom::SimpleABBoxNavigator<false>" ClassVersion="1"/>
   <class name="vecgeom::ABBoxManager" ClassVersion="1"/>
   <class name="vecgeom::VNavigatorHelper<vecgeom::SimpleABBoxNavigator<false>,false>" ClassVersion="1"/>
-  <class name="vecgeom::HybridNavigator<false>" ClassVersion="1"/>
+  <class name="vecgeom::HybridManager2::HybridBoxAccelerationStructure" ClassVersion="1"/>
   <class name="vecgeom::HybridManager2" ClassVersion="1"/>
+  <class name="vecgeom::HybridNavigator<false>" ClassVersion="1"/>
   <class name="vecgeom::VNavigatorHelper<vecgeom::HybridNavigator<false>,false>" ClassVersion="1"/>
 
   <!-- The safety estimators -->
@@ -428,18 +466,6 @@
   <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedExtruded,vecgeom::VPlacedVolume>"/>
   <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::ExtrudedImplementation,-1,-1>"/>
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::ExtrudedImplementation,-1,-1>"/>
-  <class name="vecgeom::PolygonalShell"/>
-  <class name="vecgeom::PlanarPolygon"/>
-  <class name="vecgeom::TessellatedStruct<3,double>"/>
-  <class name="vecgeom::HybridManager2::HybridBoxAccelerationStructure"/>
-  <class name="vecgeom::TessellatedStruct<3,double>::GridCell"/>
-  <class name="vecgeom::TessellatedStruct<3,double>::GridHelper">
-    <field name="fGrid" comment="[fNcells]"/>
-  </class>
-  <class name="vecgeom::Tile<3,double>"/>
-  <class name="veccore::BitSet"/>
-  <class name="veccore::VariableSizeObjectInterface<veccore::BitSet,unsigned char>"/>
-  <class name="veccore::VariableSizeObj<unsigned char>"/>
   
   
   <class name="vecgeom::UnplacedMultiUnion"/>
@@ -461,13 +487,6 @@
 
   
 
-  <class name="vecgeom::UnplacedTessellated"/>
-  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::TessellatedImplementation,vecgeom::VUnplacedVolume>"/>
-  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::TessellatedImplementation,vecgeom::VUnplacedVolume>"/>
-  <class name="vecgeom::PlacedTessellated"/>
-  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::TessellatedImplementation,-1,-1>"/>
-  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TessellatedImplementation,-1,-1>"/>
-  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedTessellated,vecgeom::VPlacedVolume>"/>
 
 
 -->

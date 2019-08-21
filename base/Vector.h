@@ -149,6 +149,7 @@ public:
                            "not allocated by Vector itself)");
       reserve(fMemorySize << 1);
     }
+    assert(fSize < (int)fMemorySize);
     new (&fData[fSize]) Type(item);
     fSize++;
   }

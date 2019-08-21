@@ -86,6 +86,9 @@ void write()
   }
   UnplacedSExtruVolume sextruUnplaced(12, x, y, -5, 5);
 
+  UnplacedTessellated tslUnplaced = UnplacedTessellated();
+  TessellatedOrb(10., 10, tslUnplaced);
+  tslUnplaced.Close();
 /*
 
     double verticesx1[8] = {-3, -3, 3, 3, -2, -2, 2, 2};
@@ -109,9 +112,6 @@ void write()
     multiuUnplaced.Close();
 
 
-    UnplacedTessellated tslUnplaced = UnplacedTessellated();
-    TessellatedOrb(10., 10, tslUnplaced);
-    tslUnplaced.Close();
 
   */
   LogicalVolume world("world", &boxUnplaced);
@@ -135,11 +135,11 @@ void write()
   LogicalVolume tet("tet", &tetUnplaced);
   LogicalVolume torus("torus", &torusUnplaced);
   LogicalVolume sextru("sextru", &sextruUnplaced);
+  LogicalVolume tsl("tsl", &tslUnplaced);
   /*
     LogicalVolume gentrp("gentrp", &gentrpUnplaced);
     LogicalVolume xtru("xtru", ExtrudedMultiLayer(false));
     LogicalVolume multiu("multiu", &multiuUnplaced);
-    LogicalVolume tsl("tsl", &tslUnplaced);
   */
 
   Transformation3D placement  = Transformation3D(5, 5, 5);
@@ -167,11 +167,11 @@ void write()
   world.PlaceDaughter(&tet, &placement);
   world.PlaceDaughter(&torus, &placement2);
   world.PlaceDaughter(&sextru, &placement);
+  world.PlaceDaughter(&tsl, &origin);
   /*
     world.PlaceDaughter(&gentrp, &placement);
     world.PlaceDaughter(&xtru, &placement2);
     world.PlaceDaughter(&multiu, &placement);
-    world.PlaceDaughter(&tsl, &origin);
   */
   VPlacedVolume *worldPlaced = world.Place();
 
@@ -203,6 +203,7 @@ void write()
   cout << endl << "\033[0;31mwriting on vecgeom_export.root\n" << endl;
 
   // gDebug = 2;
+
   RootGeoManager::Instance().Export("vecgeom_export.root");
 
   cout << "\033[0m" << endl;
