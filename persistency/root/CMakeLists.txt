@@ -14,6 +14,7 @@ get_target_property(VECGEOM_INCLUDE_DIR vecgeom INCLUDE_DIRECTORIES)
 list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS}) #see https://root.cern.ch/how/integrate-root-my-project-cmake
 include(${ROOT_USE_FILE})
 
+set(ENV{EXTRA_CLING_ARGS} "${VECGEOM_COMPILATION_FLAGS}")
 set(VECGEOM_DEFINITIONS_LIST "${VECGEOM_DEFINITIONS} --debug")
 separate_arguments(VECGEOM_DEFINITIONS_LIST)
 
