@@ -342,6 +342,17 @@
   <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::TorusImplementation2,-1,-1>" ClassVersion="1"/>
   <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedTorus2,vecgeom::VPlacedVolume>" ClassVersion="1"/>
 
+  <!-- The simple extruded volume --> 
+  <class name="vecgeom::PlanarPolygon" ClassVersion="1"/>
+  <class name="vecgeom::PolygonalShell" ClassVersion="1"/>
+  <class name="vecgeom::UnplacedSExtruVolume" ClassVersion="1"/>
+  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::SExtruImplementation,vecgeom::VUnplacedVolume>" ClassVersion="1"/>
+  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::SExtruImplementation,vecgeom::VUnplacedVolume>" ClassVersion="1"/>
+  <class name="vecgeom::PlacedSExtru" ClassVersion="1"/>
+  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::SExtruImplementation,-1,-1>" ClassVersion="1"/>
+  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::SExtruImplementation,-1,-1>" ClassVersion="1"/>
+  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedSExtruVolume,vecgeom::VPlacedVolume>" ClassVersion="1"/>
+
   <!-- The Booleans -->
   <class name="vecgeom::BooleanStruct" ClassVersion="1"/>
   <class name="vecgeom::UnplacedBooleanVolume<0>" ClassVersion="1"/>
@@ -448,13 +459,6 @@
 
 
 
-  <class name="vecgeom::UnplacedSExtruVolume"/>
-  <class name="vecgeom::LoopUnplacedVolumeImplHelper<vecgeom::SExtruImplementation,vecgeom::VUnplacedVolume>"/>
-  <class name="vecgeom::CommonUnplacedVolumeImplHelper<vecgeom::SExtruImplementation,vecgeom::VUnplacedVolume>"/>
-  <class name="vecgeom::PlacedSExtru"/>
-  <class name="vecgeom::LoopSpecializedVolImplHelper<vecgeom::SExtruImplementation,-1,-1>"/>
-  <class name="vecgeom::CommonSpecializedVolImplHelper<vecgeom::SExtruImplementation,-1,-1>"/>
-  <class name="vecgeom::PlacedVolumeImplHelper<vecgeom::UnplacedSExtruVolume,vecgeom::VPlacedVolume>"/>
   
 
   <class name="vecgeom::UnplacedTessellated"/>

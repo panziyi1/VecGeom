@@ -76,7 +76,16 @@ void write()
 
   Vector3D<double> p0(0., 0., 2.), p1(0., 0., 0.), p2(2., 0., 0.), p3(0., 2., 0.);
   UnplacedTet tetUnplaced = UnplacedTet(p0, p1, p2, p3);
+
   UnplacedTorus2 torusUnplaced(1.2, 3.1, 5., 0, kTwoPi);
+
+  double x[12], y[12];
+  for (size_t i = 0; i < (size_t)12; ++i) {
+    x[i] = 5 * std::sin(i * (2. * M_PI) / 12);
+    y[i] = 5 * std::cos(i * (2. * M_PI) / 12);
+  }
+  UnplacedSExtruVolume sextruUnplaced(12, x, y, -5, 5);
+
 /*
 
     double verticesx1[8] = {-3, -3, 3, 3, -2, -2, 2, 2};
@@ -99,14 +108,6 @@ void write()
     }
     multiuUnplaced.Close();
 
-
-
-    double x[12], y[12];
-    for (size_t i = 0; i < (size_t)12; ++i) {
-      x[i] = 5 * std::sin(i * (2. * M_PI) / 12);
-      y[i] = 5 * std::cos(i * (2. * M_PI) / 12);
-    }
-    UnplacedSExtruVolume sextruUnplaced(12, x, y, -5, 5);
 
     UnplacedTessellated tslUnplaced = UnplacedTessellated();
     TessellatedOrb(10., 10, tslUnplaced);
@@ -133,11 +134,11 @@ void write()
   LogicalVolume scaled("scaled", &scaledUnplaced);
   LogicalVolume tet("tet", &tetUnplaced);
   LogicalVolume torus("torus", &torusUnplaced);
+  LogicalVolume sextru("sextru", &sextruUnplaced);
   /*
     LogicalVolume gentrp("gentrp", &gentrpUnplaced);
     LogicalVolume xtru("xtru", ExtrudedMultiLayer(false));
     LogicalVolume multiu("multiu", &multiuUnplaced);
-    LogicalVolume sextru("sextru", &sextruUnplaced);
     LogicalVolume tsl("tsl", &tslUnplaced);
   */
 
@@ -165,11 +166,11 @@ void write()
   world.PlaceDaughter(&scaled, &placement);
   world.PlaceDaughter(&tet, &placement);
   world.PlaceDaughter(&torus, &placement2);
+  world.PlaceDaughter(&sextru, &placement);
   /*
     world.PlaceDaughter(&gentrp, &placement);
     world.PlaceDaughter(&xtru, &placement2);
     world.PlaceDaughter(&multiu, &placement);
-    world.PlaceDaughter(&sextru, &placement);
     world.PlaceDaughter(&tsl, &origin);
   */
   VPlacedVolume *worldPlaced = world.Place();
