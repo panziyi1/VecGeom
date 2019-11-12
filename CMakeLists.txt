@@ -5,12 +5,12 @@ cmake_minimum_required(VERSION 3.1.0)
 include(cmake/modules/RecordCmdLine.cmake)
 include(ExternalProject)
 
-project(VecGeom)
+project(VecGeom VERSION 1.1.5)
 
-set(VECGEOM_VERSION 1.1.5)
+# Back compatibility
+set(VECGEOM_VERSION "${PROJECT_VERSION}")
 set(VECGEOM ON)
 
-enable_language(CXX)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 11 CACHE STRING "C++ ISO Standard")
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -94,19 +94,19 @@ endif()
 
 option(VTUNE "Enable the use of profiler Vtune" OFF)
 
-set(INSTALL_LIB_DIR lib CACHE PATH "Installation directory for libraries.")
-set(INSTALL_INCLUDE_DIR include CACHE PATH
-    "Installation directory for header files.")
-set(INSTALL_CMAKE_DIR lib/cmake/VecGeom CACHE PATH
-    "Installation directory for CMake files.")
+# Install locations...
+include(GNUInstallDirs)
 
-# Make relative paths absolute
-foreach(p LIB BIN INCLUDE CMAKE)
-  set(var INSTALL_${p}_DIR)
-  if(NOT IS_ABSOLUTE "${${var}}")
-    set(${var} "${CMAKE_INSTALL_PREFIX}/${${var}}")
-  endif()
-endforeach()
+set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}" CACHE PATH "CMake package config files (LIBDIR/cmake/PROJECT_NAME)")
+
+# CMake > 3.6
+#GNUInstallDirs_get_absolute_install_dir(CMAKE_INSTALL_FULL_CMAKEDIR CMAKE_INSTALL_CMAKEDIR)
+if(IS_ABSOLUTE CMAKE_INSTALL_CMAKEDIR)
+  set(CMAKE_INSTALL_FULL_CMAKEDIR "${CMAKE_INSTALL_CMAKEDIR}")
+else()
+  set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_CMAKEDIR}")
+endif()
+
 
 if (APPLE)
    set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
@@ -558,7 +558,7 @@ endif()
 # We may have addition in compiler flags from the above included packages
 # We don't want to have trailing CMAKE_CXX_FLAGS_"BUILD_TYPE" options on the command line
 # but rather have it as first set of argument.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_build_type}} ${VECGEOM_CXX_FLAGS} ${VECGEOM_DEFINITIONS} ${VECGEOM_COMPILATION_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_build_type}} ${VECGEOM_CXX_FLAGS}  ${VECGEOM_COMPILATION_FLAGS}")
 #set(VECGEOM_CXX_FLAGS ${CMAKE_CXX_FLAGS_${_build_type}})
 #unset(CMAKE_CXX_FLAGS_${_build_type} CACHE)
 
@@ -573,17 +573,9 @@ if (CUDA)
 endif()
 
 if (ROOT)
-
-# You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:
-#   - ROOT built with classic configure/make use the provided $ROOTSYS/etc/cmake/FindROOT.cmake
-#   - ROOT built with CMake. Add in CMAKE_PREFIX_PATH the installation prefix for ROOT
   list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
-
-#---Locate the ROOT package and defines a number of variables (e.g. ROOT_INCLUDE_DIRS)
   find_package(ROOT REQUIRED COMPONENTS Geom Graf3d)
 
-  set(CMAKE_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX}/lib)
-#---setup ROOT include + lib dirs
   include_directories(AFTER SYSTEM ${ROOT_INCLUDE_DIRS})
   link_directories(${ROOT_LIBRARY_DIR})
   set(VECGEOM_LIBRARIES_EXTERNAL ${VECGEOM_LIBRARIES_EXTERNAL} ${ROOT_LIBRARIES})
@@ -594,8 +586,7 @@ if (ROOT)
       source/UnplacedRootVolume.cpp
       source/ShapeDebugger.cpp
       source/Visualizer.cpp)
-
-endif(ROOT)
+endif()
 
 # Intel Embree
 if (EMBREE)
@@ -605,7 +596,6 @@ if (EMBREE)
 endif()
 
 if (Geant4)
-
   find_package(Geant4 REQUIRED)
   # need to define G4MULTITHREADED for Geant4-MT
   add_definitions(${Geant4_DEFINITIONS})
@@ -615,23 +605,23 @@ if (Geant4)
       ${Geant4_LIBRARIES})
   message(STATUS "Geant4 found in: ${Geant4_INCLUDE_DIRS}")
 
-if(ROOT)
-  # We use VGM to convert (test) geometries from ROOT input to G4
-  # without needing an intermediate gdml file
-  # for user friendliness .. added as external project for now
-  set(VGM_INSTALL "${CMAKE_BINARY_DIR}/vgminstall/")
-  ExternalProject_Add(VGM
-                      GIT_REPOSITORY "https://github.com/alisw/VGM.git"
-                      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${VGM_INSTALL} -DWITH_EXAMPLES=OFF -DGeant4_DIR=${Geant4_DIR} -DROOT_DIR=${ROOT_DIR}
-                                 -DCMAKE_INSTALL_LIBDIR=${VGM_INSTALL}/lib)
+  if(ROOT)
+    # We use VGM to convert (test) geometries from ROOT input to G4
+    # without needing an intermediate gdml file
+    # for user friendliness .. added as external project for now
+    set(VGM_INSTALL "${CMAKE_BINARY_DIR}/vgminstall/")
+    ExternalProject_Add(VGM
+      GIT_REPOSITORY "https://github.com/alisw/VGM.git"
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${VGM_INSTALL} -DWITH_EXAMPLES=OFF -DGeant4_DIR=${Geant4_DIR} -DROOT_DIR=${ROOT_DIR}
+      -DCMAKE_INSTALL_LIBDIR=${VGM_INSTALL}/lib)
 
-  # now modify includes and libs for later linking
-  include_directories(${VGM_INSTALL}/include)
-  link_directories(${VGM_INSTALL}/lib)
-  set(VECGEOM_LIBRARIES_EXTERNAL "-L${VGM_INSTALL}/lib" BaseVGM;ClhepVGM;XmlVGM;Geant4GM;RootGM ${VECGEOM_LIBRARIES_EXTERNAL})
-  set(VGM ON)
-endif(ROOT)
-endif(Geant4)
+    # now modify includes and libs for later linking
+    include_directories(${VGM_INSTALL}/include)
+    link_directories(${VGM_INSTALL}/lib)
+    set(VECGEOM_LIBRARIES_EXTERNAL "-L${VGM_INSTALL}/lib" BaseVGM;ClhepVGM;XmlVGM;Geant4GM;RootGM ${VECGEOM_LIBRARIES_EXTERNAL})
+    set(VGM ON)
+  endif()
+endif()
 
 if (VTUNE)
   find_package(VTUNE REQUIRED)
@@ -723,7 +713,7 @@ set(VECGEOM_SRCS
   source/ABBoxManager.cpp
   source/HybridManager2.cpp
   source/FlatVoxelManager.cpp
-  
+
   source/MessageLogger.cpp
 
   services/NavigationSpecializer.cpp
@@ -733,11 +723,11 @@ set(VECGEOM_SRCS
   source/Utils3D.cpp
   source/SolidMesh.cpp
  )
- 
+
 if (EMBREE)
 set(VECGEOM_SRCS
     ${VECGEOM_SRCS}
-    source/EmbreeManager.cpp  
+    source/EmbreeManager.cpp
 )
 endif()
 
@@ -879,22 +869,25 @@ if (NOT APPLE)
 endif()
 
 add_library(vecgeom ${SRC_CPP})
-target_link_libraries(vecgeom ${VECGEOM_LIBRARIES}
+
+# Handle -D/non-D defs
+string(REGEX REPLACE "^ *-D| -D" ";" VECGEOM_COMPILE_DEFINITIONS "${VECGEOM_DEFINITIONS}")
+#string(STRIP "${VECGEOM_COMPILE_DEFINITIONS}" VECGEOM_COMPILE_DEFINITIONS)
+target_compile_definitions(vecgeom PUBLIC ${VECGEOM_COMPILE_DEFINITIONS})
+
+target_link_libraries(vecgeom PUBLIC ${VECGEOM_LIBRARIES}
                       ${VECGEOM_LIBRARIES_EXTERNAL})
 
 if(VGM)
-add_dependencies(vecgeom VGM)
+  add_dependencies(vecgeom VGM)
 endif(VGM)
+
 set(VECGEOM_LIBRARIES ${VECGEOM_LIBRARIES} vecgeom)
+
 if (GDML)
   set(VECGEOM_LIBRARIES ${VECGEOM_LIBRARIES} vgdml)
 endif()
 
-if (BUILD_SHARED_LIBS)
-    set(VECGEOM_LIBNAME "libvecgeom${CMAKE_SHARED_LIBRARY_SUFFIX}")
-else()
-    set(VECGEOM_LIBNAME "libvecgeom${CMAKE_STATIC_LIBRARY_SUFFIX}")
-endif()
 
 # build the CUDA version of the library
 if (CUDA)
@@ -1005,7 +998,7 @@ set(TEST_EXECUTABLES_ROOT
   ${CMAKE_SOURCE_DIR}/test/core/TestRegions.cpp
 )
 if (EMBREE)
- set(TEST_EXECUTABLES_ROOT 
+ set(TEST_EXECUTABLES_ROOT
       ${TEST_EXECUTABLES_ROOT}
       ${CMAKE_SOURCE_DIR}/test/core/EmbreeManagerTest.cpp
     )
@@ -1330,59 +1323,57 @@ endif()
 
 
 ################################################################################
-
 # Installation
-file(RELATIVE_PATH INSTALL_INCLUDE_DIR_RELATIVE
-     "${INSTALL_CMAKE_DIR}" "${INSTALL_INCLUDE_DIR}/.")
-file(RELATIVE_PATH INSTALL_LIB_DIR_RELATIVE
-     "${INSTALL_CMAKE_DIR}" "${INSTALL_LIB_DIR}/.")
-# Build
-set(CONF_TYPE "build")
-set(CONF_INCLUDE_DIR "${CMAKE_SOURCE_DIR}")
-set(CONF_LIBRARY_DIR "${CMAKE_BINARY_DIR}")
-set(CONF_LIBRARIES ${VECGEOM_LIBRARIES_EXTERNAL}
-    "${CONF_LIBRARY_DIR}/${VECGEOM_LIBNAME}")
-if (CUDA)
-   set(CONF_LIBRARIES ${CONF_LIBRARIES}  "${CONF_LIBRARY_DIR}/libvecgeomcuda.so")
-   set(CONF_CUDA_STATIC_LIBRARY "${CONF_LIBRARY_DIR}/libvecgeomcuda_static.a")
-endif()
-configure_file(VecGeomConfig.cmake.in
-               "${PROJECT_BINARY_DIR}/VecGeomConfig.cmake" @ONLY)
-# Installation
-set(CONF_TYPE "install")
-set(CONF_INCLUDE_DIR "\${THIS_DIR}/${INSTALL_INCLUDE_DIR_RELATIVE}")
-set(CONF_LIBRARY_DIR "\${THIS_DIR}/${INSTALL_LIB_DIR_RELATIVE}")
-set(CONF_LIBRARIES ${VECGEOM_LIBRARIES_EXTERNAL} ${CONF_LIBRARY_DIR}/${VECGEOM_LIBNAME})
-if (CUDA)
-   set(CONF_LIBRARIES ${CONF_LIBRARIES}  "${CONF_LIBRARY_DIR}/libvecgeomcuda.so")
-   set(CONF_CUDA_STATIC_LIBRARY "${CONF_LIBRARY_DIR}/libvecgeomcuda_static.a")
-endif()
-configure_file(VecGeomConfig.cmake.in
-  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/VecGeomConfig.cmake" @ONLY)
-
-# Install the VecGeomConfig.cmake
-install(FILES
-  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/VecGeomConfig.cmake"
-  DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
-
-# Install headers and libraries
+# - Headers and Libraries
 foreach(FOLDER base benchmarking management navigation volumes backend)
-  install(DIRECTORY ${FOLDER} DESTINATION ${INSTALL_INCLUDE_DIR})
+  install(DIRECTORY ${FOLDER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 endforeach()
 
-string(REPLACE "." ";" SYSTEM_VERSION_LIST ${CMAKE_SYSTEM_VERSION})
-list(GET SYSTEM_VERSION_LIST 0 SYSTEM_VERSION_MAJOR)
-list(GET SYSTEM_VERSION_LIST 1 SYSTEM_VERSION_MINOR)
-list(GET SYSTEM_VERSION_LIST 2 SYSTEM_VERSION_PATCH)
-if(APPLE AND ${SYSTEM_VERSION_MAJOR} LESS 14)
-   install(FILES ${PROJECT_BINARY_DIR}/${VECGEOM_LIBNAME} DESTINATION ${INSTALL_LIB_DIR})
-else ()
-   install(TARGETS vecgeom DESTINATION ${INSTALL_LIB_DIR})
-endif ()
-if (CUDA)
-  install(TARGETS vecgeomcuda DESTINATION ${INSTALL_LIB_DIR})
-  install(TARGETS vecgeomcuda_static DESTINATION ${INSTALL_LIB_DIR})
+set(VecGeom_INSTALL_TARGETS vecgeom)
+if(CUDA)
+  list(APPEND VecGeom_INSTALL_TARGETS vecgeomcuda vecgeomcuda_static)
 endif()
+
+install(TARGETS ${VecGeom_INSTALL_TARGETS}
+  EXPORT VecGeomTargets
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  )
+
+# - CMake support files
+include(CMakePackageConfigHelpers)
+
+# - Common Across Build/Install
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/VecGeomConfigVersion.cmake"
+  COMPATIBILITY AnyNewerVersion)
+
+# - Build Tree files
+set(VecGeom_INSTALL_INCLUDEDIR "${PROJECT_SOURCE_DIR}")
+configure_package_config_file(VecGeomConfig.cmake.in
+  "${CMAKE_CURRENT_BINARY_DIR}/VecGeomConfig.cmake"
+  INSTALL_DESTINATION "${CMAKE_CURRENT_BINARY_DIR}"
+  PATH_VARS VecGeom_INSTALL_INCLUDEDIR
+  INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}")
+
+export(EXPORT VecGeomTargets NAMESPACE VecGeom::)
+
+# - Install Tree files
+set(VecGeom_INSTALL_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}")
+configure_package_config_file(VecGeomConfig.cmake.in
+  "${CMAKE_CURRENT_BINARY_DIR}/InstallTreeFiles/VecGeomConfig.cmake"
+  INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/VecGeom"
+  PATH_VARS VecGeom_INSTALL_INCLUDEDIR)
+
+install(EXPORT VecGeomTargets NAMESPACE VecGeom:: DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
+install(
+  FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/InstallTreeFiles/VecGeomConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/VecGeomConfigVersion.cmake"
+  DESTINATION
+    "${CMAKE_INSTALL_CMAKEDIR}"
+  COMPONENT dev)
 
 ################################################################################
 
@@ -1394,7 +1385,7 @@ if(DOXYGEN_FOUND)
   foreach(d doc/doxygen backend base benchmarking management navigation scripts source volumes)
     set(DOXYFILE_SOURCE_DIRS "${DOXYFILE_SOURCE_DIRS} ${CMAKE_SOURCE_DIR}/${d}")
   endforeach()
-  
+
   configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/doc/doxygen/Doxyfile.in
                   ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
   add_custom_target(doxygen
