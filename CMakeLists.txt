@@ -7,34 +7,55 @@ include(ExternalProject)
 
 project(VecGeom VERSION 1.1.5)
 
-# Back compatibility
-set(VECGEOM_VERSION "${PROJECT_VERSION}")
-set(VECGEOM ON)
+# Builtin/Local module inclusion
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake/modules)
+include(MacroUtilities)
+include(CTest)
 
+################################################################################
+# - Minimal compiler/build requirements
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 11 CACHE STRING "C++ ISO Standard")
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-################################################################################
 if (NOT CMAKE_BUILD_TYPE)
-  message(STATUS "No build type selected, default to Release")
   set(CMAKE_BUILD_TYPE "Release")
 endif()
 string(TOUPPER ${CMAKE_BUILD_TYPE} _build_type)
 
-# Setting the C++ compiler to use
-set("${CMAKE_CXX_COMPILER_ID}" TRUE CACHE STRING "C++ Compiler")
+# Boolean of compiler id for later convenience
+set("${CMAKE_CXX_COMPILER_ID}" TRUE)
 if (NOT GNU AND NOT Clang AND NOT AppleClang AND NOT Intel)
   message(WARNING "Unsupported compiler. Build will likely fail.")
 endif()
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake/modules)
+# see if we have CCACHE ( to avoid recompilation on branch switches )
+find_program(CCACHE_EXECUTABLE ccache)
+if(CCACHE_EXECUTABLE)
+  message(STATUS "found ccache")
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_EXECUTABLE})
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ${CCACHE_EXECUTABLE})
+endif()
 
-include(MacroUtilities)
+if (APPLE)
+  set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
+endif()
+
 ################################################################################
+# - Install locations
+include(GNUInstallDirs)
 
+set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}" CACHE PATH "CMake package config files (LIBDIR/cmake/PROJECT_NAME)")
+# Use this on CMake > 3.6
+#GNUInstallDirs_get_absolute_install_dir(CMAKE_INSTALL_FULL_CMAKEDIR CMAKE_INSTALL_CMAKEDIR)
+if(IS_ABSOLUTE CMAKE_INSTALL_CMAKEDIR)
+  set(CMAKE_INSTALL_FULL_CMAKEDIR "${CMAKE_INSTALL_CMAKEDIR}")
+else()
+  set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_CMAKEDIR}")
+endif()
+
+################################################################################
 # Configuration options
-
 option(BUILTIN_VECCORE "Build VecCore and its dependencies from source" OFF)
 option(CUDA "Enable compilation for CUDA." OFF)
 option(CUDA_VOLUME_SPECIALIZATION "Use specialized volumes for CUDA." OFF)
@@ -55,8 +76,9 @@ option(STATIC_ANALYSIS "enable static analysis on VecGeom" OFF)
 option(GDML "Enable GDML persistency. Requres Xerces-C" OFF)
 option(EMBREE "Enable Intel Embree" OFF)
 option(USE_CACHED_TRANSFORMATIONS "Use cached transformations in navigation states" OFF)
-
 option(FAST_MATH "Enable the -ffast-math compiler option in Release builds" OFF)
+option(VTUNE "Enable the use of profiler Vtune" OFF)
+
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "(i686|x86_64)")
   set(VECGEOM_ARCH sse2 sse3 ssse3 sse4.1 sse4.2 avx avx2 mic mic_avx512 native empty)
@@ -71,15 +93,7 @@ enum_option(VECGEOM_VECTOR
       CASE_INSENSITIVE
     )
 
-if ("${BACKEND}" MATCHES "vc|VC")
-  set(BACKEND "Vc")
-endif()
-if ("${BACKEND}" MATCHES "scalar|SCALAR")
-  set(BACKEND "Scalar")
-endif()
-
 set(VECGEOM_BACKEND Scalar UMESIMD Vc)
-
 enum_option(BACKEND
             DOC "Backend infrastructure to be used"
             TYPE STRING
@@ -90,35 +104,13 @@ enum_option(BACKEND
 if (CTEST)
   message(STATUS "Testing with CTest enabled.")
   enable_testing()
-endif()
-
-option(VTUNE "Enable the use of profiler Vtune" OFF)
-
-# Install locations...
-include(GNUInstallDirs)
-
-set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}" CACHE PATH "CMake package config files (LIBDIR/cmake/PROJECT_NAME)")
-
-# CMake > 3.6
-#GNUInstallDirs_get_absolute_install_dir(CMAKE_INSTALL_FULL_CMAKEDIR CMAKE_INSTALL_CMAKEDIR)
-if(IS_ABSOLUTE CMAKE_INSTALL_CMAKEDIR)
-  set(CMAKE_INSTALL_FULL_CMAKEDIR "${CMAKE_INSTALL_CMAKEDIR}")
-else()
-  set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_CMAKEDIR}")
-endif()
-
-
-if (APPLE)
-   set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
+  set(DATA_DOWNLOAD ON)
 endif()
 
 if (GEANT4)
-   set(Geant4 ON)
+  set(Geant4 ON)
 endif()
 
-if (CTEST)
-  set (DATA_DOWNLOAD ON)
-endif()
 
 ################################################################################
 
@@ -526,14 +518,6 @@ endif()
 
 ################################################################################
 
-# see if we have CCACHE ( to avoid recompilation on branch switches )
-find_program(CCACHE_FOUND ccache)
-if(CCACHE_FOUND)
-  message(STATUS "found ccache")
-  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-endif(CCACHE_FOUND)
-
 if (CUDA)
   # See the setting of CUDA_SEPARABLE_COMPILATION and CUDA_USE_STATIC_CUDA_RUNTIME
   # ealier.
@@ -559,8 +543,6 @@ endif()
 # We don't want to have trailing CMAKE_CXX_FLAGS_"BUILD_TYPE" options on the command line
 # but rather have it as first set of argument.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_build_type}} ${VECGEOM_CXX_FLAGS}  ${VECGEOM_COMPILATION_FLAGS}")
-#set(VECGEOM_CXX_FLAGS ${CMAKE_CXX_FLAGS_${_build_type}})
-#unset(CMAKE_CXX_FLAGS_${_build_type} CACHE)
 
 # At this point, all changes to CXXFLAGS have been made.
 # The line below is necessary to allow passing extra options
@@ -1237,11 +1219,6 @@ if (CUDA)
   build_executables("${TEST_EXECUTABLES_CUDA}")
   #  add_to_ctest("${TEST_EXECUTABLES_CUDA}")
 endif()
-
-#---------------------------------------------------------------------------
-# Include creation and submission to dashboard cdash.cern.ch
-
-include(CTest)
 
 #---------------------------------------------------------------------------
 # Set data to be dowloaded
