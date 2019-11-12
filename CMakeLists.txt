@@ -87,19 +87,18 @@ else()
 endif()
 
 enum_option(VECGEOM_VECTOR
-      DOC "Vector instruction set to be used"
-      TYPE STRING
-      VALUES ${VECGEOM_ARCH}
-      CASE_INSENSITIVE
-    )
+  DOC "Vector instruction set to be used"
+  TYPE STRING
+  VALUES ${VECGEOM_ARCH}
+  CASE_INSENSITIVE
+  )
 
 set(VECGEOM_BACKEND Scalar UMESIMD Vc)
 enum_option(BACKEND
-            DOC "Backend infrastructure to be used"
-            TYPE STRING
-            VALUES ${VECGEOM_BACKEND}
-            CASE_SENSITIVE
-           )
+  DOC "Backend infrastructure to be used"
+  TYPE STRING
+  VALUES ${VECGEOM_BACKEND}
+  )
 
 if (CTEST)
   message(STATUS "Testing with CTest enabled.")
