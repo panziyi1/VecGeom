@@ -7,6 +7,7 @@
 #include "management/FlatVoxelManager.h"
 #include "volumes/LogicalVolume.h"
 #include "volumes/utilities/VolumeUtilities.h"
+#include "volumes/utilities/VolumeUtilities2.h"
 #include "navigation/SimpleABBoxSafetyEstimator.h"
 #include <thread>
 #include <future>
