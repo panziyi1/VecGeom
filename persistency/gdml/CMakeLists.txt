@@ -18,7 +18,7 @@ if (NOT BUILTIN_XercesC)
     message(WARNING "Could not find XercesC, will try to build from source")
     set(BUILTIN_XercesC ON)
   else()
-    message("-- Found XercesC at: ${XercesC_DIR}")
+    message(STATUS "Found XercesC at: ${XercesC_DIR}")
   endif()
 endif()
 
