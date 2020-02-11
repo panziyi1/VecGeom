@@ -25,7 +25,7 @@ void G4GeoManager::LoadG4Geometry(std::string gdmlfile, bool validate)
 {
   G4GDMLParser parser;
   parser.Read(gdmlfile, validate);
-  LoadG4Geometry(const_cast<G4VPhysicalVolume *>(parser.GetWorldVolume()));
+  CloseG4Geometry(const_cast<G4VPhysicalVolume *>(parser.GetWorldVolume()));
 }
 
 // converts to a G4 geometry from ROOT using VGM
@@ -50,6 +50,7 @@ G4VPhysicalVolume *G4GeoManager::GetG4GeometryFromROOT()
     g4Factory.SetIgnore(true);
     rtFactory.Export(&g4Factory);
     world = g4Factory.World();
+    CloseG4Geometry(world);
   } catch (...) {
     std::cerr << "caught exception in VGM; so return nullptr\n";
     world = nullptr;
@@ -61,7 +62,7 @@ G4VPhysicalVolume *G4GeoManager::GetG4GeometryFromROOT()
 }
 
 // sets a G4 geometry from existing G4PhysicalVolume
-void G4GeoManager::LoadG4Geometry(G4VPhysicalVolume *world)
+void G4GeoManager::CloseG4Geometry(G4VPhysicalVolume *world)
 {
   // if there is an existing geometry
   if (fNavigator != nullptr) delete fNavigator;

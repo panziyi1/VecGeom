@@ -558,7 +558,7 @@ int main(int argc, char *argv[])
 
     G4VPhysicalVolume *world = SetupGeant4Geometry(
         testvolume, Vector3D<Precision>(std::abs(origin[0]) + dx, std::abs(origin[1]) + dy, std::abs(origin[2]) + dz));
-    G4GeoManager::Instance().LoadG4Geometry(world);
+    G4GeoManager::Instance().CloseG4Geometry(world);
 
     timer.Start();
 

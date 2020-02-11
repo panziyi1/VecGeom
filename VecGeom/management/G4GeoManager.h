@@ -56,11 +56,11 @@ public:
   // converts to a G4 geometry from ROOT using VGM
   // expects a valid gGeoManager object for the import
   // returns world pointer of in-memory representation of G4
-  // the geometry still has to be closed + fully initialized afterwards using LoadG4Geometry
+  // the geometry still has to be closed + fully initialized afterwards using CloseG4Geometry
   G4VPhysicalVolume *GetG4GeometryFromROOT();
 
   // sets and finalizes G4 geometry from existing G4PhysicalVolume
-  void LoadG4Geometry(G4VPhysicalVolume *world);
+  void CloseG4Geometry(G4VPhysicalVolume *world);
 
   G4Navigator *GetNavigator() const
   {

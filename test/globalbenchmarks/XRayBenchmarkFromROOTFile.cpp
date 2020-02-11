@@ -816,7 +816,7 @@ int main(int argc, char *argv[])
 #ifdef VECGEOM_GEANT4
     // int errorROOTG4(0);
     G4VPhysicalVolume *world(vecgeom::G4GeoManager::Instance().GetG4GeometryFromROOT());
-    if (world != nullptr) G4GeoManager::Instance().LoadG4Geometry(world);
+    if (world != nullptr) G4GeoManager::Instance().CloseG4Geometry(world);
 
     timer.Start();
     if (world != nullptr) {

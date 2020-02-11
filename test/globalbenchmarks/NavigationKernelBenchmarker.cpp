@@ -279,7 +279,7 @@ template <bool WithSafety = false>
 __attribute__((noinline)) void benchmarkG4Navigator(SOA3D<Precision> const &points, SOA3D<Precision> const &dirs)
 {
   G4VPhysicalVolume *world(vecgeom::G4GeoManager::Instance().GetG4GeometryFromROOT());
-  if (world != nullptr) G4GeoManager::Instance().LoadG4Geometry(world);
+  if (world != nullptr) G4GeoManager::Instance().CloseG4Geometry(world);
 
   // Note: Vector3D's are expressed in cm, while G4ThreeVectors are expressed in mm
   const Precision cm = 10.; // cm --> mm conversion
