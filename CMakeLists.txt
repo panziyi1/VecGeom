@@ -723,8 +723,9 @@ if(VECGEOM_BENCHMARK)
     source/benchmarking/NavigationBenchmarker.cpp
     source/benchmarking/BenchmarkResult.cpp
     source/benchmarking/Benchmarker.cpp
-    source/benchmarking/VolumePointers.cpp)
-
+    source/benchmarking/VolumePointers.cpp
+    source/benchmarking/Raytracer.cpp)
+ 
   list(APPEND VECGEOM_CUDA_SRCS
     source/benchmarking/Benchmarker.cu
     source/benchmarking/NavigationBenchmarker.cu
