@@ -734,6 +734,7 @@ if (BENCHMARK)
     source/benchmarking/NavigationBenchmarker.cpp
     source/benchmarking/BenchmarkResult.cpp
     source/benchmarking/Benchmarker.cpp
+    source/benchmarking/Raytracer.cpp
     source/benchmarking/VolumePointers.cpp
   )
   set(SRC_CUDA ${SRC_CUDA}
