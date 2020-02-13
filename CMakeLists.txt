@@ -827,6 +827,7 @@ endif()
 # build the libraries for GDML persistency
 if(GDML)
   option(GDMLDEBUG "Enable additional debug information in GDML module" OFF)
+  include_directories(persistency/gdml/source/include)
   add_subdirectory(persistency/gdml)
 endif() # GDML
 
