@@ -7,5 +7,4 @@
 
 #include "VecGeom/navigation/NavStatePath.h"
 #include "VecGeom/navigation/NavStateIndex.h"
-
 #endif // VECGEOM_NAVIGATION_NAVIGATIONSTATE_H_
