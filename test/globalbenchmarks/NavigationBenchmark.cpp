@@ -8,9 +8,14 @@
 #undef VERBOSE
 //#define VERBOSE
 
-#include "VecGeom/base/Config.h"
+//#include "VecGeom/base/Config.h"
+#ifdef VECGEOM_GDML
+#include "persistency/gdml/source/include/Frontend.h"
+#include "persistency/gdml/source/include/Backend.h"
+#endif
 
 #ifdef VECGEOM_ROOT
+#include "TGeoManager.h"
 #include "VecGeom/management/RootGeoManager.h"
 #include "utilities/Visualizer.h"
 #endif
@@ -20,6 +25,7 @@
 #include "G4ThreeVector.hh"
 // #include "G4TouchableHistoryHandle.hh"
 #include "G4LogicalVolume.hh"
+#include "G4PhysicalVolumeStore.hh"
 #include "G4LogicalVolumeStore.hh"
 #include "G4PVPlacement.hh"
 #include "G4GeometryManager.hh"
@@ -38,7 +44,7 @@ using namespace VECGEOM_NAMESPACE;
 
 VPlacedVolume *SetupGeometry()
 {
-
+  std::cout<<"\nBuilding default navBench geometry...\n";
   UnplacedBox *worldUnplaced      = new UnplacedBox(10, 10, 10);
   UnplacedTrapezoid *trapUnplaced = new UnplacedTrapezoid(4, 0, 0, 4, 4, 4, 0, 4, 4, 4, 0);
   UnplacedBox *boxUnplaced        = new UnplacedBox(2, 2, 2);
@@ -88,6 +94,109 @@ VPlacedVolume *SetupGeometry()
   return w;
 }
 
+void VerifyVecGeomGeometry() {
+  size_t numPlaced = GeoManager::Instance().GetPlacedVolumesCount();
+  size_t numLogical = GeoManager::Instance().GetRegisteredVolumesCount();
+  size_t numNodes = GeoManager::Instance().GetTotalNodeCount();
+  std::cout<<" *** VecGeom volumes: logical="<< numLogical <<", placed="<< numPlaced <<", #nodes="<< numNodes <<"\n";
+}
+
+#ifdef VECGEOM_ROOT
+void VerifyRootGeometry() {
+  size_t rootNumShapes = gGeoManager->GetListOfShapes()->GetEntries();
+  size_t rootNumVols   = gGeoManager->GetListOfVolumes()->GetEntries();
+  size_t rootNumNodes  = gGeoManager->GetListOfNodes()->GetEntries();
+  size_t rootNumPhys   = gGeoManager->GetListOfPhysicalNodes()->GetEntries();
+  std::cout<<" *** Root geometry: #shapes="<< rootNumShapes <<", #vols="<< rootNumVols
+	   <<", #phys="<< rootNumPhys <<", #nodes="<< rootNumNodes <<"\n\n";
+}
+#endif
+
+#ifdef VECGEOM_GEANT4
+void VerifyGeant4Geometry() {
+  G4VPhysicalVolume* g4vol = G4GeoManager::Instance().GetNavigator()->GetWorldVolume();
+  size_t g4NumPhysVol = G4PhysicalVolumeStore::GetInstance()->size();
+  size_t g4NumLogVol = G4LogicalVolumeStore::GetInstance()->size();
+  std::cout<<" *** Geant4 volumes: World="<< g4vol->GetName() <<
+    " -- #logVols="<< g4NumLogVol <<", #physVols="<< g4NumPhysVol <<"\n";
+}
+#endif
+
+// Purpose: parse a .gdml file into VecGeom.
+//   If VECGEOM_GEANT4 is defined, loads also a Geant4 geometry.
+//   If VECGEOM_ROOT is defined, loads also a Root geometry.
+//
+// input: a .gdml filename char*
+//
+bool LoadFromGDML(const char* fname) {
+
+  bool loaded = false;
+  std::string gdmlName(fname);
+  if ( gdmlName.find("gdml") >= gdmlName.size() ) {
+    gdmlName += ".gdml";
+  }
+  std::cout<<" Using Geant4 GDML parser on file "<< gdmlName <<"\n";
+
+#ifdef VECGEOM_GDML
+  std::cout<<"*** Using native GDML parser...\n";
+  loaded = vgdml::Frontend::Load(gdmlName);
+#endif
+
+#ifdef VECGEOM_ROOT
+  if (loaded) {
+    std::cout<<" *** Exporting VecGeom geometry to .root format...\n";
+    RootGeoManager::Instance().ExportToROOTGeometry(GeoManager::Instance().GetWorld(), "navBench.root");
+    std::cout<<" *** Cleaning up RootGeoManager...\n";
+    RootGeoManager::Instance().Clear();
+
+    // read it back to fill Root geometry
+    std::cout<<" *** Reading back .root file to fill TGeoManager geometry...\n";
+    RootGeoManager::Instance().set_verbose(1);
+    RootGeoManager::Instance().LoadRootGeometry("navBench.root");
+  }
+  else {
+    std::cout<<"*** Using Root's GDML parser...\n";
+    loaded = TGeoManager::Import(gdmlName.c_str());
+  }
+
+  #ifdef VECGEOM_GEANT4
+  // load Geant4 geometry from ROOT
+  G4GeoManager::Instance().GetG4GeometryFromROOT();
+  #endif
+
+#else
+  #ifdef VECGEOM_GEANT4
+    std::cout<<"*** Using Geant4 GDML parser...\n";
+    G4GeoManager::Instance().LoadG4Geometry(gdmlName.c_str(), true);
+  #endif
+#endif
+
+  return loaded;
+}
+
+// Saves a VecGeom geometry from memory to a GDML file
+void SaveGDML(const char* filename) {
+  auto aBackend       = vgdml::Backend();
+  auto const loaded   = aBackend.Load(filename);
+  aBackend.Save(loaded, filename);
+}
+
+#ifdef VECGEOM_ROOT
+bool LoadFromRoot(const char* fname) {
+  // loads both Root and VecGeom geometries
+  RootGeoManager::Instance().LoadRootGeometry( fname );
+
+#ifdef VECGEOM_GEANT4
+  // load Geant4 geometry directly from Root
+  G4VPhysicalVolume *world = G4GeoManager::Instance().GetG4GeometryFromROOT();
+  G4GeoManager::Instance().CloseG4Geometry(world);
+#endif
+  return true;
+}
+#endif
+
+//====================
+
 int main(int argc, char *argv[])
 {
   OPTION_INT(ntracks, 1024);
@@ -116,55 +225,72 @@ int main(int argc, char *argv[])
     std::cout << "\n ***** No Cuda Capable Device!!! *****\n" << std::endl;
     return 0;
   }
-#else
-  std::cerr<<"... VECGEOM_ENABLE_CUDA not defined at compilation?!?\n";
 #endif
 
-  if (geometry.compare("navBench") == 0) {
-    SetupGeometry();
+  std::cout<<" Setting up geometry: "<< geometry <<"\n";
+  bool loaded = false;
+  if (geometry.find("gdml") < geometry.size()) {
+    // read GDML file -- load VG, G4 and Root geometries
+    loaded = LoadFromGDML( geometry.c_str() );
+  }
+  else if (geometry.find("root") < geometry.size()) {
+    loaded = LoadFromRoot( geometry.c_str() );
+  }
+  else {
+
+    if (geometry.compare("navBench") == 0) {
+      SetupGeometry();
+
+      SaveGDML("navBench.out.gdml");
 
 #ifdef VERBOSE
-    //.. print geometry details
-    for (auto &element : GeoManager::Instance().GetLogicalVolumesMap()) {
-      auto *lvol = element.second;
-      // lvol->SetLevelLocator(nullptr); // force-disable locators to test default GlobalLocator implementations
-      std::cerr << "SetupBoxGeom(): logVol=" << lvol << ", name=" << lvol->GetName()
-                << ", locator=" << (lvol->GetLevelLocator() ? lvol->GetLevelLocator()->GetName() : "NULL") << "\n";
-    }
+      //.. print geometry details
+      for (auto &element : GeoManager::Instance().GetLogicalVolumesMap()) {
+	auto *lvol = element.second;
+	// lvol->SetLevelLocator(nullptr); // force-disable locators to test default GlobalLocator implementations
+	std::cerr << "SetupBoxGeom(): logVol=" << lvol << ", name=" << lvol->GetName()
+		  << ", locator=" << (lvol->GetLevelLocator() ? lvol->GetLevelLocator()->GetName() : "NULL") << "\n";
+      }
 
-    std::vector<VPlacedVolume *> v1;
-    GeoManager::Instance().getAllPlacedVolumes(v1);
-    for (auto &plvol : v1) {
-      std::cerr << "placedVol=" << plvol << ", name=" << plvol->GetName() << ", world=" << world << ", <"
-                << world->GetName() << ", " << GeoManager::Instance().GetWorld() << ">\n";
-    }
+      std::vector<VPlacedVolume *> v1;
+      GeoManager::Instance().getAllPlacedVolumes(v1);
+      for (auto &plvol : v1) {
+	std::cerr << "placedVol=" << plvol << ", name=" << plvol->GetName() << ", world=" << world << ", <"
+		  << world->GetName() << ", " << GeoManager::Instance().GetWorld() << ">\n";
+      }
 
-    //.. more details
-    world->PrintContent();
-    std::cerr << "\n";
+      //.. more details
+      world->PrintContent();
+      std::cerr << "\n";
 #endif
 
 #ifdef VECGEOM_ROOT
-    // Exporting to ROOT file
-    RootGeoManager::Instance().ExportToROOTGeometry(GeoManager::Instance().GetWorld(), "navBench.root");
-    RootGeoManager::Instance().Clear();
-#endif
-  }
-
-// Now try to read back in.  This is needed to make comparisons to VecGeom easily,
-// since it builds VecGeom geometry based on the ROOT geometry and its TGeoNodes.
-#ifdef VECGEOM_ROOT
-  auto rootgeom = geometry + ".root";
-  RootGeoManager::Instance().set_verbose(0);
-  RootGeoManager::Instance().LoadRootGeometry(rootgeom.c_str());
+      // Exporting to ROOT file
+      RootGeoManager::Instance().ExportToROOTGeometry(GeoManager::Instance().GetWorld(), "navBench.root");
+      RootGeoManager::Instance().Clear();
 #endif
 
+      //#ifdef VECGEOM_ROOT
+      // Now try to read back in.  This is needed to make comparisons to VecGeom easily,
+      // since it builds VecGeom geometry based on the ROOT geometry and its TGeoNodes.
+      // auto rootgeom = geometry + ".root";
+      // RootGeoManager::Instance().set_verbose(0);
+      // RootGeoManager::Instance().LoadRootGeometry(rootgeom.c_str());
+      //#endif
+    } // endif("navBench")
+
+  } // else -- no GDML or ROOT file provided
+
+  // verify volumes
+  VerifyVecGeomGeometry();
 #ifdef VECGEOM_GEANT4
-  auto g4geom = geometry + ".gdml";
-  G4GeoManager::Instance().LoadG4Geometry(g4geom.c_str());
+  VerifyGeant4Geometry();
+#endif
+#ifdef VECGEOM_ROOT
+  VerifyRootGeometry();
 #endif
 
-// Visualization
+  // Visualization
 #ifdef VECGEOM_ROOT
   if (vis) { // note that visualization block returns, excluding the rest of benchmark
     Visualizer visualizer;
