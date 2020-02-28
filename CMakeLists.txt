@@ -740,6 +740,7 @@ if (BENCHMARK)
   set(SRC_CUDA ${SRC_CUDA}
     source/benchmarking/Benchmarker.cu
     source/benchmarking/NavigationBenchmarker.cu
+    source/benchmarking/Raytracer.cu
   )
 endif()
 

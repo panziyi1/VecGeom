@@ -39,6 +39,7 @@ set(TEST_EXECUTABLES_BENCHMARK
   ${PROJECT_SOURCE_DIR}/test/benchmark/MultiUnionBenchmark.cpp
   ${PROJECT_SOURCE_DIR}/test/benchmark/UnionFlatteningBenchmark.cpp
   ${PROJECT_SOURCE_DIR}/test/benchmark/RaytraceBenchmark.cpp
+  ${PROJECT_SOURCE_DIR}/test/benchmark/RaytraceBenchmarkCUDA.cpp
   ${PROJECT_SOURCE_DIR}/test/globalbenchmarks/NavigationBenchmark.cpp
  PARENT_SCOPE
 )
