@@ -591,6 +591,7 @@ set(VECGEOM_COMMON_SRCS
   source/Plane.cpp
   source/CutPlanes.cpp
   source/Quadrilaterals.cpp
+  source/benchmarking/Raytracer.cpp
   source/Rectangles.cpp
   source/TessellatedHelpers.cpp
   source/Tile.cpp
@@ -730,7 +731,7 @@ if(VECGEOM_BENCHMARK)
     source/benchmarking/Benchmarker.cu
     source/benchmarking/NavigationBenchmarker.cu
     test/benchmark/TestNavIndex.cu
-    source/benchmarking/Raytracer.cu)
+    source/benchmarking/Raytracer1.cu)
 endif()
 
 ################################################################################
