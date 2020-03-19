@@ -590,6 +590,7 @@ set(VECGEOM_SRCS
   source/Plane.cpp
   source/CutPlanes.cpp
   source/Quadrilaterals.cpp
+  source/benchmarking/Raytracer.cpp
   source/Rectangles.cpp
   source/TessellatedHelpers.cpp
   source/Tile.cpp
@@ -734,13 +735,12 @@ if (BENCHMARK)
     source/benchmarking/NavigationBenchmarker.cpp
     source/benchmarking/BenchmarkResult.cpp
     source/benchmarking/Benchmarker.cpp
-    source/benchmarking/Raytracer.cpp
     source/benchmarking/VolumePointers.cpp
   )
   set(SRC_CUDA ${SRC_CUDA}
     source/benchmarking/Benchmarker.cu
     source/benchmarking/NavigationBenchmarker.cu
-    source/benchmarking/Raytracer.cu
+    source/benchmarking/Raytracer1.cu
   )
 endif()
 
