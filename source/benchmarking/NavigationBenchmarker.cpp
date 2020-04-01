@@ -402,6 +402,7 @@ bool validateNavigationStepAgainstRoot(Vector3D<Precision> const &pos, Vector3D<
   const char *rtname = rootnav->GetCurrentNode()->GetName();
   static int maxReport = 0;
   if ( maxReport < 10 ) {
+    std::cout<<" Levels: VG="<< (int)testState.GetCurrentLevel() <<", Root="<< 1+rootnav->GetLevel() <<"\n";
     if ( strcmp(vgname, rtname) ) {
       std::cerr << "validateAgainstROOT: pos="<< pos <<" -> vol name mismatch: VGname=<" << vgname << ">, ROOTname=<" << rtname << ">\n";
       maxReport++;
@@ -415,19 +416,27 @@ bool validateNavigationStepAgainstRoot(Vector3D<Precision> const &pos, Vector3D<
     }
   }
 
-  else if (Abs(testStep - rootnav->GetStep()) > 5. * kTolerance ||
-           rootnav->GetCurrentNode() != RootGeoManager::Instance().tgeonode(testState.Top())) {
+  else if (Abs(testStep - rootnav->GetStep()) > 10. * kTolerance ||
+    rootnav->GetCurrentNode() != RootGeoManager::Instance().tgeonode(testState.Top())) {
     result = false;
     std::cerr << "\n*** ERROR on validateAgainstROOT: "
               << " ROOT node=" << rootnav->GetCurrentNode()->GetName() << " outside=" << rootnav->IsOutside()
               << " step=" << rootnav->GetStep()
               << " <==> VecGeom node=" << (testState.Top() ? testState.Top()->GetLabel() : "NULL")
               << " step=" << testStep << " /// Step ratio=" << testStep / rootnav->GetStep()
-              << " / step diff=" << Abs(testStep - rootnav->GetStep())
-              << " / rel.error=" << Abs(testStep - rootnav->GetStep()) / testStep
-              << " / tolerance=" << 5. * kTolerance << "\n";
+              << " / step diff*1e9=" << Abs(testStep - rootnav->GetStep())*1.0e9
+              << " / rel.error*1e9=" << Abs(testStep - rootnav->GetStep())*1.0e9 / testStep
+              << " / tolerance=" << 10. * kTolerance << "\n";
 
     std::cerr << rootnav->GetCurrentNode() << ' ' << RootGeoManager::Instance().tgeonode(testState.Top()) << "\n";
+    double const *nextPoint = rootnav->GetCurrentPoint();
+    std::cout<<" Root step="<< rootnav->GetStep() <<", nextPoint=("<< nextPoint[0] <<", "<< nextPoint[1] <<", "<< nextPoint[2] <<")"
+	     <<", level="<< 1+rootnav->GetLevel() <<"\n";
+
+    NavigationState *oldState = NavigationState::MakeInstance( vecgeom::GeoManager::Instance().getMaxDepth() );
+    vecgeom::GlobalLocator::LocateGlobalPoint(vecgeom::GeoManager::Instance().GetWorld(), pos, *(oldState), true);
+    std::cout<<" VecGeom: oldLevel="<< (int)oldState->GetCurrentLevel() <<", nextLevel="<< (int)testState.GetCurrentLevel() <<"\n";
+    NavigationState::ReleaseInstance(oldState);
   }
 
   return result;

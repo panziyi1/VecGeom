@@ -6,7 +6,7 @@
  */
 
 #undef VERBOSE
-//#define VERBOSE
+#define VERBOSE
 
 //#include "VecGeom/base/Config.h"
 #ifdef VECGEOM_GDML
@@ -56,8 +56,8 @@ VPlacedVolume *SetupGeometry()
   LogicalVolume *orb   = new LogicalVolume("orb", orbUnplaced);
 
   Transformation3D *ident = new Transformation3D(0, 0, 0, 0, 0, 0);
-  orb->PlaceDaughter("orb1", box, ident);
-  trap->PlaceDaughter("box1", orb, ident);
+  orb->PlaceDaughter("box1", box, ident);
+  trap->PlaceDaughter("orb1", orb, ident);
 
   Transformation3D *placement1 = new Transformation3D(5, 5, 5, 0, 0, 0);
   Transformation3D *placement2 = new Transformation3D(-5, 5, 5, 0, 0, 0);   // 45,  0,  0);
@@ -68,14 +68,14 @@ VPlacedVolume *SetupGeometry()
   Transformation3D *placement7 = new Transformation3D(5, -5, -5, 0, 0, 0);  // 0, 45, 45);
   Transformation3D *placement8 = new Transformation3D(-5, -5, -5, 0, 0, 0); // 45, 45, 45);
 
-  world->PlaceDaughter("trap1", trap, placement1);
-  world->PlaceDaughter("trap2", trap, placement2);
-  world->PlaceDaughter("trap3", trap, placement3);
-  world->PlaceDaughter("trap4", trap, placement4);
-  world->PlaceDaughter("trap5", trap, placement5);
-  world->PlaceDaughter("trap6", trap, placement6);
-  world->PlaceDaughter("trap7", trap, placement7);
-  world->PlaceDaughter("trap8", trap, placement8);
+  world->PlaceDaughter("trap_0", trap, placement1);
+  world->PlaceDaughter("trap_1", trap, placement2);
+  world->PlaceDaughter("trap_2", trap, placement3);
+  world->PlaceDaughter("trap_3", trap, placement4);
+  world->PlaceDaughter("trap_4", trap, placement5);
+  world->PlaceDaughter("trap_5", trap, placement6);
+  world->PlaceDaughter("trap_6", trap, placement7);
+  world->PlaceDaughter("trap_7", trap, placement8);
 
   VPlacedVolume *w = world->Place();
   GeoManager::Instance().SetWorld(w);
@@ -189,7 +189,7 @@ bool LoadFromRoot(const char* fname) {
 #ifdef VECGEOM_GEANT4
   // load Geant4 geometry directly from Root
   G4VPhysicalVolume *world = G4GeoManager::Instance().GetG4GeometryFromROOT();
-  G4GeoManager::Instance().CloseG4Geometry(world);
+  G4GeoManager::Instance().LoadG4Geometry(world);
 #endif
   return true;
 }
@@ -241,9 +241,11 @@ int main(int argc, char *argv[])
     if (geometry.compare("navBench") == 0) {
       SetupGeometry();
 
-      SaveGDML("navBench.out.gdml");
+      //SaveGDML("navBench.out.gdml");
 
 #ifdef VERBOSE
+      auto *world = GeoManager::Instance().GetWorld();
+
       //.. print geometry details
       for (auto &element : GeoManager::Instance().GetLogicalVolumesMap()) {
 	auto *lvol = element.second;
@@ -294,6 +296,7 @@ int main(int argc, char *argv[])
 #ifdef VECGEOM_ROOT
   if (vis) { // note that visualization block returns, excluding the rest of benchmark
     Visualizer visualizer;
+    visualizer.SetVerbosity(1);
     const VPlacedVolume *world = GeoManager::Instance().GetWorld();
     visualizer.AddVolume(*world);
 
@@ -320,7 +323,7 @@ int main(int argc, char *argv[])
                 << world->GetName() << ", " << GeoManager::Instance().GetWorld() << ">\n";
     }
 
-    // visualizer.Show();
+    visualizer.Show();
     return 0;
   }
 #endif
