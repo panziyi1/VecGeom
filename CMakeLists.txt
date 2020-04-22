@@ -319,7 +319,7 @@ if (CUDA)
   set(VECGEOM_NVCC_CONFIGS
         DEBUG -g -G -O0
         RELEASE  -O3 -use_fast_math
-        RELWITHDEBINFO -g -G -O3 -use_fast_math
+        RELWITHDEBINFO -g -G -O2
         MINSIZEREL -use_fast_math )
   # FindCUDA.mk generate cmake file for each .o file using
   # the cmake command:
