@@ -5,6 +5,7 @@
 /// \file GeoManager.cpp
 
 #include "VecGeom/management/GeoManager.h"
+#include "VecGeom/management/NavIndexTable.h"
 #include "VecGeom/volumes/PlacedVolume.h"
 #include "VecGeom/navigation/NavigationState.h"
 #include "VecGeom/management/ABBoxManager.h"
@@ -328,6 +329,11 @@ void GeoManager::Clear()
     free(gCompactPlacedVolBuffer);
     gCompactPlacedVolBuffer = nullptr;
   }
+}
+
+void GeoManager::MakeNavIndexTable(int depth_limit) const
+{
+  NavIndexTable::Instance()->CreateTable(GetWorld(), getMaxDepth(), depth_limit);
 }
 
 template <typename Container>

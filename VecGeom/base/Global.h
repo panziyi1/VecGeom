@@ -21,6 +21,7 @@
 #include <type_traits>
 
 using uint = unsigned int;
+using NavIndex_t = unsigned int;
 
 #define VECGEOM
 

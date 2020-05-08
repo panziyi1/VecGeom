@@ -13,6 +13,7 @@
 
 #include "VecGeom/volumes/PlacedVolume.h"
 #include "VecGeom/volumes/LogicalVolume.h"
+#include "VecGeom/management/GeoVisitor.h"
 
 #include <map>
 
@@ -22,78 +23,6 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 class UnplacedScaledShape;
 class Scale3D;
 class NavigationState;
-
-/// A visitor functor interface used when iterating over the geometry tree.
-template <typename Container>
-class GeoVisitor {
-protected:
-  Container &c_;
-
-public:
-  GeoVisitor(Container &c) : c_(c){};
-
-  virtual void apply(VPlacedVolume *, int level = 0) = 0;
-  virtual ~GeoVisitor() {}
-};
-
-/// A visitor functor interface used when iterating over the geometry tree.
-/// This visitor gets injected path information.
-template <typename Container>
-class GeoVisitorWithAccessToPath {
-protected:
-  Container &c_;
-
-public:
-  GeoVisitorWithAccessToPath(Container &c) : c_(c){};
-
-  virtual void apply(NavigationState *state, int level = 0) = 0;
-  virtual ~GeoVisitorWithAccessToPath() {}
-};
-
-/// A basic implementation of a GeoVisitor.
-template <typename Container>
-class SimpleLogicalVolumeVisitor : public GeoVisitor<Container> {
-public:
-  SimpleLogicalVolumeVisitor(Container &c) : GeoVisitor<Container>(c) {}
-  virtual void apply(VPlacedVolume *vol, int /*level*/)
-  {
-    LogicalVolume const *lvol = vol->GetLogicalVolume();
-    if (std::find(this->c_.begin(), this->c_.end(), lvol) == this->c_.end()) {
-      this->c_.push_back(const_cast<LogicalVolume *>(lvol));
-    }
-  }
-  virtual ~SimpleLogicalVolumeVisitor() {}
-};
-
-template <typename Container>
-class SimplePlacedVolumeVisitor : public GeoVisitor<Container> {
-public:
-  SimplePlacedVolumeVisitor(Container &c) : GeoVisitor<Container>(c) {}
-  virtual void apply(VPlacedVolume *vol, int /* level */) { this->c_.push_back(vol); }
-  virtual ~SimplePlacedVolumeVisitor() {}
-};
-
-/// A visitor to find out the geometry depth.
-class GetMaxDepthVisitor {
-private:
-  int maxdepth_;
-
-public:
-  GetMaxDepthVisitor() : maxdepth_(0) {}
-  void apply(VPlacedVolume * /* vol */, int level) { maxdepth_ = (level > maxdepth_) ? level : maxdepth_; }
-  int getMaxDepth() const { return maxdepth_; }
-};
-
-/// A visitor to find out the total number of geometry nodes.
-class GetTotalNodeCountVisitor {
-private:
-  int fTotalNodeCount;
-
-public:
-  GetTotalNodeCountVisitor() : fTotalNodeCount(0) {}
-  void apply(VPlacedVolume *, int /* level */) { fTotalNodeCount++; }
-  int GetTotalNodeCount() const { return fTotalNodeCount; }
-};
 
 /**
  * @brief A class serving as central registry for VecGeom geometries.
@@ -125,6 +54,12 @@ private:
   template <typename Visitor>
   void visitAllPlacedVolumesWithContext(VPlacedVolume const *, Visitor *visitor, NavigationState *state,
                                         int level = 1) const;
+
+  /// Traverses the geometry tree keeping track of the state context (volume path or navigation state)
+  /// and applies the injected Visitor for building the navigation index table
+  template <typename Visitor>
+  void visitAllPlacedVolumesNavIndex(VPlacedVolume const *, Visitor *visitor, NavigationState *state,
+                                        int level, int dind) const;
 
 public:
   static VPlacedVolume *gCompactPlacedVolBuffer;
@@ -285,6 +220,10 @@ public:
    * Returns the total number of leave nodes / geometry paths from top to leave in the geometry.
    */
   size_t GetTotalNodeCount() const { return fTotalNodeCount; }
+
+  /// Creates the navigation index table, caching global transformations down to a given geometry depth
+  void MakeNavIndexTable(int depth_limit = 0) const;
+
 
 protected:
 private:
