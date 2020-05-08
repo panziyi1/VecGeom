@@ -138,6 +138,11 @@ public:
   VECGEOM_FORCE_INLINE
   Vector<Daughter> *GetDaughtersp() { return fDaughters; }
 
+  /// Returns user request for caching transformations
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
+  bool IsReqCaching() const { return false; }
+  
   //  VECCORE_ATT_HOST_DEVICE
   //  VECGEOM_FORCE_INLINE
   //  VPlacedVolume const* GetDaughter(unsigned int i) const { return daughters_->operator[](i); }
