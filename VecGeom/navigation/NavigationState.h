@@ -361,7 +361,7 @@ public:
   VECCORE_ATT_HOST_DEVICE
   void DeltaTransformation(NavigationState const &other, Transformation3D & /* delta */) const;
 
-  VECGEOM_FORCE_INLINE
+  //VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
   Vector3D<Precision> GlobalToLocal(Vector3D<Precision> const &) const;
 
@@ -429,16 +429,17 @@ public:
     return s;
   }
 
-#ifdef VECGEOM_ROOT
-  VECGEOM_FORCE_INLINE
-  void printVolumePath(std::ostream & = std::cerr) const;
-
   /**
    * returns the number of FILLED LEVELS such that
    * state.GetNode( state.GetLevel() ) == state.Top()
    */
   VECGEOM_FORCE_INLINE
+  VECCORE_ATT_HOST_DEVICE
   unsigned char GetLevel() const { return fCurrentLevel - 1; }
+
+#ifdef VECGEOM_ROOT
+  VECGEOM_FORCE_INLINE
+  void printVolumePath(std::ostream & = std::cerr) const;
 
   TGeoNode const *GetNode(int level) const { return RootGeoManager::Instance().tgeonode(ToPlacedVolume(fPath[level])); }
 #endif

@@ -151,6 +151,19 @@ public:
   VECGEOM_FORCE_INLINE
   Vector<Daughter> const &GetDaughters() const { return logical_volume_->GetDaughters(); }
 
+  /// Finds the index of a given daughter having its pointer (linear complexity)
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
+  int IndexOf(Daughter daughter) const
+  {
+    int id = 0;
+    for (auto d : logical_volume_->GetDaughters()) {
+      if (d == daughter) return id;
+      id++;
+    }
+    return -1;
+  }
+
   /// Returns name/label.
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE

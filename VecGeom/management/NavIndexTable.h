@@ -9,19 +9,24 @@
 #ifndef VECGEOM_MANAGEMENT_NAVINDEXTABLE_H_
 #define VECGEOM_MANAGEMENT_NAVINDEXTABLE_H_
 
+#include "VecGeom/management/GeoVisitor.h"
 #include "VecGeom/navigation/NavigationState.h"
 
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
+class NavIndexTable;
+
 class BuildNavIndexVisitor : public GeoVisitorNavIndex {
 private:
-  size_t fTableSize =
-      0; ///< The iteration needs to be done in two passes, the first one is just to compute the array size
+  size_t fTableSize = sizeof(
+      NavIndex_t); ///< The iteration needs to be done in two passes, the first one is just to compute the array size
   NavIndex_t *fNavInd = nullptr; ///< Array storing the navigation info related to a given state
   int fLimitDepth     = 0;       ///< limit depth to scache the transformations, 0 means unlimited
-  NavIndex_t fCurrent = 0;       ///< Current navigation index being filled.
-  bool fDoCount       = true;    ///< First pass to compute the table size
+  // NavIndex_t fWorld   = 1;       ///< index for the world volume
+  NavIndex_t fCurrent = 1;     ///< Current navigation index being filled.
+  bool fDoCount       = true;  ///< First pass to compute the table size
+  bool fValidate      = false; ///< If set, this flag will force a thorough validation upon visiting
 
 public:
   BuildNavIndexVisitor(int depth_limit, bool do_count)
@@ -32,84 +37,18 @@ public:
   size_t GetTableSize() const { return fTableSize; }
   void SetTable(NavIndex_t *table) { fNavInd = table; }
   void SetDoCount(bool flag) { fDoCount = flag; }
+  void SetValidate(bool flag) { fValidate = flag; }
 
-  NavIndex_t apply(NavigationState *state, int level, NavIndex_t mother, int dind)
-  {
-
-    bool cacheTrans = true;
-    size_t nd       = 0;
-    // Check if matrix has to be cached for this node
-    if (fLimitDepth > 0) {
-      auto lv = state->Top()->GetLogicalVolume();
-      nd      = lv->GetDaughters().size();
-      if (level > fLimitDepth && !lv->IsReqCaching()) cacheTrans = false;
-    }
-    // Size in bytes of the current node data
-    size_t current_size =
-        3 * sizeof(unsigned int) + int(cacheTrans) * 12 * sizeof(double) + (nd + nd % 2) * sizeof(unsigned short);
-    if (fDoCount) {
-      fTableSize += current_size;
-      return 0;
-    }
-
-    // Add data for the current element.
-
-    // Fill the mother index for the current node
-    fNavInd[fCurrent] = mother;
-
-    // Fill the node index in the mother list of daughters
-    if (mother > 0) {
-      auto content_dind_mother  = (unsigned short *)(&fNavInd[mother + 3]);
-      content_dind_mother[dind] = fCurrent;
-    }
-
-    // Physical volume index
-    fNavInd[fCurrent + 1] = (level > 0) ? state->ValueAt(level - 1) : 0;
-
-    // Write current level in next byte
-    auto content_ddt = (unsigned char *)(&fNavInd[fCurrent + 2]);
-    assert(level < std::numeric_limits<unsigned char>::max() && "fatal: geometry deph more than 255 not supported");
-    *content_ddt = (unsigned char)level;
-
-    // Write number of daughters in next 2 bytes
-    auto content_nd = (unsigned short *)(content_ddt + 1);
-    assert(nd < std::numeric_limits<unsigned short>::max() && "fatal: not supporting more than 65535 daughters");
-    *content_nd = (unsigned short)nd;
-
-    // Write the flag if matrix is stored in the next byte
-    auto content_hasm = (bool *)(content_ddt + 3);
-    *content_hasm     = cacheTrans;
-
-    // Prepare the space for the daughter indices
-    auto content_dind = (unsigned short *)(&fNavInd[fCurrent + 3]);
-    for (auto i = 0; i < nd; ++i)
-      content_dind[i] = 0;
-
-    fCurrent += 3 + ((nd + nd % 2) >> 1);
-
-    if (!cacheTrans) return fCurrent;
-
-    // Write the transformation elements
-    Transformation3D mat;
-    state->TopMatrix(mat);
-
-    auto content_mat = (double *)(&fNavInd[fCurrent]);
-    for (auto i = 0; i < 3; ++i)
-      content_mat[i] = mat.Translation(i);
-    for (auto i = 0; i < 9; ++i)
-      content_mat[i + 3] = mat.Rotation(i);
-
-    // Set new value for fCurrent
-    fCurrent += 24;
-    return fCurrent;
-  }
+  NavIndex_t apply(NavigationState *state, int level, NavIndex_t mother, int dind);
 };
 
 class NavIndexTable {
 private:
-  NavIndex_t *fNavInd = nullptr; ///< address of the table
-  size_t fTableSize   = 0;       ///< table size in bytes
-  size_t fDepthLimit  = 0;       ///< depth limnit to which transformations will be cached
+  NavIndex_t *fNavInd       = nullptr; ///< address of the table
+  VPlacedVolume *fVolBuffer = nullptr; ///< placed volume buffer
+  NavIndex_t fWorld         = 1;       ///< index for the world volume
+  size_t fTableSize         = 0;       ///< table size in bytes
+  size_t fDepthLimit        = 0;       ///< depth limnit to which transformations will be cached
 
   NavIndexTable(NavIndex_t *table, size_t table_size) : fNavInd(table), fTableSize(table_size) {}
 
@@ -121,6 +60,106 @@ public:
     return &instance;
   }
 
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
+  NavIndex_t *GetTable() const { return fNavInd; }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
+  void SetVolumeBuffer(VPlacedVolume *buffer) { fVolBuffer = buffer; }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
+  VPlacedVolume const *Top(NavIndex_t nav_ind) const
+  {
+    return (nav_ind > 0) ? &fVolBuffer[fNavInd[nav_ind + 1]] : nullptr;
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
+  VPlacedVolume const *At(NavIndex_t nav_ind, int level) const
+  {
+    auto parent = GetNavIndex(nav_ind, level);
+    return Top(parent);
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
+  NavIndex_t Push(NavIndex_t nav_ind, int idaughter) const
+  {
+    assert(idaughter < (int)Ndaughters(nav_ind));
+    return fNavInd[nav_ind + 3 + idaughter];
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
+  NavIndex_t Pop(NavIndex_t nav_ind) const { return (nav_ind > 0) ? fNavInd[nav_ind] : 0; }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
+  unsigned short Ndaughters(NavIndex_t nav_ind) const
+  {
+    constexpr unsigned int kOffsetNd = 2 * sizeof(NavIndex_t) + 1;
+    auto content_nd                  = (unsigned short *)((unsigned char *)(&fNavInd[nav_ind]) + kOffsetNd);
+    return *content_nd;
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
+  void TopMatrix(NavIndex_t nav_ind, Transformation3D &trans) const
+  {
+    constexpr unsigned int kOffsetHasm = 2 * sizeof(NavIndex_t) + 3;
+    if (nav_ind == 0) return;
+    unsigned char hasm = *((unsigned char *)(&fNavInd[nav_ind]) + kOffsetHasm);
+    bool has_matrix    = (hasm & 0x04) > 0;
+    if (has_matrix) {
+      bool has_trans           = (hasm & 0x02) > 0;
+      bool has_rot             = (hasm & 0x01) > 0;
+      auto nd                  = Ndaughters(nav_ind);
+      const Precision *address = (Precision *)(&fNavInd[nav_ind + 3 + nd]);
+      trans.Set(address, address + 3, has_trans, has_rot);
+      return;
+    } else {
+      // Call recursively for the mother
+      TopMatrix(fNavInd[nav_ind], trans);
+      trans.MultiplyFromRight(*Top(nav_ind)->GetTransformation());
+    }
+  }
+
+  VECGEOM_FORCE_INLINE
+  VECCORE_ATT_HOST_DEVICE
+  Vector3D<Precision> GlobalToLocal(NavIndex_t nav_ind, Vector3D<Precision> const &globalpoint) const
+  {
+    Transformation3D trans;
+    TopMatrix(nav_ind, trans);
+    Vector3D<Precision> local = trans.Transform(globalpoint);
+    return local;
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
+  int GetLevel(NavIndex_t nav_ind) const
+  {
+    constexpr unsigned int kOffsetLevel = 2 * sizeof(NavIndex_t);
+    auto content_level                  = (unsigned char *)(&fNavInd[nav_ind]) + kOffsetLevel;
+    return (int)(*content_level);
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
+  NavIndex_t GetNavIndex(NavIndex_t nav_ind, int level) const
+  {
+    int up            = GetLevel(nav_ind) - level;
+    NavIndex_t mother = nav_ind;
+    while (mother && up--)
+      mother = fNavInd[mother];
+    return mother;
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
+  NavIndex_t GetWorld() const { return fWorld; }
+
   bool AllocateTable(size_t bytes)
   {
     bool success = true;
@@ -129,6 +168,7 @@ public:
       buffer = new char[bytes];
     } catch (std::bad_alloc &) {
       success = false;
+      std::cout << "=== EEE === AlocateTable bad_alloc intercepted while trying to allocate " << bytes << " bytes\n";
     }
     if (success) {
       fNavInd    = (NavIndex_t *)buffer;
@@ -148,15 +188,45 @@ public:
     bool hasTable = AllocateTable(visitor->GetTableSize());
     if (!hasTable) return false;
 
-    std::cout << "Navigation index table size is " << fTableSize << "bytes\n";
+    auto pretty_bytes = [](unsigned int bytes) {
+      char buf[50];
+      const char *suffixes[7] = {"Bytes", "KB", "MB", "GB", "TB", "PB", "EB"};
+      uint s                  = 0; // which suffix to use
+      double count            = bytes;
+      while (count >= 1024 && s++ < 7)
+        count /= 1024;
+
+      if (count - std::floor(count) == 0.0)
+        sprintf(buf, "%d %s", (int)count, suffixes[s]);
+      else
+        sprintf(buf, "%.1f %s", count, suffixes[s]);
+      std::string sbytes = buf;
+      return sbytes;
+    };
+
+    std::cout << "Navigation index table size is " << pretty_bytes(fTableSize) << "\n";
 
     visitor->SetTable(fNavInd);
     visitor->SetDoCount(false);
 
     state->Clear();
     visitAllPlacedVolumesNavIndex(top, visitor, state);
+    delete visitor;
+    NavigationState::ReleaseInstance(state);
     return true;
   }
+
+  bool Validate(VPlacedVolume const *top, int maxdepth) const
+  {
+    NavigationState *state = NavigationState::MakeInstance(maxdepth);
+    state->Clear();
+    auto visitor = new BuildNavIndexVisitor(0, false);
+    visitor->SetValidate(true);
+    visitAllPlacedVolumesNavIndex(top, visitor, state);
+    return true;
+  }
+
+  NavIndex_t ValidateState(NavigationState *state);
 
   // vecgeom::cuda::NavIndexTable *CopyToGPU() const
 
