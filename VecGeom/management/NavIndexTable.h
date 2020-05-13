@@ -105,7 +105,6 @@ public:
   }
 
   VECCORE_ATT_HOST_DEVICE
-  VECGEOM_FORCE_INLINE
   void TopMatrix(NavIndex_t nav_ind, Transformation3D &trans) const
   {
     constexpr unsigned int kOffsetHasm = 2 * sizeof(NavIndex_t) + 3;
