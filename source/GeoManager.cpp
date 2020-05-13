@@ -24,6 +24,7 @@ namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
 VPlacedVolume *GeoManager::gCompactPlacedVolBuffer = nullptr;
+NavIndex_t *GeoManager::gNavIndex = nullptr;
 
 void GeoManager::RegisterLogicalVolume(LogicalVolume *const logical_volume)
 {
@@ -329,11 +330,23 @@ void GeoManager::Clear()
     free(gCompactPlacedVolBuffer);
     gCompactPlacedVolBuffer = nullptr;
   }
+
+  if (GeoManager::gNavIndex != nullptr) {
+    delete NavIndexTable::Instance();
+    gNavIndex = nullptr;
+  }
+
 }
 
-void GeoManager::MakeNavIndexTable(int depth_limit) const
+bool GeoManager::MakeNavIndexTable(int depth_limit, bool validate) const
 {
-  NavIndexTable::Instance()->CreateTable(GetWorld(), getMaxDepth(), depth_limit);
+  bool success = NavIndexTable::Instance()->CreateTable(GetWorld(), getMaxDepth(), depth_limit);
+  if (success) {
+    gNavIndex = NavIndexTable::Instance()->GetTable();
+    NavIndexTable::Instance()->SetVolumeBuffer(gCompactPlacedVolBuffer);
+  }
+  if (validate) success = NavIndexTable::Instance()->Validate(GetWorld(), getMaxDepth());
+  return success;
 }
 
 template <typename Container>

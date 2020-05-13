@@ -63,6 +63,7 @@ private:
 
 public:
   static VPlacedVolume *gCompactPlacedVolBuffer;
+  static NavIndex_t *gNavIndex;
 
   /// Returns the singleton instance
   static GeoManager &Instance()
@@ -222,7 +223,7 @@ public:
   size_t GetTotalNodeCount() const { return fTotalNodeCount; }
 
   /// Creates the navigation index table, caching global transformations down to a given geometry depth
-  void MakeNavIndexTable(int depth_limit = 0) const;
+  bool MakeNavIndexTable(int depth_limit = 0, bool validate = false) const;
 
 
 protected:
