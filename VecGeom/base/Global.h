@@ -16,6 +16,7 @@
 
 #include <VecCore/VecCore>
 
+#include "VecGeom/base/Config.h"
 #include "VecGeom/base/Cuda.h"
 #include "VecGeom/base/Math.h"
 #include <type_traits>

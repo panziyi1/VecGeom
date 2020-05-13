@@ -184,6 +184,9 @@ if(USE_INDEXEDNAVSTATES)
 endif()
 
 option(GDML "Enable GDML persistency. Requres Xerces-C" OFF)
+if(GDML)
+  set(VECGEOM_GDML ON)
+endif()
 option(GDMLDEBUG "Enable additional debug information in GDML module" OFF)
 
 option(EMBREE "Enable Intel Embree" OFF)

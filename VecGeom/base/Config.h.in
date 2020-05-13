@@ -65,4 +65,7 @@
 // When VTUNE is ON
 #cmakedefine VECGEOM_VTUNE
 
+// When GDML id ON
+#cmakedefine VECGEOM_GDML
+
 #endif
