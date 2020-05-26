@@ -58,8 +58,8 @@ private:
   /// Traverses the geometry tree keeping track of the state context (volume path or navigation state)
   /// and applies the injected Visitor for building the navigation index table
   template <typename Visitor>
-  void visitAllPlacedVolumesNavIndex(VPlacedVolume const *, Visitor *visitor, NavigationState *state,
-                                        int level, int dind) const;
+  void visitAllPlacedVolumesNavIndex(VPlacedVolume const *, Visitor *visitor, NavigationState *state, int level,
+                                     int dind) const;
 
 public:
   static VPlacedVolume *gCompactPlacedVolBuffer;
@@ -202,7 +202,6 @@ public:
    */
   void Clear();
 
-
   /// Returns the number of placed volumes known to the GeoManager.
   size_t GetPlacedVolumesCount() const { return fPlacedVolumesMap.size(); }
 
@@ -216,7 +215,6 @@ public:
   /// Returns the map of logical volumes.
   decltype(fLogicalVolumesMap) const &GetLogicalVolumesMap() const { return fLogicalVolumesMap; }
 
-
   /**
    * Returns the total number of leave nodes / geometry paths from top to leave in the geometry.
    */
@@ -224,7 +222,6 @@ public:
 
   /// Creates the navigation index table, caching global transformations down to a given geometry depth
   bool MakeNavIndexTable(int depth_limit = 0, bool validate = false) const;
-
 
 protected:
 private:
@@ -276,7 +273,7 @@ UnplacedShape_t *GeoManager::MakeInstance(Argtypes... args)
 {
   return Maker<UnplacedShape_t>::MakeInstance(args...);
 }
-}
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif // VECGEOM_MANAGEMENT_GEOMANAGER_H_

@@ -79,9 +79,9 @@ NavIndex_t BuildNavIndexVisitor::apply(NavStatePath *state, int level, NavIndex_
 NavIndex_t NavIndexTable::ValidateState(NavStatePath *state)
 {
   // Decode the NavIndex_t
-  unsigned char level = state->GetLevel();
-  int dind            = 0;
-  NavIndex_t nav_ind  = fWorld;
+  unsigned char level            = state->GetLevel();
+  int dind                       = 0;
+  NavIndex_t nav_ind             = fWorld;
   VPlacedVolume const *pdaughter = nullptr;
   for (int i = 1; i < level + 1; ++i) {
     pdaughter = state->At(i);
@@ -92,7 +92,7 @@ NavIndex_t NavIndexTable::ValidateState(NavStatePath *state)
       return 0;
     }
     nav_ind = NavStateIndex::PushImpl(nav_ind, pdaughter);
-    //nav_ind = Push(nav_ind, dind);
+    // nav_ind = Push(nav_ind, dind);
     assert(nav_ind > 0);
   }
 

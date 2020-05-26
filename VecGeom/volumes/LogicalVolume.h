@@ -6,7 +6,6 @@
 /// \file LogicalVolume.h
 /// \author created by Johannes de Fine Licht, Sandro Wenzel (CERN)
 
-
 #ifndef VECGEOM_VOLUMES_LOGICALVOLUME_H_
 #define VECGEOM_VOLUMES_LOGICALVOLUME_H_
 
@@ -142,7 +141,7 @@ public:
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
   bool IsReqCaching() const { return false; }
-  
+
   //  VECCORE_ATT_HOST_DEVICE
   //  VECGEOM_FORCE_INLINE
   //  VPlacedVolume const* GetDaughter(unsigned int i) const { return daughters_->operator[](i); }
@@ -310,7 +309,7 @@ inline void LogicalVolume::SetRegion(Region *region, bool pushdown)
   }
 }
 
-} // End inline namespace
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif // VECGEOM_VOLUMES_LOGICALVOLUME_H_

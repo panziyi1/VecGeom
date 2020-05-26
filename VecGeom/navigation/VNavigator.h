@@ -19,14 +19,13 @@
 #include "VecGeom/navigation/VSafetyEstimator.h"
 #include "VecGeom/navigation/NavStateFwd.h"
 
-
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
 // some forward declarations
 template <typename T>
 class Vector3D;
-//class NavigationState;
+// class NavigationState;
 class LogicalVolume;
 class Transformation3D;
 class VPlacedVolume;
@@ -128,27 +127,22 @@ public:
   virtual void ComputeStepsAndPropagatedStates(SOA3D<Precision> const & /*globalpoints*/,
                                                SOA3D<Precision> const & /*globaldirs*/,
                                                Precision const * /*(physics) step limits */,
-                                               NavigationState const* const* /*in_states*/,
+                                               NavigationState const *const * /*in_states*/,
                                                NavigationState ** /*out_states*/, Precision * /*out_steps*/) const = 0;
 
   // for vector navigation
   VECCORE_ATT_HOST_DEVICE
-  virtual void ComputeStepsAndSafetiesAndPropagatedStates(SOA3D<Precision> const & points,
-                                                          SOA3D<Precision> const & dirs,
-                                                          Precision const *psteps,
-                                                          NavStatePool const &instates,
-                                                          NavStatePool &outstates,
-                                                          Precision *outsteps,
-                                                          bool const *calcsafety,
-                                                          Precision *safeties) const = 0;
+  virtual void ComputeStepsAndSafetiesAndPropagatedStates(SOA3D<Precision> const &points, SOA3D<Precision> const &dirs,
+                                                          Precision const *psteps, NavStatePool const &instates,
+                                                          NavStatePool &outstates, Precision *outsteps,
+                                                          bool const *calcsafety, Precision *safeties) const = 0;
 
   VECCORE_ATT_HOST_DEVICE
   virtual void ComputeStepsAndSafetiesAndPropagatedStates(SOA3D<Precision> const & /*globalpoints*/,
                                                           SOA3D<Precision> const & /*globaldirs*/,
                                                           Precision const * /*(physics) step limits */,
-                                                          NavigationState const* const* /*in_states*/,
-                                                          NavigationState ** /*out_states*/,
-                                                          Precision * /*out_steps*/,
+                                                          NavigationState const *const * /*in_states*/,
+                                                          NavigationState ** /*out_states*/, Precision * /*out_steps*/,
                                                           bool const * /*calcsafety*/,
                                                           Precision * /*out_safeties*/) const = 0;
 
@@ -157,7 +151,7 @@ public:
   virtual void ComputeStepsAndSafeties(SOA3D<Precision> const & /*globalpoints*/,
                                        SOA3D<Precision> const & /*globaldirs*/,
                                        Precision const * /*(physics) step limits */,
-                                       NavigationState const* const* /*in_states*/, Precision * /*out_steps*/,
+                                       NavigationState const *const * /*in_states*/, Precision * /*out_steps*/,
                                        bool const * /*calcsafety*/, Precision * /*out_safeties*/) const = 0;
 
 protected:
@@ -278,9 +272,9 @@ protected:
   template <typename T, unsigned int ChunkSize>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
-  static void DoGlobalToLocalTransformations(NavigationState const *const *in_states, SOA3D<Precision> const &globalpoints,
-                                             SOA3D<Precision> const &globaldirs, unsigned int from_index,
-                                             Vector3D<T> &localpoint, Vector3D<T> &localdir)
+  static void DoGlobalToLocalTransformations(NavigationState const *const *in_states,
+                                             SOA3D<Precision> const &globalpoints, SOA3D<Precision> const &globaldirs,
+                                             unsigned int from_index, Vector3D<T> &localpoint, Vector3D<T> &localdir)
   {
     for (unsigned int i = 0; i < ChunkSize; ++i) {
       unsigned int trackid = from_index + i;
@@ -633,8 +627,9 @@ public:
   static void NavigateAChunk(VNavigator const *__restrict__ nav, VPlacedVolume const *__restrict__ pvol,
                              LogicalVolume const *__restrict__ lvol, SOA3D<Precision> const &__restrict__ globalpoints,
                              SOA3D<Precision> const &__restrict__ globaldirs, Precision const *__restrict__ step_limits,
-                             NavigationState const* const* __restrict__ in_states, NavigationState** __restrict__ out_states,
-                             Precision *__restrict__ out_steps, unsigned int from_index)
+                             NavigationState const *const *__restrict__ in_states,
+                             NavigationState **__restrict__ out_states, Precision *__restrict__ out_steps,
+                             unsigned int from_index)
   {
 
     VPlacedVolume const *hitcandidates[ChunkSize] = {}; // initialize all to nullptr
@@ -698,9 +693,10 @@ public:
   static void NavigateAChunk(VNavigator const *__restrict__ nav, VPlacedVolume const *__restrict__ pvol,
                              LogicalVolume const *__restrict__ lvol, SOA3D<Precision> const &__restrict__ globalpoints,
                              SOA3D<Precision> const &__restrict__ globaldirs, Precision const *__restrict__ step_limits,
-                             NavigationState const *const *__restrict__ in_states, NavigationState **__restrict__ out_states,
-                             Precision *__restrict__ out_steps, bool const *__restrict__ calcsafeties,
-                             Precision *__restrict__ out_safeties, unsigned int from_index)
+                             NavigationState const *const *__restrict__ in_states,
+                             NavigationState **__restrict__ out_states, Precision *__restrict__ out_steps,
+                             bool const *__restrict__ calcsafeties, Precision *__restrict__ out_safeties,
+                             unsigned int from_index)
   {
 
     VPlacedVolume const *hitcandidates[ChunkSize] = {}; // initialize all to nullptr
@@ -767,9 +763,9 @@ public:
   static void NavigateAChunk(VNavigator const *__restrict__ nav, VPlacedVolume const *__restrict__ pvol,
                              LogicalVolume const *__restrict__ lvol, SOA3D<Precision> const &__restrict__ globalpoints,
                              SOA3D<Precision> const &__restrict__ globaldirs, Precision const *__restrict__ step_limits,
-                             NavStatePool const &in_states, NavStatePool &out_states,
-                             Precision *__restrict__ out_steps, bool const *__restrict__ calcsafeties,
-                             Precision *__restrict__ out_safeties, unsigned int from_index)
+                             NavStatePool const &in_states, NavStatePool &out_states, Precision *__restrict__ out_steps,
+                             bool const *__restrict__ calcsafeties, Precision *__restrict__ out_safeties,
+                             unsigned int from_index)
   {
     VPlacedVolume const *hitcandidates[ChunkSize] = {}; // initialize all to nullptr
 
@@ -837,9 +833,9 @@ public:
                                     SOA3D<Precision> const &__restrict__ globalpoints,
                                     SOA3D<Precision> const &__restrict__ globaldirs,
                                     Precision const *__restrict__ step_limits,
-                                    NavigationState const *const *__restrict__ in_states, Precision *__restrict__ out_steps,
-                                    bool const *__restrict__ calcsafeties, Precision *__restrict__ out_safeties,
-                                    unsigned int from_index)
+                                    NavigationState const *const *__restrict__ in_states,
+                                    Precision *__restrict__ out_steps, bool const *__restrict__ calcsafeties,
+                                    Precision *__restrict__ out_safeties, unsigned int from_index)
   {
     VPlacedVolume const *hitcandidates[ChunkSize] = {}; // initialize all to nullptr
 
@@ -912,11 +908,13 @@ public:
   // this implementation tries to process everything in vector CHUNKS
   // at the very least this enables at least the DistanceToOut call to be vectorized
   VECCORE_ATT_HOST_DEVICE
-  virtual void ComputeStepsAndSafetiesAndPropagatedStates(
-      SOA3D<Precision> const &__restrict__ globalpoints, SOA3D<Precision> const &__restrict__ globaldirs,
-      Precision const *__restrict__ step_limit, NavStatePool const &in_states, NavStatePool &out_states,
-      Precision *__restrict__ out_steps,
-      bool const *__restrict__ calcsafeties, Precision *__restrict__ out_safeties) const override
+  virtual void ComputeStepsAndSafetiesAndPropagatedStates(SOA3D<Precision> const &__restrict__ globalpoints,
+                                                          SOA3D<Precision> const &__restrict__ globaldirs,
+                                                          Precision const *__restrict__ step_limit,
+                                                          NavStatePool const &in_states, NavStatePool &out_states,
+                                                          Precision *__restrict__ out_steps,
+                                                          bool const *__restrict__ calcsafeties,
+                                                          Precision *__restrict__ out_safeties) const override
   {
     // process SIMD part and TAIL part
     // something like
@@ -934,11 +932,10 @@ public:
     // fall back to scalar interface for tail treatment
     for (; i < size; ++i) {
       out_steps[i] = ((Impl *)this)
-         ->Impl::ComputeStepAndSafetyAndPropagatedState(globalpoints[i], globaldirs[i], step_limit[i],
-                                                        *in_states[i], *out_states[i], calcsafeties[i],
-                                                        out_safeties[i]);
+                         ->Impl::ComputeStepAndSafetyAndPropagatedState(globalpoints[i], globaldirs[i], step_limit[i],
+                                                                        *in_states[i], *out_states[i], calcsafeties[i],
+                                                                        out_safeties[i]);
     }
-
   }
 
   // generic implementation for the vector interface

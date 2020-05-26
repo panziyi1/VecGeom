@@ -368,7 +368,12 @@ public:
   // clear all information
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
-  void Clear() { fNavInd = 0; fLastExited = 0; fOnBoundary = false; }
+  void Clear()
+  {
+    fNavInd     = 0;
+    fLastExited = 0;
+    fOnBoundary = false;
+  }
 
   VECCORE_ATT_HOST_DEVICE
   void Print() const;

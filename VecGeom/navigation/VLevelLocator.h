@@ -9,7 +9,7 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 
 class LogicalVolume;
 class VPlacedVolume;
-//class NavigationState;
+// class NavigationState;
 
 //! Pure virtual base class for LevelLocators
 

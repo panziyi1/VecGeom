@@ -56,7 +56,7 @@ public:
   LogicalVolume const *GetLogicalVolume() const { return fLogicalVolume; }
 
   // add content
-  void AddVolume(VPlacedVolume * const);
+  void AddVolume(VPlacedVolume *const);
 
   // get number of volumes
   size_t GetNVolumes() const { return fLogicalVolume->GetDaughters().size(); }
@@ -224,7 +224,7 @@ public:
                                                       const int id, VPlacedVolume *const placement) const override;
 #endif
 };
-}
-}
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif // VECGEOM_UNPLACEDASSEMBLY_H

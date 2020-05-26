@@ -9,7 +9,7 @@ using namespace vecgeom;
 
 void NavStateUnitTest1()
 {
-  using NavigationState = NavStatePath;
+  using NavigationState   = NavStatePath;
   NavigationState *state1 = NavigationState::MakeInstance(10);
   NavigationState *state2 = NavigationState::MakeInstance(10);
   // test - 0 ( one empty path )

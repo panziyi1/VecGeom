@@ -25,7 +25,7 @@ namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
 VPlacedVolume *GeoManager::gCompactPlacedVolBuffer = nullptr;
-NavIndex_t *GeoManager::gNavIndex = nullptr;
+NavIndex_t *GeoManager::gNavIndex                  = nullptr;
 
 void GeoManager::RegisterLogicalVolume(LogicalVolume *const logical_volume)
 {
@@ -336,7 +336,6 @@ void GeoManager::Clear()
     delete NavIndexTable::Instance();
     gNavIndex = nullptr;
   }
-
 }
 
 bool GeoManager::MakeNavIndexTable(int depth_limit, bool validate) const
@@ -409,5 +408,5 @@ __attribute__((noinline)) void GeoManager::getAllPathForLogicalVolume(LogicalVol
 template void GeoManager::getAllPathForLogicalVolume(LogicalVolume const *lvol, std::list<NavigationState *> &c) const;
 template void GeoManager::getAllPathForLogicalVolume(LogicalVolume const *lvol,
                                                      std::vector<NavigationState *> &c) const;
-}
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom

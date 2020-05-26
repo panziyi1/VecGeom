@@ -24,7 +24,7 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 // some forward declarations
 template <typename T>
 class Vector3D;
-//class NavigationState;
+// class NavigationState;
 class LogicalVolume;
 class Transformation3D;
 class VPlacedVolume;

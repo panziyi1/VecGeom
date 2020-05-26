@@ -57,9 +57,9 @@ class VPlacedVolume {
   friend class GeoManager;
 
 private:
-  unsigned int id_;   ///< Integer id
-  int copy_no_  = 0;  ///< Copy number for the physical volume, used by transport
-  int ichild_   = -1; ///< Index in the mother volume list;
+  unsigned int id_;  ///< Integer id
+  int copy_no_ = 0;  ///< Copy number for the physical volume, used by transport
+  int ichild_  = -1; ///< Index in the mother volume list;
 
   // Use a pointer so the string won't be constructed on the GPU
   std::string *label_;            ///< Label/name of placed volume

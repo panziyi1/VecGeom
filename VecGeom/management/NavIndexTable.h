@@ -91,7 +91,7 @@ public:
 
   bool CreateTable(VPlacedVolume const *top, int maxdepth, int depth_limit)
   {
-    fDepthLimit            = depth_limit;
+    fDepthLimit         = depth_limit;
     NavStatePath *state = NavStatePath::MakeInstance(maxdepth);
     state->Clear();
     auto visitor = new BuildNavIndexVisitor(depth_limit, true); // just count table size
