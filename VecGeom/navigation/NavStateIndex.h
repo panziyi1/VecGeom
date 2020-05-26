@@ -5,16 +5,23 @@
 #ifndef VECGEOM_NAVIGATION_NAVSTATEINDEX_H_
 #define VECGEOM_NAVIGATION_NAVSTATEINDEX_H_
 
+#include "VecGeom/base/Global.h"
 #include "VecGeom/base/Transformation3D.h"
 #include "VecGeom/volumes/PlacedVolume.h"
 #include "VecGeom/management/GeoManager.h"
+
 #ifdef VECGEOM_ENABLE_CUDA
 #include "VecGeom/management/CudaManager.h"
 #endif
-#include "VecGeom/base/Global.h"
+
+#ifdef VECGEOM_ROOT
+#include "VecGeom/management/RootGeoManager.h"
+#endif
 
 #include <iostream>
 #include <string>
+
+class TGeoBranchArray;
 
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
@@ -98,6 +105,17 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   int SizeOf() const { return (int)sizeof(NavStateIndex); }
+
+#ifdef VECGEOM_ROOT
+  TGeoBranchArray *ToTGeoBranchArray() const;
+  NavStateIndex &operator=(TGeoBranchArray const &rhs);
+  /**
+   * function return the ROOT TGeoNode object which is equivalent to calling Top()
+   * function included for convenience; to make porting Geant-V easier; we should eventually get rid of this function
+   */
+  VECGEOM_FORCE_INLINE
+  TGeoNode const *GetCurrentNode() const { return RootGeoManager::Instance().tgeonode(this->Top()); }
+#endif
 
   VECCORE_ATT_HOST_DEVICE
   void CopyTo(NavStateIndex *other) const { *other = *this; }
@@ -350,7 +368,7 @@ public:
   // clear all information
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
-  void Clear() { fNavInd = 0; }
+  void Clear() { fNavInd = 0; fLastExited = 0; fOnBoundary = false; }
 
   VECCORE_ATT_HOST_DEVICE
   void Print() const;
