@@ -183,6 +183,11 @@ if(USE_INDEXEDNAVSTATES)
   set(VECGEOM_USE_INDEXEDNAVSTATES ON)
 endif()
 
+option(USE_NAVINDEX "Use navigation index table and states" OFF)
+if(USE_NAVINDEX)
+  set(VECGEOM_USE_NAVINDEX ON)
+endif()
+
 option(GDML "Enable GDML persistency. Requres Xerces-C" OFF)
 if(GDML)
   set(VECGEOM_GDML ON)
