@@ -128,16 +128,16 @@ VPlacedVolume *LogicalVolume::Place() const
   return Place(fLabel->c_str());
 }
 
-VPlacedVolume const *LogicalVolume::PlaceDaughter(char const *const label, LogicalVolume const *const volume,
+VPlacedVolume const *LogicalVolume::PlaceDaughter(char const *const label, LogicalVolume *const volume,
                                                   Transformation3D const *const transformation)
 {
-  VPlacedVolume const *const placed = volume->Place(label, transformation);
+  VPlacedVolume *const placed = volume->Place(label, transformation);
   //  std::cerr << label <<" LogVol@"<< this <<" and placed@"<< placed << std::endl;
   PlaceDaughter(placed);
   return placed;
 }
 
-VPlacedVolume const *LogicalVolume::PlaceDaughter(LogicalVolume const *const volume,
+VPlacedVolume const *LogicalVolume::PlaceDaughter(LogicalVolume *const volume,
                                                   Transformation3D const *const transformation)
 {
   return PlaceDaughter(volume->GetLabel().c_str(), volume, transformation);
@@ -145,8 +145,11 @@ VPlacedVolume const *LogicalVolume::PlaceDaughter(LogicalVolume const *const vol
 
 #endif
 
-void LogicalVolume::PlaceDaughter(VPlacedVolume const *const placed)
+void LogicalVolume::PlaceDaughter(VPlacedVolume *const placed)
 {
+  int ichild = fDaughters->size();
+  assert(placed->GetChildId() < 0 && "===FFF=== LogicalVolume::PlaceDaughter: Not allowed to add the same placed volume twice - make a copy first");
+  placed->SetChildId(ichild);
   fDaughters->push_back(placed);
 
   // a good moment to update the bounding boxes

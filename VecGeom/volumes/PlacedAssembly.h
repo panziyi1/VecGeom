@@ -5,6 +5,7 @@
 
 #include "VecGeom/volumes/UnplacedAssembly.h"
 #include "VecGeom/volumes/PlacedVolume.h"
+#include "VecGeom/navigation/NavStateFwd.h"
 
 namespace vecgeom {
 
@@ -13,7 +14,7 @@ VECGEOM_DEVICE_DECLARE_CONV(class, PlacedAssembly);
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-class NavigationState;
+//class NavigationState;
 
 // placed version of an assembly
 // simple and unspecialized implementation

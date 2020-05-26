@@ -260,16 +260,16 @@ public:
   /// @param label Name of placed daughter volume.
   /// @param volume The logical volume to be added to the list of daughter volumes.
   /// @param transformation The transformation used to place the daughter.
-  VPlacedVolume const *PlaceDaughter(char const *const label, LogicalVolume const *const volume,
+  VPlacedVolume const *PlaceDaughter(char const *const label, LogicalVolume *const volume,
                                      Transformation3D const *const transformation);
 
   /// Adds/places a daughter volume inside this logical volume.
   /// @param volume The logical volume to be added to the list of daughter volumes.
   /// @param transformation The transformation used to place the daughter.
-  VPlacedVolume const *PlaceDaughter(LogicalVolume const *const volume, Transformation3D const *const transformation);
+  VPlacedVolume const *PlaceDaughter(LogicalVolume *const volume, Transformation3D const *const transformation);
 
   /// Adds/places an already existing placed daughter volume
-  void PlaceDaughter(VPlacedVolume const *const placed);
+  void PlaceDaughter(VPlacedVolume *const placed);
 
   /// Returns true of at least one of the daughters is an assembly.
   bool ContainsAssembly() const;

@@ -57,8 +57,9 @@ class VPlacedVolume {
   friend class GeoManager;
 
 private:
-  unsigned int id_; ///< Integer id
-  int copy_no_ = 0; ///< Copy number for the physical volume, used by transport
+  unsigned int id_;   ///< Integer id
+  int copy_no_  = 0;  ///< Copy number for the physical volume, used by transport
+  int ichild_   = -1; ///< Index in the mother volume list;
 
   // Use a pointer so the string won't be constructed on the GPU
   std::string *label_;            ///< Label/name of placed volume
@@ -111,6 +112,9 @@ protected:
 #endif
 #endif
 
+  VECGEOM_FORCE_INLINE
+  void SetChildId(int index) { ichild_ = index; }
+
 public:
   VECCORE_ATT_HOST_DEVICE
   VPlacedVolume(VPlacedVolume const &);
@@ -124,6 +128,14 @@ public:
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
   unsigned int id() const { return id_; }
+
+  /// Returns copy number.
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
+  int GetChildId() const { return ichild_; }
+
+  /// LogicalVolume::PlaceDaughters is a friend that can set the child index
+  friend void LogicalVolume::PlaceDaughter(VPlacedVolume *const placed);
 
   /// Returns copy number.
   VECCORE_ATT_HOST_DEVICE

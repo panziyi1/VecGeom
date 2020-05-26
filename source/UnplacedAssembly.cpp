@@ -16,7 +16,7 @@ UnplacedAssembly::UnplacedAssembly() : fLogicalVolume(nullptr), fLowerCorner(-kI
 
 UnplacedAssembly::~UnplacedAssembly() {}
 
-void UnplacedAssembly::AddVolume(VPlacedVolume const *v)
+void UnplacedAssembly::AddVolume(VPlacedVolume * const v)
 {
   fLogicalVolume->PlaceDaughter(v);
 }
