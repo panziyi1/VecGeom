@@ -6,7 +6,7 @@
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-NavIndex_t BuildNavIndexVisitor::apply(NavigationState *state, int level, NavIndex_t mother, int dind)
+NavIndex_t BuildNavIndexVisitor::apply(NavStatePath *state, int level, NavIndex_t mother, int dind)
 {
   bool cacheTrans       = true;
   NavIndex_t new_mother = fCurrent;
@@ -76,48 +76,49 @@ NavIndex_t BuildNavIndexVisitor::apply(NavigationState *state, int level, NavInd
   return new_mother;
 }
 
-NavIndex_t NavIndexTable::ValidateState(NavigationState *state)
+NavIndex_t NavIndexTable::ValidateState(NavStatePath *state)
 {
   // Decode the NavIndex_t
   unsigned char level = state->GetLevel();
   int dind            = 0;
   NavIndex_t nav_ind  = fWorld;
+  VPlacedVolume const *pdaughter = nullptr;
   for (int i = 1; i < level + 1; ++i) {
-    auto pvol      = state->At(i - 1);
-    auto pdaughter = state->At(i);
-    dind           = pvol->IndexOf(pdaughter);
+    pdaughter = state->At(i);
+    dind      = pdaughter->GetChildId();
     if (dind < 0) {
       std::runtime_error("=== EEE === Validate: incompatible daughter pointer");
       state->Print();
       return 0;
     }
-    nav_ind = Push(nav_ind, dind);
+    nav_ind = NavStateIndex::PushImpl(nav_ind, pdaughter);
+    //nav_ind = Push(nav_ind, dind);
     assert(nav_ind > 0);
   }
 
   // Check if the physical volume is correct
-  if (Top(nav_ind) != state->Top()) {
+  if (NavStateIndex::TopImpl(nav_ind) != state->Top()) {
     std::runtime_error("=== EEE === Validate: Top placed volume pointer mismatch");
     state->Print();
     return 0;
   }
 
   // Check if the current level is valid
-  if (level != GetLevel(nav_ind)) {
+  if (level != NavStateIndex::GetLevelImpl(nav_ind)) {
     std::runtime_error("=== EEE === Validate: Level mismatch");
     state->Print();
     return 0;
   }
 
   // Check if mother navigation index is consistent
-  if (level > 0 && nav_ind != Push(Pop(nav_ind), dind)) {
+  if (level > 0 && nav_ind != NavStateIndex::PushImpl(NavStateIndex::PopImpl(nav_ind), pdaughter)) {
     std::runtime_error("=== EEE === Validate: Navigation index inconsistency for Push/Pop");
     state->Print();
     return 0;
   }
 
   // Check if the number of daughters is correct
-  if (Ndaughters(nav_ind) != state->Top()->GetDaughters().size()) {
+  if (NavStateIndex::GetNdaughtersImpl(nav_ind) != state->Top()->GetDaughters().size()) {
     std::runtime_error("=== EEE === Validate: Number of daughters mismatch");
     state->Print();
     return 0;
@@ -125,7 +126,7 @@ NavIndex_t NavIndexTable::ValidateState(NavigationState *state)
 
   Transformation3D trans, trans_nav_ind;
   state->TopMatrix(trans);
-  TopMatrix(nav_ind, trans_nav_ind);
+  NavStateIndex::TopMatrixImpl(nav_ind, trans_nav_ind);
   if (!trans.operator==(trans_nav_ind)) {
     std::runtime_error("=== EEE === Validate: Transformation matrix mismatch");
     state->Print();

@@ -30,7 +30,7 @@ public:
   void SetType(int type) { fType = type; }
   void SetGlobalPoint(Precision x, Precision y, Precision z) { fGlobalPoint.Set(x, y, z); }
 
-  void apply(NavigationState *state, NavIndex_t nav_ind)
+  void apply(NavStatePath *state, NavIndex_t nav_ind)
   {
     switch (fType) {
     case 0:
@@ -39,7 +39,7 @@ public:
       fLocal = state->GlobalToLocal(fGlobalPoint);
       break;
     case 2:
-      fLocal = fTable->GlobalToLocal(nav_ind, fGlobalPoint);
+      fLocal = NavStateIndex::GlobalToLocalImpl(nav_ind, fGlobalPoint);
       break;
     }
   }
@@ -48,16 +48,15 @@ public:
 /// Traverses the geometry tree keeping track of the state context (volume path or navigation state)
 /// and applies the injected Visitor
 template <typename Visitor>
-void visitAllPlacedVolumesPassNavIndex(VPlacedVolume const *currentvolume, Visitor *visitor, NavigationState *state,
+void visitAllPlacedVolumesPassNavIndex(VPlacedVolume const *currentvolume, Visitor *visitor, NavStatePath *state,
                                        NavIndex_t nav_ind)
 {
   if (currentvolume != NULL) {
     state->Push(currentvolume);
     visitor->apply(state, nav_ind);
-    int size = currentvolume->GetDaughters().size();
-    for (int i = 0; i < size; ++i) {
-      auto nav_ind_d = NavIndexTable::Instance()->Push(nav_ind, i);
-      visitAllPlacedVolumesPassNavIndex(currentvolume->GetDaughters().operator[](i), visitor, state, nav_ind_d);
+    for (auto daughter : currentvolume->GetDaughters()) {
+      auto nav_ind_d = NavStateIndex::PushImpl(nav_ind, daughter);
+      visitAllPlacedVolumesPassNavIndex(daughter, visitor, state, nav_ind_d);
     }
     state->Pop();
   }
@@ -98,7 +97,7 @@ int main(int argc, char *argv[])
   float frac_build = 100. * tbuild / tload;
 
   // Check performance
-  NavigationState *state = NavigationState::MakeInstance(GeoManager::Instance().getMaxDepth());
+  NavStatePath *state = NavStatePath::MakeInstance(GeoManager::Instance().getMaxDepth());
   state->Clear();
   auto visitor = new GlobalToLocalVisitor(NavIndexTable::Instance());
 
@@ -132,7 +131,7 @@ int main(int argc, char *argv[])
   std::cout << "Speedup per GlobalToLocal averaged over all states: " << std::setprecision(3)
             << (tnavstate - tbaseline) / (tnavindex - tbaseline) << "\n";
 
-  NavigationState::ReleaseInstance(state);
+  NavStatePath::ReleaseInstance(state);
 
   if (!success) return 1;
   return 0;

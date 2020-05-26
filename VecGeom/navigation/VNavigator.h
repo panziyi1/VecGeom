@@ -17,6 +17,8 @@
 #include "VecGeom/volumes/PlacedVolume.h"
 #include "VecGeom/volumes/LogicalVolume.h"
 #include "VecGeom/navigation/VSafetyEstimator.h"
+#include "VecGeom/navigation/NavStateFwd.h"
+
 
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
@@ -24,7 +26,7 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 // some forward declarations
 template <typename T>
 class Vector3D;
-class NavigationState;
+//class NavigationState;
 class LogicalVolume;
 class Transformation3D;
 class VPlacedVolume;

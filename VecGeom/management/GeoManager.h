@@ -14,6 +14,7 @@
 #include "VecGeom/volumes/PlacedVolume.h"
 #include "VecGeom/volumes/LogicalVolume.h"
 #include "VecGeom/management/GeoVisitor.h"
+#include "VecGeom/navigation/NavStateFwd.h"
 
 #include <map>
 
@@ -22,7 +23,6 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 
 class UnplacedScaledShape;
 class Scale3D;
-class NavigationState;
 
 /**
  * @brief A class serving as central registry for VecGeom geometries.

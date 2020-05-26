@@ -12,11 +12,11 @@
 #include "VecGeom/base/Global.h"
 #include "VecGeom/volumes/PlacedVolume.h"
 #include "VecGeom/volumes/LogicalVolume.h"
+#include "VecGeom/navigation/NavStateFwd.h"
 
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-class NavigationState;
 /// A visitor functor interface used when iterating over the geometry tree.
 template <typename Container>
 class GeoVisitor {
@@ -51,7 +51,7 @@ class GeoVisitorNavIndex {
 public:
   GeoVisitorNavIndex(){};
 
-  virtual NavIndex_t apply(NavigationState *state, int level, NavIndex_t mother, int dind) = 0;
+  virtual NavIndex_t apply(NavStatePath *state, int level, NavIndex_t mother, int dind) = 0;
   virtual ~GeoVisitorNavIndex() {}
 };
 

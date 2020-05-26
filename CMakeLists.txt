@@ -604,7 +604,8 @@ set(VECGEOM_COMMON_SRCS
   source/UnplacedMultiUnion.cpp
   source/UnplacedExtruded.cpp
   source/UnplacedVolume.cpp
-  source/NavigationState.cpp
+  source/NavStateIndex.cpp
+  source/NavStatePath.cpp
   source/NavIndexTable.cpp
 
   source/UnplacedOrb.cpp

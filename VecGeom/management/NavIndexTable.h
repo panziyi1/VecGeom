@@ -39,7 +39,7 @@ public:
   void SetDoCount(bool flag) { fDoCount = flag; }
   void SetValidate(bool flag) { fValidate = flag; }
 
-  NavIndex_t apply(NavigationState *state, int level, NavIndex_t mother, int dind);
+  NavIndex_t apply(NavStatePath *state, int level, NavIndex_t mother, int dind);
 };
 
 class NavIndexTable {
@@ -70,93 +70,6 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
-  VPlacedVolume const *Top(NavIndex_t nav_ind) const
-  {
-    return (nav_ind > 0) ? &fVolBuffer[fNavInd[nav_ind + 1]] : nullptr;
-  }
-
-  VECCORE_ATT_HOST_DEVICE
-  VECGEOM_FORCE_INLINE
-  VPlacedVolume const *At(NavIndex_t nav_ind, int level) const
-  {
-    auto parent = GetNavIndex(nav_ind, level);
-    return Top(parent);
-  }
-
-  VECCORE_ATT_HOST_DEVICE
-  VECGEOM_FORCE_INLINE
-  NavIndex_t Push(NavIndex_t nav_ind, int idaughter) const
-  {
-    assert(idaughter < (int)Ndaughters(nav_ind));
-    return fNavInd[nav_ind + 3 + idaughter];
-  }
-
-  VECCORE_ATT_HOST_DEVICE
-  VECGEOM_FORCE_INLINE
-  NavIndex_t Pop(NavIndex_t nav_ind) const { return (nav_ind > 0) ? fNavInd[nav_ind] : 0; }
-
-  VECCORE_ATT_HOST_DEVICE
-  VECGEOM_FORCE_INLINE
-  unsigned short Ndaughters(NavIndex_t nav_ind) const
-  {
-    constexpr unsigned int kOffsetNd = 2 * sizeof(NavIndex_t) + 1;
-    auto content_nd                  = (unsigned short *)((unsigned char *)(&fNavInd[nav_ind]) + kOffsetNd);
-    return *content_nd;
-  }
-
-  VECCORE_ATT_HOST_DEVICE
-  void TopMatrix(NavIndex_t nav_ind, Transformation3D &trans) const
-  {
-    constexpr unsigned int kOffsetHasm = 2 * sizeof(NavIndex_t) + 3;
-    if (nav_ind == 0) return;
-    unsigned char hasm = *((unsigned char *)(&fNavInd[nav_ind]) + kOffsetHasm);
-    bool has_matrix    = (hasm & 0x04) > 0;
-    if (has_matrix) {
-      bool has_trans           = (hasm & 0x02) > 0;
-      bool has_rot             = (hasm & 0x01) > 0;
-      auto nd                  = Ndaughters(nav_ind);
-      const Precision *address = (Precision *)(&fNavInd[nav_ind + 3 + nd]);
-      trans.Set(address, address + 3, has_trans, has_rot);
-      return;
-    } else {
-      // Call recursively for the mother
-      TopMatrix(fNavInd[nav_ind], trans);
-      trans.MultiplyFromRight(*Top(nav_ind)->GetTransformation());
-    }
-  }
-
-  VECGEOM_FORCE_INLINE
-  VECCORE_ATT_HOST_DEVICE
-  Vector3D<Precision> GlobalToLocal(NavIndex_t nav_ind, Vector3D<Precision> const &globalpoint) const
-  {
-    Transformation3D trans;
-    TopMatrix(nav_ind, trans);
-    Vector3D<Precision> local = trans.Transform(globalpoint);
-    return local;
-  }
-
-  VECCORE_ATT_HOST_DEVICE
-  VECGEOM_FORCE_INLINE
-  int GetLevel(NavIndex_t nav_ind) const
-  {
-    constexpr unsigned int kOffsetLevel = 2 * sizeof(NavIndex_t);
-    auto content_level                  = (unsigned char *)(&fNavInd[nav_ind]) + kOffsetLevel;
-    return (int)(*content_level);
-  }
-
-  VECCORE_ATT_HOST_DEVICE
-  VECGEOM_FORCE_INLINE
-  NavIndex_t GetNavIndex(NavIndex_t nav_ind, int level) const
-  {
-    int up            = GetLevel(nav_ind) - level;
-    NavIndex_t mother = nav_ind;
-    while (mother && up--)
-      mother = fNavInd[mother];
-    return mother;
-  }
-
-  VECCORE_ATT_HOST_DEVICE
-  VECGEOM_FORCE_INLINE
   NavIndex_t GetWorld() const { return fWorld; }
 
   bool AllocateTable(size_t bytes)
@@ -179,7 +92,7 @@ public:
   bool CreateTable(VPlacedVolume const *top, int maxdepth, int depth_limit)
   {
     fDepthLimit            = depth_limit;
-    NavigationState *state = NavigationState::MakeInstance(maxdepth);
+    NavStatePath *state = NavStatePath::MakeInstance(maxdepth);
     state->Clear();
     auto visitor = new BuildNavIndexVisitor(depth_limit, true); // just count table size
 
@@ -211,28 +124,29 @@ public:
     state->Clear();
     visitAllPlacedVolumesNavIndex(top, visitor, state);
     delete visitor;
-    NavigationState::ReleaseInstance(state);
+    NavStatePath::ReleaseInstance(state);
     return true;
   }
 
   bool Validate(VPlacedVolume const *top, int maxdepth) const
   {
-    NavigationState *state = NavigationState::MakeInstance(maxdepth);
+    NavStatePath *state = NavStatePath::MakeInstance(maxdepth);
     state->Clear();
     auto visitor = new BuildNavIndexVisitor(0, false);
     visitor->SetValidate(true);
     visitAllPlacedVolumesNavIndex(top, visitor, state);
+    NavStatePath::ReleaseInstance(state);
     return true;
   }
 
-  NavIndex_t ValidateState(NavigationState *state);
+  NavIndex_t ValidateState(NavStatePath *state);
 
   // vecgeom::cuda::NavIndexTable *CopyToGPU() const
 
   /// Traverses the geometry tree keeping track of the state context (volume path or navigation state)
   /// and applies the injected Visitor
   template <typename Visitor>
-  void visitAllPlacedVolumesNavIndex(VPlacedVolume const *currentvolume, Visitor *visitor, NavigationState *state,
+  void visitAllPlacedVolumesNavIndex(VPlacedVolume const *currentvolume, Visitor *visitor, NavStatePath *state,
                                      int level = 0, NavIndex_t mother = 0, int dind = 0) const
   {
     if (currentvolume != NULL) {

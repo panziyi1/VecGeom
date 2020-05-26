@@ -12,6 +12,7 @@
 #include "VecGeom/volumes/UnplacedBooleanVolume.h"
 #include "VecGeom/volumes/UnplacedScaledShape.h"
 #include "VecGeom/volumes/LogicalVolume.h"
+#include "VecGeom/management/GeoVisitor.h"
 
 #include <dlfcn.h>
 #include <stdio.h>
