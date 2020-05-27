@@ -29,6 +29,9 @@ VECGEOM_DEVICE_FORWARD_DECLARE(void InitDeviceCompactPlacedVolBufferPtr(void *);
 namespace globaldevicegeomdata {
 VECCORE_ATT_DEVICE
 VPlacedVolume *&GetCompactPlacedVolBuffer();
+
+VECCORE_ATT_DEVICE
+NavIndex_t *&GetNavIndex();
 }
 
 #ifndef VECCORE_CUDA
@@ -72,6 +75,7 @@ private:
   VPlacedVolume const *world_;
   DevicePtr<vecgeom::cuda::VPlacedVolume> world_gpu_;
   DevicePtr<vecgeom::cuda::VPlacedVolume> fPlacedVolumeBufferOnDevice;
+  DevicePtr<NavIndex_t> fNavTableOnDevice = nullptr;
 
 private:
   /**

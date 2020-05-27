@@ -14,10 +14,18 @@ namespace vecgeom {
 namespace globaldevicegeomdata {
 static __device__ VPlacedVolume *gCompactPlacedVolBuffer = nullptr;
 
+static __device__ NavIndex_t *gNavIndex = nullptr;
+
 VECCORE_ATT_DEVICE
 VPlacedVolume *&GetCompactPlacedVolBuffer()
 {
   return gCompactPlacedVolBuffer;
+}
+
+VECCORE_ATT_DEVICE
+NavIndex_t *&GetNavIndex()
+{
+  return gNavIndex;
 }
 }
 
@@ -32,6 +40,17 @@ __global__ void InitDeviceCompactPlacedVolBufferPtrCudaKernel(void *gpu_ptr)
 void InitDeviceCompactPlacedVolBufferPtr(void *gpu_ptr)
 {
   InitDeviceCompactPlacedVolBufferPtrCudaKernel<<<1, 1>>>(gpu_ptr);
+}
+
+__global__ void InitDeviceNavIndexPtrCudaKernel(void *gpu_ptr)
+{
+  // gpu_ptr is some pointer on the device that was allocated by some other means
+  globaldevicegeomdata::GetNavIndex() = (NavIndex_t *)gpu_ptr;
+}
+
+void InitDeviceNavIndexPtr(void *gpu_ptr)
+{
+  InitDeviceNavIndexPtrCudaKernel<<<1, 1>>>(gpu_ptr);
 }
 
 __global__ void CudaManagerPrintGeometryKernel(vecgeom::cuda::VPlacedVolume const *const world)

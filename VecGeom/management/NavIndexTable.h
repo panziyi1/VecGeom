@@ -62,6 +62,10 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
+  size_t GetTableSize() const { return fTableSize; }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
   NavIndex_t *GetTable() const { return fNavInd; }
 
   VECCORE_ATT_HOST_DEVICE

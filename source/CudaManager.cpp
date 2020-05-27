@@ -8,6 +8,7 @@
 #include "VecGeom/base/Stopwatch.h"
 #include "VecGeom/management/GeoManager.h"
 #include "VecGeom/management/VolumeFactory.h"
+#include "VecGeom/management/NavIndexTable.h"
 #include "VecGeom/volumes/PlacedVolume.h"
 #include "VecGeom/volumes/PlacedBooleanVolume.h"
 #include "VecGeom/volumes/PlacedScaledShape.h"
@@ -23,6 +24,7 @@ namespace vecgeom {
 namespace cuda {
 // forward declare a global function
 extern __global__ void InitDeviceCompactPlacedVolBufferPtr(void *gpu_ptr);
+extern __global__ void InitDeviceNavIndexPtr(void *gpu_ptr);
 }
 
 inline namespace cxx {
@@ -236,6 +238,32 @@ bool CudaManager::AllocateCollectionOnCoproc(const char *verbose_title, const Co
   return true;
 }
 
+// Copy navigation index table on the coprocessor
+bool CudaManager::AllocateNavIndexOnCoproc()
+{
+  if (!GeoManager::gNavIndex) return false;
+  auto table_size = NavIndexTable::Instance()->GetTableSize() * sizeof(NavIndex_t);
+  auto table = NavIndexTable::Instance()->GetTable();
+
+  if (verbose_ > 2) std::cout << "Allocating navigation index table...\n";
+
+  GpuAddress gpu_address;
+  gpu_address.Allocate(table_size);
+
+  // store this address for later access (on the host)
+  fNavIndexOnDevice = DevicePtr<NavIndex_t>(gpu_address);
+  // this address has to be made known globally to the device side
+  vecgeom::cuda::InitDeviceNavIndexPtr(gpu_address.GetPtr());
+
+  allocated_memory_.push_back(gpu_address);
+
+  // Copy the table
+  CopyToGpu((char*)table, gpu_address.GetPtr(), table_size);
+
+  if (verbose_ > 2) std::cout << " OK\n";
+  return true;
+}
+
 // a special treatment for placed volumes to ensure same order of placed volumes in compact buffer
 // as on CPU
 bool CudaManager::AllocatePlacedVolumesOnCoproc()
@@ -248,7 +276,7 @@ bool CudaManager::AllocatePlacedVolumesOnCoproc()
   // we start from the compact buffer on the CPU
   unsigned int size = placed_volumes_.size();
 
-  if (verbose_ > 2) std::cout << "Allocating placed volume...\n";
+  if (verbose_ > 2) std::cout << "Allocating placed volumes...\n";
 
   size_t totalSize = 0;
   // calculate total size of buffer on GPU to hold the GPU copies of the collection
@@ -309,6 +337,9 @@ void CudaManager::AllocateGeometry()
   // the allocation for placed volumes is a bit different (due to compact buffer treatment), so we call a specialized
   // function
   AllocatePlacedVolumesOnCoproc(); // for placed volumes
+
+  // allocate the navigation index table (if any) on the coprocessor
+  AllocateNavIndexOnCoproc();
 
   // this we should only do if not using inplace transformations
   AllocateCollectionOnCoproc("transformations", transformations_);
