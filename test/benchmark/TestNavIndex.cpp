@@ -5,6 +5,7 @@
  *      Author: andrei.gheata@cern.ch
  */
 
+#include <iomanip>
 #include <VecGeom/management/GeoManager.h>
 #include <VecGeom/management/NavIndexTable.h>
 #include <VecGeom/navigation/NavigationState.h>

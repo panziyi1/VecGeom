@@ -51,7 +51,7 @@ public:
   static unsigned char GetMaxLevel()
   {
 #ifdef VECCORE_CUDA_DEVICE_COMPILATION
-    return vecgeom::globaldevicegeomdata::GetMaxLevel();
+    return vecgeom::globaldevicegeomdata::GetMaxDepth();
 #else
     return (unsigned char)GeoManager::Instance().getMaxDepth();
 #endif
@@ -104,7 +104,7 @@ public:
   int GetObjectSize() const { return (int)sizeof(NavStateIndex); }
 
   VECCORE_ATT_HOST_DEVICE
-  int SizeOf() const { return (int)sizeof(NavStateIndex); }
+  static size_t SizeOf(size_t) { return sizeof(NavStateIndex); }
 
 #ifdef VECGEOM_ROOT
   TGeoBranchArray *ToTGeoBranchArray() const;
@@ -364,6 +364,16 @@ public:
 
   void GetPathAsListOfIndices(std::list<uint> &indices) const;
   void ResetPathFromListOfIndices(VPlacedVolume const *world, std::list<uint> const &indices);
+
+  // replaces the volume pointers from CPU volumes in fPath
+  // to the equivalent pointers on the GPU
+  // uses the CudaManager to do so
+  void ConvertToGPUPointers() {}
+
+  // replaces the pointers from GPU volumes in fPath
+  // to the equivalent pointers on the CPU
+  // uses the CudaManager to do so
+  void ConvertToCPUPointers() {}
 
   // clear all information
   VECGEOM_FORCE_INLINE

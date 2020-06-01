@@ -52,7 +52,7 @@ NavIndex_t BuildNavIndexVisitor::apply(NavStatePath *state, int level, NavIndex_
 
   // Prepare the space for the daughter indices
   auto content_dind = &fNavInd[fCurrent + 3];
-  for (auto i = 0; i < nd; ++i)
+  for (size_t i = 0; i < nd; ++i)
     content_dind[i] = 0;
 
   fCurrent += 3 + nd;

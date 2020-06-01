@@ -32,6 +32,9 @@ VPlacedVolume *&GetCompactPlacedVolBuffer();
 
 VECCORE_ATT_DEVICE
 NavIndex_t *&GetNavIndex();
+
+VECCORE_ATT_DEVICE
+int GetMaxDepth();
 }
 
 #ifndef VECCORE_CUDA
@@ -75,7 +78,7 @@ private:
   VPlacedVolume const *world_;
   DevicePtr<vecgeom::cuda::VPlacedVolume> world_gpu_;
   DevicePtr<vecgeom::cuda::VPlacedVolume> fPlacedVolumeBufferOnDevice;
-  DevicePtr<NavIndex_t> fNavTableOnDevice = nullptr;
+  DevicePtr<NavIndex_t> fNavTableOnDevice;
 
 private:
   /**
@@ -199,6 +202,9 @@ private:
    * Helper routine allocate GPU memory for placed volume objects
    */
   bool AllocatePlacedVolumesOnCoproc();
+
+  /** Allocator method for the navigation index table */
+  bool AllocateNavIndexOnCoproc();
 
   // template <typename TrackContainer>
   // void LocatePointsTemplate(TrackContainer const &container, const int n,

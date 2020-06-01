@@ -24,7 +24,7 @@ namespace vecgeom {
 namespace cuda {
 // forward declare a global function
 extern __global__ void InitDeviceCompactPlacedVolBufferPtr(void *gpu_ptr);
-extern __global__ void InitDeviceNavIndexPtr(void *gpu_ptr);
+extern __global__ void InitDeviceNavIndexPtr(void *gpu_ptr, int maxdepth);
 }
 
 inline namespace cxx {
@@ -251,9 +251,9 @@ bool CudaManager::AllocateNavIndexOnCoproc()
   gpu_address.Allocate(table_size);
 
   // store this address for later access (on the host)
-  fNavIndexOnDevice = DevicePtr<NavIndex_t>(gpu_address);
+  fNavTableOnDevice = DevicePtr<NavIndex_t>(gpu_address);
   // this address has to be made known globally to the device side
-  vecgeom::cuda::InitDeviceNavIndexPtr(gpu_address.GetPtr());
+  vecgeom::cuda::InitDeviceNavIndexPtr(gpu_address.GetPtr(), GeoManager::Instance().getMaxDepth());
 
   allocated_memory_.push_back(gpu_address);
 
