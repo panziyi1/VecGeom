@@ -727,7 +727,8 @@ if(VECGEOM_BENCHMARK)
 
   list(APPEND VECGEOM_CUDA_SRCS
     source/benchmarking/Benchmarker.cu
-    source/benchmarking/NavigationBenchmarker.cu)
+    source/benchmarking/NavigationBenchmarker.cu
+    test/benchmark/TestNavIndex.cu)
 endif()
 
 ################################################################################

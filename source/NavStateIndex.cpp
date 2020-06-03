@@ -22,10 +22,12 @@ VECCORE_ATT_HOST_DEVICE
 void NavStateIndex::TopMatrixImpl(NavIndex_t nav_ind, Transformation3D &trans)
 {
   constexpr unsigned int kOffsetHasm = 2 * sizeof(NavIndex_t) + 3;
+  //trans.Clear();
   if (nav_ind == 0) return;
   unsigned char hasm = *((unsigned char *)(NavIndAddr(nav_ind)) + kOffsetHasm);
   bool has_matrix    = (hasm & 0x04) > 0;
   if (has_matrix) {
+    if ((hasm & 0x03) == 0) return;
     bool has_trans           = (hasm & 0x02) > 0;
     bool has_rot             = (hasm & 0x01) > 0;
     auto nd                  = GetNdaughtersImpl(nav_ind);

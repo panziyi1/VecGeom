@@ -130,6 +130,8 @@ NavIndex_t NavIndexTable::ValidateState(NavStatePath *state)
   if (!trans.operator==(trans_nav_ind)) {
     std::runtime_error("=== EEE === Validate: Transformation matrix mismatch");
     state->Print();
+    std::cout << "NavStatePath  transformation: " << trans << "\n";
+    std::cout << "NavStateIndex transformation: " << trans_nav_ind << "\n";
     return 0;
   }
 

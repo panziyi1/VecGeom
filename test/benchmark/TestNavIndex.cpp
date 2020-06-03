@@ -18,19 +18,30 @@
 
 using namespace vecgeom;
 
+void TestNavIndexCPU(vecgeom::cxx::VPlacedVolume const* const world, int npasses);
+
+#ifdef VECGEOM_ENABLE_CUDA
+void TestNavIndexGPU(vecgeom::cuda::VPlacedVolume const* const world, int npasses);
+#endif
+
+namespace visitorcxx {
+
 class GlobalToLocalVisitor {
 private:
-  NavIndexTable *fTable = nullptr; ///< pointer to navigation index table
-  int fType = 0; ///< visit type: 0=no computation 1=master-to-local NavigationState 2=master-to-local NavIndex_t
+  int fType = 0; ///< visit type: 0=no computation 1=master-to-local NavStatePath 2=master-to-local NavStateIndex
   Vector3D<Precision> fGlobalPoint; ///< point coordinates in the global frame
   Vector3D<Precision> fLocal;       ///< make sure we store the result somewhere
 
 public:
-  GlobalToLocalVisitor(NavIndexTable *table) { fTable = NavIndexTable::Instance(); }
+  GlobalToLocalVisitor() {}
 
+  VECCORE_ATT_HOST_DEVICE
   void SetType(int type) { fType = type; }
+
+  VECCORE_ATT_HOST_DEVICE
   void SetGlobalPoint(Precision x, Precision y, Precision z) { fGlobalPoint.Set(x, y, z); }
 
+  VECCORE_ATT_HOST_DEVICE
   void apply(NavStatePath *state, NavIndex_t nav_ind)
   {
     switch (fType) {
@@ -48,6 +59,7 @@ public:
 
 /// Traverses the geometry tree keeping track of the state context (volume path or navigation state)
 /// and applies the injected Visitor
+VECCORE_ATT_HOST_DEVICE
 template <typename Visitor>
 void visitAllPlacedVolumesPassNavIndex(VPlacedVolume const *currentvolume, Visitor *visitor, NavStatePath *state,
                                        NavIndex_t nav_ind)
@@ -63,6 +75,65 @@ void visitAllPlacedVolumesPassNavIndex(VPlacedVolume const *currentvolume, Visit
   }
 }
 
+} // namespace visitorcxx
+
+void TestNavIndexCPU(vecgeom::cxx::VPlacedVolume const* const world, int npasses)
+{
+  // Check performance
+  using namespace visitorcxx;
+
+  Stopwatch timer;
+  NavStatePath *state = NavStatePath::MakeInstance(GeoManager::Instance().getMaxDepth());
+  state->Clear();
+  GlobalToLocalVisitor visitor;
+
+  NavIndex_t nav_ind_top = 1; // The navigation index corresponding to the world
+
+  // empty pass to subtract the overhead
+  visitor.SetType(0);
+  if (npasses > 1) {
+    // Warming phase
+    for (auto i = 0; i < 5; ++i)
+      visitAllPlacedVolumesPassNavIndex(world, &visitor, state, nav_ind_top);
+  }
+
+  timer.Start();
+  for (auto i = 0; i < npasses; ++i)
+    visitAllPlacedVolumesPassNavIndex(world, &visitor, state, nav_ind_top);
+  auto tbaseline = timer.Stop();
+
+  // Compute the time for NavStatePath::GlobalToLocal
+  visitor.SetType(1);
+  if (npasses > 1) {
+    // Warming phase
+    for (auto i = 0; i < 5; ++i)
+      visitAllPlacedVolumesPassNavIndex(world, &visitor, state, nav_ind_top);
+  }
+  timer.Start();
+  for (auto i = 0; i < npasses; ++i)
+    visitAllPlacedVolumesPassNavIndex(world, &visitor, state, nav_ind_top);
+  auto tnavstate = timer.Stop();
+  std::cout << "NavStatePath::GlobalToLocal took: " << tnavstate - tbaseline << " sec.\n";
+
+  // Compute the time for NavStateIndex::GlobalToLocal
+  visitor.SetType(2);
+  if (npasses > 1) {
+    // Warming phase
+    for (auto i = 0; i < 5; ++i)
+      visitAllPlacedVolumesPassNavIndex(world, &visitor, state, nav_ind_top);
+  }
+  timer.Start();
+  for (auto i = 0; i < npasses; ++i)
+    visitAllPlacedVolumesPassNavIndex(world, &visitor, state, nav_ind_top);
+  auto tnavindex = timer.Stop();
+  std::cout << "NavStateIndex::GlobalToLocal took: " << tnavindex - tbaseline << " sec.\n";
+
+  std::cout << "Speedup per GlobalToLocal averaged over all states: " << std::setprecision(3)
+            << (tnavstate - tbaseline) / (tnavindex - tbaseline) << "\n";
+
+  NavStatePath::ReleaseInstance(state);
+}
+
 int main(int argc, char *argv[])
 {
 #ifndef VECGEOM_GDML
@@ -74,6 +145,7 @@ int main(int argc, char *argv[])
   OPTION_INT(max_depth, 0);
   OPTION_INT(validate, 0);
   OPTION_INT(npasses, 10);
+  OPTION_INT(on_gpu, 0);
 
   Stopwatch timer;
 // Try to open the input file
@@ -96,43 +168,19 @@ int main(int argc, char *argv[])
   std::cout << "Building the navigation index table took: " << tbuild << " sec.\n";
 
   float frac_build = 100. * tbuild / tload;
-
-  // Check performance
-  NavStatePath *state = NavStatePath::MakeInstance(GeoManager::Instance().getMaxDepth());
-  state->Clear();
-  auto visitor = new GlobalToLocalVisitor(NavIndexTable::Instance());
-
-  NavIndex_t nav_ind_top = 1; // The navigation index corresponding to the world
-
-  // empty pass to subtract the overhead
-  visitor->SetType(0);
-  timer.Start();
-  for (auto i = 0; i < npasses; ++i)
-    visitAllPlacedVolumesPassNavIndex(GeoManager::Instance().GetWorld(), visitor, state, nav_ind_top);
-  auto tbaseline = timer.Stop();
-
-  // Compute the time for NavigationState::GlobalToLocal
-  visitor->SetType(1);
-  timer.Start();
-  for (auto i = 0; i < npasses; ++i)
-    visitAllPlacedVolumesPassNavIndex(GeoManager::Instance().GetWorld(), visitor, state, nav_ind_top);
-  auto tnavstate = timer.Stop();
-  std::cout << "NavigationState::GlobalToLocal took: " << tnavstate - tbaseline << " sec.\n";
-
-  // Compute the time for NavIndexTable::GlobalToLocal
-  visitor->SetType(2);
-  timer.Start();
-  for (auto i = 0; i < npasses; ++i)
-    visitAllPlacedVolumesPassNavIndex(GeoManager::Instance().GetWorld(), visitor, state, nav_ind_top);
-  auto tnavindex = timer.Stop();
-  std::cout << "NavIndexTable::GlobalToLocal took: " << tnavindex - tbaseline << " sec.\n";
-
   std::cout << "Navigation table build time as fraction of the GDML load time: " << std::setprecision(2) << frac_build
             << " %\n";
-  std::cout << "Speedup per GlobalToLocal averaged over all states: " << std::setprecision(3)
-            << (tnavstate - tbaseline) / (tnavindex - tbaseline) << "\n";
-
-  NavStatePath::ReleaseInstance(state);
+  
+  if (on_gpu) {
+  #ifdef VECGEOM_ENABLE_CUDA
+    TestNavIndexCPU(GeoManager::Instance().GetWorld(), npasses);
+  #else
+    std::cout << "=== Cannot run the test on GPU since VecGeom CUDA support not compiled.\n";
+    return 1;
+  #endif
+  } else {
+    TestNavIndexCPU(GeoManager::Instance().GetWorld(), npasses);
+  }
 
   if (!success) return 1;
   return 0;
