@@ -787,8 +787,10 @@ void Transformation3D::MultiplyFromRight(Transformation3D const &rhs)
   // TODO: this code should directly operator on Vector3D and Matrix3D
 
   if (rhs.fIdentity) return;
+  fIdentity = false;
 
   if (rhs.HasTranslation()) {
+    fHasTranslation = true;
     // ideal for fused multiply add
     fTranslation[0] += fRotation[0] * rhs.fTranslation[0];
     fTranslation[0] += fRotation[1] * rhs.fTranslation[1];
@@ -804,6 +806,7 @@ void Transformation3D::MultiplyFromRight(Transformation3D const &rhs)
   }
 
   if (rhs.HasRotation()) {
+    fHasRotation = true;
     Precision tmpx = fRotation[0];
     Precision tmpy = fRotation[1];
     Precision tmpz = fRotation[2];
