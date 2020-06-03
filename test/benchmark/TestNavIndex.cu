@@ -1,4 +1,4 @@
-/// \file Raytracer.cu
+/// \file TestNavIndex.cu
 /// \author Andrei Gheata (andrei.gheata@cern.ch)
 
 #include <VecGeom/base/Transformation3D.h>
@@ -6,8 +6,9 @@
 #include <VecGeom/management/CudaManager.h>
 #include <VecGeom/navigation/NavigationState.h>
 #include <VecGeom/volumes/PlacedVolume.h>
-#include <VecGeom/benchmarking/Raytracer.h>
+#include <VecGeom/base/Stopwatch.h>
 
+#include <iomanip>
 #include <cassert>
 #include <cstdio>
 
@@ -33,6 +34,7 @@ private:
   Vector3D<Precision> fLocal;       ///< make sure we store the result somewhere
 
 public:
+  VECCORE_ATT_HOST_DEVICE
   GlobalToLocalVisitor() {}
 
   VECCORE_ATT_HOST_DEVICE
@@ -59,8 +61,8 @@ public:
 
 /// Traverses the geometry tree keeping track of the state context (volume path or navigation state)
 /// and applies the injected Visitor
-VECCORE_ATT_HOST_DEVICE
 template <typename Visitor>
+VECCORE_ATT_HOST_DEVICE
 void visitAllPlacedVolumesPassNavIndex(VPlacedVolume const *currentvolume, Visitor *visitor, NavStatePath *state,
                                        NavIndex_t nav_ind)
 {
@@ -78,7 +80,7 @@ void visitAllPlacedVolumesPassNavIndex(VPlacedVolume const *currentvolume, Visit
 } // namespace visitorcuda
 
 __global__
-TestNavIndexGPUKernel(vecgeom::cuda::VPlacedVolume const* const gpu_world, vecgeom::cuda::NavStatePath * const state, int type, int npasses)
+void TestNavIndexGPUKernel(vecgeom::cuda::VPlacedVolume const* const gpu_world, vecgeom::cuda::NavStatePath * const state, int type, int npasses)
 {
   using namespace visitorcuda;
   
@@ -89,18 +91,15 @@ TestNavIndexGPUKernel(vecgeom::cuda::VPlacedVolume const* const gpu_world, vecge
   visitor.SetType(type);
 
   for (auto i = 0; i < npasses; ++i)
-    visitAllPlacedVolumesPassNavIndex(world, &visitor, state, nav_ind_top);
+    visitAllPlacedVolumesPassNavIndex(gpu_world, &visitor, state, nav_ind_top);
 }
 
-
-
-void TestNavIndexGPU(vecgeom::cuda::VPlacedVolume const* const world, int npasses)
+void TestNavIndexGPU(vecgeom::cxx::VPlacedVolume const* const world, int maxdepth, int npasses)
 {
   // Load and synchronize the geometry on the GPU
-  int maxdepth = vecgeom::cxx::GeoManager::Instance().getMaxDepth();
   size_t statesize = NavigationState::SizeOfInstance(maxdepth);
 
-  vecgeom::cxx::CudaManager::Instance().LoadGeometry((vecgeom::cxx::VPlacedVolume*) world);
+  vecgeom::cxx::CudaManager::Instance().LoadGeometry(world);
   vecgeom::cxx::CudaManager::Instance().Synchronize();
   
   auto gpu_world = vecgeom::cxx::CudaManager::Instance().world_gpu();
@@ -113,16 +112,16 @@ void TestNavIndexGPU(vecgeom::cuda::VPlacedVolume const* const world, int npasse
 
   Stopwatch timer;
   timer.Start();
-  TestNavIndexGPU<<<1, 1>>>(gpu_world, state, 0, npasses);
+  TestNavIndexGPUKernel<<<1, 1>>>(gpu_world, state, 0, npasses);
   auto tbaseline = timer.Stop();
 
   timer.Start();
-  TestNavIndexGPU<<<1, 1>>>(gpu_world, state, 1, npasses);
+  TestNavIndexGPUKernel<<<1, 1>>>(gpu_world, state, 1, npasses);
   auto tnavstate = timer.Stop();
   std::cout << "NavStatePath::GlobalToLocal took: " << tnavstate - tbaseline << " sec.\n";
 
   timer.Start();
-  TestNavIndexGPU<<<1, 1>>>(gpu_world, state, 2, npasses);
+  TestNavIndexGPUKernel<<<1, 1>>>(gpu_world, state, 2, npasses);
   auto tnavindex = timer.Stop();
   std::cout << "NavStateIndex::GlobalToLocal took: " << tnavindex - tbaseline << " sec.\n";
 

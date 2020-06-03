@@ -18,10 +18,10 @@
 
 using namespace vecgeom;
 
-void TestNavIndexCPU(vecgeom::cxx::VPlacedVolume const* const world, int npasses);
+void TestNavIndexCPU(vecgeom::cxx::VPlacedVolume const* const world, int maxdepth, int npasses);
 
 #ifdef VECGEOM_ENABLE_CUDA
-void TestNavIndexGPU(vecgeom::cuda::VPlacedVolume const* const world, int npasses);
+void TestNavIndexGPU(vecgeom::cxx::VPlacedVolume const* const world, int maxdepth, int npasses);
 #endif
 
 namespace visitorcxx {
@@ -77,13 +77,13 @@ void visitAllPlacedVolumesPassNavIndex(VPlacedVolume const *currentvolume, Visit
 
 } // namespace visitorcxx
 
-void TestNavIndexCPU(vecgeom::cxx::VPlacedVolume const* const world, int npasses)
+void TestNavIndexCPU(vecgeom::cxx::VPlacedVolume const* const world, int maxdepth, int npasses)
 {
   // Check performance
   using namespace visitorcxx;
 
   Stopwatch timer;
-  NavStatePath *state = NavStatePath::MakeInstance(GeoManager::Instance().getMaxDepth());
+  NavStatePath *state = NavStatePath::MakeInstance(maxdepth);
   state->Clear();
   GlobalToLocalVisitor visitor;
 
@@ -159,7 +159,8 @@ int main(int argc, char *argv[])
 
   auto world = GeoManager::Instance().GetWorld();
   if (!world) return 3;
-  std::cout << "geometry max depth: " << GeoManager::Instance().getMaxDepth()
+  int maxdepth = GeoManager::Instance().getMaxDepth();
+  std::cout << "geometry max depth: " << maxdepth
             << "  total physical nodes: " << GeoManager::Instance().GetTotalNodeCount() << "\n";
 
   timer.Start();
@@ -173,13 +174,13 @@ int main(int argc, char *argv[])
   
   if (on_gpu) {
   #ifdef VECGEOM_ENABLE_CUDA
-    TestNavIndexCPU(GeoManager::Instance().GetWorld(), npasses);
+    TestNavIndexGPU(GeoManager::Instance().GetWorld(), maxdepth, npasses);
   #else
     std::cout << "=== Cannot run the test on GPU since VecGeom CUDA support not compiled.\n";
     return 1;
   #endif
   } else {
-    TestNavIndexCPU(GeoManager::Instance().GetWorld(), npasses);
+    TestNavIndexCPU(GeoManager::Instance().GetWorld(), maxdepth, npasses);
   }
 
   if (!success) return 1;
