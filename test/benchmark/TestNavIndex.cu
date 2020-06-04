@@ -94,6 +94,17 @@ void TestNavIndexGPUKernel(vecgeom::cuda::VPlacedVolume const* const gpu_world, 
     visitAllPlacedVolumesPassNavIndex(gpu_world, &visitor, state, nav_ind_top);
 }
 
+__global__
+void NavStateIndexPrintTableKernel()
+{
+  NavIndex_t const *table = NavStateIndex::NavIndAddr(0);
+  printf("Device nav table: [%u , %u, %u, %u, ...]\n", table[0], table[1], table[2], table[3]);
+  unsigned short nd = NavStateIndex::GetNdaughtersImpl(1);
+  printf("Top volume: ndaughters = %u\n", nd);
+  for (unsigned short i = 0; i < nd; ++i)
+    printf("   daughter[%u] = %u\n", i, NavStateIndex::NavInd(1+3+i));
+}
+
 void TestNavIndexGPU(vecgeom::cxx::VPlacedVolume const* const world, int maxdepth, int npasses)
 {
   // Load and synchronize the geometry on the GPU
@@ -109,17 +120,25 @@ void TestNavIndexGPU(vecgeom::cxx::VPlacedVolume const* const world, int maxdept
   checkCudaErrors(cudaMallocManaged((void **)&input_buffer, statesize));
   auto state = NavStatePath::MakeInstanceAt(maxdepth, (void *)(input_buffer));
 
+  //NavStateIndexPrintTableKernel<<<1, 1>>>();
+  //checkCudaErrors(cudaGetLastError());
+  //checkCudaErrors(cudaDeviceSynchronize());
 
   Stopwatch timer;
   timer.Start();
   TestNavIndexGPUKernel<<<1, 1>>>(gpu_world, state, 0, npasses);
   auto tbaseline = timer.Stop();
-
+  checkCudaErrors(cudaGetLastError());
+  checkCudaErrors(cudaDeviceSynchronize());
+  return;
+ 
   timer.Start();
   TestNavIndexGPUKernel<<<1, 1>>>(gpu_world, state, 1, npasses);
   auto tnavstate = timer.Stop();
   std::cout << "NavStatePath::GlobalToLocal took: " << tnavstate - tbaseline << " sec.\n";
-
+  checkCudaErrors(cudaGetLastError());
+  checkCudaErrors(cudaDeviceSynchronize());
+ 
   timer.Start();
   TestNavIndexGPUKernel<<<1, 1>>>(gpu_world, state, 2, npasses);
   auto tnavindex = timer.Stop();

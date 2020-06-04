@@ -41,7 +41,7 @@ public:
   static VPlacedVolume *CreateByTransformation(LogicalVolume const *const logical_volume,
                                                Transformation3D const *const transformation,
                                                const TranslationCode trans_code, const RotationCode rot_code,
-                                               const int id, VPlacedVolume *const placement = NULL);
+                                               const int id, const int copy_no, const int child_id, VPlacedVolume *const placement = NULL);
 
 #endif
 
@@ -57,7 +57,7 @@ VPlacedVolume *VolumeFactory::CreateByTransformation(LogicalVolume const *const 
                                                      Transformation3D const *const transformation,
                                                      const TranslationCode trans_code, const RotationCode rot_code,
 #ifdef VECCORE_CUDA
-                                                     const int id,
+                                                     const int id, const int copy_no, const int child_id,
 #endif
                                                      VPlacedVolume *const placement)
 {

@@ -9,7 +9,7 @@ VECCORE_ATT_DEVICE
 VPlacedVolume *CreateSpecializedWithPlacement(LogicalVolume const *const logical_volume,
                                               Transformation3D const *const transformation,
 #ifdef VECCORE_CUDA
-                                              const int id,
+                                              const int id, const int copy_no, const int child_id,
 #endif
                                               VPlacedVolume *const placement)
 {
@@ -18,14 +18,14 @@ VPlacedVolume *CreateSpecializedWithPlacement(LogicalVolume const *const logical
     return new (placement) SpecializationT(logical_volume, transformation
 #ifdef VECCORE_CUDA
                                            ,
-                                           (PlacedBox const *)nullptr, id
+                                           (PlacedBox const *)nullptr, id, copy_no, child_id
 #endif
                                            ); // TODO: add bounding box?
   }
 
   return new SpecializationT(
 #ifdef VECCORE_CUDA
-      logical_volume, transformation, (PlacedBox const *)nullptr, id); // TODO: add bounding box?
+      logical_volume, transformation, (PlacedBox const *)nullptr, id, copy_no, child_id); // TODO: add bounding box?
 #else
       logical_volume, transformation);
 #endif

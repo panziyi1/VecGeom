@@ -280,13 +280,13 @@ VPlacedVolume *UnplacedGenTrap::SpecializedVolume(LogicalVolume const *const vol
                                                   Transformation3D const *const transformation,
                                                   const TranslationCode trans_code, const RotationCode rot_code,
 #ifdef VECCORE_CUDA
-                                                  const int id,
+                                                  const int id, const int copy_no, const int child_id,
 #endif
                                                   VPlacedVolume *const placement) const
 {
   return VolumeFactory::CreateByTransformation<UnplacedGenTrap>(volume, transformation, trans_code, rot_code,
 #ifdef VECCORE_CUDA
-                                                                id,
+                                                                id, copy_no, child_id,
 #endif
                                                                 placement);
 }
@@ -297,7 +297,7 @@ VECCORE_ATT_DEVICE
 VPlacedVolume *UnplacedGenTrap::Create(LogicalVolume const *const logical_volume,
                                        Transformation3D const *const transformation,
 #ifdef VECCORE_CUDA
-                                       const int id,
+                                       const int id, const int copy_no, const int child_id,
 #endif
                                        VPlacedVolume *const placement)
 {
@@ -305,7 +305,7 @@ VPlacedVolume *UnplacedGenTrap::Create(LogicalVolume const *const logical_volume
     new (placement) SpecializedGenTrap<trans_code, rot_code>(logical_volume, transformation
 #ifdef VECCORE_CUDA
                                                              ,
-                                                             id
+                                                             id, copy_no, child_id
 #endif
     );
     return placement;
@@ -313,7 +313,7 @@ VPlacedVolume *UnplacedGenTrap::Create(LogicalVolume const *const logical_volume
   return new SpecializedGenTrap<trans_code, rot_code>(logical_volume, transformation
 #ifdef VECCORE_CUDA
                                                       ,
-                                                      id
+                                                      id, copy_no, child_id
 #endif
   );
 }

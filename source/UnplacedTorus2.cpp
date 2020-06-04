@@ -91,10 +91,10 @@ VPlacedVolume *UnplacedTorus2::SpecializedVolume(LogicalVolume const *const volu
 __device__ VPlacedVolume *UnplacedTorus2::SpecializedVolume(LogicalVolume const *const volume,
                                                             Transformation3D const *const transformation,
                                                             const TranslationCode trans_code,
-                                                            const RotationCode rot_code, const int id,
+                                                            const RotationCode rot_code, const int id, const int copy_no, const int child_id,
                                                             VPlacedVolume *const placement) const
 {
-  return VolumeFactory::CreateByTransformation<UnplacedTorus2>(volume, transformation, trans_code, rot_code, id,
+  return VolumeFactory::CreateByTransformation<UnplacedTorus2>(volume, transformation, trans_code, rot_code, id, copy_no, child_id,
                                                                placement);
 }
 #endif
@@ -159,7 +159,7 @@ VECCORE_ATT_DEVICE
 VPlacedVolume *UnplacedTorus2::Create(LogicalVolume const *const logical_volume,
                                       Transformation3D const *const transformation,
 #ifdef VECCORE_CUDA
-                                      const int id,
+                                      const int id, const int copy_no, const int child_id,
 #endif
                                       VPlacedVolume *const placement)
 {
@@ -167,7 +167,7 @@ VPlacedVolume *UnplacedTorus2::Create(LogicalVolume const *const logical_volume,
   return new SimpleTorus2(logical_volume, transformation
 #ifdef VECCORE_CUDA
                           ,
-                          id
+                          id, copy_no, child_id
 #endif
   );
 }

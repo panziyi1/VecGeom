@@ -442,23 +442,24 @@ template <TranslationCode trans_code, RotationCode rot_code>
 VECCORE_ATT_DEVICE
 VPlacedVolume *UnplacedSphere::Create(LogicalVolume const *const logical_volume,
                                       Transformation3D const *const transformation, const int id,
-                                      VPlacedVolume *const placement)
+                                      const int copy_no, const int child_id, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedSphere<trans_code, rot_code>(logical_volume, transformation, NULL, id);
+    new (placement) SpecializedSphere<trans_code, rot_code>(logical_volume, transformation, NULL, id, copy_no, child_id);
     return placement;
   }
-  return new SpecializedSphere<trans_code, rot_code>(logical_volume, transformation, NULL, id);
+  return new SpecializedSphere<trans_code, rot_code>(logical_volume, transformation, NULL, id, copy_no, child_id);
 }
 
 VECCORE_ATT_DEVICE VPlacedVolume *UnplacedSphere::CreateSpecializedVolume(LogicalVolume const *const volume,
                                                                           Transformation3D const *const transformation,
                                                                           const TranslationCode trans_code,
                                                                           const RotationCode rot_code, const int id,
-                                                                          VPlacedVolume *const placement)
+                                                                          const int copy_no, const int child_id,
+									  VPlacedVolume *const placement)
 {
   return VolumeFactory::CreateByTransformation<UnplacedSphere>(volume, transformation, trans_code, rot_code, id,
-                                                               placement);
+                                                               copy_no, child_id, placement);
 }
 
 #endif

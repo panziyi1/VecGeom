@@ -245,7 +245,8 @@ bool CudaManager::AllocateNavIndexOnCoproc()
   auto table_size = NavIndexTable::Instance()->GetTableSize() * sizeof(NavIndex_t);
   auto table = NavIndexTable::Instance()->GetTable();
 
-  if (verbose_ > 2) std::cout << "Allocating navigation index table...\n";
+  //if (verbose_ > 2) 
+    std::cout << "Allocating navigation index table...\n";
 
   GpuAddress gpu_address;
   gpu_address.Allocate(table_size);
@@ -258,9 +259,11 @@ bool CudaManager::AllocateNavIndexOnCoproc()
   allocated_memory_.push_back(gpu_address);
 
   // Copy the table
+  std::cout << "Copying the navigation index table at " << (void*)gpu_address.GetPtr() << ": [" << table[0] << ", " << table[1] << ", " << table[2] << ", " << table[3] << ", ...]\n";
   CopyToGpu((char*)table, gpu_address.GetPtr(), table_size);
 
-  if (verbose_ > 2) std::cout << " OK\n";
+  //if (verbose_ > 2)
+    std::cout << " OK\n";
   return true;
 }
 
