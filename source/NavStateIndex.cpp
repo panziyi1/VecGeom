@@ -21,7 +21,7 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 VECCORE_ATT_HOST_DEVICE
 void NavStateIndex::TopMatrixImpl(NavIndex_t nav_ind, Transformation3D &trans)
 {
-  constexpr unsigned int kOffsetHasm = 2 * sizeof(NavIndex_t) + 3;
+  constexpr unsigned int kOffsetHasm = 2 * sizeof(NavIndex_t) + 1;
   //trans.Clear();
   if (nav_ind == 0) return;
   unsigned char hasm = *((unsigned char *)(NavIndAddr(nav_ind)) + kOffsetHasm);
@@ -31,7 +31,7 @@ void NavStateIndex::TopMatrixImpl(NavIndex_t nav_ind, Transformation3D &trans)
     bool has_trans           = (hasm & 0x02) > 0;
     bool has_rot             = (hasm & 0x01) > 0;
     auto nd                  = GetNdaughtersImpl(nav_ind);
-    const Precision *address = (Precision *)(NavIndAddr(nav_ind + 3 + nd));
+    const Precision *address = (Precision *)(NavIndAddr(nav_ind + 3 + nd + ((nd + 1) & 1)));
     trans.Set(address, address + 3, has_trans, has_rot);
     return;
   } else {

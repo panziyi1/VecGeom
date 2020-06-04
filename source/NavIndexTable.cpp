@@ -11,7 +11,8 @@ NavIndex_t BuildNavIndexVisitor::apply(NavStatePath *state, int level, NavIndex_
   bool cacheTrans       = true;
   NavIndex_t new_mother = fCurrent;
   auto lv               = state->Top()->GetLogicalVolume();
-  size_t nd             = lv->GetDaughters().size();
+  unsigned short nd     = (unsigned short)lv->GetDaughters().size();
+  assert(lv->GetDaughters().size() < std::numeric_limits<unsigned short>::max() && "fatal: not supporting more than 65535 daughters");
   // Check if matrix has to be cached for this node
   if (fLimitDepth > 0 && level > fLimitDepth && !lv->IsReqCaching()) cacheTrans = false;
 
@@ -19,7 +20,7 @@ NavIndex_t BuildNavIndexVisitor::apply(NavStatePath *state, int level, NavIndex_
     return NavIndexTable::Instance()->ValidateState(state);
   }
   // Size in bytes of the current node data
-  size_t current_size = 3 * sizeof(unsigned int) + int(cacheTrans) * 12 * sizeof(double) + nd * sizeof(unsigned int);
+  size_t current_size = (3 + nd + ((nd + 1) & 1)) * sizeof(unsigned int) + int(cacheTrans) * 12 * sizeof(double);
   if (fDoCount) {
     fTableSize += current_size;
     return 0;
@@ -42,12 +43,11 @@ NavIndex_t BuildNavIndexVisitor::apply(NavStatePath *state, int level, NavIndex_
   *content_ddt = (unsigned char)level;
 
   // Write number of daughters in next 2 bytes
-  auto content_nd = (unsigned short *)(content_ddt + 1);
-  assert(nd < std::numeric_limits<unsigned short>::max() && "fatal: not supporting more than 65535 daughters");
-  *content_nd = (unsigned short)nd;
+  auto content_nd = (unsigned short *)(content_ddt + 2);
+  *content_nd = nd;
 
   // Write the flag if matrix is stored in the next byte
-  auto content_hasm = (unsigned char *)(content_ddt + 3);
+  auto content_hasm = (unsigned char *)(content_ddt + 1);
   *content_hasm     = 0;
 
   // Prepare the space for the daughter indices
@@ -55,7 +55,7 @@ NavIndex_t BuildNavIndexVisitor::apply(NavStatePath *state, int level, NavIndex_
   for (size_t i = 0; i < nd; ++i)
     content_dind[i] = 0;
 
-  fCurrent += 3 + nd;
+  fCurrent += 3 + nd + ((nd + 1) & 1);
 
   if (!cacheTrans) return new_mother;
 

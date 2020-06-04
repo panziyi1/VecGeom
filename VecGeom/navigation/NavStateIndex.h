@@ -183,7 +183,7 @@ public:
   VECGEOM_FORCE_INLINE
   static unsigned short GetNdaughtersImpl(NavIndex_t nav_ind)
   {
-    constexpr unsigned int kOffsetNd = 2 * sizeof(NavIndex_t) + 1;
+    constexpr unsigned int kOffsetNd = 2 * sizeof(NavIndex_t) + 2;
     auto content_nd                  = (unsigned short *)((unsigned char *)(NavIndAddr(nav_ind)) + kOffsetNd);
     return *content_nd;
   }
