@@ -20,7 +20,7 @@ VPlacedVolume *CreateSpecializedWithPlacement(LogicalVolume const *const logical
                                            ,
                                            (PlacedBox const *)nullptr, id, copy_no, child_id
 #endif
-                                           ); // TODO: add bounding box?
+    ); // TODO: add bounding box?
   }
 
   return new SpecializationT(
@@ -30,7 +30,7 @@ VPlacedVolume *CreateSpecializedWithPlacement(LogicalVolume const *const logical
       logical_volume, transformation);
 #endif
 }
-}
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif // VECGEOM_VOLUMES_UTILITIES_GENERATION_UTILITIES_H

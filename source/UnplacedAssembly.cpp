@@ -103,7 +103,8 @@ VECCORE_ATT_DEVICE
 VPlacedVolume *UnplacedAssembly::SpecializedVolume(LogicalVolume const *const volume,
                                                    Transformation3D const *const transformation,
                                                    const TranslationCode trans_code, const RotationCode rot_code,
-                                                   const int id, const int copy_no, const int child_id, VPlacedVolume *const placement) const
+                                                   const int id, const int copy_no, const int child_id,
+                                                   VPlacedVolume *const placement) const
 {
   if (placement) {
     return new (placement) PlacedAssembly("", volume, transformation, nullptr, id, copy_no, child_id);

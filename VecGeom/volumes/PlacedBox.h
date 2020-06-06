@@ -84,7 +84,7 @@ public:
 #endif // VECCORE_CUDA
 };
 
-} // end inline namespace
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif

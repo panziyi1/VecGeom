@@ -25,7 +25,7 @@ namespace cuda {
 // forward declare a global function
 extern __global__ void InitDeviceCompactPlacedVolBufferPtr(void *gpu_ptr);
 extern __global__ void InitDeviceNavIndexPtr(void *gpu_ptr, int maxdepth);
-}
+} // namespace cuda
 
 inline namespace cxx {
 
@@ -231,7 +231,7 @@ bool CudaManager::AllocateCollectionOnCoproc(const char *verbose_title, const Co
 
   // record a GPU memory location for each object in the collection to be copied
   for (auto i : data) {
-    memory_map[ToCpuAddress(i)]                                   = gpu_address;
+    memory_map[ToCpuAddress(i)] = gpu_address;
     if (isforplacedvol) fGPUtoCPUmapForPlacedVolumes[gpu_address] = i;
     gpu_address += i->DeviceSizeOf();
   }
@@ -248,10 +248,10 @@ bool CudaManager::AllocateNavIndexOnCoproc()
 {
   if (!GeoManager::gNavIndex) return false;
   auto table_size = NavIndexTable::Instance()->GetTableSize();
-  auto table = NavIndexTable::Instance()->GetTable();
+  auto table      = NavIndexTable::Instance()->GetTable();
 
-  //if (verbose_ > 2) 
-    std::cout << "Allocating navigation index table...\n";
+  // if (verbose_ > 2)
+  std::cout << "Allocating navigation index table...\n";
 
   GpuAddress gpu_address;
   gpu_address.Allocate(table_size);
@@ -264,10 +264,10 @@ bool CudaManager::AllocateNavIndexOnCoproc()
   allocated_memory_.push_back(gpu_address);
 
   // Copy the table
-  CopyToGpu((char*)table, gpu_address.GetPtr(), table_size);
+  CopyToGpu((char *)table, gpu_address.GetPtr(), table_size);
 
-  //if (verbose_ > 2)
-    std::cout << " OK\n";
+  // if (verbose_ > 2)
+  std::cout << " OK\n";
   return true;
 }
 
@@ -376,7 +376,7 @@ void CudaManager::AllocateGeometry()
 
   if (verbose_ > 2) {
     std::cout << " geometry OK: #elems in alloc_mem=" << allocated_memory_.size() << ", mem_map=" << memory_map.size()
-	      << ", dau_gpu_c_array=" << gpu_memory_map.size() << "\n";
+              << ", dau_gpu_c_array=" << gpu_memory_map.size() << "\n";
   }
 
   fprintf(stderr, "NUMBER OF PLACED VOLUMES %ld\n", placed_volumes_.size());
@@ -502,5 +502,5 @@ void CudaManager::PrintGeometry() const
 //   CudaFree(z_gpu);
 //   CudaFree(soa3d_gpu);
 // }
-}
+} // namespace cxx
 } // End namespace vecgeom

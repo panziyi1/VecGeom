@@ -14,7 +14,6 @@
 #include "VecGeom/volumes/utilities/GenerationUtilities.h"
 #include "VecGeom/base/RNG.h"
 
-
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
@@ -36,18 +35,16 @@ SolidMesh *UnplacedParallelepiped::CreateMesh3D(Transformation3D const &trans, s
 
   Vector3D<double> a = Vector3D<double>(dx, 0, 0);
   Vector3D<double> b = Vector3D<double>(dy * std::cos(gamma), dy * std::sin(gamma), 0);
-  Vector3D<double> c = Vector3D<double>(dz * std::cos(beta), dz * intermediate,
-                                        dz * std::sqrt(1 - std::cos(beta) * std::cos(beta) - intermediate * intermediate ));
+  Vector3D<double> c =
+      Vector3D<double>(dz * std::cos(beta), dz * intermediate,
+                       dz * std::sqrt(1 - std::cos(beta) * std::cos(beta) - intermediate * intermediate));
 
-
-  Utils3D::Vec_t vertices[] = {a, a + b, a + b + c, a + c, Vector3D<double>(),
-                                     b, b + c, c};
+  Utils3D::Vec_t vertices[] = {a, a + b, a + b + c, a + c, Vector3D<double>(), b, b + c, c};
 
   // subtract to move the origin to center
   Vector3D<double> origin = (a + b + c) * 0.5;
-  for(auto & vertex: vertices)
-	  vertex -= origin;
-
+  for (auto &vertex : vertices)
+    vertex -= origin;
 
   sm->SetVertices(vertices, 8);
   sm->TransformVertices(trans);

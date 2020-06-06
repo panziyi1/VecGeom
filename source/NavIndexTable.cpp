@@ -12,7 +12,8 @@ NavIndex_t BuildNavIndexVisitor::apply(NavStatePath *state, int level, NavIndex_
   NavIndex_t new_mother = fCurrent;
   auto lv               = state->Top()->GetLogicalVolume();
   unsigned short nd     = (unsigned short)lv->GetDaughters().size();
-  assert(lv->GetDaughters().size() < std::numeric_limits<unsigned short>::max() && "fatal: not supporting more than 65535 daughters");
+  assert(lv->GetDaughters().size() < std::numeric_limits<unsigned short>::max() &&
+         "fatal: not supporting more than 65535 daughters");
   // Check if matrix has to be cached for this node
   if (fLimitDepth > 0 && level > fLimitDepth && !lv->IsReqCaching()) cacheTrans = false;
 
@@ -44,7 +45,7 @@ NavIndex_t BuildNavIndexVisitor::apply(NavStatePath *state, int level, NavIndex_
 
   // Write number of daughters in next 2 bytes
   auto content_nd = (unsigned short *)(content_ddt + 2);
-  *content_nd = nd;
+  *content_nd     = nd;
 
   // Write the flag if matrix is stored in the next byte
   auto content_hasm = (unsigned char *)(content_ddt + 1);

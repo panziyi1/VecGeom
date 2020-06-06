@@ -31,10 +31,10 @@ VPlacedVolume *SUnplacedTube<Type>::Create(LogicalVolume const *const logical_vo
                                                          ,
                                                          id, copy_no, child_id
 #endif
-                                                         );
+  );
 }
 
-} // End VECGEOM_IMPL_NAMESPACE
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif // VECGEOM_VOLUMES_SPECIALIZEDTUBE_H_

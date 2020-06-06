@@ -266,8 +266,10 @@ SolidMesh *UnplacedGenTrap::CreateMesh3D(Transformation3D const &trans, size_t n
       sm->AddPolygon(4, {s2, s2 + 1, s3 + 1, s3}, true); // lateral surface 2
       sm->AddPolygon(4, {s3, s3 + 1, s0 + 1, s0}, true); // lateral surface 3
     }
-    sm->AddPolygon(4, {0, nSegments + 1, 2 * (nSegments  + 1), 3 * (nSegments + 1)}, true);
-    sm->AddPolygon(4, {3 * (nSegments + 1) + nSegments,2 * (nSegments  + 1) + nSegments, nSegments + 1 + nSegments,  0 + nSegments}, true);
+    sm->AddPolygon(4, {0, nSegments + 1, 2 * (nSegments + 1), 3 * (nSegments + 1)}, true);
+    sm->AddPolygon(
+        4, {3 * (nSegments + 1) + nSegments, 2 * (nSegments + 1) + nSegments, nSegments + 1 + nSegments, 0 + nSegments},
+        true);
   }
 
   return sm;

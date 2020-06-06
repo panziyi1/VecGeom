@@ -130,7 +130,7 @@ public:
     NavStatePath::ReleaseInstance(state);
 
     std::cout << "Navigation index table size is " << pretty_bytes(fTableSize) << "\n";
- 
+
     return true;
   }
 

@@ -146,7 +146,6 @@ public:
   virtual SolidMesh *CreateMesh3D(Transformation3D const &trans, size_t nSegments) const override;
 #endif
 
-
 #ifdef VECGEOM_CUDA_INTERFACE
   /** @brief Size of object on the device */
   size_t DeviceSizeOf() const final { return DevicePtr<cuda::UnplacedGenTrap>::SizeOf(); }

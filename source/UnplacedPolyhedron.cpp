@@ -100,18 +100,20 @@ VPlacedVolume *UnplacedPolyhedron::Create(LogicalVolume const *const logical_vol
 
   // Return value in case of NO_SPECIALIZATION
   if (placement) {
-    new (placement) SpecializedPolyhedron<transCodeT, rotCodeT, Polyhedron::EInnerRadii::kGeneric,
+    new (placement)
+        SpecializedPolyhedron<transCodeT, rotCodeT, Polyhedron::EInnerRadii::kGeneric,
 #ifdef VECCORE_CUDA
-                                          Polyhedron::EPhiCutout::kGeneric>(logical_volume, transformation, id, copy_no, child_id);
+                              Polyhedron::EPhiCutout::kGeneric>(logical_volume, transformation, id, copy_no, child_id);
 #else
-                                          Polyhedron::EPhiCutout::kGeneric>(logical_volume, transformation);
+                              Polyhedron::EPhiCutout::kGeneric>(logical_volume, transformation);
 #endif
     return placement;
   }
 
   return new SpecializedPolyhedron<translation::kGeneric, rotation::kGeneric, Polyhedron::EInnerRadii::kGeneric,
 #ifdef VECCORE_CUDA
-                                   Polyhedron::EPhiCutout::kGeneric>(logical_volume, transformation, id, copy_no, child_id);
+                                   Polyhedron::EPhiCutout::kGeneric>(logical_volume, transformation, id, copy_no,
+                                                                     child_id);
 #else
                                    Polyhedron::EPhiCutout::kGeneric>(logical_volume, transformation);
 #endif

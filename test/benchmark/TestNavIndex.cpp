@@ -18,17 +18,17 @@
 
 using namespace vecgeom;
 
-int TestNavIndexCPU(vecgeom::cxx::VPlacedVolume const* const world, int maxdepth);
+int TestNavIndexCPU(vecgeom::cxx::VPlacedVolume const *const world, int maxdepth);
 
 #ifdef VECGEOM_ENABLE_CUDA
-int TestNavIndexGPU(vecgeom::cxx::VPlacedVolume const* const world, int maxdepth);
+int TestNavIndexGPU(vecgeom::cxx::VPlacedVolume const *const world, int maxdepth);
 #endif
 
 namespace visitorcxx {
 
 class GlobalToLocalVisitor {
 private:
-  int                 fError = 0;   ///< error code
+  int fError = 0; ///< error code
 
 public:
   GlobalToLocalVisitor() {}
@@ -101,7 +101,7 @@ public:
 VECCORE_ATT_HOST_DEVICE
 template <typename Visitor>
 int visitAllPlacedVolumesPassNavIndex(VPlacedVolume const *currentvolume, Visitor *visitor, NavStatePath *state,
-                                       NavIndex_t nav_ind)
+                                      NavIndex_t nav_ind)
 {
   const char *errcodes[] = {"incompatible daughter pointer",
                             "navigation index mismatch",
@@ -109,8 +109,7 @@ int visitAllPlacedVolumesPassNavIndex(VPlacedVolume const *currentvolume, Visito
                             "level mismatch",
                             "navigation index inconsistency for Push/Pop",
                             "number of daughters mismatch",
-                            "transformation matrix mismatch"
-                           };
+                            "transformation matrix mismatch"};
   if (currentvolume != NULL) {
     state->Push(currentvolume);
     visitor->apply(state, nav_ind);
@@ -130,7 +129,7 @@ int visitAllPlacedVolumesPassNavIndex(VPlacedVolume const *currentvolume, Visito
 
 } // namespace visitorcxx
 
-int TestNavIndexCPU(vecgeom::cxx::VPlacedVolume const* const world, int maxdepth)
+int TestNavIndexCPU(vecgeom::cxx::VPlacedVolume const *const world, int maxdepth)
 {
   // Check performance
   using namespace visitorcxx;
@@ -143,11 +142,10 @@ int TestNavIndexCPU(vecgeom::cxx::VPlacedVolume const* const world, int maxdepth
   NavIndex_t nav_ind_top = 1; // The navigation index corresponding to the world
 
   timer.Start();
-  auto ierr = visitAllPlacedVolumesPassNavIndex(world, &visitor, state, nav_ind_top);
+  auto ierr      = visitAllPlacedVolumesPassNavIndex(world, &visitor, state, nav_ind_top);
   auto tvalidate = timer.Stop();
 
-  if (!ierr)
-    std::cout << "=== Info navigation table validation on CPU took: " << tvalidate << " sec.\n";
+  if (!ierr) std::cout << "=== Info navigation table validation on CPU took: " << tvalidate << " sec.\n";
 
   NavStatePath::ReleaseInstance(state);
   return ierr;
@@ -189,20 +187,19 @@ int main(int argc, char *argv[])
   float frac_build = 100. * tbuild / tload;
   std::cout << "Navigation table build time as fraction of the GDML load time: " << std::setprecision(2) << frac_build
             << " %\n";
-  
+
   auto ierr = 0;
   if (on_gpu) {
-  #ifdef VECGEOM_ENABLE_CUDA
+#ifdef VECGEOM_ENABLE_CUDA
     ierr = TestNavIndexGPU(GeoManager::Instance().GetWorld(), maxdepth);
-  #else
+#else
     std::cout << "=== Cannot run the test on GPU since VecGeom CUDA support not compiled.\n";
     return 1;
-  #endif
+#endif
   } else {
     ierr = TestNavIndexCPU(GeoManager::Instance().GetWorld(), maxdepth);
   }
-  if (!ierr)
-    std::cout << "TestNavIndex PASSED\n";
+  if (!ierr) std::cout << "TestNavIndex PASSED\n";
 
   return ierr;
 }

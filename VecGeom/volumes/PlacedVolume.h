@@ -508,7 +508,8 @@ public:
   template void DevicePtr<cuda::PlacedVol>::Construct(DevicePtr<cuda::LogicalVolume> const logical_volume, \
                                                       DevicePtr<cuda::Transformation3D> const transform,   \
                                                       DevicePtr<cuda::PlacedBox> const boundingBox,        \
-                                                      const unsigned int id, const int copy_no, const int child_id) const;                        \
+                                                      const unsigned int id, const int copy_no,            \
+                                                      const int child_id) const;                           \
   }
 
 #define VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL(PlacedVol, Extra)                                                  \
@@ -517,7 +518,8 @@ public:
   template void DevicePtr<cuda::PlacedVol, Extra>::Construct(DevicePtr<cuda::LogicalVolume> const logical_volume, \
                                                              DevicePtr<cuda::Transformation3D> const transform,   \
                                                              DevicePtr<cuda::PlacedBox> const boundingBox,        \
-                                                             const unsigned int id, const int copy_no, const int child_id) const;                        \
+                                                             const unsigned int id, const int copy_no,            \
+                                                             const int child_id) const;                           \
   }
 
 #if defined(VECGEOM_NO_SPECIALIZATION) || !defined(VECGEOM_CUDA_VOLUME_SPECIALIZATION)
@@ -583,7 +585,8 @@ public:
   template size_t DevicePtr<cuda::PlacedVol, Extra, cuda::Type>::SizeOf();                                    \
   template void DevicePtr<cuda::PlacedVol, Extra, cuda::Type>::Construct(                                     \
       DevicePtr<cuda::LogicalVolume> const logical_volume, DevicePtr<cuda::Transformation3D> const transform, \
-      DevicePtr<cuda::PlacedBox> const boundingBox, const unsigned int id, const int copy_no, const int child_id) const;                             \
+      DevicePtr<cuda::PlacedBox> const boundingBox, const unsigned int id, const int copy_no,                 \
+      const int child_id) const;                                                                              \
   }
 
 #if defined(VECGEOM_NO_SPECIALIZATION) || !defined(VECGEOM_CUDA_VOLUME_SPECIALIZATION)
@@ -625,7 +628,8 @@ public:
   template size_t DevicePtr<cuda::PlacedVol, trans, radii, phi>::SizeOf();                                    \
   template void DevicePtr<cuda::PlacedVol, trans, radii, phi>::Construct(                                     \
       DevicePtr<cuda::LogicalVolume> const logical_volume, DevicePtr<cuda::Transformation3D> const transform, \
-      DevicePtr<cuda::PlacedBox> const boundingBox, const unsigned int id, const int copy_no, const int child_id) const;                             \
+      DevicePtr<cuda::PlacedBox> const boundingBox, const unsigned int id, const int copy_no,                 \
+      const int child_id) const;                                                                              \
   }
 
 #if defined(VECGEOM_NO_SPECIALIZATION) || !defined(VECGEOM_CUDA_VOLUME_SPECIALIZATION)
@@ -681,7 +685,8 @@ public:
   template void DevicePtr<cuda::PlacedVol, trans, rot>::Construct(DevicePtr<cuda::LogicalVolume> const logical_volume, \
                                                                   DevicePtr<cuda::Transformation3D> const transform,   \
                                                                   DevicePtr<cuda::PlacedBox> const boundingBox,        \
-                                                                  const unsigned int id, const int copy_no, const int child_id) const;                        \
+                                                                  const unsigned int id, const int copy_no,            \
+                                                                  const int child_id) const;                           \
   }
 
 #if defined(VECGEOM_NO_SPECIALIZATION) || !defined(VECGEOM_CUDA_VOLUME_SPECIALIZATION)

@@ -320,7 +320,8 @@ VPlacedVolume *UnplacedBooleanVolume<kSubtraction>::SpecializedVolume(LogicalVol
                                                                       const TranslationCode trans_code,
                                                                       const RotationCode rot_code,
 #ifdef VECCORE_CUDA
-                                                                      const int id, const int copy_no, const int child_id,
+                                                                      const int id, const int copy_no,
+                                                                      const int child_id,
 #endif
                                                                       VPlacedVolume *const placement) const
 {
@@ -376,7 +377,8 @@ VPlacedVolume *UnplacedBooleanVolume<kIntersection>::SpecializedVolume(LogicalVo
                                                                        const TranslationCode trans_code,
                                                                        const RotationCode rot_code,
 #ifdef VECCORE_CUDA
-                                                                       const int id, const int copy_no, const int child_id,
+                                                                       const int id, const int copy_no,
+                                                                       const int child_id,
 #endif
                                                                        VPlacedVolume *const placement) const
 {

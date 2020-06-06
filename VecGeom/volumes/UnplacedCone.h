@@ -311,7 +311,8 @@ public:
   virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
                                            Transformation3D const *const transformation,
                                            const TranslationCode trans_code, const RotationCode rot_code, const int id,
-                                           const int copy_no, const int child_id, VPlacedVolume *const placement = NULL) const override
+                                           const int copy_no, const int child_id,
+                                           VPlacedVolume *const placement = NULL) const override
   {
     return VolumeFactory::CreateByTransformation<SUnplacedCone<ConeType>>(volume, transformation, trans_code, rot_code,
                                                                           id, copy_no, child_id, placement);

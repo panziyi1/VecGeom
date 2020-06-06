@@ -312,14 +312,15 @@ public:
   template <TranslationCode trans_code, RotationCode rot_code>
   VECCORE_ATT_DEVICE
   static VPlacedVolume *Create(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
-                               const int id, const int copy_no, const int child_id, VPlacedVolume *const placement = NULL);
+                               const int id, const int copy_no, const int child_id,
+                               VPlacedVolume *const placement = NULL);
 
   VECCORE_ATT_DEVICE static VPlacedVolume *CreateSpecializedVolume(LogicalVolume const *const volume,
                                                                    Transformation3D const *const transformation,
                                                                    const TranslationCode trans_code,
                                                                    const RotationCode rot_code, const int id,
                                                                    const int copy_no, const int child_id,
-								   VPlacedVolume *const placement = NULL);
+                                                                   VPlacedVolume *const placement = NULL);
 
 #endif
 
@@ -347,7 +348,7 @@ private:
                                                               const TranslationCode trans_code,
                                                               const RotationCode rot_code, const int id,
                                                               const int copy_no, const int child_id,
-							      VPlacedVolume *const placement = NULL) const override
+                                                              VPlacedVolume *const placement = NULL) const override
   {
     return CreateSpecializedVolume(volume, transformation, trans_code, rot_code, id, copy_no, child_id, placement);
   }
@@ -361,7 +362,7 @@ struct Maker<UnplacedSphere> {
   static UnplacedSphere *MakeInstance(Precision pRmin, Precision pRmax, Precision pSPhi, Precision pDPhi,
                                       Precision pSTheta, Precision pDTheta);
 };
-}
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif // VECGEOM_VOLUMES_UNPLACEDSPHERE_H_

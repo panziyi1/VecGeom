@@ -38,7 +38,8 @@ VPlacedVolume *SUnplacedPolycone<Type>::Create(LogicalVolume const *const logica
   (void)placement;
   return new SpecializedPolycone<transCodeT, rotCodeT, Type>(logical_volume, transformation
 #ifdef VECCORE_CUDA
-                                                             , id, copy_no, child_id
+                                                             ,
+                                                             id, copy_no, child_id
 #endif
   );
 }

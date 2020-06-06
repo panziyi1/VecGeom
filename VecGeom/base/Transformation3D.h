@@ -806,7 +806,7 @@ void Transformation3D::MultiplyFromRight(Transformation3D const &rhs)
   }
 
   if (rhs.HasRotation()) {
-    fHasRotation = true;
+    fHasRotation   = true;
     Precision tmpx = fRotation[0];
     Precision tmpy = fRotation[1];
     Precision tmpz = fRotation[2];

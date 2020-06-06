@@ -71,7 +71,8 @@ VPlacedVolume *UnplacedCoaxialCones::Create(LogicalVolume const *const logical_v
                                             const int copy_no, const int child_id, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedCoaxialCones<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+    new (placement)
+        SpecializedCoaxialCones<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
     return placement;
   }
   return new SpecializedCoaxialCones<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
@@ -82,7 +83,7 @@ VPlacedVolume *UnplacedCoaxialCones::SpecializedVolume(LogicalVolume const *cons
                                                        Transformation3D const *const transformation,
                                                        const TranslationCode trans_code, const RotationCode rot_code,
                                                        const int id, const int copy_no, const int child_id,
-						       VPlacedVolume *const placement) const
+                                                       VPlacedVolume *const placement) const
 {
   return VolumeFactory::CreateByTransformation<UnplacedCoaxialCones>(volume, transformation, trans_code, rot_code, id,
                                                                      copy_no, child_id, placement);

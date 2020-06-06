@@ -69,7 +69,7 @@ public:
   typedef UnplacedTube UnplacedShape_t;
   using Base::Base;
 };
-}
-} // End global namespace
+} // namespace VECGEOM_IMPL_NAMESPACE
+} // namespace vecgeom
 
 #endif // VECGEOM_VOLUMES_PLACEDTUBE_H_
