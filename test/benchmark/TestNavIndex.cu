@@ -29,14 +29,17 @@ namespace visitorcuda {
 
 class GlobalToLocalVisitor {
 private:
-  int                 fError = 0;   ///< error code
-
+  int fError = 0;   ///< error code
+  int fNiter = 0;   ///< number of iterations
 public:
   VECCORE_ATT_HOST_DEVICE
   GlobalToLocalVisitor() {}
 
   VECCORE_ATT_HOST_DEVICE
   int GetError() const { return fError; }
+
+  VECCORE_ATT_HOST_DEVICE
+  int GetNiter() const { return fNiter; }
 
   VECCORE_ATT_HOST_DEVICE
   void apply(NavStatePath *state, NavIndex_t nav_index)
@@ -95,13 +98,14 @@ public:
 
     // success
     fError = 0;
+    fNiter++;
   }
 };
 
 /// Traverses the geometry tree keeping track of the state context (volume path or navigation state)
 /// and applies the injected Visitor
 template <typename Visitor>
-VECCORE_ATT_HOST_DEVICE
+VECCORE_ATT_DEVICE
 int visitAllPlacedVolumesPassNavIndex(VPlacedVolume const *currentvolume, Visitor *visitor, NavStatePath *state,
                                       NavIndex_t nav_ind)
 {
@@ -113,6 +117,7 @@ int visitAllPlacedVolumesPassNavIndex(VPlacedVolume const *currentvolume, Visito
                             "number of daughters mismatch",
                             "transformation matrix mismatch"
                            };
+  constexpr int maxiter = 100000; // limit the maximum number of iterations (slow on 1 GPU thread)
   if (currentvolume != NULL) {
     state->Push(currentvolume);
     visitor->apply(state, nav_ind);
@@ -121,9 +126,11 @@ int visitAllPlacedVolumesPassNavIndex(VPlacedVolume const *currentvolume, Visito
       printf("=== EEE === TestNavIndex: %s\n", errcodes[ierr]);
       return ierr;
     }
+    if (visitor->GetNiter() > maxiter) return 0;
     for (auto daughter : currentvolume->GetDaughters()) {
       auto nav_ind_d = NavStateIndex::PushImpl(nav_ind, daughter);
       visitAllPlacedVolumesPassNavIndex(daughter, visitor, state, nav_ind_d);
+      if (visitor->GetNiter() > maxiter) return 0;
     }
     state->Pop();
   }
