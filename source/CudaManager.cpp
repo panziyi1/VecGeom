@@ -36,7 +36,7 @@ CudaManager::CudaManager() : world_gpu_(), fGPUtoCPUmapForPlacedVolumes()
   verbose_      = 0;
   total_volumes = 0;
 
-  auto res = cudaDeviceSetLimit(cudaLimitStackSize, 4096);
+  auto res = cudaDeviceSetLimit(cudaLimitStackSize, 8192);
   CudaAssertError(res);
 }
 
@@ -247,7 +247,7 @@ bool CudaManager::AllocateCollectionOnCoproc(const char *verbose_title, const Co
 bool CudaManager::AllocateNavIndexOnCoproc()
 {
   if (!GeoManager::gNavIndex) return false;
-  auto table_size = NavIndexTable::Instance()->GetTableSize() * sizeof(NavIndex_t);
+  auto table_size = NavIndexTable::Instance()->GetTableSize();
   auto table = NavIndexTable::Instance()->GetTable();
 
   //if (verbose_ > 2) 
