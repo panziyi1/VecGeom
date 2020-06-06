@@ -88,7 +88,7 @@ public:
     }
     if (success) {
       fNavInd    = (NavIndex_t *)buffer;
-      fNavInd[0] = 9999;
+      fNavInd[0] = 0;
       fTableSize = bytes;
     }
     return success;
@@ -128,10 +128,9 @@ public:
     visitAllPlacedVolumesNavIndex(top, visitor, state);
     delete visitor;
     NavStatePath::ReleaseInstance(state);
- 
-    std::cout << "Navigation index table size is " << pretty_bytes(fTableSize) << "\n";
-    std::cout << "[ " << fNavInd[0] << ", " << fNavInd[1] << ", " << fNavInd[2] << ", " << fNavInd[3] << ", ... ]\n";
 
+    std::cout << "Navigation index table size is " << pretty_bytes(fTableSize) << "\n";
+ 
     return true;
   }
 

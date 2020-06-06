@@ -58,6 +58,11 @@ vecgeom::DevicePtr<const vecgeom::cuda::VPlacedVolume> CudaManager::Synchronize(
   overalltimer.Start();
   if (verbose_ > 0) std::cerr << "Starting synchronization to GPU.\n";
 
+#ifdef VECGEOM_USE_INDEXEDNAVSTATES
+  if (NavIndexTable::Instance()->GetTableSize() == 0)
+    throw std::runtime_error("VECGEOM_USE_INDEXEDNAVSTATES is defined but navigation index table is not built");
+#endif
+
   // Will return null if no geometry is loaded
   if (synchronized) return vecgeom::DevicePtr<const vecgeom::cuda::VPlacedVolume>(world_gpu_);
 
@@ -259,7 +264,6 @@ bool CudaManager::AllocateNavIndexOnCoproc()
   allocated_memory_.push_back(gpu_address);
 
   // Copy the table
-  std::cout << "Copying the navigation index table at " << (void*)gpu_address.GetPtr() << ": [" << table[0] << ", " << table[1] << ", " << table[2] << ", " << table[3] << ", ...]\n";
   CopyToGpu((char*)table, gpu_address.GetPtr(), table_size);
 
   //if (verbose_ > 2)

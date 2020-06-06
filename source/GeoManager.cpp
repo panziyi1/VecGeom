@@ -210,6 +210,9 @@ void GeoManager::CloseGeometry()
 
   CompactifyMemory();
   vecgeom::ABBoxManager::Instance().InitABBoxesForCompleteGeometry();
+#ifdef VECGEOM_USE_INDEXEDNAVSTATES
+  std::cout << "=== Geometry closed. Build navigation index table using GeoManager::MakeNavIndexTable.\n";
+#endif
 
   fIsClosed = true;
 }

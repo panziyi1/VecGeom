@@ -87,7 +87,7 @@ NavIndex_t NavIndexTable::ValidateState(NavStatePath *state)
     pdaughter = state->At(i);
     dind      = pdaughter->GetChildId();
     if (dind < 0) {
-      std::runtime_error("=== EEE === Validate: incompatible daughter pointer");
+      throw std::runtime_error("=== EEE === Validate: incompatible daughter pointer");
       state->Print();
       return 0;
     }
@@ -98,28 +98,28 @@ NavIndex_t NavIndexTable::ValidateState(NavStatePath *state)
 
   // Check if the physical volume is correct
   if (NavStateIndex::TopImpl(nav_ind) != state->Top()) {
-    std::runtime_error("=== EEE === Validate: Top placed volume pointer mismatch");
+    throw std::runtime_error("=== EEE === Validate: Top placed volume pointer mismatch");
     state->Print();
     return 0;
   }
 
   // Check if the current level is valid
   if (level != NavStateIndex::GetLevelImpl(nav_ind)) {
-    std::runtime_error("=== EEE === Validate: Level mismatch");
+    throw std::runtime_error("=== EEE === Validate: Level mismatch");
     state->Print();
     return 0;
   }
 
   // Check if mother navigation index is consistent
   if (level > 0 && nav_ind != NavStateIndex::PushImpl(NavStateIndex::PopImpl(nav_ind), pdaughter)) {
-    std::runtime_error("=== EEE === Validate: Navigation index inconsistency for Push/Pop");
+    throw std::runtime_error("=== EEE === Validate: Navigation index inconsistency for Push/Pop");
     state->Print();
     return 0;
   }
 
   // Check if the number of daughters is correct
   if (NavStateIndex::GetNdaughtersImpl(nav_ind) != state->Top()->GetDaughters().size()) {
-    std::runtime_error("=== EEE === Validate: Number of daughters mismatch");
+    throw std::runtime_error("=== EEE === Validate: Number of daughters mismatch");
     state->Print();
     return 0;
   }
