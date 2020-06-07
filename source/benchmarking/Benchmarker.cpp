@@ -15,6 +15,7 @@
 
 #ifdef VECGEOM_CUDA_INTERFACE
 #include "VecGeom/backend/cuda/Backend.h"
+#include "VecGeom/management/GeoManager.h"
 #include "VecGeom/management/CudaManager.h"
 #endif
 
@@ -2302,6 +2303,10 @@ void Benchmarker::FreeAligned(Type *const distance)
 #ifdef VECGEOM_CUDA_INTERFACE
 void Benchmarker::GetVolumePointers(std::list<DevicePtr<cuda::VPlacedVolume>> &volumesGpu)
 {
+#ifdef VECGEOM_USE_INDEXEDNAVSTATES
+  if (!GeoManager::Instance().gNavIndex)
+    GeoManager::Instance().MakeNavIndexTable();
+#endif
   CudaManager::Instance().LoadGeometry(GetWorld());
   CudaManager::Instance().Synchronize();
   for (std::list<VolumePointers>::const_iterator v = fVolumes.begin(); v != fVolumes.end(); ++v) {
