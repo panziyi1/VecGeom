@@ -153,24 +153,24 @@ int TestNavIndexCPU(vecgeom::cxx::VPlacedVolume const *const world, int maxdepth
 
 int main(int argc, char *argv[])
 {
+  OPTION_STRING(gdml_name, "default.gdml");
+  OPTION_INT(max_depth, 0);
+  OPTION_INT(on_gpu, 0);
 #ifndef VECGEOM_GDML
+  (void)max_depth;
   std::cout << "### VecGeom must be compiled with GDML support to run this.\n";
   return 1;
 #endif
 
-  OPTION_STRING(gdml_name, "default.gdml");
-  OPTION_INT(max_depth, 0);
-  OPTION_INT(on_gpu, 0);
-
   Stopwatch timer;
-// Try to open the input file
-#ifdef VECGEOM_GDML
+  // Try to open the input file
   timer.Start();
-  bool load = vgdml::Frontend::Load(gdml_name.c_str(), false);
+#ifdef VECGEOM_GDML
+  auto load = vgdml::Frontend::Load(gdml_name.c_str(), false);
   if (!load) return 2;
+#endif
   auto tload = timer.Stop();
   std::cout << "Loading " << gdml_name << " took " << tload << " sec.\n";
-#endif
 
   auto world = GeoManager::Instance().GetWorld();
   if (!world) return 3;
@@ -179,11 +179,12 @@ int main(int argc, char *argv[])
             << "  total physical nodes: " << GeoManager::Instance().GetTotalNodeCount() << "\n";
 
   timer.Start();
-  bool success = GeoManager::Instance().MakeNavIndexTable(max_depth, false);
-  auto tbuild  = timer.Stop();
+#ifdef VECGEOM_GDML
+  auto success = GeoManager::Instance().MakeNavIndexTable(max_depth, false);
   if (!success) return 9999;
+#endif
+  auto tbuild = timer.Stop();
   std::cout << "Building the navigation index table took: " << tbuild << " sec.\n";
-
   float frac_build = 100. * tbuild / tload;
   std::cout << "Navigation table build time as fraction of the GDML load time: " << std::setprecision(2) << frac_build
             << " %\n";
