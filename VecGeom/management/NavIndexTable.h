@@ -94,15 +94,24 @@ public:
     return success;
   }
 
+  static size_t ComputeTableSize(VPlacedVolume const *top, int maxdepth, int depth_limit)
+  {
+    NavStatePath *state = NavStatePath::MakeInstance(maxdepth);
+    BuildNavIndexVisitor visitor(depth_limit, true); // just count table size
+    visitAllPlacedVolumesNavIndex(top, &visitor, state);
+    size_t table_size = visitor.GetTableSize();
+    NavStatePath::ReleaseInstance(state);
+    return table_size;
+  }
+
   bool CreateTable(VPlacedVolume const *top, int maxdepth, int depth_limit)
   {
     fDepthLimit         = depth_limit;
     NavStatePath *state = NavStatePath::MakeInstance(maxdepth);
-    state->Clear();
-    auto visitor = new BuildNavIndexVisitor(depth_limit, true); // just count table size
+    BuildNavIndexVisitor visitor(depth_limit, true); // just count table size
 
-    visitAllPlacedVolumesNavIndex(top, visitor, state);
-    bool hasTable = AllocateTable(visitor->GetTableSize());
+    visitAllPlacedVolumesNavIndex(top, &visitor, state);
+    bool hasTable = AllocateTable(visitor.GetTableSize());
     if (!hasTable) return false;
 
     auto pretty_bytes = [](unsigned int bytes) {
@@ -121,12 +130,11 @@ public:
       return sbytes;
     };
 
-    visitor->SetTable(fNavInd);
-    visitor->SetDoCount(false);
+    visitor.SetTable(fNavInd);
+    visitor.SetDoCount(false);
 
     state->Clear();
-    visitAllPlacedVolumesNavIndex(top, visitor, state);
-    delete visitor;
+    visitAllPlacedVolumesNavIndex(top, &visitor, state);
     NavStatePath::ReleaseInstance(state);
 
     std::cout << "Navigation index table size is " << pretty_bytes(fTableSize) << "\n";
@@ -152,8 +160,8 @@ public:
   /// Traverses the geometry tree keeping track of the state context (volume path or navigation state)
   /// and applies the injected Visitor
   template <typename Visitor>
-  void visitAllPlacedVolumesNavIndex(VPlacedVolume const *currentvolume, Visitor *visitor, NavStatePath *state,
-                                     int level = 0, NavIndex_t mother = 0, int dind = 0) const
+  static void visitAllPlacedVolumesNavIndex(VPlacedVolume const *currentvolume, Visitor *visitor, NavStatePath *state,
+                                            int level = 0, NavIndex_t mother = 0, int dind = 0)
   {
     if (currentvolume != NULL) {
       state->Push(currentvolume);

@@ -211,7 +211,29 @@ void GeoManager::CloseGeometry()
   CompactifyMemory();
   vecgeom::ABBoxManager::Instance().InitABBoxesForCompleteGeometry();
 #ifdef VECGEOM_USE_INDEXEDNAVSTATES
-  std::cout << "=== Geometry closed. Build navigation index table using GeoManager::MakeNavIndexTable.\n";
+  auto pretty_bytes = [](unsigned int bytes) {
+    char buf[50];
+    const char *suffixes[7] = {"Bytes", "KB", "MB", "GB", "TB", "PB", "EB"};
+    uint s                  = 0; // which suffix to use
+    double count            = bytes;
+    while (count >= 1024 && s++ < 7)
+      count /= 1024;
+
+    if (count - std::floor(count) == 0.0)
+      sprintf(buf, "%d %s", (int)count, suffixes[s]);
+    else
+      sprintf(buf, "%.1f %s", count, suffixes[s]);
+    std::string sbytes = buf;
+    return sbytes;
+  };
+  std::cout << "\n==============================================================================================\n"
+            << "Geometry closed. You have to build the navigation table using GeoManager::MakeNavIndexTable.\n"
+            << "   The table size depends on the chosen depth for global transformation caching:\n";
+  auto minsize = NavIndexTable::ComputeTableSize(GetWorld(), fMaxDepth, 1);
+  auto maxsize = NavIndexTable::ComputeTableSize(GetWorld(), fMaxDepth, fMaxDepth);
+  std::cout << "   depth = 1:  " << pretty_bytes(minsize) << "   depth = " << fMaxDepth
+            << " (max): " << pretty_bytes(maxsize)
+            << "\n==============================================================================================\n\n";
 #endif
 
   fIsClosed = true;
