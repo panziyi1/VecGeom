@@ -798,9 +798,8 @@ endif()
 
 # build the libraries for GDML persistency
 if(GDML)
-  set(VECGEOM_GDML ON)
+  add_subdirectory(persistency/gdml)
 endif()
-option(GDMLDEBUG "Enable additional debug information in GDML module" OFF)
 
 ################################################################################
 # TESTING

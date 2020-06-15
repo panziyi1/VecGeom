@@ -6,7 +6,7 @@
 #include <VecGeom/base/Transformation3D.h>
 #include <VecGeom/management/GeoManager.h>
 #include <VecGeom/management/CudaManager.h>
-#include <VecGeom/navigation/NavigationState.h>
+#include <VecGeom/navigation/NavStateIndex.h>
 #include <VecGeom/volumes/PlacedVolume.h>
 #include <VecGeom/benchmarking/Raytracer.h>
 
@@ -15,6 +15,7 @@
 
 using namespace vecgeom;
 
+namespace raytrace_bench {
 void check_cuda(cudaError_t result, char const *const func, const char *const file, int const line)
 {
   if (result) {
@@ -23,8 +24,9 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
     exit(1);
   }
 }
+} // namespace raytrace_bench
 
-#define checkCudaErrors(val) check_cuda((val), #val, __FILE__, __LINE__)
+#define checkCudaErrors(val) raytrace_bench::check_cuda((val), #val, __FILE__, __LINE__)
 
 __global__
 void RenderKernel(RaytracerData_t rtdata, char *input_buffer, unsigned char *output_buffer)
@@ -69,13 +71,14 @@ int RaytraceBenchmarkGPU(vecgeom::cuda::VPlacedVolume const* const world, int px
   rtdata.Print();
 
   // Allocate ray data and output data on the device
-  size_t statesize = NavigationState::SizeOfInstance(rtdata.fMaxDepth);
-  size_t raysize = Ray_t::SizeOfInstance(rtdata.fMaxDepth);
+  size_t statesize = NavStateIndex::SizeOfInstance(rtdata.fMaxDepth);
+  size_t raysize = Ray_t::SizeOfInstance();
+  printf(" State size is %lu, ray size is %lu\n", statesize, raysize);
 
   printf("=== Allocating %.3f MB of ray data on the device\n", (float)rtdata.fNrays * raysize / 1048576);
   //char *input_buffer_gpu = nullptr;
-  char *input_buffer = new char[statesize + rtdata.fNrays * raysize];
-  checkCudaErrors(cudaMallocManaged((void **)&input_buffer, statesize + rtdata.fNrays * raysize));
+  char *input_buffer = new char[rtdata.fNrays * raysize];
+  checkCudaErrors(cudaMallocManaged((void **)&input_buffer, rtdata.fNrays * raysize));
 
   unsigned char *output_buffer = nullptr;
   checkCudaErrors(cudaMallocManaged((void **)&output_buffer, 4 * sizeof(unsigned char) * rtdata.fSize_px * rtdata.fSize_py));
@@ -97,17 +100,16 @@ int RaytraceBenchmarkGPU(vecgeom::cuda::VPlacedVolume const* const world, int px
   assert(gpu_world && "GPU world volume is a null pointer");
 
   // Initialize the navigation state for the view point
-  auto vpstate = NavigationState::MakeInstanceAt(rtdata.fMaxDepth, (void *)(input_buffer));
-  Raytracer::LocateGlobalPoint(rtdata.fWorld, rtdata.fStart, *vpstate, true);
+  NavStateIndex vpstate;
+  Raytracer::LocateGlobalPoint(rtdata.fWorld, rtdata.fStart, vpstate, true);
   rtdata.fVPstate = vpstate;
   rtdata.fWorld   = gpu_world;
 
   rtdata.Print();
 
 // Construct rays in place
-  char *raybuff = input_buffer + statesize;
   for (int iray = 0; iray < rtdata.fNrays; ++iray)
-    Ray_t::MakeInstanceAt(raybuff + iray * raysize, rtdata.fMaxDepth);
+    Ray_t::MakeInstanceAt(input_buffer + iray * raysize);
 
   dim3 blocks(rtdata.fSize_px / 8 + 1, rtdata.fSize_py / 8 + 1), threads(8, 8);
   RenderKernel<<<blocks, threads>>>(rtdata, input_buffer, output_buffer);
