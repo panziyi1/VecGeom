@@ -94,7 +94,7 @@ public:
   /// \param zPlanes Z-coordinates of each Z-plane to draw segments between.
   /// \param rMin Radius to the sides (not to the corners!) of the inner shell
   ///             for the corresponding Z-plane.
-  /// \param rMin Radius to the sides (not to the corners!) of the outer shell
+  /// \param rMax Radius to the sides (not to the corners!) of the outer shell
   ///             for the corresponding Z-plane.
   UnplacedPolyhedron(const int sideCount, const int zPlaneCount, Precision const zPlanes[], Precision const rMin[],
                      Precision const rMax[]);
@@ -112,7 +112,7 @@ public:
   /// \param zPlanes Z-coordinates of each Z-plane to draw segments between.
   /// \param rMin Radius to the sides (not to the corners!) of the inner shell
   ///             for the corresponding Z-plane.
-  /// \param rMin Radius to the sides (not to the corners!) of the outer shell
+  /// \param rMax Radius to the sides (not to the corners!) of the outer shell
   ///             for the corresponding Z-plane.
   VECCORE_ATT_HOST_DEVICE
   UnplacedPolyhedron(Precision phiStart, Precision phiDelta, const int sideCount, const int zPlaneCount,

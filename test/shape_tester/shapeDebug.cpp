@@ -4,9 +4,10 @@
 //  a point (x,y,z) and a direction (vx,vy,vz), and the shape, point and
 //  track is drawn using ROOT, from original point to next intersection with shape,
 //  and all distances and safeties are compared with ROOT.
-//  Note: ROOT is required for visualization.
-//        Geant4 is also used when available, but they are not mandatory.
 //
+//  Note: ROOT is required for visualization.
+//        Geant4 is also used when available, but it is not mandatory.
+
 #include "VecGeom/management/RootGeoManager.h"
 #include "VecGeom/volumes/LogicalVolume.h"
 #include "VecGeom/volumes/PlacedVolume.h"
@@ -14,6 +15,7 @@
 #include "VecGeom/benchmarking/Benchmarker.h"
 #include "VecGeom/management/GeoManager.h"
 #include "VecGeom/volumes/UnplacedBox.h"
+
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
 #include "TGeoBBox.h"
@@ -32,7 +34,6 @@ using namespace vecgeom;
 
 int main(int argc, char *argv[])
 {
-
   if (argc < 7) {
     std::cerr << "Fixed shape in source code - user needs to give a local point + local dir\n";
     std::cerr << "example: " << argv[0] << " 10.0 0.8 -3.5 1 0 0\n";

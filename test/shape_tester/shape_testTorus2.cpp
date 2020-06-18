@@ -54,8 +54,8 @@ int runTester(ImplT const *shape, int npoints, bool debug, bool stat)
   tester.setDebug(debug);
   tester.setStat(stat);
   tester.SetMaxPoints(npoints);
-  // tester.SetTestBoundaryErrors(false);
-  // tester.SetSolidTolerance(1.e-7);
+  tester.SetTestBoundaryErrors(false);
+  tester.SetSolidTolerance(1.e-7);
   int errcode = tester.Run(shape);
 
   std::cout << "Final Error count for Shape *** " << shape->GetName() << "*** = " << errcode << "\n";

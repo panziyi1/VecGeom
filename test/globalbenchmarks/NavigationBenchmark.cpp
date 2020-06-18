@@ -8,7 +8,7 @@
 #undef VERBOSE
 #define VERBOSE
 
-//#include "VecGeom/base/Config.h"
+#include "VecGeom/base/Config.h"
 #ifdef VECGEOM_GDML
 #include "persistency/gdml/source/include/Frontend.h"
 #include "persistency/gdml/source/include/Backend.h"
@@ -103,6 +103,7 @@ void VerifyVecGeomGeometry() {
 
 #ifdef VECGEOM_ROOT
 void VerifyRootGeometry() {
+  extern TGeoManager *gGeoManager;
   size_t rootNumShapes = gGeoManager->GetListOfShapes()->GetEntries();
   size_t rootNumVols   = gGeoManager->GetListOfVolumes()->GetEntries();
   size_t rootNumNodes  = gGeoManager->GetListOfNodes()->GetEntries();
@@ -176,9 +177,13 @@ bool LoadFromGDML(const char* fname) {
 
 // Saves a VecGeom geometry from memory to a GDML file
 void SaveGDML(const char* filename) {
+#ifdef VECGEOM_GDML
   auto aBackend       = vgdml::Backend();
   auto const loaded   = aBackend.Load(filename);
   aBackend.Save(loaded, filename);
+#else
+  std::cerr<<"VECGEOM_GDML is not available.  Loaded geometry cannot be saved to GDML.\n";
+#endif
 }
 
 #ifdef VECGEOM_ROOT

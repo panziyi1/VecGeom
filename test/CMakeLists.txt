@@ -143,7 +143,8 @@ if(VECGEOM_ROOT)
       root/BenchmarkShapeFromROOTFile_WithVisualization.cpp
       root/CompareDistances.cpp
       root/GenerateSurfacePoints.cpp
-      shape_tester/shapeDebug.cpp)
+      shape_tester/shapeDebug.cpp
+      shape_tester/shapeGdmlDebug.cpp)
   endif()
 
   if(VECGEOM_EMBREE)
