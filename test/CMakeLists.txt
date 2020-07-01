@@ -329,7 +329,8 @@ set(TEST_EXECUTABLES_SHAPETESTER
   shape_tester/shape_testTorus2.cpp
   shape_tester/shape_testCutTube.cpp
   shape_tester/shape_testExtruded.cpp
-  shape_tester/shape_testMultiUnion.cpp)
+  shape_tester/shape_testMultiUnion.cpp
+  shape_tester/shape_testMu2eExtruded.cpp)
 
 if(VECGEOM_ROOT)
   list(APPEND TEST_EXECUTABLES_SHAPETESTER
