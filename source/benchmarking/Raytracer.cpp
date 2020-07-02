@@ -209,7 +209,7 @@ void ApplyRTmodel(Ray_t &ray, double step, RaytracerData_t const &rtdata)
       Vector3D<double> norm, lnorm;
       ray.fVolume->GetLogicalVolume()->GetUnplacedVolume()->Normal(localpoint, lnorm);
       m.InverseTransformDirection(lnorm, norm);
-      Vector3D<double> refl = ray.fDir - 2 * norm.Dot(ray.fDir) * norm;
+      Vector3D<double> refl = ray.Reflect(norm);
       refl.Normalize();
       double calf = -rtdata.fSourceDir.Dot(refl);
       // if (calf < 0) calf = 0;

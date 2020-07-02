@@ -48,6 +48,26 @@ struct Ray_t {
 
   VECCORE_ATT_HOST_DEVICE
   static size_t SizeOfInstance() { return sizeof(Ray_t); }
+
+  VECCORE_ATT_HOST_DEVICE
+  Vector3D<double> Reflect(Vector3D<double> const &normal)
+  {
+    return (fDir - 2 * fDir.Dot(normal) * normal);
+  }
+ 
+  VECCORE_ATT_HOST_DEVICE
+  Vector3D<double> Refract(Vector3D<double> const &normal, double eta1, double eta2)
+  {
+    // eta1, eta2 are the refracvtion indices of the exited and entered volumes respectively
+    double cosi = fDir.Dot(normal);
+    Vector3D<double> n = (cosi < 0) ? normal : -normal;
+    cosi = vecCore::math::Abs(cosi);
+    double eta = eta1 / eta2;
+    double k = 1 - eta * eta * (1 - cosi * cosi);
+    Vector3D<double> refracted;
+    if (k >= 0) refracted = eta * fDir + (eta * cosi - vecCore::math::Sqrt(k)) * n;
+    return refracted;
+  }
 };
 
 struct RaytracerData_t {
