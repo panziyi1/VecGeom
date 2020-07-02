@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
   vecgeom::Vector3D<double> up(upx, upy, upz);
 
   // Light color, object color (no color per volume yet) - in RGBA chars compressed into an unsigned integer
-  OPTION_INT(lightcol, 0xFF0000FF); // red
+  OPTION_INT(bkgcol, 0xFF0000FF); // red
   OPTION_INT(objcol, 0x0000FFFF);   // blue
   OPTION_INT(vdepth, 4);            // visible depth
 
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
   rtdata.fView       = (ERTView)view;
   rtdata.fSize_px    = px;
   rtdata.fSize_py    = py;
-  rtdata.fLightColor = lightcol;
+  rtdata.fBkgColor   = bkgcol;
   rtdata.fObjColor   = objcol;
   rtdata.fVisDepth   = vdepth;
   rtdata.fMaxDepth   = GeoManager::Instance().getMaxDepth();

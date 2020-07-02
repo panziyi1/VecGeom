@@ -16,7 +16,7 @@
 
 namespace vecgeom {
 
-enum ERTmodel { kRTxray = 0, kRTspecular, kRTtransparent, kRTdiffuse };
+enum ERTmodel { kRTxray = 0, kRTspecular, kRTtransparent, kRTfresnel };
 enum ERTView { kRTVparallel = 0, kRTVperspective };
 
 VECGEOM_DEVICE_FORWARD_DECLARE(class VPlacedVolume;);
@@ -56,18 +56,47 @@ struct Ray_t {
   }
  
   VECCORE_ATT_HOST_DEVICE
-  Vector3D<double> Refract(Vector3D<double> const &normal, double eta1, double eta2)
+  Vector3D<double> Refract(Vector3D<double> const &normal, float ior1, float ior2, bool &totalreflect)
   {
-    // eta1, eta2 are the refracvtion indices of the exited and entered volumes respectively
-    double cosi = fDir.Dot(normal);
+    // ior1, ior2 are the refraction indices of the exited and entered volumes respectively
+    float cosi = fDir.Dot(normal);
     Vector3D<double> n = (cosi < 0) ? normal : -normal;
     cosi = vecCore::math::Abs(cosi);
-    double eta = eta1 / eta2;
-    double k = 1 - eta * eta * (1 - cosi * cosi);
+    float eta = ior1 / ior2;
+    float k = 1 - eta * eta * (1 - cosi * cosi);
     Vector3D<double> refracted;
-    if (k >= 0) refracted = eta * fDir + (eta * cosi - vecCore::math::Sqrt(k)) * n;
+    if (k < 0) {
+      totalreflect = true;
+    } else {
+      totalreflect = false;
+      refracted = eta * fDir + (eta * cosi - vecCore::math::Sqrt(k)) * n;
+    }
     return refracted;
   }
+
+
+  VECCORE_ATT_HOST_DEVICE
+  void Fresnel(Vector3D<double> const &normal, float ior1, float ior2, float &kr) 
+  { 
+    float cosi = fDir.Dot(normal);
+    Vector3D<double> n = (cosi < 0) ? normal : -normal;
+    cosi = vecCore::math::Abs(cosi);
+    float eta = ior1 / ior2;
+    // Compute sini using Snell's law
+    float sint = eta * vecCore::math::Sqrt(vecCore::math::Max(0.f, 1.f - cosi * cosi)); 
+    // Total internal reflection
+    if (sint >= 1) { 
+      kr = 1; 
+    } else { 
+      float cost = vecCore::math::Sqrt(1 - sint * sint);
+      float Rs = ((ior2 * cosi) - (ior1 * cost)) / ((ior2 * cosi) + (ior1 * cost)); 
+      float Rp = ((ior1 * cosi) - (ior2 * cost)) / ((ior1 * cosi) + (ior2 * cost)); 
+      kr = (Rs * Rs + Rp * Rp) / 2; 
+    }
+    // As a consequence of the conservation of energy, transmittance is given by:
+    // kt = 1 - kr;
+  } 
+
 };
 
 struct RaytracerData_t {
@@ -90,7 +119,7 @@ struct RaytracerData_t {
   int fSize_py        = 1024;            ///< Image pixel size in y
   int fVisDepth       = 1;               ///< Visible geometry depth
   int fMaxDepth       = 0;               ///< Maximum geometry depth
-  Color_t fLightColor = 0xFFFFFFFF;      ///< Light color
+  Color_t fBkgColor = 0xFFFFFFFF;      ///< Light color
   Color_t fObjColor   = 0x0000FFFF;      ///< Object color
   ERTmodel fModel     = kRTxray;         ///< Selected RT model
   ERTView fView       = kRTVperspective; ///< View type

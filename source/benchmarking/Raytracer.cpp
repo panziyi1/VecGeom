@@ -70,7 +70,7 @@ size_t Ray_t::SizeOfInstance(int maxdepth)
 void RaytracerData_t::Print()
 {
   printf("  screen_pos(%g, %g, %g) screen_size(%d, %d)\n", fScreenPos[0], fScreenPos[1], fScreenPos[2], fSize_px, fSize_py);
-  printf("  light_dir(%g, %g, %g) light_color(0x%08x) obj_color(0x%08x)\n", fSourceDir[0], fSourceDir[1], fSourceDir[2], fLightColor.fColor, fObjColor.fColor);
+  printf("  light_dir(%g, %g, %g) light_color(0x%08x) obj_color(0x%08x)\n", fSourceDir[0], fSourceDir[1], fSourceDir[2], fBkgColor.fColor, fObjColor.fColor);
   printf("  zoom_factor(%g) visible_depth(%d/%d) rt_model(%d) rt_view(%d)\n", fZoom, fVisDepth, fMaxDepth, (int)fModel, (int)fView);
   printf("  viewpoint_state: ");
   fVPstate.Print();
@@ -214,7 +214,7 @@ void ApplyRTmodel(Ray_t &ray, double step, RaytracerData_t const &rtdata)
       double calf = -rtdata.fSourceDir.Dot(refl);
       // if (calf < 0) calf = 0;
       // calf                   = vecCore::math::Pow(calf, fShininess);
-      auto specular_color = rtdata.fLightColor;
+      auto specular_color = rtdata.fBkgColor;
       specular_color.MultiplyLightChannel(1. + 0.5 * calf);
       auto object_color = rtdata.fObjColor;
       object_color.MultiplyLightChannel(1. + 0.5 * calf);
@@ -231,6 +231,30 @@ void ApplyRTmodel(Ray_t &ray, double step, RaytracerData_t const &rtdata)
       auto object_color  = rtdata.fObjColor;
       object_color *= (1 - transparency);
       ray.fColor += object_color;
+    }
+  } else if (rtdata.fModel == kRTfresnel) {
+    bool valid = ray.fVolume != nullptr && depth >= rtdata.fVisDepth;
+    if (valid) {
+      Transformation3D m;
+      ray.fNextState.TopMatrix(m);
+      auto localpoint = m.Transform(ray.fPos);
+      Vector3D<double> norm, lnorm;
+      ray.fVolume->GetLogicalVolume()->GetUnplacedVolume()->Normal(localpoint, lnorm);
+      m.InverseTransformDirection(lnorm, norm);
+      // Compute fraction of reflected light
+      float kr = 0;
+      ray.Fresnel(norm, 1.5, 1, kr); // we need to take refraction coeff from geometry
+      Vector3D<double> reflected, refracted;
+      Color_t col_reflected = 0, col_refracted = 0;
+      if (kr < 1) {
+        bool totalreflect = false;
+        refracted = ray.Refract(norm, 1.5, 1, totalreflect);
+        // col_refracted = cast_ray(refracted);
+      }
+      reflected = ray.Reflect(norm);
+      // col_reflected = cast_ray(reflected);
+      // ray.fColor = kr * col_reflected + (1 - kr) * col_refracted
+      // ray.fDone = true;
     }
   }
   if (ray.fVolume == nullptr) ray.fDone = true;
