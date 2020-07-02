@@ -146,8 +146,12 @@ Color_t RaytraceOne(int px, int py, RaytracerData_t const &rtdata, void *input_b
   ray->fDir                     = (rtdata.fView == kRTVperspective) ? pos_onscreen - rtdata.fStart : rtdata.fDir;
   ray->fDir.Normalize();
   ray->fColor  = 0xFFFFFFFF; // white
-  ray->fVolume = (rtdata.fView == kRTVperspective) ? rtdata.fVPstate.Top()
-                                                  : LocateGlobalPoint(rtdata.fWorld, ray->fPos, ray->fCrtState, true);
+  if (rtdata.fView == kRTVperspective) {
+    ray->fCrtState = rtdata.fVPstate;
+    ray->fVolume = rtdata.fVPstate.Top();
+  } else {
+    ray->fVolume = LocateGlobalPoint(rtdata.fWorld, ray->fPos, ray->fCrtState, true);
+  }
   int itry = 0;
   while (!ray->fVolume && itry < kMaxTries) {
     auto snext = rtdata.fWorld->DistanceToIn(ray->fPos, ray->fDir);

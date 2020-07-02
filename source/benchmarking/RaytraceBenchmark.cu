@@ -9,6 +9,7 @@
 #include <VecGeom/navigation/NavStateIndex.h>
 #include <VecGeom/volumes/PlacedVolume.h>
 #include <VecGeom/benchmarking/Raytracer.h>
+#include <VecGeom/base/Stopwatch.h>
 
 #include <cassert>
 #include <cstdio>
@@ -88,11 +89,15 @@ int RaytraceBenchmarkGPU(vecgeom::cuda::RaytracerData_t *rtdata)
   for (int iray = 0; iray < rtdata->fNrays; ++iray)
     Ray_t::MakeInstanceAt(input_buffer + iray * raysize);
 
+  Stopwatch timer;
+  timer.Start();
   dim3 blocks(rtdata->fSize_px / 8 + 1, rtdata->fSize_py / 8 + 1), threads(8, 8);
   RenderKernel<<<blocks, threads>>>(*rtdata, input_buffer, output_buffer);
 
   checkCudaErrors(cudaGetLastError());
   checkCudaErrors(cudaDeviceSynchronize());
+  auto time_gpu = timer.Stop();
+  std::cout << "Time on GPU: " << time_gpu << "\n";
 
   write_ppm("output.ppm", output_buffer, rtdata->fSize_px, rtdata->fSize_py);
 

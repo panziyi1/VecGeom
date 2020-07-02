@@ -9,6 +9,7 @@
 #include <VecGeom/benchmarking/Raytracer.h>
 #include <VecGeom/management/GeoManager.h>
 #include <VecGeom/navigation/NavStatePath.h>
+#include <VecGeom/base/Stopwatch.h>
 #include "ArgParser.h"
 
 #ifdef VECGEOM_GDML
@@ -42,7 +43,10 @@ int main(int argc, char *argv[])
   return 2;
 #endif
 
+  // geometry file name and global transformation cache depth (affects size of navigation index table)
   OPTION_STRING(gdml_name, "default.gdml");
+  OPTION_INT(cache_depth, 0); // 0 = full depth
+
   // image size in pixels
   OPTION_INT(px, 1200);
   OPTION_INT(py, 800);
@@ -76,6 +80,7 @@ int main(int argc, char *argv[])
 
 // Try to open the input file
 #ifdef VECGEOM_GDML
+  GeoManager::Instance().SetTransformationCacheDepth(cache_depth);
   bool load = vgdml::Frontend::Load(gdml_name.c_str(), false);
   if (!load) return 2;
 #endif
@@ -136,7 +141,11 @@ int RaytraceBenchmarkCPU(vecgeom::cxx::RaytracerData_t &rtdata)
     Ray_t::MakeInstanceAt(input_buffer + iray * raysize);
 
   // Run the CPU propagation kernel
+  Stopwatch timer;
+  timer.Start();
   Raytracer::PropagateRays(rtdata, input_buffer, output_buffer);
+  auto time_cpu = timer.Stop();
+  std::cout << "Run time on CPU: " << time_cpu << "\n";
 
   // Write the output
   write_ppm("output.ppm", (unsigned char*)output_buffer, rtdata.fSize_px, rtdata.fSize_py);
