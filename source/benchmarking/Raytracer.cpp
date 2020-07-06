@@ -236,7 +236,7 @@ void ApplyRTmodel(Ray_t &ray, double step, RaytracerData_t const &rtdata)
       float kr = 0;
       ray.Fresnel(norm, 1.5, 1, kr); // we need to take refraction coeff from geometry
       Vector3D<double> reflected, refracted;
-      Color_t col_reflected = 0, col_refracted = 0;
+      // Color_t col_reflected = 0, col_refracted = 0;
       if (kr < 1) {
         bool totalreflect = false;
         refracted         = ray.Refract(norm, 1.5, 1, totalreflect);
@@ -251,10 +251,9 @@ void ApplyRTmodel(Ray_t &ray, double step, RaytracerData_t const &rtdata)
   if (ray.fVolume == nullptr) ray.fDone = true;
 }
 
-void PropagateRays(RaytracerData_t &rtdata, void *input_buffer, void *output_buffer)
+void PropagateRays(RaytracerData_t &rtdata, unsigned char *input_buffer, unsigned char *output_buffer)
 {
   // Propagate all rays and write out the image on the CPU
-  auto buffer = (unsigned char *)output_buffer;
   size_t n10  = 0.1 * rtdata.fNrays;
   size_t icrt = 0;
   // fprintf(stderr, "P3\n%d %d\n255\n", fSize_px, fSize_py);
@@ -267,10 +266,10 @@ void PropagateRays(RaytracerData_t &rtdata, void *input_buffer, void *output_buf
       auto pixel_color = RaytraceOne(rtdata, *ray, px, py);
 
       int pixel_index         = 4 * ray_index;
-      buffer[pixel_index + 0] = pixel_color.fComp.red;
-      buffer[pixel_index + 1] = pixel_color.fComp.green;
-      buffer[pixel_index + 2] = pixel_color.fComp.blue;
-      buffer[pixel_index + 3] = 255;
+      output_buffer[pixel_index + 0] = pixel_color.fComp.red;
+      output_buffer[pixel_index + 1] = pixel_color.fComp.green;
+      output_buffer[pixel_index + 2] = pixel_color.fComp.blue;
+      output_buffer[pixel_index + 3] = 255;
       icrt++;
     }
   }

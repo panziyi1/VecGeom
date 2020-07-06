@@ -72,7 +72,7 @@ struct Ray_t {
   void Fresnel(Vector3D<double> const &normal, float ior1, float ior2, float &kr)
   {
     float cosi         = fDir.Dot(normal);
-    Vector3D<double> n = (cosi < 0) ? normal : -normal;
+    // Vector3D<double> n = (cosi < 0) ? normal : -normal;
     cosi               = vecCore::math::Abs(cosi);
     float eta          = ior1 / ior2;
     // Compute sini using Snell's law
@@ -144,7 +144,7 @@ void ApplyRTmodel(Ray_t &ray, double step, RaytracerData_t const &rtdata);
 
 /// \brief Entry point to propagate all rays
 VECCORE_ATT_HOST_DEVICE
-void PropagateRays(RaytracerData_t &data, void *rays_buffer, void *output_buffer);
+void PropagateRays(RaytracerData_t &data, unsigned char *rays_buffer, unsigned char *output_buffer);
 
 VECCORE_ATT_HOST_DEVICE
 Color_t RaytraceOne(RaytracerData_t const &rtdata, Ray_t &ray, int px, int py);

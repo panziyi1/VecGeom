@@ -127,8 +127,8 @@ int RaytraceBenchmarkCPU(vecgeom::cxx::RaytracerData_t &rtdata)
   // Allocate and initialize all rays on the host
   size_t raysize = Ray_t::SizeOfInstance();
   printf("=== Allocating %.3f MB of ray data on the host\n", (float)rtdata.fNrays * raysize / 1048576);
-  char *input_buffer  = new char[rtdata.fNrays * raysize];
-  char *output_buffer = new char[4 * rtdata.fNrays * sizeof(char)];
+  unsigned char *input_buffer  = new unsigned char[rtdata.fNrays * raysize];
+  unsigned char *output_buffer = new unsigned char[4 * rtdata.fNrays * sizeof(char)];
 
   // Initialize the navigation state for the view point
   NavStateIndex vpstate;
@@ -148,7 +148,7 @@ int RaytraceBenchmarkCPU(vecgeom::cxx::RaytracerData_t &rtdata)
   std::cout << "Run time on CPU: " << time_cpu << "\n";
 
   // Write the output
-  write_ppm("output.ppm", (unsigned char *)output_buffer, rtdata.fSize_px, rtdata.fSize_py);
+  write_ppm("output.ppm", output_buffer, rtdata.fSize_px, rtdata.fSize_py);
 
   return 0;
 }
