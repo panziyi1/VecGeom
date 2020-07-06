@@ -35,9 +35,12 @@ void RenderKernel(RaytracerData_t rtdata, char *input_buffer, unsigned char *out
 
   if ((px >= rtdata.fSize_px) || (py >= rtdata.fSize_py)) return;
 
-  int pixel_index = 4 * (py * rtdata.fSize_px + px);
+  int ray_index = py * rtdata.fSize_px + px;
 
-  Color_t pixel_color = Raytracer::RaytraceOne(px, py, rtdata, input_buffer);
+  Ray_t *ray = (Ray_t*)(input_buffer + ray_index * sizeof(Ray_t));
+  Color_t pixel_color = Raytracer::RaytraceOne(rtdata, *ray, px, py);
+
+  int pixel_index = 4 * ray_index;
 
   output_buffer[pixel_index + 0] = pixel_color.fComp.red;
   output_buffer[pixel_index + 1] = pixel_color.fComp.green;

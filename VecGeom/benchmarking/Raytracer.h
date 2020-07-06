@@ -155,7 +155,7 @@ VECCORE_ATT_HOST_DEVICE
 void PropagateRays(RaytracerData_t &data, void *rays_buffer, void *output_buffer);
 
 VECCORE_ATT_HOST_DEVICE
-Color_t RaytraceOne(int px, int py, RaytracerData_t const &rtdata, void *input_buffer);
+Color_t RaytraceOne(RaytracerData_t const &rtdata, Ray_t &ray, int px, int py);
 
 // Navigation methods (just temporary here)
 VECCORE_ATT_HOST_DEVICE
