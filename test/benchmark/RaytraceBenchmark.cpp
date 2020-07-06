@@ -21,7 +21,6 @@ using namespace vecgeom;
 // forward declarations
 int RaytraceBenchmarkCPU(cxx::RaytracerData_t &rtdata);
 
-
 #ifdef VECGEOM_ENABLE_CUDA
 namespace vecgeom {
 namespace cuda {
@@ -73,11 +72,11 @@ int main(int argc, char *argv[])
 
   // Light color, object color (no color per volume yet) - in RGBA chars compressed into an unsigned integer
   OPTION_INT(bkgcol, 0xFF0000FF); // red
-  OPTION_INT(objcol, 0x0000FFFF);   // blue
-  OPTION_INT(vdepth, 4);            // visible depth
+  OPTION_INT(objcol, 0x0000FFFF); // blue
+  OPTION_INT(vdepth, 4);          // visible depth
 
-  OPTION_INT(on_gpu, 0);            // run on GPU
-  OPTION_INT(use_tiles, 0);         // run on GPU in tiled mode
+  OPTION_INT(on_gpu, 0);    // run on GPU
+  OPTION_INT(use_tiles, 0); // run on GPU in tiled mode
 
 // Try to open the input file
 #ifdef VECGEOM_GDML
@@ -93,15 +92,15 @@ int main(int argc, char *argv[])
 
   rtdata.fScreenPos.Set(screenx, screeny, screenz);
   rtdata.fUp.Set(upx, upy, upz);
-  rtdata.fZoom       = zoom;
-  rtdata.fModel      = (ERTmodel)model;
-  rtdata.fView       = (ERTView)view;
-  rtdata.fSize_px    = px;
-  rtdata.fSize_py    = py;
-  rtdata.fBkgColor   = bkgcol;
-  rtdata.fObjColor   = objcol;
-  rtdata.fVisDepth   = vdepth;
-  rtdata.fMaxDepth   = GeoManager::Instance().getMaxDepth();
+  rtdata.fZoom     = zoom;
+  rtdata.fModel    = (ERTmodel)model;
+  rtdata.fView     = (ERTView)view;
+  rtdata.fSize_px  = px;
+  rtdata.fSize_py  = py;
+  rtdata.fBkgColor = bkgcol;
+  rtdata.fObjColor = objcol;
+  rtdata.fVisDepth = vdepth;
+  rtdata.fMaxDepth = GeoManager::Instance().getMaxDepth();
 
   Raytracer::InitializeModel(world, rtdata);
   rtdata.Print();
@@ -110,13 +109,13 @@ int main(int argc, char *argv[])
   if (on_gpu) {
 #ifdef VECGEOM_ENABLE_CUDA
     auto rtdata_cuda = reinterpret_cast<cuda::RaytracerData_t *>(&rtdata);
-    ierr = RaytraceBenchmarkGPU(rtdata_cuda, use_tiles);
+    ierr             = RaytraceBenchmarkGPU(rtdata_cuda, use_tiles);
 #else
     std::cout << "=== Cannot run RaytracerBenchmark on GPU since VecGeom CUDA support not compiled.\n";
     return 1;
 #endif
   } else {
-   ierr = RaytraceBenchmarkCPU(rtdata);
+    ierr = RaytraceBenchmarkCPU(rtdata);
   }
   if (ierr) std::cout << "TestNavIndex FAILED\n";
 
@@ -128,7 +127,7 @@ int RaytraceBenchmarkCPU(vecgeom::cxx::RaytracerData_t &rtdata)
   // Allocate and initialize all rays on the host
   size_t raysize = Ray_t::SizeOfInstance();
   printf("=== Allocating %.3f MB of ray data on the host\n", (float)rtdata.fNrays * raysize / 1048576);
-  char *input_buffer = new char[rtdata.fNrays * raysize];
+  char *input_buffer  = new char[rtdata.fNrays * raysize];
   char *output_buffer = new char[4 * rtdata.fNrays * sizeof(char)];
 
   // Initialize the navigation state for the view point
@@ -149,7 +148,7 @@ int RaytraceBenchmarkCPU(vecgeom::cxx::RaytracerData_t &rtdata)
   std::cout << "Run time on CPU: " << time_cpu << "\n";
 
   // Write the output
-  write_ppm("output.ppm", (unsigned char*)output_buffer, rtdata.fSize_px, rtdata.fSize_py);
+  write_ppm("output.ppm", (unsigned char *)output_buffer, rtdata.fSize_px, rtdata.fSize_py);
 
   return 0;
 }

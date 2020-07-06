@@ -77,13 +77,13 @@ union Color_t {
   }
 
   VECCORE_ATT_HOST_DEVICE
-  float Red() const { return 1./255 * fComp.red; }
+  float Red() const { return 1. / 255 * fComp.red; }
   VECCORE_ATT_HOST_DEVICE
-  float Green() const { return 1./255 * fComp.green; }
+  float Green() const { return 1. / 255 * fComp.green; }
   VECCORE_ATT_HOST_DEVICE
-  float Blue() const { return 1./255 * fComp.blue; }
+  float Blue() const { return 1. / 255 * fComp.blue; }
   VECCORE_ATT_HOST_DEVICE
-  float Alpha() const { return 1./255 * fComp.alpha; }
+  float Alpha() const { return 1. / 255 * fComp.alpha; }
   int GetColor() const { return fColor; }
 
   VECCORE_ATT_HOST_DEVICE

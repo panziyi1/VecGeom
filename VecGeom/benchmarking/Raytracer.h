@@ -30,18 +30,15 @@ struct Ray_t {
 
   Vector3D<double> fPos;
   Vector3D<double> fDir;
-  NavStateIndex fCrtState;               ///< navigation state for the current volume
-  NavStateIndex fNextState;              ///< navigation state for the next volume
-  VPlacedVolumePtr_t fVolume  = nullptr; ///< current volume
-  int fNcrossed               = 0;       ///< number of crossed boundaries
-  Color_t fColor              = 0;       ///< pixel color
-  bool fDone                  = false;   ///< done flag
+  NavStateIndex fCrtState;              ///< navigation state for the current volume
+  NavStateIndex fNextState;             ///< navigation state for the next volume
+  VPlacedVolumePtr_t fVolume = nullptr; ///< current volume
+  int fNcrossed              = 0;       ///< number of crossed boundaries
+  Color_t fColor             = 0;       ///< pixel color
+  bool fDone                 = false;   ///< done flag
 
   VECCORE_ATT_HOST_DEVICE
-  static Ray_t *MakeInstanceAt(void *addr)
-  {
-    return new (addr) Ray_t();
-  }
+  static Ray_t *MakeInstanceAt(void *addr) { return new (addr) Ray_t(); }
 
   VECCORE_ATT_HOST_DEVICE
   Ray_t() {}
@@ -50,82 +47,77 @@ struct Ray_t {
   static size_t SizeOfInstance() { return sizeof(Ray_t); }
 
   VECCORE_ATT_HOST_DEVICE
-  Vector3D<double> Reflect(Vector3D<double> const &normal)
-  {
-    return (fDir - 2 * fDir.Dot(normal) * normal);
-  }
- 
+  Vector3D<double> Reflect(Vector3D<double> const &normal) { return (fDir - 2 * fDir.Dot(normal) * normal); }
+
   VECCORE_ATT_HOST_DEVICE
   Vector3D<double> Refract(Vector3D<double> const &normal, float ior1, float ior2, bool &totalreflect)
   {
     // ior1, ior2 are the refraction indices of the exited and entered volumes respectively
-    float cosi = fDir.Dot(normal);
+    float cosi         = fDir.Dot(normal);
     Vector3D<double> n = (cosi < 0) ? normal : -normal;
-    cosi = vecCore::math::Abs(cosi);
-    float eta = ior1 / ior2;
-    float k = 1 - eta * eta * (1 - cosi * cosi);
+    cosi               = vecCore::math::Abs(cosi);
+    float eta          = ior1 / ior2;
+    float k            = 1 - eta * eta * (1 - cosi * cosi);
     Vector3D<double> refracted;
     if (k < 0) {
       totalreflect = true;
     } else {
       totalreflect = false;
-      refracted = eta * fDir + (eta * cosi - vecCore::math::Sqrt(k)) * n;
+      refracted    = eta * fDir + (eta * cosi - vecCore::math::Sqrt(k)) * n;
     }
     return refracted;
   }
 
-
   VECCORE_ATT_HOST_DEVICE
-  void Fresnel(Vector3D<double> const &normal, float ior1, float ior2, float &kr) 
-  { 
-    float cosi = fDir.Dot(normal);
+  void Fresnel(Vector3D<double> const &normal, float ior1, float ior2, float &kr)
+  {
+    float cosi         = fDir.Dot(normal);
     Vector3D<double> n = (cosi < 0) ? normal : -normal;
-    cosi = vecCore::math::Abs(cosi);
-    float eta = ior1 / ior2;
+    cosi               = vecCore::math::Abs(cosi);
+    float eta          = ior1 / ior2;
     // Compute sini using Snell's law
-    float sint = eta * vecCore::math::Sqrt(vecCore::math::Max(0.f, 1.f - cosi * cosi)); 
+    float sint = eta * vecCore::math::Sqrt(vecCore::math::Max(0.f, 1.f - cosi * cosi));
     // Total internal reflection
-    if (sint >= 1) { 
-      kr = 1; 
-    } else { 
+    if (sint >= 1) {
+      kr = 1;
+    } else {
       float cost = vecCore::math::Sqrt(1 - sint * sint);
-      float Rs = ((ior2 * cosi) - (ior1 * cost)) / ((ior2 * cosi) + (ior1 * cost)); 
-      float Rp = ((ior1 * cosi) - (ior2 * cost)) / ((ior1 * cosi) + (ior2 * cost)); 
-      kr = (Rs * Rs + Rp * Rp) / 2; 
+      float Rs   = ((ior2 * cosi) - (ior1 * cost)) / ((ior2 * cosi) + (ior1 * cost));
+      float Rp   = ((ior1 * cosi) - (ior2 * cost)) / ((ior1 * cosi) + (ior2 * cost));
+      kr         = (Rs * Rs + Rp * Rp) / 2;
     }
     // As a consequence of the conservation of energy, transmittance is given by:
     // kt = 1 - kr;
-  } 
-
+  }
 };
 
 struct RaytracerData_t {
 
   using VPlacedVolumePtr_t = VPlacedVolume const *;
 
-  double fScale     = 0;                 ///< Scaling from pixels to world coordinates
-  double fShininess = 1.;                ///< Shininess exponent in the specular model
-  double fZoom      = 1.;                ///< Zoom with respect to the default view
-  Vector3D<double> fSourceDir;           ///< Light source direction
-  Vector3D<double> fScreenPos;           ///< Screen position
-  Vector3D<double> fStart;               ///< Eye position in perspectove mode
-  Vector3D<double> fDir;                 ///< Start direction of all rays in parallel view mode
-  Vector3D<double> fUp;                  ///< Up vector in the shooting rectangle plane
-  Vector3D<double> fRight;               ///< Right vector in the shooting rectangle plane
-  Vector3D<double> fLeftC;               ///< left-down corner of the ray shooting rectangle
-  int fVerbosity      = 0;               ///< Verbosity level
-  int fNrays          = 0;               ///< Number of rays left to propagate
-  int fSize_px        = 1024;            ///< Image pixel size in x
-  int fSize_py        = 1024;            ///< Image pixel size in y
-  int fVisDepth       = 1;               ///< Visible geometry depth
-  int fMaxDepth       = 0;               ///< Maximum geometry depth
+  double fScale     = 0;               ///< Scaling from pixels to world coordinates
+  double fShininess = 1.;              ///< Shininess exponent in the specular model
+  double fZoom      = 1.;              ///< Zoom with respect to the default view
+  Vector3D<double> fSourceDir;         ///< Light source direction
+  Vector3D<double> fScreenPos;         ///< Screen position
+  Vector3D<double> fStart;             ///< Eye position in perspectove mode
+  Vector3D<double> fDir;               ///< Start direction of all rays in parallel view mode
+  Vector3D<double> fUp;                ///< Up vector in the shooting rectangle plane
+  Vector3D<double> fRight;             ///< Right vector in the shooting rectangle plane
+  Vector3D<double> fLeftC;             ///< left-down corner of the ray shooting rectangle
+  int fVerbosity    = 0;               ///< Verbosity level
+  int fNrays        = 0;               ///< Number of rays left to propagate
+  int fSize_px      = 1024;            ///< Image pixel size in x
+  int fSize_py      = 1024;            ///< Image pixel size in y
+  int fVisDepth     = 1;               ///< Visible geometry depth
+  int fMaxDepth     = 0;               ///< Maximum geometry depth
   Color_t fBkgColor = 0xFFFFFFFF;      ///< Light color
-  Color_t fObjColor   = 0x0000FFFF;      ///< Object color
-  ERTmodel fModel     = kRTxray;         ///< Selected RT model
-  ERTView fView       = kRTVperspective; ///< View type
+  Color_t fObjColor = 0x0000FFFF;      ///< Object color
+  ERTmodel fModel   = kRTxray;         ///< Selected RT model
+  ERTView fView     = kRTVperspective; ///< View type
 
-  VPlacedVolumePtr_t fWorld = nullptr;   ///< World volume
-  NavStateIndex fVPstate;                ///< Navigation state corresponding to the viewpoint
+  VPlacedVolumePtr_t fWorld = nullptr; ///< World volume
+  NavStateIndex fVPstate;              ///< Navigation state corresponding to the viewpoint
 
   VECCORE_ATT_HOST_DEVICE
   void Print();
@@ -176,7 +168,7 @@ double ComputeStepAndPropagatedState(Vector3D<Precision> const &globalpoint, Vec
 } // End namespace VECGEOM_IMPL_NAMESPACE
 
 void write_ppm(std::string filename, unsigned char *buffer, int px, int py);
-//void RenderCPU(VPlacedVolume const *const world, int px, int py, int maxdepth);
+// void RenderCPU(VPlacedVolume const *const world, int px, int py, int maxdepth);
 
 } // End namespace vecgeom
 

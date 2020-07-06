@@ -647,10 +647,9 @@ double Middleware::GetLengthMultiplier(XERCES_CPP_NAMESPACE_QUALIFIER DOMNode co
   auto const unit              = GetAttribute(unitTag, attributes);
 
   const char *lunits[7] = {"nm", "um", "mm", "cm", "dm", "m", "km"};
-  double lm[7] = {1.E-6, 1.E-3, 1., 10., 100., 1000., 1.E6};
+  double lm[7]          = {1.E-6, 1.E-3, 1., 10., 100., 1000., 1.E6};
   for (auto i = 0; i < 7; ++i) {
-    if ( unit == lunits[i] )
-      return lm[i];
+    if (unit == lunits[i]) return lm[i];
   }
   return 1.;
 }

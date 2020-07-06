@@ -69,9 +69,12 @@ size_t Ray_t::SizeOfInstance(int maxdepth)
 */
 void RaytracerData_t::Print()
 {
-  printf("  screen_pos(%g, %g, %g) screen_size(%d, %d)\n", fScreenPos[0], fScreenPos[1], fScreenPos[2], fSize_px, fSize_py);
-  printf("  light_dir(%g, %g, %g) light_color(0x%08x) obj_color(0x%08x)\n", fSourceDir[0], fSourceDir[1], fSourceDir[2], fBkgColor.fColor, fObjColor.fColor);
-  printf("  zoom_factor(%g) visible_depth(%d/%d) rt_model(%d) rt_view(%d)\n", fZoom, fVisDepth, fMaxDepth, (int)fModel, (int)fView);
+  printf("  screen_pos(%g, %g, %g) screen_size(%d, %d)\n", fScreenPos[0], fScreenPos[1], fScreenPos[2], fSize_px,
+         fSize_py);
+  printf("  light_dir(%g, %g, %g) light_color(0x%08x) obj_color(0x%08x)\n", fSourceDir[0], fSourceDir[1], fSourceDir[2],
+         fBkgColor.fColor, fObjColor.fColor);
+  printf("  zoom_factor(%g) visible_depth(%d/%d) rt_model(%d) rt_view(%d)\n", fZoom, fVisDepth, fMaxDepth, (int)fModel,
+         (int)fView);
   printf("  viewpoint_state: ");
   fVPstate.Print();
 }
@@ -126,18 +129,18 @@ void InitializeModel(VPlacedVolumePtr_t world, RaytracerData_t &rtdata)
 
 Color_t RaytraceOne(RaytracerData_t const &rtdata, Ray_t &ray, int px, int py)
 {
-  constexpr int kMaxTries      = 10;
-  constexpr double kPush       = 1.e-8;  
+  constexpr int kMaxTries = 10;
+  constexpr double kPush  = 1.e-8;
 
   Vector3D<double> pos_onscreen = rtdata.fLeftC + rtdata.fScale * (px * rtdata.fRight + py * rtdata.fUp);
   Vector3D<double> start        = (rtdata.fView == kRTVperspective) ? rtdata.fStart : pos_onscreen;
-  ray.fPos                     = start;
-  ray.fDir                     = (rtdata.fView == kRTVperspective) ? pos_onscreen - rtdata.fStart : rtdata.fDir;
+  ray.fPos                      = start;
+  ray.fDir                      = (rtdata.fView == kRTVperspective) ? pos_onscreen - rtdata.fStart : rtdata.fDir;
   ray.fDir.Normalize();
-  ray.fColor  = 0xFFFFFFFF; // white
+  ray.fColor = 0xFFFFFFFF; // white
   if (rtdata.fView == kRTVperspective) {
     ray.fCrtState = rtdata.fVPstate;
-    ray.fVolume = rtdata.fVPstate.Top();
+    ray.fVolume   = rtdata.fVPstate.Top();
   } else {
     ray.fVolume = LocateGlobalPoint(rtdata.fWorld, ray.fPos, ray.fCrtState, true);
   }
@@ -236,7 +239,7 @@ void ApplyRTmodel(Ray_t &ray, double step, RaytracerData_t const &rtdata)
       Color_t col_reflected = 0, col_refracted = 0;
       if (kr < 1) {
         bool totalreflect = false;
-        refracted = ray.Refract(norm, 1.5, 1, totalreflect);
+        refracted         = ray.Refract(norm, 1.5, 1, totalreflect);
         // col_refracted = cast_ray(refracted);
       }
       reflected = ray.Reflect(norm);
@@ -252,18 +255,18 @@ void PropagateRays(RaytracerData_t &rtdata, void *input_buffer, void *output_buf
 {
   // Propagate all rays and write out the image on the CPU
   auto buffer = (unsigned char *)output_buffer;
-  size_t n10    = 0.1 * rtdata.fNrays;
-  size_t icrt   = 0;
+  size_t n10  = 0.1 * rtdata.fNrays;
+  size_t icrt = 0;
   // fprintf(stderr, "P3\n%d %d\n255\n", fSize_px, fSize_py);
   for (int py = 0; py < rtdata.fSize_py; py++) {
     for (int px = 0; px < rtdata.fSize_px; px++) {
       if ((icrt % n10) == 0) printf("%lu %%\n", 10 * icrt / n10);
       int ray_index = py * rtdata.fSize_px + px;
-      Ray_t *ray = (Ray_t*)(input_buffer + ray_index * sizeof(Ray_t));
+      Ray_t *ray    = (Ray_t *)(input_buffer + ray_index * sizeof(Ray_t));
 
       auto pixel_color = RaytraceOne(rtdata, *ray, px, py);
 
-      int pixel_index = 4 * ray_index;
+      int pixel_index         = 4 * ray_index;
       buffer[pixel_index + 0] = pixel_color.fComp.red;
       buffer[pixel_index + 1] = pixel_color.fComp.green;
       buffer[pixel_index + 2] = pixel_color.fComp.blue;
@@ -274,8 +277,8 @@ void PropagateRays(RaytracerData_t &rtdata, void *input_buffer, void *output_buf
 }
 
 ///< Explicit navigation functions, we should be using the navigator functionality when it works
-VPlacedVolume const *LocateGlobalPoint(VPlacedVolume const *vol, Vector3D<Precision> const &point,
-                                       NavStateIndex &path, bool top)
+VPlacedVolume const *LocateGlobalPoint(VPlacedVolume const *vol, Vector3D<Precision> const &point, NavStateIndex &path,
+                                       bool top)
 {
   VPlacedVolume const *candvolume = vol;
   Vector3D<Precision> currentpoint(point);
@@ -389,8 +392,8 @@ double ComputeStepAndPropagatedState(Vector3D<Precision> const &globalpoint, Vec
   // need to calc DistanceToOut first
   // step = Impl::TreatDistanceToMother(pvol, localpoint, localdir, step_limit);
   step = lvol->GetUnplacedVolume()->DistanceToOut(localpoint, localdir, step_limit);
-  //step = pvol->DistanceToOut(localpoint, localdir, step_limit);
-  
+  // step = pvol->DistanceToOut(localpoint, localdir, step_limit);
+
   if (step < 0) step = 0;
   // "suck in" algorithm from Impl and treat hit detection in local coordinates for daughters
   //((Impl *)this)
@@ -515,4 +518,3 @@ void write_ppm(std::string filename, unsigned char *buffer, int px, int py)
 #endif
 
 } // End namespace vecgeom
-
