@@ -29,7 +29,7 @@ struct RaytracerData_t;
 } // namespace cuda
 } // namespace vecgeom
 
-int RaytraceBenchmarkGPU(cuda::RaytracerData_t *);
+int RaytraceBenchmarkGPU(cuda::RaytracerData_t *, bool);
 #endif
 
 int main(int argc, char *argv[])
@@ -77,6 +77,7 @@ int main(int argc, char *argv[])
   OPTION_INT(vdepth, 4);            // visible depth
 
   OPTION_INT(on_gpu, 0);            // run on GPU
+  OPTION_INT(use_tiles, 0);         // run on GPU in tiled mode
 
 // Try to open the input file
 #ifdef VECGEOM_GDML
@@ -109,7 +110,7 @@ int main(int argc, char *argv[])
   if (on_gpu) {
 #ifdef VECGEOM_ENABLE_CUDA
     auto rtdata_cuda = reinterpret_cast<cuda::RaytracerData_t *>(&rtdata);
-    ierr = RaytraceBenchmarkGPU(rtdata_cuda);
+    ierr = RaytraceBenchmarkGPU(rtdata_cuda, use_tiles);
 #else
     std::cout << "=== Cannot run RaytracerBenchmark on GPU since VecGeom CUDA support not compiled.\n";
     return 1;

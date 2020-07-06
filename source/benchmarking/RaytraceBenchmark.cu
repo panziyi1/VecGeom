@@ -71,7 +71,81 @@ void RenderTile(RaytracerData_t rtdata, int offset_x, int offset_y, int tile_siz
   tile[pixel_index + 3] = 255;
 }
 
-int RaytraceBenchmarkGPU(vecgeom::cuda::RaytracerData_t *rtdata)
+// subdivide image in 16 tiles and launch each tile on a separate CUDA stream
+void RenderTiledImage(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *output_buffer)
+{
+      cudaStream_t streams[16];
+
+      unsigned char *tile_host[16];
+      unsigned char *tile_device[16];
+
+      int tile_size_x = rtdata->fSize_px/4 + 1;
+      int tile_size_y = rtdata->fSize_py/4 + 1;
+
+      // subdivide each tile in 4x4 thread blocks
+      dim3 blocks(tile_size_x / 4 + 1, tile_size_y / 4 + 1), threads(4, 4);
+
+      for (int i = 0; i < 16; ++i) {
+          checkCudaErrors(cudaStreamCreate(&streams[i]));
+          // allocate tile on host and device
+          checkCudaErrors(cudaMalloc(&tile_device[i], 4 * tile_size_x * tile_size_y));
+          // CUDA streams require host memory to be pinned
+          checkCudaErrors(cudaMallocHost(&tile_host[i], 4 * tile_size_x * tile_size_y));
+      }
+
+      // wait for memory to reach GPU before launching kernels
+      checkCudaErrors(cudaDeviceSynchronize());
+
+      for (int ix = 0; ix < 4; ++ix) {
+          for (int iy = 0; iy < 4; ++iy) {
+              int idx = 4*ix + iy;
+              int offset_x = ix * tile_size_x;
+              int offset_y = iy * tile_size_y;
+
+              // cudaMemcpyAsync(tile_device[idx], tile_host[idx], (size_t)4 * tile_size_x * tile_size_y, cudaMemcpyHostToDevice, streams[idx]);
+              // launch kernel to render a single tile
+              RenderTile<<<blocks, threads, 0, streams[idx]>>>(*rtdata, offset_x, offset_y, tile_size_x, tile_size_y, tile_device[idx]);
+              // copy back rendered tile to system memory
+              checkCudaErrors(cudaMemcpyAsync(tile_host[idx], tile_device[idx], 
+                          (size_t)4 * tile_size_x * tile_size_y, cudaMemcpyDeviceToHost, streams[idx]));
+              checkCudaErrors(cudaFree(tile_device[idx]));
+          }
+      }
+
+      // ensure all tiles have been copied back
+      checkCudaErrors(cudaDeviceSynchronize());
+      checkCudaErrors(cudaGetLastError());
+
+      for (int ix = 0; ix < 4; ++ix) {
+          for (int iy = 0; iy < 4; ++iy) {
+              int idx = 4*ix + iy;
+              int offset_x = ix * tile_size_x;
+              int offset_y = iy * tile_size_y;
+
+              // copy each tile into the final destination
+              for (int i = 0; i < tile_size_x; ++i) {
+                  for (int j = 0; j < tile_size_y; ++j) {
+                      int px = offset_x + i;
+                      int py = offset_y + j;
+                      int tile_index  = 4 * (j * tile_size_x + i);
+                      int pixel_index = 4 * (py * rtdata->fSize_px + px);
+
+                      if ((px >= rtdata->fSize_px) || (py >= rtdata->fSize_py))
+                          continue;
+
+                      output_buffer[pixel_index + 0] = tile_host[idx][tile_index + 0];
+                      output_buffer[pixel_index + 1] = tile_host[idx][tile_index + 1];
+                      output_buffer[pixel_index + 2] = tile_host[idx][tile_index + 2];
+                      output_buffer[pixel_index + 3] = tile_host[idx][tile_index + 3];
+                  }
+              }
+              checkCudaErrors(cudaFreeHost(tile_host[idx]));
+          }
+      }
+      checkCudaErrors(cudaGetLastError());
+}
+
+int RaytraceBenchmarkGPU(vecgeom::cuda::RaytracerData_t *rtdata, bool use_tiles)
 {
   // Allocate ray data and output data on the device
   size_t statesize = NavStateIndex::SizeOfInstance(rtdata->fMaxDepth);
@@ -111,17 +185,23 @@ int RaytraceBenchmarkGPU(vecgeom::cuda::RaytracerData_t *rtdata)
 
   rtdata->Print();
 
-// Construct rays in place
-  for (int iray = 0; iray < rtdata->fNrays; ++iray)
-    Ray_t::MakeInstanceAt(input_buffer + iray * raysize);
-
   Stopwatch timer;
   timer.Start();
-  dim3 blocks(rtdata->fSize_px / 8 + 1, rtdata->fSize_py / 8 + 1), threads(8, 8);
-  RenderKernel<<<blocks, threads>>>(*rtdata, input_buffer, output_buffer);
+
+  if (use_tiles) {
+      RenderTiledImage(rtdata, output_buffer);
+  } else {
+      // Construct rays in place
+      for (int iray = 0; iray < rtdata->fNrays; ++iray)
+          Ray_t::MakeInstanceAt(input_buffer + iray * raysize);
+
+      dim3 blocks(rtdata->fSize_px / 8 + 1, rtdata->fSize_py / 8 + 1), threads(8, 8);
+      RenderKernel<<<blocks, threads>>>(*rtdata, input_buffer, output_buffer);
+  }
 
   checkCudaErrors(cudaGetLastError());
   checkCudaErrors(cudaDeviceSynchronize());
+
   auto time_gpu = timer.Stop();
   std::cout << "Time on GPU: " << time_gpu << "\n";
 
