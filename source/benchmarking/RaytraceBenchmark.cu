@@ -74,7 +74,7 @@ __global__ void RenderTile(RaytracerData_t rtdata, int offset_x, int offset_y, i
 // subdivide image in 16 tiles and launch each tile on a separate CUDA stream
 void RenderTiledImage(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *output_buffer)
 {
-  cudaStream_t streams[16];
+  cudaStream_t streams[4];
 
   unsigned char *tile_host[16];
   unsigned char *tile_device[16];
@@ -85,8 +85,10 @@ void RenderTiledImage(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *out
   // subdivide each tile in 4x4 thread blocks
   dim3 blocks(tile_size_x / 4 + 1, tile_size_y / 4 + 1), threads(4, 4);
 
-  for (int i = 0; i < 16; ++i) {
+  for (int i = 0; i < 4; ++i)
     checkCudaErrors(cudaStreamCreate(&streams[i]));
+
+  for (int i = 0; i < 16; ++i) {
     // allocate tile on host and device
     checkCudaErrors(cudaMalloc(&tile_device[i], 4 * tile_size_x * tile_size_y));
     // CUDA streams require host memory to be pinned
@@ -102,13 +104,11 @@ void RenderTiledImage(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *out
       int offset_x = ix * tile_size_x;
       int offset_y = iy * tile_size_y;
 
-      // cudaMemcpyAsync(tile_device[idx], tile_host[idx], (size_t)4 * tile_size_x * tile_size_y,
-      // cudaMemcpyHostToDevice, streams[idx]); launch kernel to render a single tile
-      RenderTile<<<blocks, threads, 0, streams[idx]>>>(*rtdata, offset_x, offset_y, tile_size_x, tile_size_y,
-                                                       tile_device[idx]);
+      RenderTile<<<blocks, threads, 0, streams[iy]>>>(*rtdata, offset_x, offset_y, tile_size_x, tile_size_y,
+                                                      tile_device[idx]);
       // copy back rendered tile to system memory
       checkCudaErrors(cudaMemcpyAsync(tile_host[idx], tile_device[idx], (size_t)4 * tile_size_x * tile_size_y,
-                                      cudaMemcpyDeviceToHost, streams[idx]));
+                                      cudaMemcpyDeviceToHost, streams[iy]));
       checkCudaErrors(cudaFree(tile_device[idx]));
     }
   }
