@@ -55,13 +55,15 @@ __global__ void RenderTile(RaytracerData_t rtdata, int offset_x, int offset_y, i
 
   if (local_px >= tile_size_x || local_py >= tile_size_y) return;
 
+  int ray_index   = 4 * threadIdx.y + threadIdx.x;
   int pixel_index = 4 * (local_py * tile_size_x + local_px);
 
   int global_px = offset_x + local_px;
   int global_py = offset_y + local_py;
 
-  Ray_t ray;
-  Color_t pixel_color = Raytracer::RaytraceOne(rtdata, ray, global_px, global_py);
+  __shared__ Ray_t rays[16];
+
+  Color_t pixel_color = Raytracer::RaytraceOne(rtdata, rays[ray_index], global_px, global_py);
 
   tile[pixel_index + 0] = pixel_color.fComp.red;
   tile[pixel_index + 1] = pixel_color.fComp.green;
