@@ -330,7 +330,8 @@ set(TEST_EXECUTABLES_SHAPETESTER
   shape_tester/shape_testCutTube.cpp
   shape_tester/shape_testExtruded.cpp
   shape_tester/shape_testMultiUnion.cpp
-  shape_tester/shape_testMu2eExtruded.cpp)
+  shape_tester/shape_testMu2eExtruded.cpp
+  shape_tester/shape_testMu2eExtruded2.cpp)
 
 if(VECGEOM_ROOT)
   list(APPEND TEST_EXECUTABLES_SHAPETESTER
@@ -342,7 +343,7 @@ if(NOT VECGEOM_ENABLE_CUDA)
   list(APPEND TEST_EXECUTABLES_SHAPETESTER shape_tester/shape_testTessellated.cpp)
 endif()
 
-if(VECGEOM_BENCHMARK)
+if(VECGEOM_ROOT)
   build_executables("${TEST_EXECUTABLES_SHAPETESTER}")
 endif()
 

@@ -8,6 +8,8 @@
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
 #include "TGeoBBox.h"
+#include "TGraph2D.h"
+#include "TCanvas.h"
 #include "utilities/Visualizer.h"
 #include <string>
 #include <cmath>
@@ -18,7 +20,7 @@
 #include "G4VSolid.hh"
 #endif
 
-size_t N = 1000;
+size_t N = 10000;
 
 using namespace vecgeom;
 
@@ -60,10 +62,20 @@ int main(int argc, char *argv[])
     VPlacedVolume *vecgeomplaced = converted->Place();
 
     // generate POINTS ON SURFACE FROM VECGEOM
+    //TCanvas c1("c1", "Title", 0, 0, 600, 400);
+    //TGraph2D visPoints(N);
+    //visPoints.SetTitle("Graph title; X axis title; Y axis title; Z axis title");
     for (size_t i = 0; i < N; ++i) {
       auto sp = vecgeomplaced->GetUnplacedVolume()->SamplePointOnSurface();
-      std::cerr << "SPVG " << sp.x() << " " << sp.y() << " " << sp.z() << "\n";
+      std::cerr << "SPVG "<< sp.x() << " " << sp.y() << " " << sp.z() << "\n";
+      //visPoints.SetPoint(i, sp.x(), sp.y(), sp.z());
     }
+    // visPoints.Draw();
+    // c1.Update();
+    // c1.SaveAs("x.png");
+    // std::cout<<"Type <Return> when done...\n";
+    // char buff[12];
+    // std::cin >> buff;
 
 // generate POINTS ON SURFACE FOR G4
 #ifdef VECGEOM_GEANT4
