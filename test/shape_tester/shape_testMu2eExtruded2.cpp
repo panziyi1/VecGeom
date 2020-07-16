@@ -36,9 +36,9 @@ int main(int argc, char *argv[])
   sections[1].fOrigin.Set(0, 0,  2209.8);
   sections[1].fScale = 1;
 
-  UnplacedExtruded mu2eXtru( nvertices, vertices, nsections, sections);
-  LogicalVolume vol( &mu2eXtru );
-  VPlacedVolume *placed = vol.Place();
+  SimpleExtruded mu2eXtru("mu2eXtru", nvertices, vertices, nsections, sections);
+  // LogicalVolume vol( &mu2eXtru );
+  // VPlacedVolume *placed = vol.Place();
 
   ShapeTester<vecgeom::VPlacedVolume> tester;
   tester.setDebug(debug);
@@ -46,9 +46,10 @@ int main(int argc, char *argv[])
   tester.SetMaxPoints(npoints);
   tester.SetSolidTolerance(1.e-9);
   tester.SetTestBoundaryErrors(false);
-  int errCode = tester.Run(placed);
+  //int errCode = tester.Run(placed);
+  int errCode = tester.Run(&mu2eXtru);
 
-  std::cout << "Final Error count for Shape *** " << placed->GetName() << "*** = " << errCode << "\n";
+  std::cout << "Final Error count for Shape *** " << mu2eXtru.GetName() << "*** = " << errCode << "\n";
   std::cout << "=========================================================" << std::endl;
 
 #endif
