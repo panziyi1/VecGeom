@@ -134,6 +134,14 @@ public:
         y[i] = sections[0].fOrigin.y() + sections[0].fScale * vertices[i].y;
       }
       fSxtruHelper.Init(nvertices, x, y, sections[0].fOrigin[2], sections[1].fOrigin[2]);
+      delete[] x;
+      delete[] y;
+
+      // avoid using Sxtru shape for non-convex profiles -- temporary fix to JIRA #554
+      if(!fSxtruHelper.GetPolygon().IsConvex()) {
+        fIsSxtru = false;
+        // TODO: cleanup if Sxtru really not used ?
+      }
     }
     // Create the tessellated structure in all cases
     CreateTessellated(nvertices, vertices, nsections, sections);
