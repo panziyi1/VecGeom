@@ -11,6 +11,8 @@
 #include <VecGeom/benchmarking/Raytracer.h>
 #include <VecGeom/base/Stopwatch.h>
 
+#include <cuda_profiler_api.h>
+
 #include <cassert>
 #include <cstdio>
 
@@ -190,6 +192,8 @@ int RaytraceBenchmarkGPU(vecgeom::cuda::RaytracerData_t *rtdata, bool use_tiles)
 
   rtdata->Print();
 
+  cudaProfilerStart();
+
   Stopwatch timer;
   timer.Start();
 
@@ -206,6 +210,8 @@ int RaytraceBenchmarkGPU(vecgeom::cuda::RaytracerData_t *rtdata, bool use_tiles)
 
   checkCudaErrors(cudaGetLastError());
   checkCudaErrors(cudaDeviceSynchronize());
+
+  cudaProfilerStop();
 
   auto time_gpu = timer.Stop();
   std::cout << "Time on GPU: " << time_gpu << "\n";
