@@ -73,7 +73,7 @@ __global__ void RenderTile(RaytracerData_t rtdata, int offset_x, int offset_y, i
 }
 
 // subdivide image in 16 tiles and launch each tile on a separate CUDA stream
-void RenderTiledImage(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *output_buffer)
+void RenderTiledImage(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *output_buffer, int block_size)
 {
   cudaStream_t streams[4];
 
@@ -84,8 +84,9 @@ void RenderTiledImage(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *out
   int tile_size_x = rtdata->fSize_px / 4 + 1;
   int tile_size_y = rtdata->fSize_py / 4 + 1;
 
-  // subdivide each tile in 4x4 thread blocks
-  dim3 blocks(tile_size_x / 4 + 1, tile_size_y / 4 + 1), threads(4, 4);
+  // subdivide each tile in block_size x block_size thread blocks
+  dim3 threads(block_size, block_size);
+  dim3 blocks(tile_size_x / block_size + 1, tile_size_y / block_size + 1);
 
   for (int i = 0; i < 4; ++i)
     checkCudaErrors(cudaStreamCreate(&streams[i]));
@@ -150,7 +151,7 @@ void RenderTiledImage(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *out
   checkCudaErrors(cudaGetLastError());
 }
 
-int RaytraceBenchmarkGPU(vecgeom::cuda::RaytracerData_t *rtdata, bool use_tiles)
+int RaytraceBenchmarkGPU(vecgeom::cuda::RaytracerData_t *rtdata, bool use_tiles, int block_size)
 {
   // Allocate ray data and output data on the device
   size_t statesize = NavStateIndex::SizeOfInstance(rtdata->fMaxDepth);
@@ -198,13 +199,14 @@ int RaytraceBenchmarkGPU(vecgeom::cuda::RaytracerData_t *rtdata, bool use_tiles)
   timer.Start();
 
   if (use_tiles) {
-    RenderTiledImage(rtdata, output_buffer);
+    RenderTiledImage(rtdata, output_buffer, block_size);
   } else {
     // Construct rays in place
     for (int iray = 0; iray < rtdata->fNrays; ++iray)
       Ray_t::MakeInstanceAt(input_buffer + iray * raysize);
 
-    dim3 blocks(rtdata->fSize_px / 8 + 1, rtdata->fSize_py / 8 + 1), threads(8, 8);
+    dim3 threads(block_size, block_size);
+    dim3 blocks(rtdata->fSize_px / block_size + 1, rtdata->fSize_py / block_size + 1);
     RenderKernel<<<blocks, threads>>>(*rtdata, input_buffer, output_buffer);
   }
 
