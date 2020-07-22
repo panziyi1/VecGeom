@@ -43,12 +43,12 @@ int main(int argc, char *argv[])
 #endif
 
   // geometry file name and global transformation cache depth (affects size of navigation index table)
-  OPTION_STRING(gdml_name, "default.gdml");
+  OPTION_STRING(gdml_name, "trackML.gdml");
   OPTION_INT(cache_depth, 0); // 0 = full depth
 
   // image size in pixels
-  OPTION_INT(px, 1200);
-  OPTION_INT(py, 800);
+  OPTION_INT(px, 1840);
+  OPTION_INT(py, 512);
 
   // RT model as in { kRTxray = 0, kRTspecular, kRTtransparent, kRTdiffuse };
   OPTION_INT(model, 2);
@@ -57,11 +57,11 @@ int main(int argc, char *argv[])
   OPTION_INT(view, 1);
 
   // zoom w.r.t to the default view mode
-  OPTION_DOUBLE(zoom, 1.5);
+  OPTION_DOUBLE(zoom, 3.5);
 
   // Screen position in world coordinates
-  OPTION_DOUBLE(screenx, -10000);
-  OPTION_DOUBLE(screeny, -5000);
+  OPTION_DOUBLE(screenx, -5000);
+  OPTION_DOUBLE(screeny, 0);
   OPTION_DOUBLE(screenz, 0);
 
   // Up vector (no need to be normalized)
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
   OPTION_INT(objcol, 0x0000FFFF); // blue
   OPTION_INT(vdepth, 4);          // visible depth
 
-  OPTION_INT(on_gpu, 0);     // run on GPU
+  OPTION_INT(on_gpu, 1);     // run on GPU
   OPTION_INT(use_tiles, 0);  // run on GPU in tiled mode
   OPTION_INT(block_size, 8); // run on GPU in tiled mode
 
