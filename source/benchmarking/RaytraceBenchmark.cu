@@ -161,7 +161,7 @@ int RaytraceBenchmarkGPU(vecgeom::cuda::RaytracerData_t *rtdata, bool use_tiles,
   printf("=== Allocating %.3f MB of ray data on the device\n", (float)rtdata->fNrays * raysize / 1048576);
   // char *input_buffer_gpu = nullptr;
   char *input_buffer = new char[rtdata->fNrays * raysize];
-  checkCudaErrors(cudaMallocManaged((void **)&input_buffer, rtdata->fNrays * raysize));
+  checkCudaErrors(cudaMalloc((void **)&input_buffer, rtdata->fNrays * raysize));
 
   unsigned char *output_buffer = nullptr;
   checkCudaErrors(
@@ -201,10 +201,6 @@ int RaytraceBenchmarkGPU(vecgeom::cuda::RaytracerData_t *rtdata, bool use_tiles,
   if (use_tiles) {
     RenderTiledImage(rtdata, output_buffer, block_size);
   } else {
-    // Construct rays in place
-    for (int iray = 0; iray < rtdata->fNrays; ++iray)
-      Ray_t::MakeInstanceAt(input_buffer + iray * raysize);
-
     dim3 threads(block_size, block_size);
     dim3 blocks(rtdata->fSize_px / block_size + 1, rtdata->fSize_py / block_size + 1);
     RenderKernel<<<blocks, threads>>>(*rtdata, input_buffer, output_buffer);
