@@ -164,8 +164,7 @@ int RaytraceBenchmarkGPU(vecgeom::cuda::RaytracerData_t *rtdata, bool use_tiles,
   checkCudaErrors(cudaMalloc((void **)&input_buffer, rtdata->fNrays * raysize));
 
   unsigned char *output_buffer = nullptr;
-  checkCudaErrors(
-      cudaMallocManaged((void **)&output_buffer, 4 * sizeof(unsigned char) * rtdata->fSize_px * rtdata->fSize_py));
+  checkCudaErrors(cudaMalloc((void **)&output_buffer, 4 * sizeof(unsigned char) * rtdata->fSize_px * rtdata->fSize_py));
 
   // Load and synchronize the geometry on the GPU
   auto &cudaManager = cxx::CudaManager::Instance();
@@ -193,10 +192,10 @@ int RaytraceBenchmarkGPU(vecgeom::cuda::RaytracerData_t *rtdata, bool use_tiles,
 
   rtdata->Print();
 
-  cudaProfilerStart();
-
   Stopwatch timer;
   timer.Start();
+
+  cudaProfilerStart();
 
   if (use_tiles) {
     RenderTiledImage(rtdata, output_buffer, block_size);
@@ -206,15 +205,22 @@ int RaytraceBenchmarkGPU(vecgeom::cuda::RaytracerData_t *rtdata, bool use_tiles,
     RenderKernel<<<blocks, threads>>>(*rtdata, input_buffer, output_buffer);
   }
 
+  cudaProfilerStop();
+
   checkCudaErrors(cudaGetLastError());
   checkCudaErrors(cudaDeviceSynchronize());
-
-  cudaProfilerStop();
 
   auto time_gpu = timer.Stop();
   std::cout << "Time on GPU: " << time_gpu << "\n";
 
-  write_ppm("output.ppm", output_buffer, rtdata->fSize_px, rtdata->fSize_py);
+  unsigned char *image_buffer = new unsigned char[4 * rtdata->fSize_px * rtdata->fSize_py];
+
+  checkCudaErrors(
+      cudaMemcpyAsync(image_buffer, output_buffer, 4 * rtdata->fSize_px * rtdata->fSize_py, cudaMemcpyDeviceToHost));
+
+  write_ppm("output.ppm", image_buffer, rtdata->fSize_px, rtdata->fSize_py);
+
+  delete[] image_buffer;
 
   checkCudaErrors(cudaFree(input_buffer));
   checkCudaErrors(cudaFree(output_buffer));
