@@ -192,17 +192,20 @@ int RaytraceBenchmarkGPU(vecgeom::cuda::RaytracerData_t *rtdata, bool use_tiles,
 
   rtdata->Print();
 
+  unsigned char *image_buffer = new unsigned char[4 * rtdata->fSize_px * rtdata->fSize_py];
+
   Stopwatch timer;
   timer.Start();
 
   cudaProfilerStart();
 
   if (use_tiles) {
-    RenderTiledImage(rtdata, output_buffer, block_size);
+    RenderTiledImage(rtdata, image_buffer, block_size);
   } else {
     dim3 threads(block_size, block_size);
     dim3 blocks(rtdata->fSize_px / block_size + 1, rtdata->fSize_py / block_size + 1);
     RenderKernel<<<blocks, threads>>>(*rtdata, input_buffer, output_buffer);
+    checkCudaErrors(cudaMemcpy(image_buffer, output_buffer, 4 * rtdata->fSize_px * rtdata->fSize_py, cudaMemcpyDeviceToHost));
   }
 
   cudaProfilerStop();
@@ -212,11 +215,6 @@ int RaytraceBenchmarkGPU(vecgeom::cuda::RaytracerData_t *rtdata, bool use_tiles,
 
   auto time_gpu = timer.Stop();
   std::cout << "Time on GPU: " << time_gpu << "\n";
-
-  unsigned char *image_buffer = new unsigned char[4 * rtdata->fSize_px * rtdata->fSize_py];
-
-  checkCudaErrors(
-      cudaMemcpyAsync(image_buffer, output_buffer, 4 * rtdata->fSize_px * rtdata->fSize_py, cudaMemcpyDeviceToHost));
 
   write_ppm("output.ppm", image_buffer, rtdata->fSize_px, rtdata->fSize_py);
 
