@@ -183,6 +183,7 @@ void RenderTiledImage(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *out
   // wait for memory to reach GPU before launching kernels
   checkCudaErrors(cudaDeviceSynchronize());
 
+  // call kernels to render each tile
   for (int ix = 0; ix < 4; ++ix) {
     for (int iy = 0; iy < 4; ++iy) {
       int idx      = 4 * ix + iy;
@@ -191,8 +192,15 @@ void RenderTiledImage(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *out
 
       RenderTile<<<blocks, threads, 0, streams[iy]>>>(*rtdata, offset_x, offset_y, tile_size_x, tile_size_y,
                                                       tile_device_in[idx], tile_device_out[idx]);
-      // copy back rendered tile to system memory
-      checkCudaErrors(cudaDeviceSynchronize());
+    }
+  }
+
+  checkCudaErrors(cudaDeviceSynchronize());
+
+  // copy back rendered tile to system memory
+  for (int ix = 0; ix < 4; ++ix) {
+    for (int iy = 0; iy < 4; ++iy) {
+      int idx      = 4 * ix + iy;
       checkCudaErrors(cudaMemcpyAsync(tile_host[idx], tile_device_out[idx], (size_t)4 * tile_size_x * tile_size_y,
                                       cudaMemcpyDeviceToHost, streams[iy]));
       checkCudaErrors(cudaFree(tile_device_in[idx]));
