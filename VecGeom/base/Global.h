@@ -175,7 +175,7 @@ VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
 T NonZero(T const &x)
 {
-  return x + CopySign(T(1.0e-30), x);
+  return x + T(1.0e-30);
 }
 
 } // namespace vecgeom
