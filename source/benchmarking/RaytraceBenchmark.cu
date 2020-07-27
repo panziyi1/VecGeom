@@ -49,6 +49,41 @@ __global__ void RenderKernel(RaytracerData_t rtdata, char *input_buffer, unsigne
   output_buffer[pixel_index + 3] = 255;
 }
 
+__global__ void RenderLine(RaytracerData_t rtdata, int py, unsigned char *line)
+{
+  int px = threadIdx.x + blockIdx.x * blockDim.x;
+
+  if (px >= rtdata.fSize_px) return;
+
+  Ray_t ray;
+  Color_t pixel_color = Raytracer::RaytraceOne(rtdata, ray, px, py);
+
+  line[4*px + 0] = pixel_color.fComp.red;
+  line[4*px + 1] = pixel_color.fComp.green;
+  line[4*px + 2] = pixel_color.fComp.blue;
+  line[4*px + 3] = 255;
+}
+
+__global__ void RenderInterlaced(RaytracerData_t rtdata, int offset, int width, unsigned char *output)
+{
+  Ray_t ray;
+
+  int px = threadIdx.x + blockIdx.x * blockDim.x;
+
+  if (px >= rtdata.fSize_px) return;
+
+  for (int py = offset; py < rtdata.fSize_py; py += width) {
+      unsigned char *line = &output[4*py*rtdata.fSize_px];
+
+      Color_t pixel_color = Raytracer::RaytraceOne(rtdata, ray, px, py);
+
+      line[4*px + 0] = pixel_color.fComp.red;
+      line[4*px + 1] = pixel_color.fComp.green;
+      line[4*px + 2] = pixel_color.fComp.blue;
+      line[4*px + 3] = 255;
+  }
+}
+
 __global__ void RenderTile(RaytracerData_t rtdata, int offset_x, int offset_y, int tile_size_x, int tile_size_y,
                            unsigned char *tile_in, unsigned char *tile_out)
 {
@@ -70,6 +105,52 @@ __global__ void RenderTile(RaytracerData_t rtdata, int offset_x, int offset_y, i
   tile_out[pixel_index + 1] = pixel_color.fComp.green;
   tile_out[pixel_index + 2] = pixel_color.fComp.blue;
   tile_out[pixel_index + 3] = 255;
+}
+
+void RenderImageLines(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *output)
+{
+  #define NSTREAMS 4
+  cudaStream_t streams[NSTREAMS];
+  unsigned char *buffer = nullptr;
+
+  for (int i = 0; i < NSTREAMS; ++i)
+    checkCudaErrors(cudaStreamCreate(&streams[i]));
+
+  checkCudaErrors(cudaMalloc((void **)&buffer, 4 * sizeof(unsigned char) * rtdata->fSize_px * rtdata->fSize_py));
+  checkCudaErrors(cudaDeviceSynchronize());
+
+  dim3 blocks((rtdata->fSize_px >> 5) + 1), threads(32);
+
+  for (int iy = 0; iy < rtdata->fSize_py; ++iy)
+      RenderLine<<<blocks, threads, 0, streams[iy % NSTREAMS]>>>(*rtdata, iy, buffer + 4*iy*rtdata->fSize_px);
+
+  checkCudaErrors(cudaMemcpy(output, buffer, 4 * sizeof(unsigned char) * rtdata->fSize_px * rtdata->fSize_py, cudaMemcpyDeviceToHost));
+  checkCudaErrors(cudaDeviceSynchronize());
+  checkCudaErrors(cudaFree(buffer));
+  checkCudaErrors(cudaGetLastError());
+}
+
+void RenderImageInterlaced(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *output)
+{
+  #define NSTREAMS 4
+  cudaStream_t streams[NSTREAMS];
+  unsigned char *buffer = nullptr;
+
+  for (int i = 0; i < NSTREAMS; ++i)
+    checkCudaErrors(cudaStreamCreate(&streams[i]));
+
+  checkCudaErrors(cudaMalloc((void **)&buffer, 4 * sizeof(unsigned char) * rtdata->fSize_px * rtdata->fSize_py));
+  checkCudaErrors(cudaDeviceSynchronize());
+
+  dim3 blocks((rtdata->fSize_px >> 5) + 1), threads(32);
+
+  for (int i = 0; i < NSTREAMS; ++i)
+      RenderInterlaced<<<blocks, threads, 0, streams[i % NSTREAMS]>>>(*rtdata, i, NSTREAMS, buffer);
+
+  checkCudaErrors(cudaMemcpy(output, buffer, 4 * sizeof(unsigned char) * rtdata->fSize_px * rtdata->fSize_py, cudaMemcpyDeviceToHost));
+  checkCudaErrors(cudaDeviceSynchronize());
+  checkCudaErrors(cudaFree(buffer));
+  checkCudaErrors(cudaGetLastError());
 }
 
 // subdivide image in 16 tiles and launch each tile on a separate CUDA stream
