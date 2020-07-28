@@ -147,6 +147,12 @@ VECCORE_ATT_HOST_DEVICE
 void PropagateRays(RaytracerData_t &data, unsigned char *rays_buffer, unsigned char *output_buffer);
 
 VECCORE_ATT_HOST_DEVICE
+void InitRay(RaytracerData_t const &rtdata, Ray_t &ray, int px, int py);
+
+VECCORE_ATT_HOST_DEVICE
+Color_t PropagateOneStep(RaytracerData_t const &rtdata, Ray_t &ray);
+
+VECCORE_ATT_HOST_DEVICE
 Color_t RaytraceOne(RaytracerData_t const &rtdata, Ray_t &ray, int px, int py);
 
 // Navigation methods (just temporary here)

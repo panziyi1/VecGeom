@@ -127,11 +127,11 @@ void InitializeModel(VPlacedVolumePtr_t world, RaytracerData_t &rtdata)
   rtdata.fNrays = rtdata.fSize_px * rtdata.fSize_py;
 }
 
-Color_t RaytraceOne(RaytracerData_t const &rtdata, Ray_t &ray, int px, int py)
+void InitRay(RaytracerData_t const &rtdata, Ray_t &ray, int px, int py)
 {
+  // Initialize a ray
   constexpr int kMaxTries = 10;
   constexpr double kPush  = 1.e-8;
-
   Vector3D<double> pos_onscreen = rtdata.fLeftC + rtdata.fScale * (px * rtdata.fRight + py * rtdata.fUp);
   Vector3D<double> start        = (rtdata.fView == kRTVperspective) ? rtdata.fStart : pos_onscreen;
   ray.fPos                      = start;
@@ -144,47 +144,61 @@ Color_t RaytraceOne(RaytracerData_t const &rtdata, Ray_t &ray, int px, int py)
   } else {
     ray.fVolume = LocateGlobalPoint(rtdata.fWorld, ray.fPos, ray.fCrtState, true);
   }
-  int itry = 0;
-  while (!ray.fVolume && itry < kMaxTries) {
+  int nsmall = 0;
+  while (!ray.fVolume && nsmall < kMaxTries) {
     auto snext = rtdata.fWorld->DistanceToIn(ray.fPos, ray.fDir);
     ray.fDone  = snext == kInfLength;
-    if (ray.fDone) return ray.fColor;
+    if (ray.fDone) return;
     // Propagate to the world volume (but do not increment the boundary count)
     ray.fPos += (snext + kPush) * ray.fDir;
     ray.fVolume = LocateGlobalPoint(rtdata.fWorld, ray.fPos, ray.fCrtState, true);
+    nsmall++;
   }
-  ray.fDone = ray.fVolume == nullptr;
+  ray.fDone = ray.fVolume == nullptr; 
+}
+
+Color_t PropagateOneStep(RaytracerData_t const &rtdata, Ray_t &ray)
+{
+  constexpr int kMaxTries = 10;
+  constexpr double kPush  = 1.e-8;
   if (ray.fDone) return ray.fColor;
+  auto nextvol = ray.fVolume;
+  double snext = kInfLength;
+  int nsmall   = 0;
+
+  while (nextvol == ray.fVolume && nsmall < kMaxTries) {
+    snext   = ComputeStepAndPropagatedState(ray.fPos, ray.fDir, kInfLength, ray.fCrtState, ray.fNextState);
+    nextvol = ray.fNextState.Top();
+    ray.fPos += (snext + kPush) * ray.fDir;
+    nsmall++;
+  }
+  if (nsmall == kMaxTries) {
+    // std::cout << "error for ray (" << px << ", " << py << ")\n";
+    ray.fDone  = true;
+    ray.fColor = 0;
+    return ray.fColor;
+  }
+  // Apply the selected RT model
+  ray.fNcrossed++;
+  ray.fVolume = nextvol;
+  if (ray.fVolume == nullptr) ray.fDone = true;
+  if (nextvol) ApplyRTmodel(ray, snext, rtdata);
+  auto tmpstate  = ray.fCrtState;
+  ray.fCrtState  = ray.fNextState;
+  ray.fNextState = tmpstate;
+  return ray.fColor;  
+}
+
+Color_t RaytraceOne(RaytracerData_t const &rtdata, Ray_t &ray, int px, int py)
+{
+  InitRay(rtdata, ray, px, py);
 
   // Now propagate ray
+  auto color = ray.fColor;
   while (!ray.fDone) {
-    auto nextvol = ray.fVolume;
-    double snext = kInfLength;
-    int nsmall   = 0;
-
-    while (nextvol == ray.fVolume && nsmall < kMaxTries) {
-      snext   = ComputeStepAndPropagatedState(ray.fPos, ray.fDir, kInfLength, ray.fCrtState, ray.fNextState);
-      nextvol = ray.fNextState.Top();
-      ray.fPos += (snext + kPush) * ray.fDir;
-      nsmall++;
-    }
-    if (nsmall == kMaxTries) {
-      // std::cout << "error for ray (" << px << ", " << py << ")\n";
-      ray.fDone  = true;
-      ray.fColor = 0;
-      return ray.fColor;
-    }
-    // Apply the selected RT model
-    ray.fNcrossed++;
-    ray.fVolume = nextvol;
-    if (ray.fVolume == nullptr) ray.fDone = true;
-    if (nextvol) ApplyRTmodel(ray, snext, rtdata);
-    auto tmpstate  = ray.fCrtState;
-    ray.fCrtState  = ray.fNextState;
-    ray.fNextState = tmpstate;
+    color = PropagateOneStep(rtdata, ray);
   }
-
-  return ray.fColor;
+  return color;
 }
 
 void ApplyRTmodel(Ray_t &ray, double step, RaytracerData_t const &rtdata)
