@@ -72,6 +72,47 @@ __global__ void RenderTile(RaytracerData_t rtdata, int offset_x, int offset_y, i
   tile_out[pixel_index + 3] = 255;
 }
 
+__global__ void PropagateOneStep(RaytracerData_t rtdata, int offset_x, int offset_y, int tile_size_x, int tile_size_y,
+                                  unsigned char *tile_in, unsigned char *tile_out, int *counter)
+{
+  int local_px = threadIdx.x + blockIdx.x * blockDim.x;
+  int local_py = threadIdx.y + blockIdx.y * blockDim.y;
+
+  if (local_px >= tile_size_x || local_py >= tile_size_y) return;
+
+  int ray_index   = local_py * tile_size_x + local_px;
+  int pixel_index = 4 * (local_py * tile_size_x + local_px);
+
+  Ray_t *ray          = (Ray_t *)(tile_in + ray_index * sizeof(Ray_t));
+  Color_t pixel_color = Raytracer::PropagateOneStep(rtdata, *ray);
+
+  if (ray->fDone) {
+    tile_out[pixel_index + 0] = pixel_color.fComp.red;
+    tile_out[pixel_index + 1] = pixel_color.fComp.green;
+    tile_out[pixel_index + 2] = pixel_color.fComp.blue;
+    tile_out[pixel_index + 3] = 255;
+    atomicAdd(counter, 1);
+  }
+}
+
+__global__ void InitRaysOnTile(RaytracerData_t rtdata, int offset_x, int offset_y, int tile_size_x, int tile_size_y,
+                               unsigned char *tile_in)
+{
+  int local_px = threadIdx.x + blockIdx.x * blockDim.x;
+  int local_py = threadIdx.y + blockIdx.y * blockDim.y;
+
+  if (local_px >= tile_size_x || local_py >= tile_size_y) return;
+
+  int ray_index   = local_py * tile_size_x + local_px;
+  int pixel_index = 4 * (local_py * tile_size_x + local_px);
+
+  int global_px = offset_x + local_px;
+  int global_py = offset_y + local_py;
+
+  Ray_t *ray    = (Ray_t *)(tile_in + ray_index * sizeof(Ray_t));
+  Raytracer::InitRay(rtdata, *ray, global_px, global_py);
+}
+
 // subdivide image in 16 tiles and launch each tile on a separate CUDA stream
 void RenderTiledImage(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *output_buffer, int block_size)
 {
@@ -80,6 +121,11 @@ void RenderTiledImage(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *out
   unsigned char *tile_host[16];
   unsigned char *tile_device_in[16];
   unsigned char *tile_device_out[16];
+  unsigned char tile_host_counter[16] = {0};
+  unsigned char *tile_device_counter = nullptr;
+
+  bool tile_init_done[16] = {false};
+  bool tile_done[16]      = {false};
 
   int tile_size_x = rtdata->fSize_px / 4 + 1;
   int tile_size_y = rtdata->fSize_py / 4 + 1;
@@ -90,6 +136,9 @@ void RenderTiledImage(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *out
 
   for (int i = 0; i < 4; ++i)
     checkCudaErrors(cudaStreamCreate(&streams[i]));
+
+  checkCudaErrors(cudaMalloc((void **)&tile_device_counter, 16*sizeof(int)));
+  checkCudaErrors(cudaMemcpy(tile_device_counter, tile_host_counter, 16*sizeof(int), cudaMemcpyHostToDevice));
 
   for (int i = 0; i < 16; ++i) {
     // allocate tile on host and device
@@ -102,20 +151,49 @@ void RenderTiledImage(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *out
   // wait for memory to reach GPU before launching kernels
   checkCudaErrors(cudaDeviceSynchronize());
 
-  for (int ix = 0; ix < 4; ++ix) {
-    for (int iy = 0; iy < 4; ++iy) {
-      int idx      = 4 * ix + iy;
-      int offset_x = ix * tile_size_x;
-      int offset_y = iy * tile_size_y;
+  int ndone = 0;
+  int rays_per_block = tile_size_x * tile_size_y;
+  while (ndone < 16) {
+    ndone = 0;
+    for (int ix = 0; ix < 4; ++ix) {
+      for (int iy = 0; iy < 4; ++iy) {
+        int idx      = 4 * ix + iy;
+        int offset_x = ix * tile_size_x;
+        int offset_y = iy * tile_size_y;
 
-      RenderTile<<<blocks, threads, 0, streams[iy]>>>(*rtdata, offset_x, offset_y, tile_size_x, tile_size_y,
-                                                      tile_device_in[idx], tile_device_out[idx]);
-      // copy back rendered tile to system memory
-      checkCudaErrors(cudaDeviceSynchronize());
-      checkCudaErrors(cudaMemcpyAsync(tile_host[idx], tile_device_out[idx], (size_t)4 * tile_size_x * tile_size_y,
-                                      cudaMemcpyDeviceToHost, streams[iy]));
-      checkCudaErrors(cudaFree(tile_device_in[idx]));
-      checkCudaErrors(cudaFree(tile_device_out[idx]));
+        // Syncronize the current stream so the atomic counter of done rays reaches the host
+        cudaStreamSynchronize(streams[iy]);
+
+        if (!tile_init_done[idx]) {
+          InitRaysOnTile<<<blocks, threads, 0, streams[iy]>>>(*rtdata, offset_x, offset_y, tile_size_x, tile_size_y,
+                                                              tile_device_in[idx]);
+          tile_init_done[idx] = true;
+        }
+
+        // Check if the tile rendering is complete
+        if (tile_host_counter[idx] == rays_per_block) {
+          ndone++;
+          if (!tile_done[idx]) {
+            tile_done[idx] = true;
+            // copy back rendered tile to system memory
+            checkCudaErrors(cudaMemcpyAsync(tile_host[idx], tile_device_out[idx], (size_t)4 * tile_size_x * tile_size_y,
+                                            cudaMemcpyDeviceToHost, streams[iy]));
+            checkCudaErrors(cudaFree(tile_device_in[idx]));
+            checkCudaErrors(cudaFree(tile_device_out[idx]));
+            std::cout << "=== tile " << idx << "  rendered\n";
+          }
+          continue;
+        }
+        // Pass memory for atomic counting of the number of rays done per tile
+        int *device_counter = (int*)(tile_device_counter + idx*sizeof(int));
+        PropagateOneStep<<<blocks, threads, 0, streams[iy]>>>(*rtdata, offset_x, offset_y, tile_size_x, tile_size_y,
+                                                        tile_device_in[idx], tile_device_out[idx], device_counter);
+
+        // Copy back asynchronouslythe host counter
+        checkCudaErrors(cudaMemcpyAsync(tile_host_counter, tile_device_counter, 16*sizeof(int), cudaMemcpyDeviceToHost, streams[iy]));
+      }
+      // we should not need to synchronize here
+      // checkCudaErrors(cudaDeviceSynchronize());
     }
   }
 
@@ -158,10 +236,11 @@ int RaytraceBenchmarkGPU(vecgeom::cuda::RaytracerData_t *rtdata, bool use_tiles,
   size_t raysize   = Ray_t::SizeOfInstance();
   printf(" State size is %lu, ray size is %lu\n", statesize, raysize);
 
-  printf("=== Allocating %.3f MB of ray data on the device\n", (float)rtdata->fNrays * raysize / 1048576);
-  // char *input_buffer_gpu = nullptr;
-  char *input_buffer = new char[rtdata->fNrays * raysize];
-  checkCudaErrors(cudaMalloc((void **)&input_buffer, rtdata->fNrays * raysize));
+  char *input_buffer = nullptr;
+  if (!use_tiles) {
+    printf("=== Allocating %.3f MB of ray data on the device\n", (float)rtdata->fNrays * raysize / 1048576);
+    checkCudaErrors(cudaMalloc((void **)&input_buffer, rtdata->fNrays * raysize)); 
+  }
 
   unsigned char *output_buffer = nullptr;
   checkCudaErrors(cudaMalloc((void **)&output_buffer, 4 * sizeof(unsigned char) * rtdata->fSize_px * rtdata->fSize_py));
