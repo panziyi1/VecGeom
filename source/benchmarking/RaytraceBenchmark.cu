@@ -171,7 +171,10 @@ void RenderTiledImage(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *out
         }
 
         // Check if the tile rendering is complete
-        if (tile_host_counter[idx] == rays_per_block) {
+	int *host_counter = (int*)(tile_host_counter + idx*sizeof(int));
+        std::cout << "--counter[" << idx << "] = " << *host_counter << "\n";
+
+        if (*host_counter == rays_per_block) {
           ndone++;
           if (!tile_done[idx]) {
             tile_done[idx] = true;
@@ -186,6 +189,7 @@ void RenderTiledImage(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *out
         }
         // Pass memory for atomic counting of the number of rays done per tile
         int *device_counter = (int*)(tile_device_counter + idx*sizeof(int));
+        std::cout << "-- PropagateOneStep[" << idx << "]\n";
         PropagateOneStep<<<blocks, threads, 0, streams[iy]>>>(*rtdata, offset_x, offset_y, tile_size_x, tile_size_y,
                                                         tile_device_in[idx], tile_device_out[idx], device_counter);
 
