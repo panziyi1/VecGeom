@@ -84,8 +84,13 @@ __global__ void PropagateOneStep(RaytracerData_t rtdata, int offset_x, int offse
   int pixel_index = 4 * (local_py * tile_size_x + local_px);
 
   Ray_t *ray          = (Ray_t *)(tile_in + ray_index * sizeof(Ray_t));
+
+// The ray may have been done by initialization or a previous step
+  if (ray->fDone) return;
+
   Color_t pixel_color = Raytracer::PropagateOneStep(rtdata, *ray);
 
+  // Score the pixel color and count the ray
   if (ray->fDone) {
     tile_out[pixel_index + 0] = pixel_color.fComp.red;
     tile_out[pixel_index + 1] = pixel_color.fComp.green;
@@ -96,7 +101,7 @@ __global__ void PropagateOneStep(RaytracerData_t rtdata, int offset_x, int offse
 }
 
 __global__ void InitRaysOnTile(RaytracerData_t rtdata, int offset_x, int offset_y, int tile_size_x, int tile_size_y,
-                               unsigned char *tile_in)
+                               unsigned char *tile_in, unsigned char *tile_out, int *counter)
 {
   int local_px = threadIdx.x + blockIdx.x * blockDim.x;
   int local_py = threadIdx.y + blockIdx.y * blockDim.y;
@@ -111,6 +116,15 @@ __global__ void InitRaysOnTile(RaytracerData_t rtdata, int offset_x, int offset_
 
   Ray_t *ray    = (Ray_t *)(tile_in + ray_index * sizeof(Ray_t));
   Raytracer::InitRay(rtdata, *ray, global_px, global_py);
+
+  // Score the pixel color as background and count the ray
+  if (ray->fDone) {
+    tile_out[pixel_index + 0] = 255;
+    tile_out[pixel_index + 1] = 255;
+    tile_out[pixel_index + 2] = 255;
+    tile_out[pixel_index + 3] = 255;
+    atomicAdd(counter, 1);
+  }
 }
 
 // subdivide image in 16 tiles and launch each tile on a separate CUDA stream
@@ -121,7 +135,7 @@ void RenderTiledImage(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *out
   unsigned char *tile_host[16];
   unsigned char *tile_device_in[16];
   unsigned char *tile_device_out[16];
-  unsigned char tile_host_counter[16] = {0};
+  int tile_host_counter[16] = {0};
   unsigned char *tile_device_counter = nullptr;
 
   bool tile_init_done[16] = {false};
@@ -160,21 +174,19 @@ void RenderTiledImage(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *out
         int idx      = 4 * ix + iy;
         int offset_x = ix * tile_size_x;
         int offset_y = iy * tile_size_y;
+	int *device_counter = (int*)(tile_device_counter + idx*sizeof(int));
 
-        // Syncronize the current stream so the atomic counter of done rays reaches the host
-        cudaStreamSynchronize(streams[iy]);
+        // Syncronize the current stream so the atomic counter of done rays reaches the host (is this needed)
+        //cudaStreamSynchronize(streams[iy]);
 
         if (!tile_init_done[idx]) {
           InitRaysOnTile<<<blocks, threads, 0, streams[iy]>>>(*rtdata, offset_x, offset_y, tile_size_x, tile_size_y,
-                                                              tile_device_in[idx]);
+                                                              tile_device_in[idx], tile_device_out[idx], device_counter);
           tile_init_done[idx] = true;
         }
 
         // Check if the tile rendering is complete
-	int *host_counter = (int*)(tile_host_counter + idx*sizeof(int));
-        std::cout << "--counter[" << idx << "] = " << *host_counter << "\n";
-
-        if (*host_counter == rays_per_block) {
+        if (tile_host_counter[idx] == rays_per_block) {
           ndone++;
           if (!tile_done[idx]) {
             tile_done[idx] = true;
@@ -188,16 +200,12 @@ void RenderTiledImage(vecgeom::cuda::RaytracerData_t *rtdata, unsigned char *out
           continue;
         }
         // Pass memory for atomic counting of the number of rays done per tile
-        int *device_counter = (int*)(tile_device_counter + idx*sizeof(int));
-        std::cout << "-- PropagateOneStep[" << idx << "]\n";
         PropagateOneStep<<<blocks, threads, 0, streams[iy]>>>(*rtdata, offset_x, offset_y, tile_size_x, tile_size_y,
                                                         tile_device_in[idx], tile_device_out[idx], device_counter);
 
-        // Copy back asynchronouslythe host counter
+        // Copy back asynchronously the host counter
         checkCudaErrors(cudaMemcpyAsync(tile_host_counter, tile_device_counter, 16*sizeof(int), cudaMemcpyDeviceToHost, streams[iy]));
       }
-      // we should not need to synchronize here
-      // checkCudaErrors(cudaDeviceSynchronize());
     }
   }
 
