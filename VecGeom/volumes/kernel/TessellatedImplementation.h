@@ -193,8 +193,11 @@ struct TessellatedImplementation {
       sign[0]  = invdir.x() < 0;
       sign[1]  = invdir.y() < 0;
       sign[2]  = invdir.z() < 0;
+      Vector3D<Real_v> extent[2];
+      extent[0] = tessellated.fMinExtent;
+      extent[1] = tessellated.fMaxExtent;
       distance = BoxImplementation::IntersectCachedKernel2<Real_v, Real_v>(
-          &tessellated.fMinExtent, point, invdir, sign.x(), sign.y(), sign.z(), -kTolerance, InfinityLength<Real_v>());
+          &extent[0], point, invdir, sign.x(), sign.y(), sign.z(), -kTolerance, InfinityLength<Real_v>());
       if (distance >= stepMax) return;
     }
 
@@ -213,7 +216,7 @@ struct TessellatedImplementation {
       // requested limit or than the current distance
       if (hitbox.second > vecCore::math::Min(stepMax, distance)) return true;
       // Compute distance to the cluster (in both ToIn or ToOut assumptions)
-      Real_v clusterToIn, clusterToOut;
+      double clusterToIn, clusterToOut;
       int icrtToIn, icrtToOut;
       tessellated.fClusters[hitbox.first]->DistanceToCluster(pointv, dirv, clusterToIn, clusterToOut, icrtToIn,
                                                              icrtToOut);

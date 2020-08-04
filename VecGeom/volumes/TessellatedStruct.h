@@ -397,10 +397,11 @@ public:
 
   /// Generate and store a random direction used for Contains and Inside navigation queries.
   /** @param[out] direction Random direction generated */
-  void RandomDirection(Vector3D<double> &direction)
+  template <typename PrecisionType>
+  void RandomDirection(Vector3D<PrecisionType> &direction)
   {
-    double phi    = RNG::Instance().uniform(0., 2. * kPi);
-    double theta  = std::acos(1. - 2. * RNG::Instance().uniform(0, 1));
+    PrecisionType phi    = RNG::Instance().uniform(0., 2. * kPi);
+    PrecisionType theta  = std::acos(1. - 2. * RNG::Instance().uniform(0, 1));
     direction.x() = std::sin(theta) * std::cos(phi);
     direction.y() = std::sin(theta) * std::sin(phi);
     direction.z() = std::cos(theta);

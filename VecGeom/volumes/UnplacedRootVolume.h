@@ -28,6 +28,14 @@ public:
   TGeoShape const *GetRootShape() const { return fRootShape; }
 
   bool Contains(Vector3D<Precision> const &p) const override { return fRootShape->Contains(&p[0]); }
+  bool Contains(Vector3D<float> const &p) const override
+  {
+    double point[3];
+    point[0] = p[0];
+    point[1] = p[1];
+    point[2] = p[2];
+    return fRootShape->Contains(point);
+  }
 
   EnumInside Inside(Vector3D<Precision> const &point) const override
   {

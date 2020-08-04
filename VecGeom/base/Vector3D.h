@@ -304,6 +304,18 @@ public:
     return *this;
   }
 
+  //  Assignment from other vector type
+  template <typename TypeOther>
+  VECGEOM_FORCE_INLINE
+  VECCORE_ATT_HOST_DEVICE
+  VecType& operator=(Vector3D<TypeOther> const &other)
+  {
+    vec[0] = other[0];
+    vec[1] = other[1];
+    vec[2] = other[2];
+    return *this;
+  }
+
 // Inplace binary operators
 
 #define VECTOR3D_TEMPLATE_INPLACE_BINARY_OP(OPERATOR)                                                       \

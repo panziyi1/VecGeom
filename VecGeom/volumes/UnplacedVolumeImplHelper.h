@@ -139,6 +139,15 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
+  virtual bool Contains(Vector3D<float> const &p) const override
+  {
+    bool output(false);
+    Implementation::Contains(((UnplacedVolume_t *)this)->UnplacedVolume_t::GetStruct(), p, output);
+    return output;
+  }
+
+  VECCORE_ATT_HOST_DEVICE
+  VECGEOM_FORCE_INLINE
   virtual EnumInside Inside(Vector3D<Precision> const &p) const override
   {
     Inside_t output(0);

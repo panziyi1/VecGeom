@@ -88,6 +88,13 @@ public:
   }
 
   VECCORE_ATT_HOST_DEVICE
+  bool Contains(Vector3D<float> const &point) const override
+  {
+    Vector3D<double> ptd(point);
+    return UnplacedAssembly::Contains(ptd);
+  }
+
+  VECCORE_ATT_HOST_DEVICE
   EnumInside Inside(Vector3D<Precision> const & /*point*/) const override
   {
 #ifndef VECCORE_CUDA

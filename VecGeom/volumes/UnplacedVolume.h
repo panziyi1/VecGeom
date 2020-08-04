@@ -60,6 +60,9 @@ public:
   VECCORE_ATT_HOST_DEVICE
   virtual bool Contains(Vector3D<Precision> const &pos) const = 0;
 
+  VECCORE_ATT_HOST_DEVICE
+  virtual bool Contains(Vector3D<float> const &pos) const = 0;
+
   /*!
    * Returns whether a space point pos is inside, on the surface or outside
    * the shape. The surface is defined by a thickness constant.
