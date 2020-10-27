@@ -30,6 +30,8 @@ endif()
 
 if(DEFINED ENV{CTEST_SITE})
   set(CTEST_SITE $ENV{CTEST_SITE})
+elseif(DEFINED ENV{container} AND DEFINED ENV{NODE_NAME})
+  set(CTEST_SITE "$ENV{NODE_NAME}-$ENV{container}")
 else()
   find_program(HOSTNAME_CMD NAMES hostname)
   exec_program(${HOSTNAME_CMD} ARGS OUTPUT_VARIABLE CTEST_SITE)
