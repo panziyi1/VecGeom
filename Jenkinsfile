@@ -8,7 +8,7 @@
 pipeline {
   parameters {
     string(name: 'EXTERNALS', defaultValue: 'devgeantv/latest', description: 'LCG software stack in CVMFS')
-    choice(name: 'MODE', choices: ['experimental', 'nightly'], description: 'CDash mode')
+    choice(name: 'MODE', choices: ['experimental', 'nightly', 'continuous'], description: 'CDash mode')
     string(name: 'ExtraCMakeOptions', defaultValue: '', description: 'CMake extra configuration options')
     string(name: 'VERSION', defaultValue: 'master', description: 'Branch to use for the build (master, experimental, ... )')
     choice(name: 'LABEL', choices: ['centos7', 'centos8', 'slc6', 'mac1015', 'cuda10', 'ubuntu18', 'ubuntu20'])
