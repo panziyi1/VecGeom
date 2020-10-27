@@ -39,7 +39,7 @@ pipeline {
     stage('InDocker') {
       when {
         beforeAgent true
-        expression { params.LABEL =~ 'centos|ubuntu' }
+        expression { params.LABEL =~ 'centos|ubuntu' && !(params.LABEL =~ 'physical')}
       }
       agent {
         docker {
@@ -70,7 +70,7 @@ pipeline {
     stage('InGPU') {
       when {
         beforeAgent true
-        expression { params.LABEL =~ 'cuda' }
+        expression { params.LABEL =~ 'cuda|physical' }
       }
       agent {
         label 'cuda10'
