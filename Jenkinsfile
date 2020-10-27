@@ -99,6 +99,6 @@ def buildAndTest() {
   sh label: 'build_and_test', script: """
     source /cvmfs/sft.cern.ch/lcg/views/${EXTERNALS}/x86_64-centos7-${COMPILER}-opt/setup.sh
     env | sort | sed 's/:/:?     /g' | tr '?' '\n'
-    ctest -V -S vecgeom/jenkins/vecgeom-ctest.cmake,$MODE
+    ctest -VV -S vecgeom/jenkins/vecgeom-ctest.cmake,$MODE
   """
 }
