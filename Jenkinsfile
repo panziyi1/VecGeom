@@ -33,7 +33,7 @@ pipeline {
     //------------------------------------------------------------------------------------------------------------------
     stage('Prepa'){
       steps {
-        currentBuild.displayName = "#${BUILD_NUMBER}" + ' ' + params.OPTION + '-' + params.BACKEND + '-' + params.LABEL + '-' + params.COMPILER + '-' + params.BUILDTYPE
+        init()
       }
     }
     stage('InDocker') {
@@ -84,6 +84,10 @@ pipeline {
       }
     }
   }
+}
+
+def init() {
+  currentBuild.displayName = "#${BUILD_NUMBER}" + ' ' + params.OPTION + '-' + params.BACKEND + '-' + params.LABEL + '-' + params.COMPILER + '-' + params.BUILDTYPE
 }
 
 def buildAndTest() {
