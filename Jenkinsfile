@@ -68,13 +68,13 @@ pipeline {
         }
       }
     }
-    stage('InGPU') {
+    stage('InBareMetal') {
       when {
         beforeAgent true
         expression { params.LABEL =~ 'cuda|physical' }
       }
       agent {
-        label 'cuda10'
+        label "$LABEL"
       }
       stages {
         stage('Build&Test') {
