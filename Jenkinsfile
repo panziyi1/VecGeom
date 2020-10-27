@@ -59,6 +59,11 @@ pipeline {
           steps {
             buildAndTest()
           }
+          post {
+            success {
+              deleteDir()
+            }
+          }
         }
       }
     }
@@ -75,12 +80,12 @@ pipeline {
           steps {
             buildAndTest()
           }
+          post {
+            success {
+              deleteDir()
+            }
+          }
         }
-      }
-    }
-    post {
-      success {
-        deleteDir()
       }
     }
   }
