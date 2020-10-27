@@ -10,13 +10,14 @@ pipeline {
     string(name: 'EXTERNALS', defaultValue: 'devgeantv/latest', description: 'LCG software stack in CVMFS')
     choice(name: 'MODE', choices: ['experimental', 'nightly', 'continuous'], description: 'CDash mode')
     string(name: 'ExtraCMakeOptions', defaultValue: '', description: 'CMake extra configuration options')
-    string(name: 'VERSION', defaultValue: 'master', description: 'Branch to use for the build (master, experimental, ... )')
     choice(name: 'LABEL', choices: ['centos7', 'centos8', 'slc6', 'mac1015', 'cuda10', 'ubuntu18', 'ubuntu20'])
     choice(name: 'COMPILER', choices: ['gcc7', 'gcc8', 'gcc9', 'gcc10', 'clang8', 'clang10', 'native'])
     choice(name: 'BUILDTYPE', choices: ['Release', 'Debug'])
     choice(name: 'OPTION', choices: ['default', 'SPEC', 'AVX', 'GDML'])
     choice(name: 'BACKEND', choices: ['scalar', 'vc'])
     string(name: 'DOCKER_LABEL', defaultValue: 'docker-host', description: 'Label for the the nodes able to launch docker images')
+    string(name: 'SourceBranch', defaultValue: '', description: 'Source branch in repository')
+    string(name: 'TargetBranch', defaultValue: '', description: 'Target branch in repository')
   }
 
   environment {
@@ -48,7 +49,7 @@ pipeline {
           args  """-v /cvmfs:/cvmfs 
                    -v /ccache:/ccache 
                    -v /ec:/ec
-                   -e SHELL
+                   -e SHELL -e gitlabMergedByUser -e gitlabMergeRequestIid
                    --net=host
                    --hostname ${LABEL}-docker
                 """
