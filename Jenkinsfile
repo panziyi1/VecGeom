@@ -16,8 +16,6 @@ pipeline {
     choice(name: 'OPTION', choices: ['default', 'SPEC', 'AVX', 'GDML'])
     choice(name: 'BACKEND', choices: ['scalar', 'vc'])
     string(name: 'DOCKER_LABEL', defaultValue: 'docker-host-noafs', description: 'Label for the the nodes able to launch docker images')
-    string(name: 'SourceBranch', defaultValue: '', description: 'Source branch in repository')
-    string(name: 'TargetBranch', defaultValue: '', description: 'Target branch in repository')
   }
 
   environment {
