@@ -1,6 +1,7 @@
 Overview
 ========
 
+
 What is VecGeom ?
 -----------------
 VecGeom is a library of that provides geometrical shape primitives, 
