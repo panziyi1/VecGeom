@@ -231,6 +231,7 @@ bool CudaManager::AllocateCollectionOnCoproc(const char *verbose_title, const Co
 
   // record a GPU memory location for each object in the collection to be copied
   for (auto i : data) {
+    fprintf(stderr, "Adding-1 cpu=%p with gpu=%p\n", ToCpuAddress(i), gpu_address.GetPtr());
     memory_map[ToCpuAddress(i)] = gpu_address;
     if (isforplacedvol) fGPUtoCPUmapForPlacedVolumes[gpu_address] = i;
     gpu_address += i->DeviceSizeOf();
@@ -307,6 +308,7 @@ bool CudaManager::AllocatePlacedVolumesOnCoproc()
   // getting the same order on the GPU/device automatically
   for (unsigned int i = 0; i < size; ++i) {
     VPlacedVolume const *ptr                  = &GeoManager::gCompactPlacedVolBuffer[i];
+    fprintf(stderr, "Adding-2 cpu=%p with gpu=%p\n", ToCpuAddress(ptr), gpu_address.GetPtr());
     memory_map[ToCpuAddress(ptr)]             = gpu_address;
     fGPUtoCPUmapForPlacedVolumes[gpu_address] = ptr;
     gpu_address += ptr->DeviceSizeOf();
@@ -331,6 +333,7 @@ void CudaManager::AllocateGeometry()
 
     for (std::set<LogicalVolume const *>::const_iterator i = logical_volumes_.begin(); i != logical_volumes_.end();
          ++i) {
+        fprintf(stderr, "Adding-3 cpu=%p with gpu=%p\n", ToCpuAddress(*i), gpu_array.GetPtr());
       memory_map[ToCpuAddress(*i)] = DevicePtr<char>(gpu_array);
 
       ++gpu_array;
@@ -364,6 +367,7 @@ void CudaManager::AllocateGeometry()
 
     for (std::set<Vector<Daughter> *>::const_iterator i = daughters_.begin(); i != daughters_.end(); ++i) {
 
+         fprintf(stderr, "Adding-4 cpu=%p with gpu=%p\n", ToCpuAddress(*i), daughter_gpu_array.GetPtr());
       memory_map[ToCpuAddress(*i)]                   = GpuAddress(daughter_gpu_array);
       gpu_memory_map[GpuAddress(daughter_gpu_array)] = GpuAddress(daughter_gpu_c_array);
 
@@ -433,6 +437,7 @@ typename CudaManager::GpuAddress CudaManager::Lookup(Type const *const key)
 {
   const CpuAddress cpu_address = ToCpuAddress(key);
   GpuAddress output            = memory_map[cpu_address];
+  fprintf(stderr, "lookup cpu=%p got gpu=%p\n", (void*)key, output.GetPtr());
   assert(output != nullptr);
   return output;
 }
