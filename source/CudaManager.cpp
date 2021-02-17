@@ -33,7 +33,7 @@ CudaManager::CudaManager() : world_gpu_(), fGPUtoCPUmapForPlacedVolumes()
 {
   synchronized  = true;
   world_        = NULL;
-  verbose_      = 0;
+  verbose_      = 3;
   total_volumes = 0;
 
   auto res = cudaDeviceSetLimit(cudaLimitStackSize, 8192);
@@ -114,6 +114,8 @@ vecgeom::DevicePtr<const vecgeom::cuda::VPlacedVolume> CudaManager::Synchronize(
   timer.Start();
   for (std::set<VPlacedVolume const *>::const_iterator i = placed_volumes_.begin(); i != placed_volumes_.end(); ++i) {
 
+    fprintf(stderr, "Copying to gpu for placed vol=%p logical=%p\n",
+            *i, (*i)->GetLogicalVolume() );
     (*i)->CopyToGpu(LookupLogical((*i)->GetLogicalVolume()), LookupTransformation((*i)->GetTransformation()),
                     LookupPlaced(*i));
 
@@ -308,7 +310,7 @@ bool CudaManager::AllocatePlacedVolumesOnCoproc()
   // getting the same order on the GPU/device automatically
   for (unsigned int i = 0; i < size; ++i) {
     VPlacedVolume const *ptr                  = &GeoManager::gCompactPlacedVolBuffer[i];
-    fprintf(stderr, "Adding-2 cpu=%p with gpu=%p\n", ToCpuAddress(ptr), gpu_address.GetPtr());
+    fprintf(stderr, "Adding-2 placed volume ptr=%p cpu=%p with gpu=%p and the place volume point to logical volume=%p\n", ptr, ToCpuAddress(ptr), gpu_address.GetPtr(), ptr->GetLogicalVolume());
     memory_map[ToCpuAddress(ptr)]             = gpu_address;
     fGPUtoCPUmapForPlacedVolumes[gpu_address] = ptr;
     gpu_address += ptr->DeviceSizeOf();
@@ -333,7 +335,7 @@ void CudaManager::AllocateGeometry()
 
     for (std::set<LogicalVolume const *>::const_iterator i = logical_volumes_.begin(); i != logical_volumes_.end();
          ++i) {
-        fprintf(stderr, "Adding-3 cpu=%p with gpu=%p\n", ToCpuAddress(*i), gpu_array.GetPtr());
+      fprintf(stderr, "Adding-3 logical volume iter=%p cpu=%p with gpu=%p\n", *i, ToCpuAddress(*i), gpu_array.GetPtr());
       memory_map[ToCpuAddress(*i)] = DevicePtr<char>(gpu_array);
 
       ++gpu_array;
