@@ -562,15 +562,6 @@ struct TorusImplementation2 {
     Inside_v inside     = Inside_v(EInside::kOutside);
     Real_v tubeDistance = kInfLength;
 
-#ifndef VECGEOM_NO_SPECIALIZATION
-    // call the tube functionality -- first of all we check whether we are inside
-    // bounding volume
-    TubeImplementation<TubeTypes::HollowTube>::Contains(torus.GetBoundingTube().GetStruct(), localPoint, inBounds);
-
-    // only need to do this check if all particles (in vector) are outside ( otherwise useless )
-    TubeImplementation<TubeTypes::HollowTube>::DistanceToIn(torus.GetBoundingTube().GetStruct(), localPoint,
-                                                            localDirection, stepMax, tubeDistance);
-#else
     // call the tube functionality -- first of all we check whether we are inside
     // bounding volume
     TubeImplementation<TubeTypes::UniversalTube>::Contains(torus.GetBoundingTube().GetStruct(), localPoint, inBounds);
@@ -584,7 +575,6 @@ struct TorusImplementation2 {
       tubeDistance = 0.;
     }
 
-#endif // VECGEOM_NO_SPECIALIZATION
     if (inBounds) {
       // Check points on the wrong side (inside torus)
       TorusImplementation2::InsideKernel<Real_v, Inside_v>(torus, point, inside);

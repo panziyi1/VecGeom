@@ -50,22 +50,7 @@ template <>
 UnplacedTrd *Maker<UnplacedTrd>::MakeInstance(const Precision x1, const Precision x2, const Precision y1,
                                               const Precision y2, const Precision z)
 {
-
-#ifndef VECGEOM_NO_SPECIALIZATION
-  // Trd becomes a box, hence returning a box from the factory
-  if ((x1 == x2) && (y1 == y2)) {
-    return new SUnplacedImplAs<SUnplacedTrd<TrdTypes::Trd2>, UnplacedBox>(x1, y1, z);
-  }
-
-  // Specialized Trd of type Trd1
-  if (y1 == y2) {
-    return new SUnplacedTrd<TrdTypes::Trd1>(x1, x2, y1, z);
-  } else {
-    return new SUnplacedTrd<TrdTypes::Trd2>(x1, x2, y1, y2, z);
-  }
-#else
   return new SUnplacedTrd<TrdTypes::UniversalTrd>(x1, x2, y1, y2, z);
-#endif
 }
 
 // special case Trd1 when dY1 == dY2
@@ -73,17 +58,7 @@ template <>
 UnplacedTrd *Maker<UnplacedTrd>::MakeInstance(const Precision x1, const Precision x2, const Precision y1,
                                               const Precision z)
 {
-
-#ifndef VECGEOM_NO_SPECIALIZATION
-  // Trd1 becomes a box, hence returning a box from the factory
-  if (x1 == x2) {
-    return new SUnplacedImplAs<SUnplacedTrd<TrdTypes::Trd1>, UnplacedBox>(x1, y1, z);
-  } else {
-    return new SUnplacedTrd<TrdTypes::Trd1>(x1, x2, y1, z);
-  }
-#else
   return new SUnplacedTrd<TrdTypes::UniversalTrd>(x1, x2, y1, z);
-#endif
 }
 
 void UnplacedTrd::Print() const

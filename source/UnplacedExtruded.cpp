@@ -84,35 +84,7 @@ template <>
 UnplacedExtruded *Maker<UnplacedExtruded>::MakeInstance(const size_t nvertices, XtruVertex2 const *vertices,
                                                         const int nsections, XtruSection const *sections)
 {
-
-#ifndef VECGEOM_NO_SPECIALIZATION
-  bool isSExtru = false;
-  for (int i = 0; i < (nsections - 1); i++) {
-    if (i == 0) {
-      isSExtru = ((sections[i].fOrigin - sections[i + 1].fOrigin).Perp2() < kTolerance &&
-                  vecCore::math::Abs(sections[i].fScale - sections[i + 1].fScale) < kTolerance);
-    } else {
-      isSExtru &= ((sections[i].fOrigin - sections[i + 1].fOrigin).Perp2() < kTolerance &&
-                   vecCore::math::Abs(sections[i].fScale - sections[i + 1].fScale) < kTolerance);
-    }
-    if (!isSExtru) break;
-  }
-  if (isSExtru) {
-    Precision *x = new Precision[nvertices];
-    Precision *y = new Precision[nvertices];
-    for (size_t i = 0; i < nvertices; ++i) {
-      x[i] = vertices[i].x;
-      y[i] = vertices[i].y;
-    }
-    Precision zmin = sections[0].fOrigin.z();
-    Precision zmax = sections[nsections - 1].fOrigin.z();
-    return new SUnplacedImplAs<UnplacedExtruded, UnplacedSExtruVolume>(nvertices, x, y, zmin, zmax);
-  } else {
-    return new UnplacedExtruded(nvertices, vertices, nsections, sections);
-  }
-#else
   return new UnplacedExtruded(nvertices, vertices, nsections, sections);
-#endif
 }
 
 void UnplacedExtruded::Print() const

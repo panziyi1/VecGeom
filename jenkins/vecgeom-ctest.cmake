@@ -83,14 +83,12 @@ set(config_options -DCMAKE_INSTALL_PREFIX=${CTEST_INSTALL_PREFIX}
                    -DBUILD_TESTING=ON
                    -DBENCHMARK=ON
                    -DROOT=ON
-                   -DCUDA_VOLUME_SPECIALIZATION=OFF
                    $ENV{ExtraCMakeOptions})
 
 ################################################################################
 # Options depending on compiler/label/etc.
 if("$ENV{LABEL}" MATCHES cuda)
   list(APPEND config_options -DCUDA=ON)
-  list(APPEND config_options -DCUDA_VOLUME_SPECIALIZATION=OFF)
   list(APPEND config_options -DCMAKE_CUDA_STANDARD=14)
 endif()
 
@@ -100,9 +98,7 @@ endif()
 
 list(APPEND config_options -DCMAKE_CXX_STANDARD=17)
 
-if("$ENV{OPTION}" STREQUAL "SPEC")
-  list(APPEND config_options -DNO_SPECIALIZATION=OFF)
-elseif("$ENV{OPTION}" STREQUAL "GDML")
+if("$ENV{OPTION}" STREQUAL "GDML")
   list(APPEND config_options -DGDML=ON)
 elseif("$ENV{OPTION}" STREQUAL "AVX")
   list(APPEND config_options -DVECGEOM_VECTOR=avx)

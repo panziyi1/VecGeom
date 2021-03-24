@@ -23,10 +23,6 @@
 #include "VecGeom/base/RNG.h"
 #include "VecGeom/base/Global.h"
 
-#ifndef VECGEOM_NO_SPECIALIZATION
-#include "VecGeom/volumes/UnplacedTube.h"
-#endif
-
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
@@ -34,33 +30,6 @@ template <>
 UnplacedHype *Maker<UnplacedHype>::MakeInstance(const Precision rMin, const Precision rMax, const Precision stIn,
                                                 const Precision stOut, const Precision dz)
 {
-#ifndef VECGEOM_NO_SPECIALIZATION
-#ifndef VECCORE_CUDA
-  if (rMin <= 0) {
-    // Solid Hype
-    if ((stIn <= 0.) && (stOut > 0.)) {
-      return new SUnplacedHype<HypeTypes::NonHollowHype>(0., rMax, 0., stOut, dz);
-    }
-
-    // Hype becomes solid Tube with outer radius equals rMax
-    if ((stIn <= 0.) && (stOut <= 0.)) {
-      return new SUnplacedImplAs<SUnplacedHype<HypeTypes::NonHollowHype>, SUnplacedTube<TubeTypes::NonHollowTube>>(
-          0., rMax, dz, 0., 2 * kPi);
-    }
-  } else if (rMin > 0) {
-
-    // Hype becomes hollow Tube with inner radius equals rMin and outer radius equals rMax
-    if ((stIn <= 0.) && (stOut <= 0.)) {
-      return new SUnplacedImplAs<SUnplacedHype<HypeTypes::HollowHype>, SUnplacedTube<TubeTypes::HollowTube>>(
-          rMin, rMax, dz, 0., 2 * kPi);
-    }
-    if ((stIn > 0.) || (stOut > 0.)) {
-      return new SUnplacedHype<HypeTypes::HollowHype>(rMin, rMax, stIn, stOut, dz);
-    }
-  }
-  return new SUnplacedHype<HypeTypes::UniversalHype>(rMin, rMax, stIn, stOut, dz);
-#endif
-#endif
   return new SUnplacedHype<HypeTypes::UniversalHype>(rMin, rMax, stIn, stOut, dz);
 }
 

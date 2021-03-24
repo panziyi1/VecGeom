@@ -132,25 +132,16 @@ if (SINGLE_PRECISION)
 endif()
 
 option(CUDA "Enable compilation for CUDA." OFF)
-cmake_dependent_option(CUDA_VOLUME_SPECIALIZATION "Use specialized volumes for CUDA." OFF "CUDA" OFF)
 cmake_dependent_option(CUDA_SEPARABLE_COMPILATION "Compile CUDA objects with separable compilation enabled." ON "CUDA" OFF)
 cmake_dependent_option(CUDA_USE_STATIC_CUDA_RUNTIME "Use the static version of the CUDA runtime library if available" OFF "CUDA" OFF)
 
 if(CUDA)
   set(VECGEOM_ENABLE_CUDA ON)
-  if(CUDA_VOLUME_SPECIALIZATION)
-    set(VECGEOM_CUDA_VOLUME_SPECIALIZATION ON)
-  endif()
 
   set(CUDA_ARCH 30 CACHE STRING "CUDA device architecture.")
   set(CUDA_ARCH "-arch=sm_${CUDA_ARCH}")
 
   set(VecCore_COMPONENTS ${VecCore_COMPONENTS} "CUDA")
-endif()
-
-option(NO_SPECIALIZATION "Disable specialization of volumes." ON)
-if(NO_SPECIALIZATION)
-  set(VECGEOM_NO_SPECIALIZATION ON)
 endif()
 
 option(PLANESHELL "Enable the use of PlaneShell class for the trapezoid." ON)
@@ -408,11 +399,6 @@ if(VECGEOM_ENABLE_CUDA)
     -Xcompiler -Wno-unused-function
     -Xcudafe "--diag_suppress=code_is_unreachable"
     -Xcudafe "--diag_suppress=initialization_not_reachable")
-
-  if(NOT NO_SPECIALIZATION)
-    set(VECGEOM_NVCC_COMPILATION_FLAGS ${VECGEOM_NVCC_COMPILATION_FLAGS}
-      -Xptxas --disable-optimizer-constants)
-  endif()
 
   set(VECGEOM_NVCC_CONFIGS
     DEBUG -g -G -O0

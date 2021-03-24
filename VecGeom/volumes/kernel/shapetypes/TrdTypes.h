@@ -13,13 +13,6 @@ namespace vecgeom {
 
 VECGEOM_DEVICE_DECLARE_NS_CONV(TrdTypes, struct, UniversalTrd, UniversalTrd);
 
-#ifndef VECGEOM_NO_SPECIALIZATION
-
-VECGEOM_DEVICE_DECLARE_NS_CONV(TrdTypes, struct, Trd1, UniversalTrd);
-VECGEOM_DEVICE_DECLARE_NS_CONV(TrdTypes, struct, Trd2, UniversalTrd);
-
-#endif // VECGEOM_NO_SPECIALIZATION
-
 inline namespace VECGEOM_IMPL_NAMESPACE {
 namespace TrdTypes {
 
@@ -32,15 +25,6 @@ namespace TrdTypes {
 // A Trd that includes all cases but does runtime checks
 DEFINE_TRD_TYPE(UniversalTrd);
 
-#ifndef VECGEOM_NO_SPECIALIZATION
-
-// A special case for which dy1 == dy2
-DEFINE_TRD_TYPE(Trd1);
-// A general case without runtime checks
-DEFINE_TRD_TYPE(Trd2);
-
-#endif // VECGEOM_NO_SPECIALIZATION
-
 #undef DEFINE_TRD_TYPE
 
 enum ETreatmentType { kYes = 0, kNo, kUnknown };
@@ -49,19 +33,6 @@ template <typename T>
 struct HasVaryingY {
   static const ETreatmentType value = kUnknown;
 };
-
-#ifndef VECGEOM_NO_SPECIALIZATION
-
-template <>
-struct HasVaryingY<Trd1> {
-  static const ETreatmentType value = kNo;
-};
-template <>
-struct HasVaryingY<Trd2> {
-  static const ETreatmentType value = kYes;
-};
-
-#endif // VECGEOM_NO_SPECIALIZATION
 
 template <typename T>
 VECGEOM_FORCE_INLINE

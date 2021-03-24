@@ -93,27 +93,7 @@ template <>
 UnplacedTube *Maker<UnplacedTube>::MakeInstance(const Precision &rmin, const Precision &rmax, const Precision &z,
                                                 const Precision &sphi, const Precision &dphi)
 {
-#ifndef VECGEOM_NO_SPECIALIZATION
-  if (rmin <= 0) {
-    if (dphi >= 2 * M_PI) return new SUnplacedTube<TubeTypes::NonHollowTube>(rmin, rmax, z, sphi, dphi);
-    if (dphi == M_PI) return new SUnplacedTube<TubeTypes::NonHollowTubeWithPiSector>(rmin, rmax, z, sphi, dphi);
-    if (dphi < M_PI)
-      return new SUnplacedTube<TubeTypes::NonHollowTubeWithSmallerThanPiSector>(rmin, rmax, z, sphi, dphi);
-    if (dphi > M_PI)
-      return new SUnplacedTube<TubeTypes::NonHollowTubeWithBiggerThanPiSector>(rmin, rmax, z, sphi, dphi);
-  } else if (rmin > 0) {
-    if (dphi >= 2 * M_PI) return new SUnplacedTube<TubeTypes::HollowTube>(rmin, rmax, z, sphi, dphi);
-    if (dphi == M_PI) return new SUnplacedTube<TubeTypes::HollowTubeWithPiSector>(rmin, rmax, z, sphi, dphi);
-    if (dphi < M_PI) return new SUnplacedTube<TubeTypes::HollowTubeWithSmallerThanPiSector>(rmin, rmax, z, sphi, dphi);
-    if (dphi > M_PI) return new SUnplacedTube<TubeTypes::HollowTubeWithBiggerThanPiSector>(rmin, rmax, z, sphi, dphi);
-  }
-  // just here to trigger symbol creation (because it might be used explicitly elsewhere)
   return new SUnplacedTube<TubeTypes::UniversalTube>(rmin, rmax, z, sphi, dphi);
-#else
-  // if nothing matches return the most general case
-  // in principle this should never happen
-  return new SUnplacedTube<TubeTypes::UniversalTube>(rmin, rmax, z, sphi, dphi);
-#endif
 }
 
 int UnplacedTube::ChooseSurface() const

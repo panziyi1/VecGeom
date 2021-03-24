@@ -436,13 +436,6 @@ struct Maker<UnplacedTrapezoid> {
   static UnplacedTrapezoid *MakeInstance(TrapCorners const pt);
 };
 
-// Helper function to be used by all the Factories of Trapezoid
-#ifndef VECGEOM_NO_SPECIALIZATION
-UnplacedTrapezoid *GetSpecialized(const Precision dz, const Precision theta, const Precision phi, const Precision dy1,
-                                  const Precision dx1, const Precision dx2, const Precision Alpha1, const Precision dy2,
-                                  const Precision dx3, const Precision dx4, const Precision Alpha2);
-#endif
-
 using GenericUnplacedTrapezoid = UnplacedTrapezoid;
 
 } // namespace VECGEOM_IMPL_NAMESPACE

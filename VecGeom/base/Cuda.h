@@ -79,52 +79,6 @@
      template <ArgType1 Arg1,ArgType2 Arg2> struct kCudaType<cxx::X<Arg1,Arg2> >        \
      { using type_t = cuda::X<Arg1, CudaType_t<Arg2> >; }
 
-#ifdef VECGEOM_CUDA_VOLUME_SPECIALIZATION
-
-  #define VECGEOM_DEVICE_DECLARE_NS_CONV(NS,classOrStruct,X,Def)               \
-     namespace cuda { namespace NS { classOrStruct X; } }                      \
-     inline namespace cxx { namespace NS { classOrStruct X; } }                \
-     template <> struct kCudaType<cxx::NS::X> { using type_t = cuda::NS::X; }
-
-  #define VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE_1v(classOrStruct,X,ArgType1,Def1) \
-     namespace cuda { template <ArgType1 Arg1> classOrStruct X; }                \
-     inline namespace cxx  { template <ArgType1 Arg1> classOrStruct X; }         \
-     template <ArgType1 Arg1> struct kCudaType<cxx::X<Arg1> >                    \
-     { using type_t = cuda::X<Arg>; }
-  #define VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE_1specv_1t(classOrStruct,X,ArgType1,ArgType2) \
-     namespace cuda { template <ArgType1 Arg1,ArgType2 Arg2> classOrStruct X; }             \
-     inline namespace cxx  { template <ArgType1 Arg1,ArgType2 Arg2> classOrStruct X; }      \
-     template <ArgType1 Arg1,ArgType2 Arg2> struct kCudaType<cxx::X<Arg1,Arg2> >            \
-     { using type_t = cuda::X<Arg1, CudaType_t<Arg2> >; }
-  #define VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE_2v(classOrStruct,X,ArgType1,Def1,ArgType2,Def2) \
-     namespace cuda { template <ArgType1 Arg1,ArgType2 Arg2> classOrStruct X; }                \
-     inline namespace cxx  { template <ArgType1 Arg1,ArgType2 Arg2> classOrStruct X; }         \
-     template <ArgType1 Arg1,ArgType2 Arg2> struct kCudaType<cxx::X<Arg1,Arg2> >               \
-     { using type_t = cuda::X<Arg1,Arg2 >; }
-  #define VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE_2v_1t(classOrStruct,X,ArgType1,Def1,ArgType2,Def2,ArgType3) \
-     namespace cuda { template <ArgType1 Arg1,ArgType2 Arg2,ArgType3 Arg3> classOrStruct X; }              \
-     inline namespace cxx  { template <ArgType1 Arg1,ArgType2 Arg2,ArgType3 Arg3> classOrStruct X; }       \
-     template <ArgType1 Arg1,ArgType2 Arg2,ArgType3 Arg3> struct kCudaType<cxx::X<Arg1,Arg2,Arg3> >        \
-     { using type_t = cuda::X<Arg1, Arg2, CudaType_t<Arg3> >; }
-  #define VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE_1t_2v(classOrStruct,X,ArgType1,ArgType2,Def2,ArgType3,Def3) \
-     namespace cuda { template <ArgType1 Arg1,ArgType2 Arg2,ArgType3 Arg3> classOrStruct X; }              \
-     inline namespace cxx  { template <ArgType1 Arg1,ArgType2 Arg2,ArgType3 Arg3> classOrStruct X; }       \
-     template <ArgType1 Arg1,ArgType2 Arg2,ArgType3 Arg3> struct kCudaType<cxx::X<Arg1,Arg2,Arg3> >        \
-     { using type_t = cuda::X<CudaType_t<Arg1>, Arg2, Arg3 >; }
-  #define VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE_3v(classOrStruct,X,ArgType1,Def1,ArgType2,Def2,ArgType3,Def3) \
-     namespace cuda { template <ArgType1 Arg1,ArgType2 Arg2,ArgType3 Arg3> classOrStruct X; }                \
-     inline namespace cxx  { template <ArgType1 Arg1,ArgType2 Arg2,ArgType3 Arg3> classOrStruct X; }         \
-     template <ArgType1 Arg1,ArgType2 Arg2,ArgType3 Arg3> struct kCudaType<cxx::X<Arg1,Arg2,Arg3> >          \
-     { using type_t = cuda::X<Arg1,Arg2,Arg3 >; }
-
-  #define VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE_4v(classOrStruct,X,ArgType1,Def1,ArgType2,Def2,ArgType3,Def3,ArgType4,Def4) \
-    namespace cuda { template <ArgType1 Arg1,ArgType2 Arg2,ArgType3 Arg3,ArgType4 Arg4> classOrStruct X; }                 \
-    inline namespace cxx  { template <ArgType1 Arg1,ArgType2 Arg2,ArgType3 Arg3,ArgType4 Arg4> classOrStruct X; }          \
-    template <ArgType1 Arg1,ArgType2 Arg2,ArgType3 Arg3,ArgType4 Arg4> struct kCudaType<cxx::X<Arg1,Arg2,Arg3,Arg4> >      \
-    { using type_t = cuda::X<Arg1,Arg2,Arg3,Arg4 >; }
-
-#else // VECGEOM_CUDA_VOLUME_SPECIALIZATION
-
   #define VECGEOM_DEVICE_DECLARE_NS_CONV(NS,classOrStruct,X,Def)                 \
      namespace cuda { namespace NS { classOrStruct Def; } }                      \
      inline namespace cxx { namespace NS { classOrStruct X; } }                  \
@@ -165,8 +119,6 @@
      inline namespace cxx  { template <ArgType1 Arg1,ArgType2 Arg2,ArgType3 Arg3,ArgType4 Arg4> classOrStruct X; }         \
      template <ArgType1 Arg1,ArgType2 Arg2,ArgType3 Arg3,ArgType4 Arg4> struct kCudaType<cxx::X<Arg1,Arg2,Arg3,Arg4> >     \
      { using type_t = cuda::X<Def1,Def2,Def3,Def4 >; }
-
-#endif // VECGEOM_CUDA_VOLUME_SPECIALIZATION
 
 /* Instead of multiple macro, when we have auto expansion of Template pack we could use:
 template <typename... Arguments>

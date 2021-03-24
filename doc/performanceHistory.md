@@ -41,7 +41,7 @@ For the impatient, here is a basic list of suggested instructions:
     cmake  -DCMAKE_BUILD_TYPE=Release \
     -DBACKEND=Vc -DVc=ON -DVECGEOM_VECTOR=avx \
     -DROOT=ON -DGEANT4=ON -DBENCHMARK=ON \
-    -DBUILD_TESTING=ON -DVALIDATION=OFF -DNO_SPECIALIZATION=ON
+    -DBUILD_TESTING=ON -DVALIDATION=OFF
 
   make -j8 [myShapeBenchmark]
 

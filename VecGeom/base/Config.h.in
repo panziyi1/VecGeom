@@ -15,19 +15,10 @@
 // CUDA Settings
 // When CUDA is ON
 #cmakedefine VECGEOM_ENABLE_CUDA
-// When CUDA_VOLUME_SPECIALIZATION) is ON (NB: the _NO_ version must be defined otherwise)
-#cmakedefine VECGEOM_CUDA_VOLUME_SPECIALIZATION
-#ifndef VECGEOM_CUDA_VOLUME_SPECIALIZATION
-#define VECGEOM_CUDA_NO_VOLUME_SPECIALIZATION
-#endif
 
 // When QUADRILATERAL_ACCELERATION is ON (Maybe a VC dependence as well?)
 // Also, *seems* to only affect template functions in headers, so maybe choice is deferred?
 #cmakedefine VECGEOM_QUADRILATERALS_VC
-
-// When NO_SPECIALIZATION is ON
-// Pretty clear this affects API and ABI
-#cmakedefine VECGEOM_NO_SPECIALIZATION
 
 // Both of the following are API and ABI
 // Nb: for volume conversion part, *might* be possible to isolate in separate library?

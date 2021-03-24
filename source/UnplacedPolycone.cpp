@@ -43,69 +43,7 @@ UnplacedPolycone *Maker<UnplacedPolycone>::MakeInstance(Precision phistart, Prec
                                                         Precision const *z, Precision const *rmin,
                                                         Precision const *rmax)
 {
-/*
- * NOTE : Since Polycone is internally using Cone, So for specializaton
- *        we are using ConeTypes as PolyconeTypes
- */
-#ifndef VECGEOM_NO_SPECIALIZATION
-  if (Nz == 2) {
-    Precision dz = std::fabs(z[1] - z[0]) / 2.;
-    std::cerr << "*****************************************************************************" << std::endl
-              << "****** WARNING :: Trying to create Polycone with only one section... ********" << std::endl
-              << "***************** This would Result in reduced performance ******************" << std::endl
-              << "@@@@@@@@@@@@@ Suggestion : Create CONE instead of Polycone @@@@@@@@@@@@@@@@@@" << std::endl
-              << "*****************************************************************************" << std::endl;
-    return new SUnplacedImplAs<SUnplacedPolycone<ConeTypes::UniversalCone>, SUnplacedCone<ConeTypes::UniversalCone>>(
-        rmin[0], rmax[0], rmin[1], rmax[1], dz, phistart, deltaphi);
-  }
-
-  /* Considering following cases for specialization of Polycon  */
-
-  // 1) When the polycone is Completely NonHollow Polycone
-  bool isCompletelyNonHollow = false;
-  for (int i = 0; i < Nz; i++) {
-    if (i == 0) {
-      isCompletelyNonHollow = rmin[i] <= 0.;
-    } else {
-      isCompletelyNonHollow &= rmin[i] <= 0.;
-    }
-  }
-  if (isCompletelyNonHollow) {
-    if (deltaphi >= 2 * M_PI) {
-      return new SUnplacedPolycone<ConeTypes::NonHollowCone>(phistart, deltaphi, Nz, z, rmin, rmax);
-    }
-    if (deltaphi == M_PI) {
-      return new SUnplacedPolycone<ConeTypes::NonHollowConeWithPiSector>(phistart, deltaphi, Nz, z, rmin, rmax);
-    }
-  }
-
-  // 2) When the polycone is Completely Hollow Polycone
-  bool isCompletelyHollow = false;
-  for (int i = 0; i < Nz; i++) {
-    if (i == 0) {
-      isCompletelyHollow = rmin[i] > 0.;
-    } else {
-      isCompletelyHollow &= rmin[i] > 0.;
-    }
-  }
-  if (isCompletelyHollow) {
-    if (deltaphi >= 2 * M_PI) {
-      return new SUnplacedPolycone<ConeTypes::HollowCone>(phistart, deltaphi, Nz, z, rmin, rmax);
-    }
-    if (deltaphi == M_PI) {
-      return new SUnplacedPolycone<ConeTypes::HollowConeWithPiSector>(phistart, deltaphi, Nz, z, rmin, rmax);
-    }
-  }
-
-  /*
-   * In case the polycone is the combination of Hollow and NonHollow Sections, then
-   * we will pass it on to most general case ie. Universal.
-   */
   return new SUnplacedPolycone<ConeTypes::UniversalCone>(phistart, deltaphi, Nz, z, rmin, rmax);
-
-#else
-  return new SUnplacedPolycone<ConeTypes::UniversalCone>(phistart, deltaphi, Nz, z, rmin, rmax);
-#endif
 }
 
 template <>

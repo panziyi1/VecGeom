@@ -443,25 +443,6 @@ bool TestTrd()
   assert(trdType2->dy2() == 35);
   assert(trdType2->dz() == 40);
 
-#ifndef VECGEOM_NO_SPECIALIZATION
-  using trd1Box = SUnplacedImplAs<SUnplacedTrd<TrdTypes::Trd1>, UnplacedBox>;
-  // Checking type of trdBoxTrd1, it should return true with pointer of trd1Box
-  assert(dynamic_cast<trd1Box *>(trdBoxTrd1));
-  // Checking type of other specialized Trd's with type of trdBoxTrd1, all should return false
-  assert(!dynamic_cast<trd1Box *>(trdBoxTrd2));
-  assert(!dynamic_cast<trd1Box *>(trdType1));
-  assert(!dynamic_cast<trd1Box *>(trdType2));
-
-  // Similar test for trdBoxTrd2
-  using trd2Box = SUnplacedImplAs<SUnplacedTrd<TrdTypes::Trd2>, UnplacedBox>;
-  // Checking type of trdBoxTrd2, it should return true with pointer of trd2Box
-  assert(dynamic_cast<trd2Box *>(trdBoxTrd2));
-  // Checking type of other specialized Trd's with type of trdBoxTrd2, all should return false
-  assert(!dynamic_cast<trd2Box *>(trdBoxTrd1));
-  assert(!dynamic_cast<trd2Box *>(trdType1));
-  assert(!dynamic_cast<trd2Box *>(trdType2));
-#endif
-
   return true;
 }
 

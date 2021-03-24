@@ -55,75 +55,14 @@ UnplacedTrapezoid *Maker<UnplacedTrapezoid>::MakeInstance(const Precision dz, co
                                                           const Precision dy2, const Precision dx3, const Precision dx4,
                                                           const Precision Alpha2)
 {
-
-#ifndef VECGEOM_NO_SPECIALIZATION
-  return GetSpecialized(dz, theta, phi, dy1, dx1, dx2, Alpha1, dy2, dx3, dx4, Alpha2);
-#else
   return new UnplacedTrapezoid(dz, theta, phi, dy1, dx1, dx2, Alpha1, dy2, dx3, dx4, Alpha2);
-#endif
 }
 
 template <>
 UnplacedTrapezoid *Maker<UnplacedTrapezoid>::MakeInstance(TrapCorners const pt)
 {
-#ifndef VECGEOM_NO_SPECIALIZATION
-
-  Precision dz      = pt[7].z();
-  Precision DzRecip = 1.0 / dz;
-
-  Precision dy1       = 0.50 * (pt[2].y() - pt[0].y());
-  Precision dx1       = 0.50 * (pt[1].x() - pt[0].x());
-  Precision dx2       = 0.50 * (pt[3].x() - pt[2].x());
-  Precision tanAlpha1 = 0.25 * (pt[2].x() + pt[3].x() - pt[1].x() - pt[0].x()) / dy1;
-  Precision Alpha1    = atan(tanAlpha1);
-
-  Precision dy2       = 0.50 * (pt[6].y() - pt[4].y());
-  Precision dx3       = 0.50 * (pt[5].x() - pt[4].x());
-  Precision dx4       = 0.50 * (pt[7].x() - pt[6].x());
-  Precision tanAlpha2 = 0.25 * (pt[6].x() + pt[7].x() - pt[5].x() - pt[4].x()) / dy2;
-  Precision Alpha2    = atan(tanAlpha2);
-
-  Precision TthetaCphi = (pt[4].x() + dy2 * tanAlpha2 + dx3) * DzRecip;
-  Precision TthetaSphi = (pt[4].y() + dy2) * DzRecip;
-
-  Precision theta = atan(sqrt(TthetaSphi * TthetaSphi + TthetaCphi * TthetaCphi));
-  Precision phi   = atan2(TthetaSphi, TthetaCphi);
-
-  return GetSpecialized(dz, theta, phi, dy1, dx1, dx2, Alpha1, dy2, dx3, dx4, Alpha2);
-
-#else
   return new UnplacedTrapezoid(pt);
-#endif
 }
-
-#ifndef VECGEOM_NO_SPECIALIZATION
-UnplacedTrapezoid *GetSpecialized(const Precision dz, const Precision theta, const Precision phi, const Precision dy1,
-                                  const Precision dx1, const Precision dx2, const Precision Alpha1, const Precision dy2,
-                                  const Precision dx3, const Precision dx4, const Precision Alpha2)
-{
-
-  // Box Like Trapezoid
-  if (theta == 0. && phi == 0. && Alpha1 == 0. && Alpha2 == 0 && dx1 == dx2 && dx2 == dx3 && dx3 == dx4 && dy1 == dy2) {
-    return new SUnplacedImplAs<UnplacedTrapezoid, UnplacedBox>(dx1, dy1, dz);
-  }
-  // Trd1 Like Trapezoid
-  if (theta == 0. && phi == 0. && Alpha1 == 0. && Alpha2 == 0 && dx1 == dx2 && dx3 == dx4 && dx2 != dx3 && dy1 == dy2) {
-    return new SUnplacedImplAs<UnplacedTrapezoid, SUnplacedTrd<TrdTypes::Trd1>>(dx1, dx3, dy1, dz);
-  }
-  // Trd2 Like Trapezoid
-  if (theta == 0. && phi == 0. && Alpha1 == 0. && Alpha2 == 0 && dx1 == dx2 && dx3 == dx4 && dx2 != dx3 && dy1 != dy2) {
-    return new SUnplacedImplAs<UnplacedTrapezoid, SUnplacedTrd<TrdTypes::Trd2>>(dx1, dx3, dy1, dy2, dz);
-  }
-
-  // Parallelepiped Like Trapezoid
-  if (Alpha1 == Alpha2 && dx1 == dx2 && dx2 == dx3 && dx3 == dx4 && dy1 == dy2) {
-    return new SUnplacedImplAs<UnplacedTrapezoid, UnplacedParallelepiped>(dx1, dy1, dz, Alpha1, theta, phi);
-  }
-
-  // if none of the above then return the full Trapezoid.
-  return new UnplacedTrapezoid(dz, theta, phi, dy1, dx1, dx2, Alpha1, dy2, dx3, dx4, Alpha2);
-}
-#endif
 
 VECCORE_ATT_HOST_DEVICE
 UnplacedTrapezoid::UnplacedTrapezoid(TrapCorners const corners) : fTrap()

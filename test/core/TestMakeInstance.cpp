@@ -37,12 +37,7 @@ int main()
     auto utube = GeoManager::MakeInstance<UnplacedTube>(0., 1., 1., 0., 2. * M_PI);
     assert(utube != nullptr);
     assert(dynamic_cast<UnplacedTube *>(utube));
-#ifndef VECGEOM_NO_SPECIALIZATION
-    assert(dynamic_cast<SUnplacedTube<TubeTypes::NonHollowTube> *>(utube));
-    assert(dynamic_cast<SUnplacedTube<TubeTypes::HollowTube> *>(utube) == nullptr);
-#else
     assert(dynamic_cast<SUnplacedTube<TubeTypes::UniversalTube> *>(utube));
-#endif
 
     // let me try to make a specialized placed hollow tube
     Transformation3D placement(0, 0, 0);
@@ -57,12 +52,7 @@ int main()
     auto utube = GeoManager::MakeInstance<UnplacedTube>(0.5, 1., 1., 0., 2. * M_PI);
     assert(utube != nullptr);
     assert(dynamic_cast<UnplacedTube *>(utube));
-#ifndef VECGEOM_NO_SPECIALIZATION
-    assert(dynamic_cast<SUnplacedTube<TubeTypes::HollowTube> *>(utube));
-    assert(dynamic_cast<SUnplacedTube<TubeTypes::NonHollowTube> *>(utube) == nullptr);
-#else
     assert(dynamic_cast<SUnplacedTube<TubeTypes::UniversalTube> *>(utube));
-#endif
   }
 
   // CHECK THE CONE CASES
@@ -71,12 +61,7 @@ int main()
     auto ucone = GeoManager::MakeInstance<UnplacedCone>(0., 1., 0., 1., 2., 0., kTwoPi);
     assert(ucone != nullptr);
     assert(dynamic_cast<UnplacedCone *>(ucone));
-#ifndef VECGEOM_NO_SPECIALIZATION
-    assert(dynamic_cast<SUnplacedCone<ConeTypes::NonHollowCone> *>(ucone));
-    assert(dynamic_cast<SUnplacedCone<ConeTypes::HollowCone> *>(ucone) == nullptr);
-#else
     assert(dynamic_cast<SUnplacedCone<ConeTypes::UniversalCone> *>(ucone));
-#endif
 
     // let me try to make a specialized placed hollow cone
     Transformation3D placement(0, 0, 0);
@@ -91,12 +76,7 @@ int main()
     auto ucone = GeoManager::MakeInstance<UnplacedCone>(0.5, 1., 0.4, 1., 1.8, 0., kTwoPi);
     assert(ucone != nullptr);
     assert(dynamic_cast<UnplacedCone *>(ucone));
-#ifndef VECGEOM_NO_SPECIALIZATION
-    assert(dynamic_cast<SUnplacedCone<ConeTypes::HollowCone> *>(ucone));
-    assert(dynamic_cast<SUnplacedCone<ConeTypes::NonHollowCone> *>(ucone) == nullptr);
-#else
     assert(dynamic_cast<SUnplacedCone<ConeTypes::UniversalCone> *>(ucone));
-#endif
   }
 
   {
@@ -104,13 +84,7 @@ int main()
     auto ucone = GeoManager::MakeInstance<UnplacedCone>(0.5, 1., 0.4, 1., 1.8, 0., kPi / 3.);
     assert(ucone != nullptr);
     assert(dynamic_cast<UnplacedCone *>(ucone));
-#ifndef VECGEOM_NO_SPECIALIZATION
-    assert(dynamic_cast<SUnplacedCone<ConeTypes::NonHollowCone> *>(ucone) == nullptr);
-    assert(dynamic_cast<SUnplacedCone<ConeTypes::HollowCone> *>(ucone) == nullptr);
-    assert(dynamic_cast<SUnplacedCone<ConeTypes::HollowConeWithSmallerThanPiSector> *>(ucone));
-#else
     assert(dynamic_cast<SUnplacedCone<ConeTypes::UniversalCone> *>(ucone));
-#endif
   }
 
   std::cout << "test passed \n";

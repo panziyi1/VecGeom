@@ -13,11 +13,6 @@ namespace vecgeom {
 
 VECGEOM_DEVICE_DECLARE_NS_CONV(HypeTypes, struct, UniversalHype, UniversalHype);
 
-#ifndef VECGEOM_NO_SPECIALIZATION
-VECGEOM_DEVICE_DECLARE_NS_CONV(HypeTypes, struct, NonHollowHype, UniversalHype);
-VECGEOM_DEVICE_DECLARE_NS_CONV(HypeTypes, struct, HollowHype, UniversalHype);
-#endif
-
 inline namespace VECGEOM_IMPL_NAMESPACE {
 namespace HypeTypes {
 

@@ -53,7 +53,6 @@ The table below shows some options you may want to customise:
 |CUDA|OFF|Enable compilation for CUDA|
 |CUDA_ARCH|30|Default CUDA device architecture|
 |CUDA_USE_STATIC_CUDA_RUNTIME|OFF|Use the static version of the CUDA runtime library if available|
-|CUDA_VOLUME_SPECIALIZATION|OFF|Use specialized volumes for CUDA|
 |DATA_DOWNLOAD|OFF|Enable downloading of data for tests|
 |DISTANCE_DEBUG|OFF|Enable comparison of calculated distances againt ROOT/Geant4 behind the scenes|
 |EMBREE|OFF|Enable Intel Embree|
@@ -62,7 +61,6 @@ The table below shows some options you may want to customise:
 |GDMLDEBUG|OFF|Enable additional debug information in GDML module|
 |GEANT4|OFF|Build with support for Geant4 (https://geant4.web.cern.ch)|
 |INPLACE_TRANSFORMATIONS|ON|Put transformation as members rather than pointers into PlacedVolume objects|
-|NO_SPECIALIZATION|ON|Disable specialization of volumes|
 |PLANESHELL|ON|Enable the use of PlaneShell class for the trapezoid|
 |QUADRILATERAL_ACCELERATION|ON|Enable SIMD vectorization when looping over quadrilaterals|
 |ROOT|OFF|Build with support for ROOT (https://root.cern)|

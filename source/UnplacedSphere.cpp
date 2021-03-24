@@ -286,11 +286,6 @@ template <>
 UnplacedSphere *Maker<UnplacedSphere>::MakeInstance(Precision pRmin, Precision pRmax, Precision pSPhi, Precision pDPhi,
                                                     Precision pSTheta, Precision pDTheta)
 {
-#if !defined(VECCORE_CUDA) && !defined(VECGEOM_NO_SPECIALIZATION)
-  if (pRmin == 0. && pDPhi == kTwoPi && pDTheta == kPi) {
-    return new SUnplacedImplAs<UnplacedSphere, UnplacedOrb>(pRmax);
-  }
-#endif
   return new UnplacedSphere(pRmin, pRmax, pSPhi, pDPhi, pSTheta, pDTheta);
 }
 

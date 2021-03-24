@@ -46,10 +46,5 @@ G4VSolid const *PlacedHype::ConvertToGeant4() const
 #ifdef VECCORE_CUDA
 VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_3(SpecializedHype, HypeTypes::UniversalHype)
 
-#ifndef VECGEOM_NO_SPECIALIZATION
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_3(SpecializedHype, HypeTypes::NonHollowHype)
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_3(SpecializedHype, HypeTypes::HollowHype)
-#endif
-
 #endif // VECCORE_CUDA
 } // End namespace vecgeom

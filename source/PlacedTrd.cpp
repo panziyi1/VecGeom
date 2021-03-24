@@ -39,11 +39,6 @@ G4VSolid const *PlacedTrd::ConvertToGeant4() const
 
 VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_3(SpecializedTrd, TrdTypes::UniversalTrd)
 
-#ifndef VECGEOM_NO_SPECIALIZATION
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_3(SpecializedTrd, TrdTypes::Trd1)
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_3(SpecializedTrd, TrdTypes::Trd2)
-#endif
-
 #endif
 
 } // namespace vecgeom

@@ -12,20 +12,6 @@ namespace vecgeom {
 
 VECGEOM_DEVICE_DECLARE_NS_CONV(TubeTypes, struct, UniversalTube, UniversalTube);
 
-#ifndef VECGEOM_NO_SPECIALIZATION
-
-VECGEOM_DEVICE_DECLARE_NS_CONV(TubeTypes, struct, NonHollowTube, UniversalTube);
-VECGEOM_DEVICE_DECLARE_NS_CONV(TubeTypes, struct, NonHollowTubeWithSmallerThanPiSector, UniversalTube);
-VECGEOM_DEVICE_DECLARE_NS_CONV(TubeTypes, struct, NonHollowTubeWithBiggerThanPiSector, UniversalTube);
-VECGEOM_DEVICE_DECLARE_NS_CONV(TubeTypes, struct, NonHollowTubeWithPiSector, UniversalTube);
-
-VECGEOM_DEVICE_DECLARE_NS_CONV(TubeTypes, struct, HollowTube, UniversalTube);
-VECGEOM_DEVICE_DECLARE_NS_CONV(TubeTypes, struct, HollowTubeWithSmallerThanPiSector, UniversalTube);
-VECGEOM_DEVICE_DECLARE_NS_CONV(TubeTypes, struct, HollowTubeWithBiggerThanPiSector, UniversalTube);
-VECGEOM_DEVICE_DECLARE_NS_CONV(TubeTypes, struct, HollowTubeWithPiSector, UniversalTube);
-
-#endif // VECGEOM_NO_SPECIALIZATION
-
 inline namespace VECGEOM_IMPL_NAMESPACE {
 namespace TubeTypes {
 
@@ -37,8 +23,6 @@ namespace TubeTypes {
 
 // A tube that encompasses all cases - not specialized and will do extra checks at runtime
 DEFINE_TUBE_TYPE(UniversalTube);
-
-//#ifndef VECGEOM_NO_SPECIALIZATION
 
 // A tube not having rmin or phi sector
 DEFINE_TUBE_TYPE(NonHollowTube);
@@ -58,8 +42,6 @@ DEFINE_TUBE_TYPE(HollowTubeWithBiggerThanPiSector);
 // A tube with rmin and a phi sector equal to pi
 DEFINE_TUBE_TYPE(HollowTubeWithPiSector);
 
-//#endif // VECGEOM_NO_SPECIALIZATION
-
 #undef DEFINE_TUBE_TYPE
 
 // Mapping of tube types to certain characteristics
@@ -70,19 +52,6 @@ template <typename T>
 struct NeedsPhiTreatment {
   static const ETreatmentType value = kYes;
 };
-
-#ifndef VECGEOM_NO_SPECIALIZATION
-
-template <>
-struct NeedsPhiTreatment<NonHollowTube> {
-  static const ETreatmentType value = kNo;
-};
-template <>
-struct NeedsPhiTreatment<HollowTube> {
-  static const ETreatmentType value = kNo;
-};
-
-#endif // VECGEOM_NO_SPECIALIZATION
 
 template <>
 struct NeedsPhiTreatment<UniversalTube> {
@@ -105,27 +74,6 @@ template <typename T>
 struct NeedsRminTreatment {
   static const ETreatmentType value = kUnknown; // unknown will trigger real rmin check
 };
-
-#ifndef VECGEOM_NO_SPECIALIZATION
-
-template <>
-struct NeedsRminTreatment<NonHollowTube> {
-  static const ETreatmentType value = kNo;
-};
-template <>
-struct NeedsRminTreatment<NonHollowTubeWithSmallerThanPiSector> {
-  static const ETreatmentType value = kNo;
-};
-template <>
-struct NeedsRminTreatment<NonHollowTubeWithBiggerThanPiSector> {
-  static const ETreatmentType value = kNo;
-};
-template <>
-struct NeedsRminTreatment<NonHollowTubeWithPiSector> {
-  static const ETreatmentType value = kNo;
-};
-
-#endif // VECGEOM_NO_SPECIALIZATION
 
 template <>
 struct NeedsRminTreatment<UniversalTube> {
@@ -155,39 +103,6 @@ template <>
 struct SectorType<UniversalTube> {
   static const EAngleType value = kUnknownAngle;
 };
-
-#ifndef VECGEOM_NO_SPECIALIZATION
-
-template <>
-struct SectorType<NonHollowTubeWithSmallerThanPiSector> {
-  static const EAngleType value = kSmallerThanPi;
-};
-
-template <>
-struct SectorType<NonHollowTubeWithPiSector> {
-  static const EAngleType value = kOnePi;
-};
-
-template <>
-struct SectorType<NonHollowTubeWithBiggerThanPiSector> {
-  static const EAngleType value = kBiggerThanPi;
-};
-template <>
-struct SectorType<HollowTubeWithSmallerThanPiSector> {
-  static const EAngleType value = kSmallerThanPi;
-};
-
-template <>
-struct SectorType<HollowTubeWithPiSector> {
-  static const EAngleType value = kOnePi;
-};
-
-template <>
-struct SectorType<HollowTubeWithBiggerThanPiSector> {
-  static const EAngleType value = kBiggerThanPi;
-};
-
-#endif // VECGEOM_NO_SPECIALIZATION
 
 } // End namespace TubeTypes
 } // End VECGEOM_IMPL_NAMESPACE
