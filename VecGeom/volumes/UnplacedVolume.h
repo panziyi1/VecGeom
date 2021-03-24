@@ -11,7 +11,6 @@
 
 #include "VecGeom/base/Global.h"
 #include "VecGeom/base/Transformation3D.h"
-#include "VecGeom/base/SOA3D.h"
 #include <string>
 #include <ostream>
 
@@ -46,9 +45,6 @@ protected:
   bool fIsAssembly = false; // indicates if this volume is an assembly
 
 public:
-  // alias for the globally selected VectorType
-  using Real_v = vecgeom::VectorBackend::Real_v;
-
   VECCORE_ATT_HOST_DEVICE
   virtual ~VUnplacedVolume() {}
 
@@ -90,32 +86,6 @@ public:
   virtual Precision DistanceToOut(Vector3D<Precision> const &pos, Vector3D<Precision> const &dir,
                                   Vector3D<Precision> &normal, bool &convex, Precision step_max = kInfLength) const;
 
-  /*!
-   * Same as DistanceToOut(pos, dir, step_max) but treating vectored input/output of type Real_v.
-   * Real_v represents typically a SIMD register type.
-   */
-  VECCORE_ATT_HOST_DEVICE
-  virtual Real_v DistanceToOutVec(Vector3D<Real_v> const &pos, Vector3D<Real_v> const &dir,
-                                  Real_v const &step_max) const;
-
-  /*!
-   * Helper "trampoline" to dispatch to DistanceToOutVec if type is not scalar.
-   */
-  template <typename T>
-  VECGEOM_FORCE_INLINE
-  VECCORE_ATT_HOST_DEVICE
-  T DistanceToOut(Vector3D<T> const &p, Vector3D<T> const &d, T const &step_max) const
-  {
-    return DistanceToOutVec(p, d, step_max);
-  }
-
-  /*!
-   * Same as DistanceToOut(pos, dir, step_max) but processing a collection of points and directions.
-   * @param output The vector/container of distances
-   */
-  virtual void DistanceToOut(SOA3D<Precision> const &points, SOA3D<Precision> const &directions,
-                             Precision const *const step_max, Precision *const output) const;
-
   // ---------------- SafetyToOut functions -----------------------------------------------------
 
   /*!
@@ -125,30 +95,6 @@ public:
    */
   VECCORE_ATT_HOST_DEVICE
   virtual Precision SafetyToOut(Vector3D<Precision> const &pos) const = 0;
-
-  /*!
-   * Like SafetToOut(Vector3D<Precision> const &pos) but processing SIMD vector
-   * input.
-   */
-  VECCORE_ATT_HOST_DEVICE
-  virtual Real_v SafetyToOutVec(Vector3D<Real_v> const &p) const;
-
-  /*!
-   * Helper trampoline to dispatch to SafetyToOutVec if type is not scalar.
-   */
-  template <typename T>
-  VECGEOM_FORCE_INLINE
-  VECCORE_ATT_HOST_DEVICE
-  T SafetyToOut(Vector3D<T> const &p) const
-  {
-    return SafetyToOutVec(p);
-  }
-
-  /*!
-   * Like SafetyToOut(Vector3D<Precision> const &pos) but processing a collection
-   * of input points.
-   */
-  virtual void SafetyToOut(SOA3D<Precision> const &points, Precision *const output) const /* = 0*/;
 
   // ---------------- DistanceToIn functions -----------------------------------------------------
 
@@ -164,26 +110,6 @@ public:
   virtual Precision DistanceToIn(Vector3D<Precision> const &position, Vector3D<Precision> const &direction,
                                  const Precision step_max = kInfLength) const = 0;
 
-  /*!
-   * Same as DistanceToIn(pos, dir, step_max) but treating vectored input/output of type Real_v.
-   * Real_v represents typically a SIMD register type.
-   */
-  VECCORE_ATT_HOST_DEVICE
-  virtual Real_v DistanceToInVec(Vector3D<Real_v> const &position, Vector3D<Real_v> const &direction,
-                                 const Real_v &step_max = Real_v(kInfLength)) const /* = 0 */;
-
-  /*!
-   * Helper trampoline to dispatch to DistanceToInVec if type is not scalar.
-   * The T = Precision this template will not instantiate as the compiler finds another matching function
-   */
-  template <typename T>
-  VECGEOM_FORCE_INLINE
-  VECCORE_ATT_HOST_DEVICE
-  T DistanceToIn(Vector3D<T> const &p, Vector3D<T> const &d, T const &step_max) const
-  {
-    return DistanceToInVec(p, d, step_max);
-  }
-
   // ---------------- SafetyToIn functions -------------------------------------------------------
 
   /*!
@@ -193,24 +119,6 @@ public:
    */
   VECCORE_ATT_HOST_DEVICE
   virtual Precision SafetyToIn(Vector3D<Precision> const &pos) const = 0;
-
-  /*!
-   * Like SafetyToIn(Vector3D<Precision> const &) but processing SIMD vector
-   * input.
-   */
-  VECCORE_ATT_HOST_DEVICE
-  virtual Real_v SafetyToInVec(Vector3D<Real_v> const &p) const;
-
-  /*!
-   *  Helper trampoline to dispatch to SafetyToInVec if type is not scalar.
-   */
-  template <typename T>
-  VECGEOM_FORCE_INLINE
-  VECCORE_ATT_HOST_DEVICE
-  T SafetyToIn(Vector3D<T> const &p) const
-  {
-    return SafetyToInVec(p);
-  }
 
   // ---------------- Normal ---------------------------------------------------------------------
 

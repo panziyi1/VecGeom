@@ -175,12 +175,7 @@ private:
 
   void DumpRelocateMethod(std::ostream &) const;
 
-  void DumpLocalVectorSafetyFunctionDeclaration(std::ostream &);
-
-  void DumpLocalVectorSafetyFunctionDeclarationPerSIMDVector(std::ostream &);
-
   void DumpSafetyFunctionDeclaration(std::ostream &);
-  void DumpVectorSafetyFunctionDeclaration(std::ostream &);
   void DumpTransformationAsserts(std::ostream &);
 
   void DumpLocalHitDetectionFunction(std::ostream &) const;
