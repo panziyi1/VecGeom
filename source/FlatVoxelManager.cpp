@@ -75,9 +75,14 @@ FlatVoxelHashMap<int, false> *FlatVoxelManager::BuildSafetyVoxels(LogicalVolume 
   std::vector<std::future<void>> futures;
   for (int t = 0; t < numtasks; ++t) {
     auto fut = std::async([&engines, &points, &keyspertask, vol, t, voxels] {
-      volumeUtilities::FillUncontainedPoints(*vol, engines[t], *points[t]);
-      keyspertask[t] = new std::vector<long>;
-      voxels->getKeys(*points[t], *keyspertask[t]);
+      bool foundPoints=
+         volumeUtilities::FillUncontainedPoints(*vol, engines[t], *points[t]);
+      if( foundPoints ) {
+         keyspertask[t] = new std::vector<long>;
+         voxels->getKeys(*points[t], *keyspertask[t]);
+      } else {
+         keyspertask[t] = nullptr;
+      }
     });
     futures.push_back(std::move(fut));
   }
@@ -89,7 +94,14 @@ FlatVoxelHashMap<int, false> *FlatVoxelManager::BuildSafetyVoxels(LogicalVolume 
   // merge all keys
   std::vector<long> allkeys;
   for (int t = 0; t < numtasks; ++t) {
-    std::copy(keyspertask[t]->begin(), keyspertask[t]->end(), std::back_inserter(allkeys));
+     if( keyspertask[t] )
+        std::copy(keyspertask[t]->begin(), keyspertask[t]->end(), std::back_inserter(allkeys));
+  }
+  // Do we need to delete keyspertask[t] ??  JA
+  
+  if( allkeys.begin() == allkeys.end() || allkeys.size() <= 1 ) {
+     // No points found -- the daughthers fill the current volume
+     return nullptr; 
   }
   std::sort(allkeys.begin(), allkeys.end());
 
@@ -200,11 +212,19 @@ FlatVoxelHashMap<int, false> *FlatVoxelManager::BuildSafetyVoxels(LogicalVolume 
   Stopwatch timer;
   timer.Start();
   std::vector<std::future<void>> futures;
-  for (int t = 0; t < numtasks; ++t) {
+  for (int t = 0; t < numtasks ; ++t) {
     auto fut = std::async([&engines, &points, &keyspertask, vol, t, safetyvoxels] {
-      volumeUtilities::FillUncontainedPoints(*vol, engines[t], *points[t]);
-      keyspertask[t] = new std::vector<long>;
-      safetyvoxels->getKeys(*points[t], *keyspertask[t]);
+      bool foundPoints=       
+         volumeUtilities::FillUncontainedPoints(*vol, engines[t], *points[t]);
+      if( foundPoints ) {      
+         keyspertask[t] = new std::vector<long>;
+         safetyvoxels->getKeys(*points[t], *keyspertask[t]);
+         // delete points[t]; points[t] = nullptr;  // JA 2021.03.04 17:15 CEST ???
+      } else {
+         keyspertask[t] = nullptr;
+         std::cerr << " WARNING: Found 0 uncontained points for " << vol->GetName()
+                   << " -- expect problems in estimating safety. \n";
+      }
     });
     futures.push_back(std::move(fut));
   }
@@ -216,8 +236,15 @@ FlatVoxelHashMap<int, false> *FlatVoxelManager::BuildSafetyVoxels(LogicalVolume 
   // merge all keys
   std::vector<long> allkeys;
   for (int t = 0; t < numtasks; ++t) {
-    std::copy(keyspertask[t]->begin(), keyspertask[t]->end(), std::back_inserter(allkeys));
+     if( keyspertask[t] )     
+        std::copy(keyspertask[t]->begin(), keyspertask[t]->end(), std::back_inserter(allkeys));
   }
+
+  if( allkeys.begin() == allkeys.end() || allkeys.size() <= 1 ) {
+     // No points found -- the daughthers fill the current volume
+     return nullptr; 
+  }
+  
   std::sort(allkeys.begin(), allkeys.end());
 
   // get rid of duplicates easily since they are sorted
@@ -229,12 +256,16 @@ FlatVoxelHashMap<int, false> *FlatVoxelManager::BuildSafetyVoxels(LogicalVolume 
       sortedkeys.push_back(k);
     }
   }
-  std::cout << "Generating unique keys took " << timer.Stop() << "s \n";
+  std::cout << "Generating unique keys took " << timer.Stop() << " s \n";
 
   std::cerr << " We have " << sortedkeys.size() << " sorted unique keys; fraction "
             << sortedkeys.size() / (1. * Nx * Ny * Nz) << " estimated volume "
             << sortedkeys.size() * safetyvoxels->getVoxelVolume() << "\n";
-
+  int minSize = 50;
+  if( sortedkeys.size() < minSize ){
+     std::cerr << " ** Keys are few -- not creating acceleration structure. \n";
+     return nullptr;
+  }
   //
   timer.Start();
   // make a vector where to collect the safetycandidates
@@ -242,7 +273,7 @@ FlatVoxelHashMap<int, false> *FlatVoxelManager::BuildSafetyVoxels(LogicalVolume 
 
   std::vector<std::future<void>> safetyfutures;
 
-  std::cerr << " Calculating safety candidates ... in parallel ";
+  std::cerr << " Calculating safety candidates ... in parallel \n";
 
   for (int t = 0; t < numtasks; ++t) {
     auto fut = std::async([t, numtasks, &safetycandidates, safetyvoxels, &sortedkeys, vol] {
@@ -292,6 +323,7 @@ FlatVoxelHashMap<int, false> *FlatVoxelManager::BuildSafetyVoxels(LogicalVolume 
         // (WE NEED TO BE CAREFUL ABOUT TOPOLOGICALLY WEIRD CASES)
         // ---
         std::set<int> othersafetycandidates;
+        std::set<int> insidedaughtercandidates;
 
         voxelsurfacepoints.clear();
         volumeUtilities::GenerateRegularSurfacePointsOnBox(keylower, keyupper, 10, voxelsurfacepoints);
@@ -318,14 +350,18 @@ FlatVoxelHashMap<int, false> *FlatVoxelManager::BuildSafetyVoxels(LogicalVolume 
             bool inboundingbox{false};
             ABBoxImplementation::ABBoxContainsKernelGeneric(boxlower, boxupper, sp, inboundingbox);
             if (inboundingbox) {
-              // ASSUMING BOXINDEX == DAUGHERINDEX !!
+              // ASSUMING BOXINDEX == DAUGHTERINDEX !!
               if (daughters[boxindex]->Contains(spdouble)) {
                 inanydaughter = true;
+                // if(verbose) std::cerr << "used to ignore surface point " << sp << " inside daughter vol " << boxindex << "\n";
+                
+                insidedaughtercandidates.insert(boxindex);
+                // Should only be inside one daughter volume
                 break;
               }
             }
           }
-
+          
           if (!inanydaughter) {
             // get safetytoout as reference length scale
             const auto safetyout    = vol->GetUnplacedVolume()->SafetyToOut(spdouble);
@@ -371,7 +407,7 @@ FlatVoxelHashMap<int, false> *FlatVoxelManager::BuildSafetyVoxels(LogicalVolume 
               // if this safety is smaller than the previously known safety
               if (thiscandidatesafetysqr <= finalsafetysqr) {
                 if (verbose) {
-                  std::cerr << "Updating best cand from " << bestcandidate << " to " << volid << "\n";
+                  std::cerr << "Updating best cand from " << bestcandidate << " to " << volid << " safety-sq = " << thiscandidatesafetysqr << " for sp = " << sp << "\n";
                 }
                 bestcandidate  = volid;
                 finalsafetysqr = thiscandidatesafetysqr;
@@ -391,6 +427,19 @@ FlatVoxelHashMap<int, false> *FlatVoxelManager::BuildSafetyVoxels(LogicalVolume 
             safetycandidates[i].push_back(other);
           }
         }
+
+#ifdef CHECK_IN_DAUGHTER_CANDIDATES
+        // Check whether any 'in-daughter' candidates are not yet seen
+        for (const auto &other : insidedaughtercandidates) {
+          // we add the other candidates to the list of existing candidates
+          auto iter = std::find(safetycandidates[i].begin(), safetycandidates[i].end(), other);
+          if (iter == safetycandidates[i].end()) {
+            // if(verbose)
+            std::cerr << "used to ignore 'inside daughter' vol " << other << "\n";
+            safetycandidates[i].push_back(other);
+          }
+        }
+#endif
         std::sort(safetycandidates[i].begin(), safetycandidates[i].end());
 
       } // loop over keys/voxels
@@ -398,7 +447,7 @@ FlatVoxelHashMap<int, false> *FlatVoxelManager::BuildSafetyVoxels(LogicalVolume 
     safetyfutures.push_back(std::move(fut));
   }
   std::for_each(safetyfutures.begin(), safetyfutures.end(), [](std::future<void> &fut) { fut.wait(); });
-  std::cout << "Generating safeties took " << timer.Stop() << "s \n";
+  std::cout << "Generating safeties took " << timer.Stop() << " s \n";
 
   // finally register safety or locate candidates in voxel hash map
   for (size_t i = 0; i < sortedkeys.size(); ++i) {
