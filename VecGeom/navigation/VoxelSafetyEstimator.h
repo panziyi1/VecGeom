@@ -145,15 +145,10 @@ public:
           printProcedure(safetycandidates, length, lvol, localpoint);
         }
 #endif
-
-        if (returnvalue < 0) {
-          std::cerr << "returning negative value " << safetyToDaughters << " " << safetymother << "\n";
-        }
-
         return returnvalue;
       } else {
         // no information for this voxel present
-        std::cerr << counter << " no information for this voxel present " << localpoint << " at key "
+        std::cerr << "WARNING or Error> VoxelSafetyEstimator::ComputeSafetyForLocalPoint call# " << counter << " no information for this voxel present " << localpoint << " at key "
                   << structure->fVoxelToCandidate->getKey(lp.x(), lp.y(), lp.z()) << " \n ";
         return 0.;
       }
