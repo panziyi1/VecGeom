@@ -79,7 +79,7 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 ///     fZPlanes[0]/fRMax[0]           ----->
 
 class UnplacedPolyhedron
-    : public LoopUnplacedVolumeImplHelper<
+    : public UnplacedVolumeImplHelper<
           PolyhedronImplementation<Polyhedron::EInnerRadii::kGeneric, Polyhedron::EPhiCutout::kGeneric>>,
       public AlignedBase {
 

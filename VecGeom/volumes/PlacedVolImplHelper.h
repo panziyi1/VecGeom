@@ -21,7 +21,6 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 template <class UnplacedShape_t, class BaseVol = VPlacedVolume>
 struct PlacedVolumeImplHelper : public BaseVol {
 
-  using Helper_t = PlacedVolumeImplHelper<UnplacedShape_t, BaseVol>;
   using Struct_t = typename UnplacedShape_t::UnplacedStruct_t;
 
 public:
