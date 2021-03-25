@@ -49,7 +49,7 @@ G4VSolid const *PlacedGenericPolycone::ConvertToGeant4() const
 
 #ifdef VECCORE_CUDA
 
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC(SpecializedGenericPolycone)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedGenericPolycone)
 
 #endif // VECCORE_CUDA
 

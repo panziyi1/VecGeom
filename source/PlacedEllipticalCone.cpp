@@ -56,7 +56,7 @@ G4VSolid const *PlacedEllipticalCone::ConvertToGeant4() const
 
 #ifdef VECCORE_CUDA
 
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC(SpecializedEllipticalCone)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedEllipticalCone)
 
 #endif // VECCORE_CUDA
 

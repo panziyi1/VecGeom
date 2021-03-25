@@ -134,9 +134,9 @@ G4VSolid const *PlacedBooleanVolume<kSubtraction>::ConvertToGeant4() const
 
 #ifdef VECCORE_CUDA
 
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_BOOLEAN(SpecializedBooleanVolume, kUnion)
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_BOOLEAN(SpecializedBooleanVolume, kIntersection)
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_BOOLEAN(SpecializedBooleanVolume, kSubtraction)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedBooleanVolume<kUnion>)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedBooleanVolume<kIntersection>)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedBooleanVolume<kSubtraction>)
 
 #endif // VECCORE_CUDA
 

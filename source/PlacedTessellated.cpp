@@ -56,7 +56,7 @@ G4VSolid const *PlacedTessellated::ConvertToGeant4() const
 
 #ifdef VECCORE_CUDA
 
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC(SpecializedTessellated)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedTessellated)
 
 #endif
 

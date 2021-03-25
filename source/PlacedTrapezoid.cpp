@@ -47,7 +47,7 @@ G4VSolid const *PlacedTrapezoid::ConvertToGeant4() const
 } // namespace VECGEOM_IMPL_NAMESPACE
 
 #ifdef VECCORE_CUDA
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC(SpecializedTrapezoid)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedTrapezoid)
 #endif
 
 } // End namespace vecgeom

@@ -52,7 +52,7 @@ G4VSolid const *PlacedParaboloid::ConvertToGeant4() const
 
 #ifdef VECCORE_CUDA
 
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC(SpecializedParaboloid)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedParaboloid)
 
 #endif // VECCORE_CUDA
 

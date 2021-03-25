@@ -70,7 +70,7 @@ G4VSolid const *PlacedPolyhedron::ConvertToGeant4() const
 
 #ifdef VECCORE_CUDA
 
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_4(SpecializedPolyhedron)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedPolyhedron)
 
 #endif
 

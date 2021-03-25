@@ -391,69 +391,6 @@ public:
                                                       const int child_id) const;                           \
   }
 
-#define VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL(PlacedVol, Extra)                                                  \
-  namespace cxx {                                                                                                 \
-  template size_t DevicePtr<cuda::PlacedVol, Extra>::SizeOf();                                                    \
-  template void DevicePtr<cuda::PlacedVol, Extra>::Construct(DevicePtr<cuda::LogicalVolume> const logical_volume, \
-                                                             DevicePtr<cuda::Transformation3D> const transform,   \
-                                                             const unsigned int id, const int copy_no,            \
-                                                             const int child_id) const;                           \
-  }
-
-#define VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT(PlacedVol, trans) \
-  VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL(PlacedVol<trans, rotation::kGeneric>)
-
-#define VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC(PlacedVol) \
-  VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT(PlacedVol, translation::kGeneric)
-
-#define VECGEOM_DEVICE_INST_PLACED_POLYHEDRON_ALL_CUTOUT(PlacedVol, radii) \
-  VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL(PlacedVol<radii, Polyhedron::EPhiCutout::kGeneric>)
-
-#define VECGEOM_DEVICE_INST_PLACED_POLYHEDRON_ALLSPEC(PlacedVol) \
-  VECGEOM_DEVICE_INST_PLACED_POLYHEDRON_ALL_CUTOUT(PlacedVol, Polyhedron::EInnerRadii::kGeneric)
-
-#define VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL_3(PlacedVol, Extra, Type)                                      \
-  namespace cxx {                                                                                             \
-  template size_t DevicePtr<cuda::PlacedVol, Extra, cuda::Type>::SizeOf();                                    \
-  template void DevicePtr<cuda::PlacedVol, Extra, cuda::Type>::Construct(                                     \
-      DevicePtr<cuda::LogicalVolume> const logical_volume, DevicePtr<cuda::Transformation3D> const transform, \
-      const unsigned int id, const int copy_no, const int child_id) const;                                    \
-  }
-
-#define VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT_3(PlacedVol, trans, Type) \
-  VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL_3(PlacedVol<trans, rotation::kGeneric, Type>)
-#define VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_3(PlacedVol, Type) \
-  VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT_3(PlacedVol, translation::kGeneric, Type)
-
-#define VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL_4(PlacedVol, trans, radii, phi)                                \
-  namespace cxx {                                                                                             \
-  template size_t DevicePtr<cuda::PlacedVol, trans, radii, phi>::SizeOf();                                    \
-  template void DevicePtr<cuda::PlacedVol, trans, radii, phi>::Construct(                                     \
-      DevicePtr<cuda::LogicalVolume> const logical_volume, DevicePtr<cuda::Transformation3D> const transform, \
-      const unsigned int id, const int copy_no, const int child_id) const;                                    \
-  }
-
-#define VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT_4(PlacedVol, trans, radii, phi) \
-  VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL_4(PlacedVol<trans, rotation::kGeneric, radii, phi>)
-#define VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_4(PlacedVol)                                                     \
-  VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT_4(PlacedVol, translation::kGeneric, Polyhedron::EInnerRadii::kGeneric, \
-                                              Polyhedron::EPhiCutout::kGeneric)
-
-#define VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL_BOOLEAN(PlacedVol, trans, rot)                                          \
-  namespace cxx {                                                                                                      \
-  template size_t DevicePtr<cuda::PlacedVol, trans, rot>::SizeOf();                                                    \
-  template void DevicePtr<cuda::PlacedVol, trans, rot>::Construct(DevicePtr<cuda::LogicalVolume> const logical_volume, \
-                                                                  DevicePtr<cuda::Transformation3D> const transform,   \
-                                                                  const unsigned int id, const int copy_no,            \
-                                                                  const int child_id) const;                           \
-  }
-
-#define VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT_BOOLEAN(PlacedVol, Op, trans) \
-  VECGEOM_DEVICE_INST_PLACED_VOLUME_IMPL_BOOLEAN(PlacedVol<Op, trans, rotation::kGeneric>)
-
-#define VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_BOOLEAN(PlacedVol, Op) \
-  VECGEOM_DEVICE_INST_PLACED_VOLUME_ALL_ROT_BOOLEAN(PlacedVol, Op, translation::kGeneric)
-
 #endif
 
 #endif // VECGEOM_VOLUMES_PLACEDVOLUME_H_

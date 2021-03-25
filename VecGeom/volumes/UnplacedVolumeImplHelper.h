@@ -30,6 +30,7 @@ template <class Implementation, class BaseUnplVol = VUnplacedVolume>
 class UnplacedVolumeImplHelper : public BaseUnplVol {
 
 public:
+  using Implementation_t = Implementation;
   using UnplacedStruct_t = typename Implementation::UnplacedStruct_t;
   using UnplacedVolume_t = typename Implementation::UnplacedVolume_t;
 

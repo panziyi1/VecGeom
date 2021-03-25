@@ -43,7 +43,7 @@ G4VSolid const *PlacedTrd::ConvertToGeant4() const
 
 #ifdef VECCORE_CUDA
 
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_3(SpecializedTrd, TrdTypes::UniversalTrd)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedTrd)
 
 #endif
 

@@ -62,7 +62,7 @@ G4VSolid const *PlacedGenTrap::ConvertToGeant4() const
 
 #ifdef VECCORE_CUDA
 
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC(SpecializedGenTrap)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedGenTrap)
 
 #endif // VECCORE_CUDA
 

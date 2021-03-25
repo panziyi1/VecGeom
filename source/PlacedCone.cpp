@@ -53,7 +53,7 @@ G4VSolid const *PlacedCone::ConvertToGeant4() const
 
 #ifdef VECCORE_CUDA
 
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_3(SpecializedCone, ConeTypes::UniversalCone)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedCone)
 
 #endif // VECCORE_CUDA
 

@@ -145,25 +145,20 @@ namespace cuda {
 inline namespace cxx {
 
 template <>
-size_t DevicePtr<cuda::SpecializedVolImplHelper<cuda::MultiUnionImplementation, translation::kGeneric,
-                                                    rotation::kGeneric>>::SizeOf()
+size_t DevicePtr<cuda::PlacedMultiUnion>::SizeOf()
 {
   return 0;
 }
-// template size_t DevicePtr<cuda::SpecializedVolImplHelper<cuda::MultiUnionImplementation, translation::kGeneric,
-//                                                             rotation::kGeneric>>::SizeOf();
+// template size_t DevicePtr<cuda::PlacedMultiUnion>::SizeOf();
 
 template <>
 template <>
-void DevicePtr<
-    cuda::SpecializedVolImplHelper<cuda::MultiUnionImplementation, translation::kGeneric, rotation::kGeneric>>::
-    Construct(DevicePtr<vecgeom::cuda::LogicalVolume>, DevicePtr<vecgeom::cuda::Transformation3D>, unsigned int, int,
-              int) const
+void DevicePtr<cuda::PlacedMultiUnion>::Construct(DevicePtr<vecgeom::cuda::LogicalVolume>,
+                                                  DevicePtr<vecgeom::cuda::Transformation3D>, unsigned int, int, int) const
 {
   return;
 }
-// template void DevicePtr<cuda::SpecializedVolImplHelper<cuda::MultiUnionImplementation, translation::kGeneric,
-//                                                           rotation::kGeneric>>::Construct() const;
+// template void DevicePtr<cuda::PlacedMultiUnion>>::Construct() const;
 
 } // namespace cxx
 #endif

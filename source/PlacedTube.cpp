@@ -54,7 +54,7 @@ G4VSolid const *PlacedTube::ConvertToGeant4() const
 
 #ifdef VECCORE_CUDA
 
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_3(SpecializedTube, TubeTypes::UniversalTube)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedTube)
 
 #endif
 

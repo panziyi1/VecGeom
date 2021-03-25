@@ -48,7 +48,7 @@ G4VSolid const *PlacedPolycone::ConvertToGeant4() const
 } // namespace VECGEOM_IMPL_NAMESPACE
 
 #ifdef VECCORE_CUDA
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_3(SpecializedPolycone, ConeTypes::UniversalCone)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedPolycone)
 #endif // VECCORE_CUDA
 
 } // namespace vecgeom

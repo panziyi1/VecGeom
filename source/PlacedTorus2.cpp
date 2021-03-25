@@ -50,7 +50,7 @@ G4VSolid const *PlacedTorus2::ConvertToGeant4() const
 
 #ifdef VECCORE_CUDA
 
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC(SpecializedTorus2)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedTorus2)
 
 #endif
 

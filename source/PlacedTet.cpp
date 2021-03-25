@@ -53,7 +53,7 @@ G4VSolid const *PlacedTet::ConvertToGeant4() const
 
 #ifdef VECCORE_CUDA
 
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC(SpecializedTet)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedTet)
 
 #endif // VECCORE_CUDA
 

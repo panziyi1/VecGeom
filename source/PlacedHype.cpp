@@ -50,7 +50,7 @@ G4VSolid const *PlacedHype::ConvertToGeant4() const
 } // namespace VECGEOM_IMPL_NAMESPACE
 
 #ifdef VECCORE_CUDA
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC_3(SpecializedHype, HypeTypes::UniversalHype)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedHype)
 
 #endif // VECCORE_CUDA
 } // End namespace vecgeom

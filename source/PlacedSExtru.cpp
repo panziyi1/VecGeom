@@ -72,7 +72,7 @@ G4VSolid const *PlacedSExtru::ConvertToGeant4() const
 
 #ifdef VECCORE_CUDA
 
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC(SpecializedSExtru)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedSExtru)
 
 #endif // VECCORE_CUDA
 

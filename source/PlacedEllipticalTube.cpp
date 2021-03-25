@@ -52,7 +52,7 @@ G4VSolid const *PlacedEllipticalTube::ConvertToGeant4() const
 
 #ifdef VECCORE_CUDA
 
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC(SpecializedEllipticalTube)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedEllipticalTube)
 
 #endif // VECCORE_CUDA
 

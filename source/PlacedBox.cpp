@@ -48,7 +48,7 @@ G4VSolid const *PlacedBox::ConvertToGeant4() const
 
 #ifdef VECCORE_CUDA
 
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC(SpecializedBox)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedBox)
 
 #endif // VECCORE_CUDA
 

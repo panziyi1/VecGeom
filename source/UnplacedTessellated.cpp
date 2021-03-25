@@ -168,16 +168,14 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedTessellated::CopyToGpu() const
 
 #ifndef HYBRID_NAVIGATOR_PORTED_TO_CUDA
 template <>
-size_t DevicePtr<vecgeom::cuda::SpecializedVolImplHelper<vecgeom::cuda::TessellatedImplementation,
-                                                             translation::kGeneric, rotation::kGeneric>>::SizeOf()
+size_t DevicePtr<cuda::PlacedTessellated>::SizeOf()
 {
   return 0;
 }
 
 template <>
 template <>
-void DevicePtr<
-    cuda::SpecializedVolImplHelper<cuda::TessellatedImplementation, translation::kGeneric, rotation::kGeneric>>::
+void DevicePtr<cuda::PlacedTessellated>::
     Construct(DevicePtr<vecgeom::cuda::LogicalVolume>, DevicePtr<vecgeom::cuda::Transformation3D>, unsigned int, int,
               int) const
 {

@@ -23,7 +23,7 @@ void PlacedSphere::PrintType(std::ostream &s) const
 
 #ifdef VECCORE_CUDA
 
-VECGEOM_DEVICE_INST_PLACED_VOLUME_ALLSPEC(SpecializedSphere)
+VECGEOM_DEVICE_INST_PLACED_VOLUME(PlacedSphere)
 
 #endif // VECCORE_CUDA
 
