@@ -50,21 +50,6 @@ struct OrbImplementation {
     st << "SpecializedOrb<" << transCodeT << "," << rotCodeT << ">";
   }
 
-  template <typename Stream>
-  static void PrintImplementationType(Stream &st)
-  {
-    (void)st;
-    // st << "OrbImplementation<" << transCodeT << "," << rotCodeT << ">";
-  }
-
-  template <typename Stream>
-  static void PrintUnplacedType(Stream &st)
-  {
-    (void)st;
-    // TODO: this is wrong
-    // st << "UnplacedOrb";
-  }
-
   template <typename Real_v, typename Bool_v>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE

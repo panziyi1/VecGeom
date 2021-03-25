@@ -45,16 +45,6 @@ struct ConeImplementation {
     s << "SpecializedCone<" << transCodeT << "," << rotCodeT << ">";
   }
 
-  template <typename Stream>
-  static void PrintImplementationType(Stream & /*s*/)
-  {
-  }
-
-  template <typename Stream>
-  static void PrintUnplacedType(Stream & /*s*/)
-  {
-  }
-
   /* A Function that will just check if the point is on the CONICAL (circle) edge
    * assuming that it is on either lowerZ or upperZ
    *

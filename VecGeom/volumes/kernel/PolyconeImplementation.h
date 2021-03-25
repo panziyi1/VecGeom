@@ -49,21 +49,6 @@ struct PolyconeImplementation {
     st << "SpecializedPolycone<" << transCodeT << "," << rotCodeT << ">";
   }
 
-  template <typename Stream>
-  static void PrintImplementationType(Stream &st)
-  {
-    (void)st;
-    // st << "PolyconeImplementation<" << transCodeT << "," << rotCodeT << ">";
-  }
-
-  template <typename Stream>
-  static void PrintUnplacedType(Stream &st)
-  {
-    (void)st;
-    // TODO: this is wrong
-    // st << "UnplacedPolycone";
-  }
-
   template <typename Real_v, bool ForInside>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE

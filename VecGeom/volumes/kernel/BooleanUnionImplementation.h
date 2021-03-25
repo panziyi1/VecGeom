@@ -44,19 +44,6 @@ struct BooleanImplementation<kUnion> {
     //    << "," << transCodeT << "," << rotCodeT << ">";
   }
 
-  template <typename Stream>
-  static void PrintImplementationType(Stream &s)
-  {
-    // s << "BooleanImplementation<kUnion"
-    //   << "," << transCodeT << "," << rotCodeT << ">";
-  }
-
-  template <typename Stream>
-  static void PrintUnplacedType(Stream &s)
-  {
-    s << "UnplacedBooleanVolume";
-  }
-
   template <typename Real_v, typename Bool_v>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE

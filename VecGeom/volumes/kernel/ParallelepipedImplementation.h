@@ -47,18 +47,6 @@ struct ParallelepipedImplementation {
     s << "SpecializedParallelepiped<" << transCodeT << "," << rotCodeT << ">";
   }
 
-  template <typename Stream>
-  static void PrintImplementationType(Stream & /*s*/)
-  {
-    // s << "ParallelepipedImplementation<" << transCodeT << "," << rotCodeT << ">";
-  }
-
-  template <typename Stream>
-  static void PrintUnplacedType(Stream & /*s*/)
-  {
-    // s << "UnplacedParallelepiped";
-  }
-
   template <typename Real_v>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE

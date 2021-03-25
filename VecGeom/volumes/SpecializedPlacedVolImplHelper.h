@@ -80,8 +80,6 @@ public:
   virtual void PrintType() const override { Specialization::PrintType(); }
 
   virtual void PrintType(std::ostream &os) const override { Specialization::PrintType(os, transC, rotC); }
-  virtual void PrintImplementationType(std::ostream &os) const override { Specialization::PrintImplementationType(os); }
-  virtual void PrintUnplacedType(std::ostream &os) const override { Specialization::PrintUnplacedType(os); }
 
   int GetTransCode() const final { return transC; }
   int GetRotCode() const final { return rotC; }

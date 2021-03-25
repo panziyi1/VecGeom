@@ -44,21 +44,6 @@ struct SphereImplementation {
     st << "SpecializedSphere<" << transCodeT << "," << rotCodeT << ">";
   }
 
-  template <typename Stream>
-  static void PrintImplementationType(Stream &st)
-  {
-    (void)st;
-    // st << "SphereImplementation<" << transCodeT << "," << rotCodeT << ">";
-  }
-
-  template <typename Stream>
-  static void PrintUnplacedType(Stream &st)
-  {
-    (void)st;
-    // TODO: this is wrong
-    // st << "UnplacedSphere";
-  }
-
   template <typename Real_v, typename Bool_v>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE

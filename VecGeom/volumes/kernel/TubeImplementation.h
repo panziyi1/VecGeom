@@ -367,21 +367,6 @@ struct TubeImplementation {
     s << "SpecializedTube<" << transCodeT << "," << rotCodeT << ",TubeTypes::" << tubeTypeT::toString() << ">";
   }
 
-  template <typename Stream>
-  static void PrintImplementationType(Stream &s)
-  {
-    (void)s;
-    // have to implement this somewhere else
-    //  s << "TubeImplementation<" << transCodeT << "," << rotCodeT <<
-    //  ",TubeTypes::" << tubeTypeT::toString() << ">";
-  }
-
-  template <typename Stream>
-  static void PrintUnplacedType(Stream &s)
-  {
-    s << "UnplacedTube";
-  }
-
   /////GenericKernel Contains/Inside implementation
   template <typename Real_v, bool ForInside>
   VECGEOM_FORCE_INLINE

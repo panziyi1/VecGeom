@@ -42,21 +42,6 @@ struct CoaxialConesImplementation {
     st << "SpecializedCoaxialCones<" << transCodeT << "," << rotCodeT << ">";
   }
 
-  template <typename Stream>
-  static void PrintImplementationType(Stream &st)
-  {
-    (void)st;
-    // st << "CoaxialConesImplementation<" << transCodeT << "," << rotCodeT << ">";
-  }
-
-  template <typename Stream>
-  static void PrintUnplacedType(Stream &st)
-  {
-    (void)st;
-    // TODO: this is wrong
-    // st << "UnplacedCoaxialCones";
-  }
-
   template <typename Real_v, bool ForLowerZ>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE

@@ -43,19 +43,6 @@ struct GenericPolyconeImplementation {
     st << "SpecializedGenericPolycone<" << transCodeT << "," << rotCodeT << ">";
   }
 
-  template <typename Stream>
-  static void PrintImplementationType(Stream &st)
-  {
-    (void)st;
-    // st << "GenericPolyconeImplementation<" << transCodeT << "," << rotCodeT << ">";
-  }
-
-  template <typename Stream>
-  static void PrintUnplacedType(Stream &st)
-  {
-    st << "UnplacedGenericPolycone";
-  }
-
   template <typename Real_v, bool ForInside>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE

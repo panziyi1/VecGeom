@@ -53,21 +53,6 @@ struct TrapezoidImplementation {
     st << "SpecializedTrapezoid<" << transCodeT << "," << rotCodeT << ">";
   }
 
-  template <typename Stream>
-  static void PrintImplementationType(Stream &st)
-  {
-    (void)st;
-    // st << "TrapezoidImplementation<" << transCodeT << "," << rotCodeT << ">";
-  }
-
-  template <typename Stream>
-  static void PrintUnplacedType(Stream &st)
-  {
-    (void)st;
-    // TODO: this is wrong
-    st << "UnplacedTrapezoid";
-  }
-
 #ifdef VECGEOM_PLANESHELL_DISABLE
   template <typename Real_v>
   VECGEOM_FORCE_INLINE

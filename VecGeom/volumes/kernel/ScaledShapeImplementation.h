@@ -42,18 +42,6 @@ struct ScaledShapeImplementation {
       << ">";
   }
 
-  template <typename Stream>
-  static void PrintImplementationType(Stream & /*s*/)
-  {
-    // s << "SpecializedScaledShape<" << transCodeT << "," << rotCodeT << ">";
-  }
-
-  template <typename Stream>
-  static void PrintUnplacedType(Stream & /*s*/)
-  {
-    // s << "UnplacedScaledShape";
-  }
-
   template <typename Real_v, typename Bool_v>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE

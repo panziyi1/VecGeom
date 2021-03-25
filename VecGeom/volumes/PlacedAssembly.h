@@ -49,19 +49,6 @@ public:
 
   virtual void PrintType(std::ostream &s) const override { s << "PlacedAssembly"; }
 
-  virtual void PrintImplementationType(std::ostream &) const override
-  {
-#ifndef VECCORE_CUDA
-    throw std::runtime_error("unimplemented function called");
-#endif
-  }
-  virtual void PrintUnplacedType(std::ostream &) const override
-  {
-#ifndef VECCORE_CUDA
-    throw std::runtime_error("unimplemented function called");
-#endif
-  }
-
   VECCORE_ATT_HOST_DEVICE
   virtual bool Contains(Vector3D<Precision> const &p) const override
   {

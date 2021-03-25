@@ -680,18 +680,6 @@ struct TorusImplementation2 {
     s << "SpecializedTorus2<" << transCodeT << "," << rotCodeT << ">";
   }
 
-  template <typename Stream>
-  static void PrintImplementationType(Stream &s)
-  {
-    s << "TorusImplemenation2";
-  }
-
-  template <typename Stream>
-  static void PrintUnplacedType(Stream &s)
-  {
-    s << "UnplacedTorus2";
-  }
-
 }; // end struct
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // namespace vecgeom
