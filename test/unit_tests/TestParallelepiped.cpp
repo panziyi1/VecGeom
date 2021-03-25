@@ -394,7 +394,7 @@ bool TestParallelepiped()
 int main(int argc, char *argv[])
 {
 
-  TestParallelepiped<vecgeom::SimpleParallelepiped>();
+  TestParallelepiped<vecgeom::PlacedParallelepiped>();
   std::cout << "\nVecGeom Parallelepiped passed\n" << std::endl;
   return 0;
 }

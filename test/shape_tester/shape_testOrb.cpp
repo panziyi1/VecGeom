@@ -11,7 +11,7 @@
 #include "VecGeom/volumes/Orb.h"
 
 using VPlacedVolume = vecgeom::VPlacedVolume;
-using VGOrb         = vecgeom::SimpleOrb;
+using VGOrb         = vecgeom::PlacedOrb;
 
 template <typename ImplT>
 int runTester(ImplT const *shape, int npoints, bool debug, bool stat);

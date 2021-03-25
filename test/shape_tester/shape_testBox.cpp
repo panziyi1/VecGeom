@@ -4,7 +4,7 @@
 #include "VecGeom/volumes/Box.h"
 
 using VPlacedVolume = vecgeom::VPlacedVolume;
-using VGBox         = vecgeom::SimpleBox;
+using VGBox         = vecgeom::PlacedBox;
 
 template <typename ImplT>
 int runTester(ImplT const *shape, int npoints, bool debug, bool stat);

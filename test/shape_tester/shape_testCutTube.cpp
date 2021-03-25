@@ -1,7 +1,7 @@
 #include "../benchmark/ArgParser.h"
 #include "ShapeTester.h"
 #include "VecGeom/volumes/CutTube.h"
-typedef vecgeom::SimpleCutTube CutTube_t;
+typedef vecgeom::PlacedCutTube CutTube_t;
 
 int main(int argc, char *argv[])
 {

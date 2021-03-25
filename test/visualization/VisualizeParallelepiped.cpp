@@ -12,7 +12,7 @@ int main()
 {
   constexpr int nSamples = 10000;
 
-  SimpleParallelepiped para("parallelepiped", 10, 7, 20, 30, 30, 45);
+  PlacedParallelepiped para("parallelepiped", 10, 7, 20, 30, 30, 45);
   TPolyMarker3D pm(nSamples);
   pm.SetMarkerColor(kRed);
   pm.SetMarkerStyle(6);

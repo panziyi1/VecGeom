@@ -392,7 +392,7 @@ bool TestHype()
 
 int main(int argc, char *argv[])
 {
-  assert(TestHype<vecgeom::SimpleHype>());
+  assert(TestHype<vecgeom::PlacedHype>());
   std::cout << "VecGeomHype passed\n";
 
   return 0;

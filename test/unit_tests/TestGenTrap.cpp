@@ -27,8 +27,8 @@ bool TestGenTrap()
   Precision verticesx2[8] = {-3, -3, 3, 3, -2, -2, 2, 2};
   Precision verticesy2[8] = {-3, 3, 3, -3, -1.9, 2, 2, -2};
 
-  SimpleGenTrap trap1("planar_trap", verticesx1, verticesy1, 5);
-  SimpleGenTrap trap2("twisted_trap", verticesx2, verticesy2, 5);
+  PlacedGenTrap trap1("planar_trap", verticesx1, verticesy1, 5);
+  PlacedGenTrap trap2("twisted_trap", verticesx2, verticesy2, 5);
 
   // Some particular points
   Vec_t pzero(0, 0, 0);

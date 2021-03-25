@@ -8,7 +8,7 @@ using namespace vecgeom;
 int main()
 {
   constexpr int nSamples = 512;
-  SimpleParaboloid parabolid("Visualizer Paraboloid", 2., 5., 8.);
+  PlacedParaboloid parabolid("Visualizer Paraboloid", 2., 5., 8.);
   AOS3D<Precision> points(nSamples);
   for (int i = 0; i < nSamples; ++i) {
     Vector3D<Precision> sample;

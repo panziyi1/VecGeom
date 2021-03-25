@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     y[i] = 4 * std::cos(i * (2. * M_PI) / N);
   }
 
-  auto volume = new vecgeom::SimpleSExtru("test_VecGeomSExtru", N, x, y, -5., 5.);
+  auto volume = new vecgeom::PlacedSExtru("test_VecGeomSExtru", N, x, y, -5., 5.);
   volume->Print();
 
   ShapeTester<vecgeom::VPlacedVolume> tester;

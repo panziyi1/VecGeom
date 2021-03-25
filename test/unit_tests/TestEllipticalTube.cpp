@@ -642,7 +642,7 @@ bool TestEllipticalTube()
 
 int main(int argc, char *argv[])
 {
-  assert(TestEllipticalTube<vecgeom::SimpleEllipticalTube>());
+  assert(TestEllipticalTube<vecgeom::PlacedEllipticalTube>());
   std::cout << "VecGeomEllipticalTube passed\n";
 
   return 0;

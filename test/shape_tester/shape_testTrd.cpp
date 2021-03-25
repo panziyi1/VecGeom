@@ -11,7 +11,7 @@
 #include "VecGeom/volumes/Trd.h"
 
 using VPlacedVolume = vecgeom::VPlacedVolume;
-using VGTrd         = vecgeom::SimpleTrd;
+using VGTrd         = vecgeom::PlacedTrd;
 
 template <typename ImplT>
 int runTester(ImplT const *shape, int npoints, bool debug, bool stat);

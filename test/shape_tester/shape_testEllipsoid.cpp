@@ -12,7 +12,7 @@
 #include "VecGeom/volumes/Ellipsoid.h"
 
 using VPlacedVolume = vecgeom::VPlacedVolume;
-using VGEllipsoid   = vecgeom::SimpleEllipsoid;
+using VGEllipsoid   = vecgeom::PlacedEllipsoid;
 
 template <typename ImplT>
 int runTester(ImplT const *shape, int npoints, bool debug, bool stat);

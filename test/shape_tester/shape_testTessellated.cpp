@@ -6,7 +6,7 @@
 #include "test/core/TessellatedOrb.h"
 
 using namespace vecgeom;
-using Tessellated_t = vecgeom::SimpleTessellated;
+using Tessellated_t = vecgeom::PlacedTessellated;
 #endif
 
 int main(int argc, char *argv[])

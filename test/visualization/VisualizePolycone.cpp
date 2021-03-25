@@ -68,7 +68,7 @@ int main()
   // Precision rmax[nZ]={10.,20.,30.};
   // Precision z[nZ]={0.,10.,10.};
 
-  SimplePolycone polycone("Visualizer Polycone", phiStart, deltaPhi, nZ, z, rmin, rmax);
+  PlacedPolycone polycone("Visualizer Polycone", phiStart, deltaPhi, nZ, z, rmin, rmax);
   std::cout << "Convexity : " << polycone.GetUnplacedVolume()->IsConvex() << std::endl;
   AOS3D<Precision> points(nSamples);
   for (int i = 0; i < nSamples; ++i) {

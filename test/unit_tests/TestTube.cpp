@@ -590,7 +590,7 @@ bool TestTubs()
 
 int main(int argc, char *argv[])
 {
-  TestTubs<vecgeom::SimpleTube>();
+  TestTubs<vecgeom::PlacedTube>();
   std::cout << "VecGeom tube passed\n";
 
   return 0;

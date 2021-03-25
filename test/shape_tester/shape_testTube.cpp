@@ -4,7 +4,7 @@
 #include "VecGeom/volumes/Tube.h"
 
 using VPlacedVolume = vecgeom::VPlacedVolume;
-using VGTube        = vecgeom::SimpleTube;
+using VGTube        = vecgeom::PlacedTube;
 
 template <typename ImplT>
 int runTester(ImplT const *shape, int npoints, bool debug, bool stat);

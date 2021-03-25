@@ -122,7 +122,7 @@ bool TestTrap()
   // std::cout<<"Trd Surface Area : " << trap5.SurfaceArea()<<std::endl;
   assert(trap5.SurfaceArea() == 20800);
 
-  // vecgeom::cxx::SimpleTrapezoid const* ptrap1 = dynamic_cast<vecgeom::cxx::SimpleTrapezoid*>(&trap1);
+  // vecgeom::cxx::PlacedTrapezoid const* ptrap1 = dynamic_cast<vecgeom::cxx::PlacedTrapezoid*>(&trap1);
   // if(ptrap1 != NULL) {
   // ptrap1->Print();
   // // ptrap1->PrintType(std::cout);
@@ -715,7 +715,7 @@ int main(int argc, char *argv[])
   TestVECGEOM375();
   TestVECGEOM353();
   TestVECGEOM393();
-  TestTrap<VECGEOM_NAMESPACE::SimpleTrapezoid>();
+  TestTrap<VECGEOM_NAMESPACE::PlacedTrapezoid>();
   std::cout << "VecGeom Trap passed.\n";
 
   return 0;

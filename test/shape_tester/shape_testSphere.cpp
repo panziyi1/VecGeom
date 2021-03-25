@@ -4,7 +4,7 @@
 #include "VecGeom/volumes/Sphere.h"
 
 using VPlacedVolume = vecgeom::VPlacedVolume;
-using VGSphere      = vecgeom::SimpleSphere;
+using VGSphere      = vecgeom::PlacedSphere;
 
 template <typename ImplT>
 int runTester(ImplT const *shape, int npoints, bool debug, bool stat);

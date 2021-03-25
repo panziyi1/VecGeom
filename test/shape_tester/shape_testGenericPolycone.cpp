@@ -2,7 +2,7 @@
 #include "ShapeTester.h"
 #include "VecGeom/volumes/GenericPolycone.h"
 
-typedef vecgeom::SimpleGenericPolycone Poly_t;
+typedef vecgeom::PlacedGenericPolycone Poly_t;
 
 int main(int argc, char *argv[])
 {

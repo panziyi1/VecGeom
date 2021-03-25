@@ -7,7 +7,7 @@ using namespace vecgeom;
 int main()
 {
   constexpr int nSamples = 512;
-  SimpleTorus2 torus2("Visualizer Torus2", 2., 3., 15., 0., 2 * kPi);
+  PlacedTorus2 torus2("Visualizer Torus2", 2., 3., 15., 0., 2 * kPi);
   AOS3D<Precision> points(nSamples);
   for (int i = 0; i < nSamples; ++i) {
     Vector3D<Precision> sample;

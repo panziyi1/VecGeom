@@ -96,8 +96,8 @@ bool TestPolyhedra()
   Precision zz[Nrz] = {10, -10, -10, 10};
   Precision rr[Nrz] = {15, 15, 0, 0};
 
-  vecgeom::SimplePolyhedron *MyPGon2 =
-      new vecgeom::SimplePolyhedron("Hexagonal prism", sphi1, dphi1, Nside, Nrz, rr, zz);
+  vecgeom::PlacedPolyhedron *MyPGon2 =
+      new vecgeom::PlacedPolyhedron("Hexagonal prism", sphi1, dphi1, Nside, Nrz, rr, zz);
 
   // std::cout << "=== Polyhedron: \n";
   // std::cout << *MyPGon2 << std::endl;
@@ -396,7 +396,7 @@ bool TestPolyhedra()
 
 int main(int argc, char *argv[])
 {
-  assert(TestPolyhedra<vecgeom::SimplePolyhedron>());
+  assert(TestPolyhedra<vecgeom::PlacedPolyhedron>());
   std::cout << "VecGeom Polyhedron passed\n";
 
   return 0;

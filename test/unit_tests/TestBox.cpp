@@ -594,7 +594,7 @@ int main(int argc, char *argv[])
 #endif
 
   testvecgeom = true;
-  assert(TestBox<vecgeom::SimpleBox>());
+  assert(TestBox<vecgeom::PlacedBox>());
   std::cout << "VecGeomBox passed\n";
   return 0;
 }

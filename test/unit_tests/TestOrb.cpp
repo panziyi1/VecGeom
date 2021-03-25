@@ -378,7 +378,7 @@ bool TestOrb()
 
 int main(int argc, char *argv[])
 {
-  assert(TestOrb<vecgeom::SimpleOrb>());
+  assert(TestOrb<vecgeom::PlacedOrb>());
   std::cout << "VecGeomOrb passed\n";
 
   return 0;

@@ -10,7 +10,7 @@
 #include "VecGeom/base/Transformation3D.h"
 
 using namespace vecgeom;
-using MultiUnion_t = vecgeom::SimpleMultiUnion;
+using MultiUnion_t = vecgeom::PlacedMultiUnion;
 #endif
 
 int main(int argc, char *argv[])

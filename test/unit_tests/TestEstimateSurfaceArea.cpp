@@ -134,10 +134,10 @@ void BenchEstimateArea(const VPlacedVolume *solid, double area)
 void TestScaledTrd()
 {
   double dx1 = 200, dx2 = 100, dy1 = 200, dy2 = 100, dz = 800;
-  VPlacedVolume *trd = new SimpleTrd("Trd", dx1, dx2, dy1, dy2, dz);
+  VPlacedVolume *trd = new PlacedTrd("Trd", dx1, dx2, dy1, dy2, dz);
 
   double sx = 3, sy = 2, sz = 0.2;
-  VPlacedVolume *solid = new SimpleScaledShape("Scaled Trd", trd, sx, sy, sz);
+  VPlacedVolume *solid = new PlacedScaledShape("Scaled Trd", trd, sx, sy, sz);
 
   dx1 *= sx;
   dx2 *= sx;
@@ -161,10 +161,10 @@ void TestScaledTrd()
 void TestScaledCone()
 {
   double rminus = 50, rplus = 10, dz = 50;
-  VPlacedVolume *cone = new SimpleCone("Cone", 0, rminus, 0, rplus, dz, 0, kTwoPi);
+  VPlacedVolume *cone = new PlacedCone("Cone", 0, rminus, 0, rplus, dz, 0, kTwoPi);
 
   double sx = 10, sy = 5, sz = 2;
-  VPlacedVolume *solid = new SimpleScaledShape("Scaled Cone", cone, sx, sy, sz);
+  VPlacedVolume *solid = new PlacedScaledShape("Scaled Cone", cone, sx, sy, sz);
 
   double area = 887358;
   std::cout << "\n*********************************************************"

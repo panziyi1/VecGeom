@@ -28,7 +28,7 @@ int main()
   // std::cout<<t0<<std::endl;
   // std::cout<<t0.InverseTransformDirection(Vector3D<Precision>(1,0,0))<<std::endl;
 
-  SimpleBox box("VisualizerBox", 2, 3, 4);
+  PlacedBox box("VisualizerBox", 2, 3, 4);
   const Transformation3D *m = box.GetTransformation();
   std::cout << "Box Transformation : " << m->InverseTransformDirection(Vector3D<Precision>(1, 0, 0)) << std::endl;
 
@@ -38,8 +38,8 @@ int main()
   // Creating a box from unplaced then placed it at a known location
   // UnplacedBox worldUnplaced = UnplacedBox(dx*4, dy*4, dz*4);
 
-  SimpleBox boxSimple1("SimpleBox", b1dx, b1dy, b1dz);
-  SimpleBox boxSimple2("SimpleBox", b2dx, b2dy, b2dz);
+  PlacedBox boxSimple1("PlacedBox", b1dx, b1dy, b1dz);
+  PlacedBox boxSimple2("PlacedBox", b2dx, b2dy, b2dz);
   // LogicalVolume world ("world", &worldUnplaced);
   UnplacedBox boxUnplaced = UnplacedBox(b2dx, b2dy, b2dz);
   LogicalVolume box2("box", &boxUnplaced);

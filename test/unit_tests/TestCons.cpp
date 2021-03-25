@@ -1099,7 +1099,7 @@ bool TestCons()
 
 int main(int argc, char *argv[])
 {
-  TestCons<vecgeom::SimpleCone>();
+  TestCons<vecgeom::PlacedCone>();
   std::cout << "VecGeom Cone passed\n";
   return 0;
 }

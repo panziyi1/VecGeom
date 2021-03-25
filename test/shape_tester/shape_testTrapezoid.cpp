@@ -7,7 +7,7 @@
 using Precision     = vecgeom::Precision;
 using Vec_t         = vecgeom::Vector3D<vecgeom::Precision>;
 using VPlacedVolume = vecgeom::VPlacedVolume;
-using VGTrap        = vecgeom::SimpleTrapezoid;
+using VGTrap        = vecgeom::PlacedTrapezoid;
 
 template <typename ImplT>
 int runTester(ImplT const *shape, int npoints, bool debug, bool stat);

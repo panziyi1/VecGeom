@@ -4,7 +4,7 @@
 #include "VecGeom/volumes/Cone.h"
 
 using VPlacedVolume = vecgeom::VPlacedVolume;
-using VGCone        = vecgeom::SimpleCone;
+using VGCone        = vecgeom::PlacedCone;
 
 template <typename ImplT>
 int runTester(ImplT const *shape, int npoints, bool debug, bool stat);

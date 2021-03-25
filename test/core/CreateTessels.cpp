@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
   if (scalability) {
     gtime = new TGraph(14);
     while (ngrid1 < 1000) {
-      SimpleTessellated *stsl   = new SimpleTessellated("test_VecGeomTessellated");
+      PlacedTessellated *stsl   = new PlacedTessellated("test_VecGeomTessellated");
       UnplacedTessellated *tsl1 = (UnplacedTessellated *)stsl->GetUnplacedVolume();
       int nfacets1              = TessellatedOrb(r, ngrid1, *tsl1);
       // Close the solid
@@ -209,7 +209,7 @@ int main(int argc, char *argv[])
     }
   }
 #endif
-  SimpleTessellated *stsl1                   = new SimpleTessellated("test_VecGeomTessellated");
+  PlacedTessellated *stsl1                   = new PlacedTessellated("test_VecGeomTessellated");
   UnplacedTessellated *utsl                  = (UnplacedTessellated *)stsl1->GetUnplacedVolume();
   TessellatedStruct<3, Precision> const &tsl = utsl->GetStruct();
   TessellatedOrb(r, ngrid, *utsl);
@@ -247,7 +247,7 @@ int main(int argc, char *argv[])
     // Visualize bounding box
     Vector3D<Precision> deltas = 0.5 * (tsl.fMaxExtent - tsl.fMinExtent);
     Vector3D<Precision> origin = 0.5 * (tsl.fMaxExtent + tsl.fMinExtent);
-    SimpleBox box("bbox", deltas.x(), deltas.y(), deltas.z());
+    PlacedBox box("bbox", deltas.x(), deltas.y(), deltas.z());
     visualizer.AddVolume(box, Transformation3D(origin.x(), origin.y(), origin.z()));
 
     // Visualize facets

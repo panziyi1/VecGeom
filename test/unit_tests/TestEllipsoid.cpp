@@ -712,7 +712,7 @@ bool TestEllipsoid()
 
 int main(int argc, char *argv[])
 {
-  assert(TestEllipsoid<vecgeom::SimpleEllipsoid>());
+  assert(TestEllipsoid<vecgeom::PlacedEllipsoid>());
   std::cout << "VecGeom Ellipsoid passed\n";
 
   return 0;

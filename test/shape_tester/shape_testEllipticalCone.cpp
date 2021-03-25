@@ -12,7 +12,7 @@
 #include "VecGeom/volumes/EllipticalCone.h"
 
 using VPlacedVolume = vecgeom::VPlacedVolume;
-using VGCone        = vecgeom::SimpleEllipticalCone;
+using VGCone        = vecgeom::PlacedEllipticalCone;
 
 template <typename ImplT>
 int runTester(ImplT const *shape, int npoints, bool debug, bool stat);

@@ -6,7 +6,7 @@
 #include "VecGeom/volumes/PlacedVolume.h"
 
 #include "VecGeom/volumes/Polyhedron.h"
-typedef vecgeom::SimplePolyhedron Polyhedron_t;
+typedef vecgeom::PlacedPolyhedron Polyhedron_t;
 using vecgeom::Precision;
 
 int main(int argc, char *argv[])

@@ -364,7 +364,7 @@ bool TestTet()
 
 int main(int argc, char *argv[])
 {
-  assert(TestTet<vecgeom::SimpleTet>());
+  assert(TestTet<vecgeom::PlacedTet>());
   std::cout << "VecGeomTet passed\n";
 
   return 0;

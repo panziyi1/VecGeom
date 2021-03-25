@@ -32,7 +32,7 @@ bool TestPolycone()
   Precision RMIN[3]   = {0, 0, 0};
   Precision RMAX[3]   = {70, 70, 80};
   Precision Z_Val2[3] = {-10, 0, 10};
-  Polycone_t Simple("SimpleTube+Cone", 0, 360. * kPi / 180., 3, Z_Val2, RMIN, RMAX);
+  Polycone_t Simple("PlacedTube+Cone", 0, 360. * kPi / 180., 3, Z_Val2, RMIN, RMAX);
 
   Precision z1[8]    = {-2935., -1899., -1899., -1899., 1899., 1899., 1899., 2935.};
   Precision rmin1[8] = {74., 34., 31., 31., 31., 31., 34., 74.};
@@ -547,7 +547,7 @@ bool TestPolycone()
 
 int main(int argc, char *argv[])
 {
-  TestPolycone<vecgeom::SimplePolycone>();
+  TestPolycone<vecgeom::PlacedPolycone>();
   std::cout << "VecGeomPolycone passed\n";
   return 0;
 }

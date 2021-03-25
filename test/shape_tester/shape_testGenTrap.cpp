@@ -1,7 +1,7 @@
 #include "../benchmark/ArgParser.h"
 #include "ShapeTester.h"
 #include "VecGeom/volumes/GenTrap.h"
-typedef vecgeom::SimpleGenTrap GenTrap_t;
+typedef vecgeom::PlacedGenTrap GenTrap_t;
 
 int main(int argc, char *argv[])
 {

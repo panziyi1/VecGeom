@@ -9,8 +9,8 @@ using namespace vecgeom;
 int main()
 {
   constexpr int nSamples = 10000;
-  SimpleOrb orb("Visualizer Orb", 3);
-  SimpleScaledShape scaled("Scaled Orb", orb.GetUnplacedVolume(), 0.5, 1.2, 1.);
+  PlacedOrb orb("Visualizer Orb", 3);
+  PlacedScaledShape scaled("Scaled Orb", orb.GetUnplacedVolume(), 0.5, 1.2, 1.);
   TPolyMarker3D pm(nSamples);
   pm.SetMarkerColor(kRed);
   pm.SetMarkerStyle(6);

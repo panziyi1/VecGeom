@@ -448,7 +448,7 @@ bool TestTrd()
 
 int main(int argc, char *argv[])
 {
-  TestTrd<vecgeom::SimpleTrd>();
+  TestTrd<vecgeom::PlacedTrd>();
   std::cout << "VecGeom Trd passed\n";
 
   return 0;

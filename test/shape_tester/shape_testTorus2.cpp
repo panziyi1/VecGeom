@@ -4,7 +4,7 @@
 #include "VecGeom/volumes/SpecializedTorus2.h"
 
 using VPlacedVolume = vecgeom::VPlacedVolume;
-using VGTorus       = vecgeom::SimpleTorus2;
+using VGTorus       = vecgeom::PlacedTorus2;
 
 template <typename ImplT>
 int runTester(ImplT const *shape, int npoints, bool debug, bool stat);

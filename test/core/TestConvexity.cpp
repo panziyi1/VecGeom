@@ -35,7 +35,7 @@ using namespace VECGEOM_NAMESPACE;
 bool test_ConvexityOrb()
 {
 
-  vecgeom::SimpleOrb b1("Solid VecGeomOrb #1", 5.);
+  vecgeom::PlacedOrb b1("Solid VecGeomOrb #1", 5.);
   assert(b1.GetUnplacedVolume()->IsConvex());
   return true;
 }
@@ -44,21 +44,21 @@ bool test_ConvexitySphere()
 {
 
   Precision rmin = 0., rmax = 5., sphi = 0., dphi = 2 * PI, stheta = 0., dtheta = PI;
-  vecgeom::SimpleSphere b1("Solide VecGeomSphere #1", rmin, rmax, sphi, dphi, stheta, dtheta);
+  vecgeom::PlacedSphere b1("Solide VecGeomSphere #1", rmin, rmax, sphi, dphi, stheta, dtheta);
   assert(b1.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleSphere b2("Solide VecGeomSphere #2", rmin, rmax, 0., PI, stheta, dtheta);
+  vecgeom::PlacedSphere b2("Solide VecGeomSphere #2", rmin, rmax, 0., PI, stheta, dtheta);
   assert(b2.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleSphere b3("Solide VecGeomSphere #3", rmin, rmax, 0., PI / 3, stheta, dtheta);
+  vecgeom::PlacedSphere b3("Solide VecGeomSphere #3", rmin, rmax, 0., PI / 3, stheta, dtheta);
   assert(b3.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleSphere b4("Solide VecGeomSphere #4", rmin, rmax, 0., 4 * PI / 3, stheta, dtheta);
+  vecgeom::PlacedSphere b4("Solide VecGeomSphere #4", rmin, rmax, 0., 4 * PI / 3, stheta, dtheta);
   assert(!b4.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleSphere b5("Solide VecGeomSphere #5", rmin, rmax, PI / 3., PI / 3, stheta, dtheta);
+  vecgeom::PlacedSphere b5("Solide VecGeomSphere #5", rmin, rmax, PI / 3., PI / 3, stheta, dtheta);
   assert(b5.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleSphere b6("Solide VecGeomSphere #6", rmin, rmax, PI / 3., 2 * PI / 3, stheta, dtheta);
+  vecgeom::PlacedSphere b6("Solide VecGeomSphere #6", rmin, rmax, PI / 3., 2 * PI / 3, stheta, dtheta);
   assert(b6.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleSphere b7("Solide VecGeomSphere #7", rmin, rmax, PI / 3., PI, stheta, dtheta);
+  vecgeom::PlacedSphere b7("Solide VecGeomSphere #7", rmin, rmax, PI / 3., PI, stheta, dtheta);
   assert(b7.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleSphere b8("Solide VecGeomSphere #8", rmin, rmax, PI / 3., 7 * PI / 6, stheta, dtheta);
+  vecgeom::PlacedSphere b8("Solide VecGeomSphere #8", rmin, rmax, PI / 3., 7 * PI / 6, stheta, dtheta);
   assert(!b8.GetUnplacedVolume()->IsConvex());
 
   // THESE TESTS ARE TESTING WEDGE BEHAVIOUR --> MOVE THEM INTO A WEDGE TEST
@@ -67,49 +67,49 @@ bool test_ConvexitySphere()
   //checking proper dphi calculation if specified dphi>2PI
   //Should be accepted by Wedge
   //Convention used for dPhi is if(dPhi>2PI) dPhi=2PI //needs a relook
-  vecgeom::SimpleSphere b9("Solide VecGeomSphere #9", rmin, rmax, PI/3. , 4*PI, stheta, dtheta);
+  vecgeom::PlacedSphere b9("Solide VecGeomSphere #9", rmin, rmax, PI/3. , 4*PI, stheta, dtheta);
   assert(b9.GetUnplacedVolume()->IsConvex());
   //std::cerr<<"Newly Calcuated DPHi of b9 : "<<b9.GetDPhi()<<std::endl;
 
-  vecgeom::SimpleSphere b10("Solide VecGeomSphere #10", rmin, rmax, PI/3. , 5*PI, stheta, dtheta);
+  vecgeom::PlacedSphere b10("Solide VecGeomSphere #10", rmin, rmax, PI/3. , 5*PI, stheta, dtheta);
   assert(b10.GetUnplacedVolume()->IsConvex());
   //std::cerr<<"Newly Calcuated DPHi of b10 : "<<b10.GetDPhi()<<std::endl;
 
 
   //This case should be discussed
-  vecgeom::SimpleSphere b11("Solide VecGeomSphere #11", rmin, rmax, PI/3. , ((2*PI) + (7*PI/6)), stheta, dtheta);
+  vecgeom::PlacedSphere b11("Solide VecGeomSphere #11", rmin, rmax, PI/3. , ((2*PI) + (7*PI/6)), stheta, dtheta);
   assert(b11.GetUnplacedVolume()->IsConvex());
   //std::cerr<<"Newly Calcuated DPHi of b11 : "<<b10.GetDPhi()<<std::endl;
   */
 
-  vecgeom::SimpleSphere b12("Solide VecGeomSphere #12", rmin, rmax, 0., 2 * PI, stheta, PI / 2);
+  vecgeom::PlacedSphere b12("Solide VecGeomSphere #12", rmin, rmax, 0., 2 * PI, stheta, PI / 2);
   assert(b12.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleSphere b13("Solide VecGeomSphere #13", rmin, rmax, 0., 2 * PI, stheta, 2 * PI / 3);
+  vecgeom::PlacedSphere b13("Solide VecGeomSphere #13", rmin, rmax, 0., 2 * PI, stheta, 2 * PI / 3);
   assert(!b13.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleSphere b14("Solide VecGeomSphere #14", rmin, rmax, 0., 2 * PI, stheta, PI / 3);
+  vecgeom::PlacedSphere b14("Solide VecGeomSphere #14", rmin, rmax, 0., 2 * PI, stheta, PI / 3);
   assert(b14.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleSphere b15("Solide VecGeomSphere #15", rmin, rmax, 0., 2 * PI, PI / 6, PI / 6);
+  vecgeom::PlacedSphere b15("Solide VecGeomSphere #15", rmin, rmax, 0., 2 * PI, PI / 6, PI / 6);
   assert(!b15.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleSphere b16("Solide VecGeomSphere #16", rmin, rmax, 0., 2 * PI, PI / 6, PI / 3);
+  vecgeom::PlacedSphere b16("Solide VecGeomSphere #16", rmin, rmax, 0., 2 * PI, PI / 6, PI / 3);
   assert(!b16.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleSphere b17("Solide VecGeomSphere #17", rmin, rmax, 0., 2 * PI, PI / 2, PI / 2);
+  vecgeom::PlacedSphere b17("Solide VecGeomSphere #17", rmin, rmax, 0., 2 * PI, PI / 2, PI / 2);
   assert(b17.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleSphere b18("Solide VecGeomSphere #18", rmin, rmax, 0., 2 * PI, PI / 2, PI / 6);
+  vecgeom::PlacedSphere b18("Solide VecGeomSphere #18", rmin, rmax, 0., 2 * PI, PI / 2, PI / 6);
   assert(!b18.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleSphere b19("Solide VecGeomSphere #19", rmin, rmax, 0., 2 * PI, 2 * PI / 3, PI / 3);
+  vecgeom::PlacedSphere b19("Solide VecGeomSphere #19", rmin, rmax, 0., 2 * PI, 2 * PI / 3, PI / 3);
   assert(b19.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleSphere b20("Solide VecGeomSphere #20", rmin, rmax, 0., 2 * PI, 2 * PI / 3, PI / 6);
+  vecgeom::PlacedSphere b20("Solide VecGeomSphere #20", rmin, rmax, 0., 2 * PI, 2 * PI / 3, PI / 6);
   assert(!b20.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleSphere b21("Solide VecGeomSphere #21", rmin, rmax, 0., 2 * PI, PI / 3, 2 * PI / 3);
+  vecgeom::PlacedSphere b21("Solide VecGeomSphere #21", rmin, rmax, 0., 2 * PI, PI / 3, 2 * PI / 3);
   assert(!b21.GetUnplacedVolume()->IsConvex());
 
-  vecgeom::SimpleSphere b22("Solide VecGeomSphere #22", rmin, rmax, 0., 2 * PI, PI / 3, PI / 3);
+  vecgeom::PlacedSphere b22("Solide VecGeomSphere #22", rmin, rmax, 0., 2 * PI, PI / 3, PI / 3);
   assert(!b22.GetUnplacedVolume()->IsConvex());
 
-  vecgeom::SimpleSphere b23("Solide VecGeomSphere #23", 3, rmax, 0., 2 * PI, 0, PI);
+  vecgeom::PlacedSphere b23("Solide VecGeomSphere #23", 3, rmax, 0., 2 * PI, 0, PI);
   assert(!b23.GetUnplacedVolume()->IsConvex());
 
-  vecgeom::SimpleSphere b24("Solide VecGeomSphere #24", 3, rmax, 0., 2 * PI / 3, PI / 3, PI / 3);
+  vecgeom::PlacedSphere b24("Solide VecGeomSphere #24", 3, rmax, 0., 2 * PI / 3, PI / 3, PI / 3);
   assert(!b24.GetUnplacedVolume()->IsConvex());
 
   return true;
@@ -118,9 +118,9 @@ bool test_ConvexitySphere()
 bool test_ConvexityParaboloid()
 {
 
-  vecgeom::SimpleParaboloid b1("VecGeomParaboloid", 5., 8., 10.);
+  vecgeom::PlacedParaboloid b1("VecGeomParaboloid", 5., 8., 10.);
   assert(b1.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleParaboloid b2("VecGeomParaboloid", 0., 8., 10.);
+  vecgeom::PlacedParaboloid b2("VecGeomParaboloid", 0., 8., 10.);
   assert(b1.GetUnplacedVolume()->IsConvex());
   return true;
 }
@@ -129,19 +129,19 @@ bool test_ConvexityCone()
 {
 
   Precision rmin1 = 0., rmax1 = 5., rmin2 = 0., rmax2 = 7., dz = 10., sphi = 0., dphi = 2 * PI;
-  vecgeom::SimpleCone b1("VecGeomCone1", rmin1, rmax1, rmin2, rmax2, dz, sphi, dphi);
+  vecgeom::PlacedCone b1("VecGeomCone1", rmin1, rmax1, rmin2, rmax2, dz, sphi, dphi);
   assert(b1.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleCone b2("VecGeomCone2", 2., rmax1, rmin2, rmax2, dz, sphi, dphi);
+  vecgeom::PlacedCone b2("VecGeomCone2", 2., rmax1, rmin2, rmax2, dz, sphi, dphi);
   assert(!b2.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleCone b3("VecGeomCone3", rmin1, rmax1, 4., rmax2, dz, sphi, dphi);
+  vecgeom::PlacedCone b3("VecGeomCone3", rmin1, rmax1, 4., rmax2, dz, sphi, dphi);
   assert(!b3.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleCone b4("VecGeomCone4", 2., rmax1, 4., rmax2, dz, sphi, dphi);
+  vecgeom::PlacedCone b4("VecGeomCone4", 2., rmax1, 4., rmax2, dz, sphi, dphi);
   assert(!b4.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleCone b5("VecGeomCone5", rmin1, rmax1, rmin2, rmax2, dz, sphi, PI);
+  vecgeom::PlacedCone b5("VecGeomCone5", rmin1, rmax1, rmin2, rmax2, dz, sphi, PI);
   assert(b5.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleCone b6("VecGeomCone6", rmin1, rmax1, rmin2, rmax2, dz, sphi, PI / 3);
+  vecgeom::PlacedCone b6("VecGeomCone6", rmin1, rmax1, rmin2, rmax2, dz, sphi, PI / 3);
   assert(b6.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleCone b7("VecGeomCone7", rmin1, rmax1, rmin2, rmax2, dz, sphi, 4 * PI / 3);
+  vecgeom::PlacedCone b7("VecGeomCone7", rmin1, rmax1, rmin2, rmax2, dz, sphi, 4 * PI / 3);
   assert(!b7.GetUnplacedVolume()->IsConvex());
 
   return true;
@@ -151,17 +151,17 @@ bool test_ConvexityTorus()
 {
 
   Precision rmin = 0., rmax = 5., rtor = 0., sphi = 0., dphi = 2 * PI;
-  vecgeom::SimpleTorus2 b1("VecGeomTorus1", rmin, rmax, rtor, sphi, dphi); // Torus becomes Orb
+  vecgeom::PlacedTorus2 b1("VecGeomTorus1", rmin, rmax, rtor, sphi, dphi); // Torus becomes Orb
   assert(b1.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleTorus2 b2("VecGeomTorus2", 3, rmax, rtor, sphi, dphi); // Torus becomes SphericalShell
+  vecgeom::PlacedTorus2 b2("VecGeomTorus2", 3, rmax, rtor, sphi, dphi); // Torus becomes SphericalShell
   assert(!b2.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleTorus2 b3("VecGeomTorus3", 3, rmax, 15, sphi, dphi); // Real Complete Torus
+  vecgeom::PlacedTorus2 b3("VecGeomTorus3", 3, rmax, 15, sphi, dphi); // Real Complete Torus
   assert(!b3.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleTorus2 b4("VecGeomTorus4", rmin, rmax, rtor, sphi, PI);
+  vecgeom::PlacedTorus2 b4("VecGeomTorus4", rmin, rmax, rtor, sphi, PI);
   assert(b4.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleTorus2 b5("VecGeomTorus5", rmin, rmax, rtor, sphi, PI / 3);
+  vecgeom::PlacedTorus2 b5("VecGeomTorus5", rmin, rmax, rtor, sphi, PI / 3);
   assert(b5.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleTorus2 b6("VecGeomTorus6", rmin, rmax, rtor, sphi, 4 * PI / 3);
+  vecgeom::PlacedTorus2 b6("VecGeomTorus6", rmin, rmax, rtor, sphi, 4 * PI / 3);
   assert(!b6.GetUnplacedVolume()->IsConvex());
 
   return true;
@@ -171,15 +171,15 @@ bool test_ConvexityTube()
 {
 
   Precision rmin = 0., rmax = 5., dz = 10., sphi = 0., dphi = 2 * PI;
-  vecgeom::SimpleTube b1("VecgeomTube1", rmin, rmax, dz, sphi, dphi); // Solid Cylinder
+  vecgeom::PlacedTube b1("VecgeomTube1", rmin, rmax, dz, sphi, dphi); // Solid Cylinder
   assert(b1.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleTube b2("VecgeomTube2", 3, rmax, dz, sphi, dphi); // Hollow Cylinder
+  vecgeom::PlacedTube b2("VecgeomTube2", 3, rmax, dz, sphi, dphi); // Hollow Cylinder
   assert(!b2.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleTube b3("VecgeomTube3", rmin, rmax, dz, sphi, PI);
+  vecgeom::PlacedTube b3("VecgeomTube3", rmin, rmax, dz, sphi, PI);
   assert(b3.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleTube b4("VecgeomTube4", rmin, rmax, dz, sphi, 2 * PI / 3);
+  vecgeom::PlacedTube b4("VecgeomTube4", rmin, rmax, dz, sphi, 2 * PI / 3);
   assert(b4.GetUnplacedVolume()->IsConvex());
-  vecgeom::SimpleTube b5("VecgeomTube5", rmin, rmax, dz, sphi, 4 * PI / 3);
+  vecgeom::PlacedTube b5("VecgeomTube5", rmin, rmax, dz, sphi, 4 * PI / 3);
   assert(!b5.GetUnplacedVolume()->IsConvex());
 
   return true;
@@ -188,7 +188,7 @@ bool test_ConvexityTube()
 bool test_ConvexityParallelepiped()
 {
   Precision dx = 20., dy = 30., dz = 40., alpha = 30., theta = 15., phi = 30.;
-  vecgeom::SimpleParallelepiped b1("VecGeomParallelepiped1", dx, dy, dz, alpha, theta, phi);
+  vecgeom::PlacedParallelepiped b1("VecGeomParallelepiped1", dx, dy, dz, alpha, theta, phi);
   assert(b1.GetUnplacedVolume()->IsConvex());
 
   return true;
@@ -197,7 +197,7 @@ bool test_ConvexityParallelepiped()
 bool test_ConvexityTrd()
 {
   Precision xlower = 20., xupper = 10., ylower = 15., yupper = 15, dz = 40.;
-  vecgeom::SimpleTrd b1("VecGeomParallelepiped1", xlower, xupper, ylower, yupper, dz);
+  vecgeom::PlacedTrd b1("VecGeomParallelepiped1", xlower, xupper, ylower, yupper, dz);
   assert(b1.GetUnplacedVolume()->IsConvex());
 
   return true;
@@ -217,7 +217,7 @@ bool test_ConvexityPolycone()
   // Precision rmax[4]={15.,15.,15.,10.};
   // Precision z[4]={0.,20.,30.,40.};
 
-  vecgeom::SimplePolycone b1("VecGeomPolycone", phiStart, deltaPhi, nZ, z, rmin, rmax);
+  vecgeom::PlacedPolycone b1("VecGeomPolycone", phiStart, deltaPhi, nZ, z, rmin, rmax);
   assert(!b1.GetUnplacedVolume()->IsConvex());
 
   // Added this new test case provided by Guilherme lima and Phillipe,
@@ -228,21 +228,21 @@ bool test_ConvexityPolycone()
   Precision z2[5]    = {0., 10., 20., 20., 40.};
   phiStart           = 0.;
   deltaPhi           = kTwoPi;
-  vecgeom::SimplePolycone b2("VecGeomPolycone2", phiStart, deltaPhi, nZ2, z2, rmin2, rmax2);
+  vecgeom::PlacedPolycone b2("VecGeomPolycone2", phiStart, deltaPhi, nZ2, z2, rmin2, rmax2);
   assert(!b2.GetUnplacedVolume()->IsConvex());
 
   int nZ3            = 6;
   Precision rmin3[6] = {0., 0., 0., 0., 0., 0.};
   Precision rmax3[6] = {10., 20., 20., 30., 20., 10.};
   Precision z3[6]    = {0., 10., 20., 20., 20., 30.};
-  vecgeom::SimplePolycone b3("VecGeomPolycone3", phiStart, deltaPhi, nZ3, z3, rmin3, rmax3);
+  vecgeom::PlacedPolycone b3("VecGeomPolycone3", phiStart, deltaPhi, nZ3, z3, rmin3, rmax3);
   assert(b3.GetUnplacedVolume()->IsConvex());
 
   int nZ4            = 3;
   Precision rmin4[3] = {0., 0., 0.};
   Precision rmax4[3] = {10., 20., 30.};
   Precision z4[3]    = {0., 10., 10.};
-  vecgeom::SimplePolycone b4("VecGeomPolycone3", phiStart, deltaPhi, nZ4, z4, rmin4, rmax4);
+  vecgeom::PlacedPolycone b4("VecGeomPolycone3", phiStart, deltaPhi, nZ4, z4, rmin4, rmax4);
   assert(b4.GetUnplacedVolume()->IsConvex());
 
   // Some more test cases
@@ -255,7 +255,7 @@ bool test_ConvexityPolycone()
       Precision rmin[nZ] = {0., 0., 0., 0., 0., 0.};
       Precision rmax[nZ] = {10., 20., 20., 30., 20., 10.};
       Precision z[nZ]    = {0., 10., 20., 20., 20., 30.};
-      vecgeom::SimplePolycone B("VecGeomPolycone", phiStart, deltaPhi, nZ, z, rmin, rmax);
+      vecgeom::PlacedPolycone B("VecGeomPolycone", phiStart, deltaPhi, nZ, z, rmin, rmax);
       assert(B.GetUnplacedVolume()->IsConvex());
     }
 
@@ -271,7 +271,7 @@ bool test_ConvexityPolycone()
       Precision rmin[nZ] = {0., 0., 10., 0., 0., 0.};
       Precision rmax[nZ] = {10., 20., 20., 30., 20., 10.};
       Precision z[nZ]    = {0., 10., 20., 20., 20., 30.};
-      vecgeom::SimplePolycone B("VecGeomPolycone", phiStart, deltaPhi, nZ, z, rmin, rmax);
+      vecgeom::PlacedPolycone B("VecGeomPolycone", phiStart, deltaPhi, nZ, z, rmin, rmax);
       assert(!B.GetUnplacedVolume()->IsConvex());
     }
 
@@ -284,7 +284,7 @@ bool test_ConvexityPolycone()
       Precision rmin[nZ] = {0., 0., 0., 10., 0., 0.};
       Precision rmax[nZ] = {10., 20., 20., 30., 20., 10.};
       Precision z[nZ]    = {0., 10., 20., 20., 20., 30.};
-      vecgeom::SimplePolycone B("VecGeomPolycone", phiStart, deltaPhi, nZ, z, rmin, rmax);
+      vecgeom::PlacedPolycone B("VecGeomPolycone", phiStart, deltaPhi, nZ, z, rmin, rmax);
       assert(B.GetUnplacedVolume()->IsConvex());
     }
 
@@ -295,7 +295,7 @@ bool test_ConvexityPolycone()
       Precision rmin[nZ] = {0., 0., 0., 0., 0., 0., 0., 0.};
       Precision rmax[nZ] = {10., 20., 20., 10., 10., 5., 5., 20.};
       Precision z[nZ]    = {0., 20., 20., 40., 45., 50., 50., 60.};
-      vecgeom::SimplePolycone B("VecGeomPolycone", phiStart, deltaPhi, nZ, z, rmin, rmax);
+      vecgeom::PlacedPolycone B("VecGeomPolycone", phiStart, deltaPhi, nZ, z, rmin, rmax);
       assert(!B.GetUnplacedVolume()->IsConvex());
     }
 
@@ -306,7 +306,7 @@ bool test_ConvexityPolycone()
       Precision rmin[nZ] = {0., 0., 0., 0., 0., 0.};
       Precision rmax[nZ] = {10., 20., 30., 25., 20., 30.};
       Precision z[nZ]    = {0., 10., 10., 10., 20., 30.};
-      vecgeom::SimplePolycone B("VecGeomPolycone", phiStart, deltaPhi, nZ, z, rmin, rmax);
+      vecgeom::PlacedPolycone B("VecGeomPolycone", phiStart, deltaPhi, nZ, z, rmin, rmax);
       assert(!B.GetUnplacedVolume()->IsConvex());
     }
 
@@ -317,7 +317,7 @@ bool test_ConvexityPolycone()
       Precision rmin[nZ] = {0., 0., 0.};
       Precision rmax[nZ] = {10., 20., 30.};
       Precision z[nZ]    = {0., 10., 15.};
-      vecgeom::SimplePolycone B("VecGeomPolycone", phiStart, deltaPhi, nZ, z, rmin, rmax);
+      vecgeom::PlacedPolycone B("VecGeomPolycone", phiStart, deltaPhi, nZ, z, rmin, rmax);
       assert(!B.GetUnplacedVolume()->IsConvex());
     }
 
@@ -328,7 +328,7 @@ bool test_ConvexityPolycone()
       Precision rmin[nZ] = {0., 0., 0.};
       Precision rmax[nZ] = {10., 20., 30.};
       Precision z[nZ]    = {0., 10., 30.};
-      vecgeom::SimplePolycone B("VecGeomPolycone", phiStart, deltaPhi, nZ, z, rmin, rmax);
+      vecgeom::PlacedPolycone B("VecGeomPolycone", phiStart, deltaPhi, nZ, z, rmin, rmax);
       assert(B.GetUnplacedVolume()->IsConvex());
     }
 
@@ -340,7 +340,7 @@ bool test_ConvexityPolycone()
       Precision rmin[nZ] = {5., 0., 0.};
       Precision rmax[nZ] = {10., 20., 30.};
       Precision z[nZ]    = {0., 10., 30.};
-      vecgeom::SimplePolycone B("VecGeomPolycone", phiStart, deltaPhi, nZ, z, rmin, rmax);
+      vecgeom::PlacedPolycone B("VecGeomPolycone", phiStart, deltaPhi, nZ, z, rmin, rmax);
       assert(!B.GetUnplacedVolume()->IsConvex());
     }
   }
@@ -351,7 +351,7 @@ bool test_ConvexityPolycone()
 bool test_ConvexityTrapezoid()
 {
 
-  vecgeom::SimpleTrapezoid b1("trap3", 50, 0, 0, 50, 50, 50, PI / 4, 50, 50, 50, PI / 4);
+  vecgeom::PlacedTrapezoid b1("trap3", 50, 0, 0, 50, 50, 50, PI / 4, 50, 50, 50, PI / 4);
   assert(b1.GetUnplacedVolume()->IsConvex());
 
   return true;
@@ -367,19 +367,19 @@ bool test_ConvexityPolyhedron()
   Precision rInner[nPlanes]  = {0, 0, 0, 0};
   Precision rOuter[nPlanes]  = {2, 2, 2, 2};
 
-  vecgeom::SimplePolyhedron b1("Vecgeom Polyhedron", phiStart, deltaPhi, sides, nPlanes, zPlanes, rInner, rOuter);
+  vecgeom::PlacedPolyhedron b1("Vecgeom Polyhedron", phiStart, deltaPhi, sides, nPlanes, zPlanes, rInner, rOuter);
   assert(b1.GetUnplacedVolume()->IsConvex());
 
-  vecgeom::SimplePolyhedron b2("Vecgeom Polyhedron", phiStart, 60 * kDegToRad, sides, nPlanes, zPlanes, rInner, rOuter);
+  vecgeom::PlacedPolyhedron b2("Vecgeom Polyhedron", phiStart, 60 * kDegToRad, sides, nPlanes, zPlanes, rInner, rOuter);
   assert(b2.GetUnplacedVolume()->IsConvex());
 
-  vecgeom::SimplePolyhedron b3("Vecgeom Polyhedron", phiStart, 200 * kDegToRad, sides, nPlanes, zPlanes, rInner,
+  vecgeom::PlacedPolyhedron b3("Vecgeom Polyhedron", phiStart, 200 * kDegToRad, sides, nPlanes, zPlanes, rInner,
                                rOuter);
   assert(!b3.GetUnplacedVolume()->IsConvex());
 
   rOuter[1] = 1.;
   rOuter[2] = 1.;
-  vecgeom::SimplePolyhedron b5("Vecgeom Polyhedron", phiStart, 120 * kDegToRad, sides, nPlanes, zPlanes, rInner,
+  vecgeom::PlacedPolyhedron b5("Vecgeom Polyhedron", phiStart, 120 * kDegToRad, sides, nPlanes, zPlanes, rInner,
                                rOuter);
   assert(!b5.GetUnplacedVolume()->IsConvex());
 
@@ -387,27 +387,27 @@ bool test_ConvexityPolyhedron()
   rOuter[1] = 2.;
   rOuter[2] = 2.;
   rOuter[3] = 1.;
-  vecgeom::SimplePolyhedron b6("Vecgeom Polyhedron", phiStart, 120 * kDegToRad, sides, nPlanes, zPlanes, rInner,
+  vecgeom::PlacedPolyhedron b6("Vecgeom Polyhedron", phiStart, 120 * kDegToRad, sides, nPlanes, zPlanes, rInner,
                                rOuter);
   assert(b6.GetUnplacedVolume()->IsConvex());
 
   rInner[1] = 1.;
   rInner[2] = 0.5;
-  vecgeom::SimplePolyhedron b4("Vecgeom Polyhedron", phiStart, 60 * kDegToRad, sides, nPlanes, zPlanes, rInner, rOuter);
+  vecgeom::PlacedPolyhedron b4("Vecgeom Polyhedron", phiStart, 60 * kDegToRad, sides, nPlanes, zPlanes, rInner, rOuter);
   assert(!b4.GetUnplacedVolume()->IsConvex());
 
   return true;
 }
 bool test_ConvexityHype()
 {
-  vecgeom::SimpleHype b1("Solid VecGeomHype #1", 10., 15., PI / 4, PI / 3, 50);
+  vecgeom::PlacedHype b1("Solid VecGeomHype #1", 10., 15., PI / 4, PI / 3, 50);
   assert(!b1.GetUnplacedVolume()->IsConvex());
 
-  vecgeom::SimpleHype b2("Solid VecGeomHype #2", 0., 15., 0., PI / 3, 50);
+  vecgeom::PlacedHype b2("Solid VecGeomHype #2", 0., 15., 0., PI / 3, 50);
   assert(!b2.GetUnplacedVolume()->IsConvex());
 
   // Case when hype becomes Solid Tube
-  vecgeom::SimpleHype b3("Solid VecGeomHype #3", 0., 15., 0., 0., 50);
+  vecgeom::PlacedHype b3("Solid VecGeomHype #3", 0., 15., 0., 0., 50);
   assert(b3.GetUnplacedVolume()->IsConvex());
 
   return true;
@@ -417,8 +417,8 @@ bool test_ConvexityHype()
 
 bool test_ConvexityScaledOrb()
 {
-  vecgeom::SimpleOrb orb("Visualizer Orb", 3);
-  vecgeom::SimpleScaledShape scaledOrb("Scaled Orb", orb.GetUnplacedVolume(), 0.5, 1.2, 1.);
+  vecgeom::PlacedOrb orb("Visualizer Orb", 3);
+  vecgeom::PlacedScaledShape scaledOrb("Scaled Orb", orb.GetUnplacedVolume(), 0.5, 1.2, 1.);
   assert(scaledOrb.GetUnplacedVolume()->IsConvex());
 
   return true;

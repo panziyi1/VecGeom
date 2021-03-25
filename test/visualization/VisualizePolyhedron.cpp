@@ -43,7 +43,7 @@ int main()
   Precision rInner[nPlanes]  = {0, 1, 0.5, 0};
   Precision rOuter[nPlanes]  = {1, 2, 2, 1};
 
-  SimplePolyhedron polyhedron("Visualizer Polyhedron", phiStart, deltaPhi, sides, nPlanes, zPlanes, rInner, rOuter);
+  PlacedPolyhedron polyhedron("Visualizer Polyhedron", phiStart, deltaPhi, sides, nPlanes, zPlanes, rInner, rOuter);
   TPolyMarker3D pm(nSamples);
   pm.SetMarkerColor(kRed);
   pm.SetMarkerStyle(6);

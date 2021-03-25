@@ -124,7 +124,7 @@ bool TestParaboloid()
 
 int main(int argc, char *argv[])
 {
-  assert(TestParaboloid<vecgeom::SimpleParaboloid>());
+  assert(TestParaboloid<vecgeom::PlacedParaboloid>());
   std::cout << "VecGeomParaboloid passed\n";
 
   return 0;

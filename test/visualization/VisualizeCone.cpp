@@ -9,7 +9,7 @@ using namespace vecgeom;
 int main()
 {
   constexpr int nSamples = 512;
-  SimpleCone cone("Visualizer Cone", 0., 3., 0., 8., 10., 0., 4 * kPi / 3);
+  PlacedCone cone("Visualizer Cone", 0., 3., 0., 8., 10., 0., 4 * kPi / 3);
   AOS3D<Precision> points(nSamples);
   for (int i = 0; i < nSamples; ++i) {
     Vector3D<Precision> sample;

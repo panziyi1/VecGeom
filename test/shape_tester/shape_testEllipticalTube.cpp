@@ -12,7 +12,7 @@
 #include "VecGeom/volumes/EllipticalTube.h"
 
 using VPlacedVolume = vecgeom::VPlacedVolume;
-using VGTube        = vecgeom::SimpleEllipticalTube;
+using VGTube        = vecgeom::PlacedEllipticalTube;
 
 template <typename ImplT>
 int runTester(ImplT const *shape, int npoints, bool debug, bool stat);

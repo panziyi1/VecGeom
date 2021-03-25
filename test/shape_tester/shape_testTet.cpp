@@ -12,7 +12,7 @@
 #include "VecGeom/base/Vector3D.h"
 
 using VPlacedVolume = vecgeom::VPlacedVolume;
-using VGTet         = vecgeom::SimpleTet;
+using VGTet         = vecgeom::PlacedTet;
 
 template <typename ImplT>
 int runTester(ImplT const *shape, int npoints, bool debug, bool stat);

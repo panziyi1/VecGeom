@@ -363,7 +363,7 @@ int main(int argc, char *argv[])
     unplacedvolume = GeoManager::MakeInstance<UnplacedGenTrap>(verticesx, verticesy, ps[0]);
   } else if (!v.compare("polytri")) {
     Visualizer visualizer;
-    SimpleBox boxshape("box", 3, 3, 3);
+    PlacedBox boxshape("box", 3, 3, 3);
     visualizer.AddVolume(boxshape);
 
     std::vector<Vec_t> v = {{2, 2, 0}, {-2, 2, 0}, {-2, -2, 0}, {0, 0, 0}, {2, -2, 0},
@@ -809,7 +809,7 @@ int main(int argc, char *argv[])
     Utils3D::PolygonIntersection *pi = p.Intersect(p2);
 
     Visualizer visualizer;
-    SimpleBox boxshape("box", 5, 5, 5);
+    PlacedBox boxshape("box", 5, 5, 5);
     visualizer.AddVolume(boxshape);
 
     DrawPolygon(p, visualizer, kGreen);
@@ -835,7 +835,7 @@ int main(int argc, char *argv[])
 
   } else if (!v.compare("pip")) {
     Visualizer visualizer;
-    SimpleBox boxshape("box", 3, 3, 3);
+    PlacedBox boxshape("box", 3, 3, 3);
     visualizer.AddVolume(boxshape);
 
     std::vector<Vec_t> v = {{2, 2, 0}, {-2, 2, 0}, {-2, -2, 0}, {0, 0, 0}, {2, -2, 0},
@@ -877,7 +877,7 @@ int main(int argc, char *argv[])
 
   else if (!v.compare("pit")) {
     Visualizer visualizer;
-    SimpleBox boxshape("box", 3, 3, 3);
+    PlacedBox boxshape("box", 3, 3, 3);
     visualizer.AddVolume(boxshape);
 
     std::vector<Vec_t> v = {{2, 2, 0}, {-2, 2, 0}, {-2, -2, 0}, {0, 0, 0}, {2, -2, 0},
@@ -921,7 +921,7 @@ int main(int argc, char *argv[])
   }
 
   Visualizer visualizer;
-  SimpleBox boxshape("box", WORLDSIZE, WORLDSIZE, WORLDSIZE);
+  PlacedBox boxshape("box", WORLDSIZE, WORLDSIZE, WORLDSIZE);
   visualizer.AddVolume(boxshape);
   DrawPolyhedron(unplacedvolume->CreateMesh3D(Transformation3D(), nSegments)->GetMesh(), visualizer, kBlue);
   // DrawPolygon(p, visualizer, kBlue);

@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
   Inside_t inside;
   bool contains;
 
-  SimpleCutTube cuttube("cuttube", rmin, rmax, dz, sphi, dphi, nbottom, ntop);
+  PlacedCutTube cuttube("cuttube", rmin, rmax, dz, sphi, dphi, nbottom, ntop);
 #ifdef VECGEOM_ROOT
   TGeoCtub *rootctub = (TGeoCtub *)cuttube.ConvertToRoot();
   printf("ROOT shape parameters:\n");

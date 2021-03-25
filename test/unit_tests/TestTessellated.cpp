@@ -15,11 +15,11 @@ bool testvecgeom = true;
 using namespace vecgeom;
 
 template <class Vec_t = vecgeom::Vector3D<vecgeom::Precision>>
-vecgeom::SimpleTessellated *CreateTrdLikeTessellated(const char *name, double x1, double x2, double y1, double y2,
+vecgeom::PlacedTessellated *CreateTrdLikeTessellated(const char *name, double x1, double x2, double y1, double y2,
                                                      double z)
 {
   // Create a tessellated solid from Trd parameters
-  vecgeom::SimpleTessellated *stsl  = new vecgeom::SimpleTessellated(name);
+  vecgeom::PlacedTessellated *stsl  = new vecgeom::PlacedTessellated(name);
   vecgeom::UnplacedTessellated *tsl = (vecgeom::UnplacedTessellated *)stsl->GetUnplacedVolume();
   // Top facet
   tsl->AddQuadrilateralFacet(Vec_t(-x2, y2, z), Vec_t(-x2, -y2, z), Vec_t(x2, -y2, z), Vec_t(x2, y2, z));
@@ -60,9 +60,9 @@ bool TestTessellated()
   Vec_t normal;
   bool valid;
 
-  vecgeom::SimpleTessellated &tsl1 = *CreateTrdLikeTessellated<Vec_t>("Test Box #1", 20, 20, 30, 30, 40);
-  vecgeom::SimpleTessellated &tsl2 = *CreateTrdLikeTessellated<Vec_t>("Test Trd", 10, 30, 20, 40, 40);
-  vecgeom::SimpleTessellated &tsl3 =
+  vecgeom::PlacedTessellated &tsl1 = *CreateTrdLikeTessellated<Vec_t>("Test Box #1", 20, 20, 30, 30, 40);
+  vecgeom::PlacedTessellated &tsl2 = *CreateTrdLikeTessellated<Vec_t>("Test Trd", 10, 30, 20, 40, 40);
+  vecgeom::PlacedTessellated &tsl3 =
       *CreateTrdLikeTessellated<Vec_t>("BABAR Trd", 0.14999999999999999, 0.14999999999999999, 24.707000000000001,
                                        24.707000000000001, 22.699999999999999);
 
@@ -362,7 +362,7 @@ bool TestTessellated()
 
 int main(int argc, char *argv[])
 {
-  TestTessellated<vecgeom::SimpleTessellated>();
+  TestTessellated<vecgeom::PlacedTessellated>();
   std::cout << "VecGeom Tessellated passed\n";
 
   return 0;

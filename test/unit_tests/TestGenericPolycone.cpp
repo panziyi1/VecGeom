@@ -236,7 +236,7 @@ bool TestGenericPolycone()
 
 int main(int argc, char *argv[])
 {
-  assert(TestGenericPolycone<vecgeom::SimpleGenericPolycone>());
+  assert(TestGenericPolycone<vecgeom::PlacedGenericPolycone>());
   std::cout << "VecGeomGenericPolycone passed\n";
 
   return 0;

@@ -23,7 +23,7 @@ using namespace vecgeom;
 // Check DistanceToIn() for set of points, p.y() should be positive (!!!)
 //
 template <class Vec_t = Vector3D<Precision>>
-void CheckDistanceToIn(const SimpleEllipticalCone &cone, double Z)
+void CheckDistanceToIn(const PlacedEllipticalCone &cone, double Z)
 {
   double b    = cone.GetSemiAxisY();
   double h    = cone.GetZMax();
@@ -213,7 +213,7 @@ void CheckDistanceToIn(const SimpleEllipticalCone &cone, double Z)
 // Check DistanceToOut() for set of points, p.y() should be positive (!!!)
 //
 template <class Vec_t = Vector3D<Precision>>
-void CheckDistanceToOut(const SimpleEllipticalCone &cone, double Z)
+void CheckDistanceToOut(const PlacedEllipticalCone &cone, double Z)
 {
   double a    = cone.GetSemiAxisX();
   double b    = cone.GetSemiAxisY();
@@ -999,7 +999,7 @@ bool TestEllipticalCone()
 
 int main()
 {
-  assert(TestEllipticalCone<SimpleEllipticalCone>());
+  assert(TestEllipticalCone<PlacedEllipticalCone>());
   std::cout << "\n   Test EllipticalCone passed\n" << std::endl;
 
   return 0;

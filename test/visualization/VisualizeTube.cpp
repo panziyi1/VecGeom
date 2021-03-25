@@ -8,7 +8,7 @@ using namespace vecgeom;
 int main()
 {
   constexpr int nSamples = 512;
-  SimpleTube tube("Visualizer Tube", 0, 5, 10, 0., 4 * kPi / 3);
+  PlacedTube tube("Visualizer Tube", 0, 5, 10, 0., 4 * kPi / 3);
   AOS3D<Precision> points(nSamples);
   for (int i = 0; i < nSamples; ++i) {
     Vector3D<Precision> sample;

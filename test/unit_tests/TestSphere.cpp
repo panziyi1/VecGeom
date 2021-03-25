@@ -1112,7 +1112,7 @@ bool TestSphere()
 
 int main(int argc, char *argv[])
 {
-  assert(TestSphere<vecgeom::SimpleSphere>());
+  assert(TestSphere<vecgeom::PlacedSphere>());
   std::cout << "VecGeomSphere passed\n";
 
   return 0;

@@ -348,6 +348,6 @@ int main()
 #ifdef NDEBUG
   G4Exception("FAIL: *** Assertions must be compiled in! ***");
 #endif
-  assert(testTorus<vecgeom::SimpleTorus2>());
+  assert(testTorus<vecgeom::PlacedTorus2>());
   return 0;
 }

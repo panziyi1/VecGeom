@@ -5,7 +5,7 @@
 
 #define PI 3.14159265358979323846
 
-typedef vecgeom::SimpleTube Tube_t;
+typedef vecgeom::PlacedTube Tube_t;
 
 int main(int argc, char *argv[])
 {

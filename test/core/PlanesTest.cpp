@@ -15,7 +15,7 @@ int StaticPlanes()
   planes.Set(3, Vector3D<Precision>(-1, 0, 0), Vector3D<Precision>(-1, 0, 0));
   planes.Set(4, Vector3D<Precision>(0, 1, 0), Vector3D<Precision>(0, 1, 0));
   planes.Set(5, Vector3D<Precision>(0, -1, 0), Vector3D<Precision>(0, -1, 0));
-  SimpleBox die("die", 1, 1, 1);
+  PlacedBox die("die", 1, 1, 1);
   std::cout << planes;
   const Vector3D<Precision> sampleBounds(2., 2., 2.);
   constexpr int nPoints = 1024;

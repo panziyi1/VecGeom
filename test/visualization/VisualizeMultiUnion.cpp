@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
   // Visualize bounding box
   Vector3D<double> deltas = 0.5 * (multiunion.GetStruct().fMaxExtent - multiunion.GetStruct().fMinExtent);
   Vector3D<double> origin = 0.5 * (multiunion.GetStruct().fMaxExtent + multiunion.GetStruct().fMinExtent);
-  SimpleBox box("bbox", deltas.x(), deltas.y(), deltas.z());
+  PlacedBox box("bbox", deltas.x(), deltas.y(), deltas.z());
   visualizer.AddVolume(box, Transformation3D(origin.x(), origin.y(), origin.z()));
   for (size_t i = 0; i < multiunion.GetNumberOfSolids(); ++i) {
     AddComponentToVisualizer(multiunion.GetStruct(), i, visualizer);

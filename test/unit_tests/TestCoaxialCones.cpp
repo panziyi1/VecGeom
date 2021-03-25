@@ -115,7 +115,7 @@ bool TestCoaxialCones()
 
 int main(int argc, char *argv[])
 {
-  assert(TestCoaxialCones<vecgeom::SimpleCoaxialCones>());
+  assert(TestCoaxialCones<vecgeom::PlacedCoaxialCones>());
   std::cout << "VecGeomCoaxialCones passed\n";
 
   return 0;

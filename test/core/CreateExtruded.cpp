@@ -207,7 +207,7 @@ int main(int argc, char *argv[])
     xtru.Extent(amin, amax);
     Vector3D<Precision> deltas = 0.5 * (amax - amin);
     Vector3D<Precision> origin = 0.5 * (amax + amin);
-    SimpleBox box("bbox", deltas.x(), deltas.y(), deltas.z());
+    PlacedBox box("bbox", deltas.x(), deltas.y(), deltas.z());
     visualizer.AddVolume(box, Transformation3D(origin.x(), origin.y(), origin.z()));
 
     // Visualize facets

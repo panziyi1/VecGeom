@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
 #ifdef VECGEOM_ROOT
   if (vis == 0) return 0;
   Visualizer visualizer;
-  SimpleBox boxshape("box", 7, 7, 7);
+  PlacedBox boxshape("box", 7, 7, 7);
   visualizer.AddVolume(boxshape);
   Utils3D::vector_t<Utils3D::Line> lines;
   DrawPolyhedron(polyh1, visualizer, kBlue);
