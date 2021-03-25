@@ -30,7 +30,7 @@ template <>
 UnplacedHype *Maker<UnplacedHype>::MakeInstance(const Precision rMin, const Precision rMax, const Precision stIn,
                                                 const Precision stOut, const Precision dz)
 {
-  return new SUnplacedHype<HypeTypes::UniversalHype>(rMin, rMax, stIn, stOut, dz);
+  return new UnplacedHype(rMin, rMax, stIn, stOut, dz);
 }
 
 #ifndef VECCORE_CUDA
@@ -174,7 +174,7 @@ void UnplacedHype::GetParametersList(int, Precision *aArray) const
 VECCORE_ATT_HOST_DEVICE
 UnplacedHype *UnplacedHype::Clone() const
 {
-  return new SUnplacedHype<HypeTypes::UniversalHype>(fHype.fRmin, fHype.fStIn, fHype.fRmax, fHype.fStOut, fHype.fDz);
+  return new UnplacedHype(fHype.fRmin, fHype.fStIn, fHype.fRmax, fHype.fStOut, fHype.fDz);
 }
 
 std::ostream &UnplacedHype::StreamInfo(std::ostream &os) const
@@ -209,6 +209,47 @@ void UnplacedHype::Print(std::ostream &os) const
   os << "UnplacedHype {" << fHype.fRmin << ", " << fHype.fRmax << ", " << fHype.fStIn << ", " << fHype.fStOut << ", "
      << fHype.fDz << "}";
 }
+
+template <TranslationCode transCodeT, RotationCode rotCodeT>
+VECCORE_ATT_DEVICE
+VPlacedVolume *UnplacedHype::Create(LogicalVolume const *const logical_volume,
+                                    Transformation3D const *const transformation,
+#ifdef VECCORE_CUDA
+                                    const int id, const int copy_no, const int child_id,
+#endif
+                                    VPlacedVolume *const placement)
+{
+  (void)placement;
+  return new SpecializedHype<transCodeT, rotCodeT, HypeTypes::UniversalHype>(logical_volume, transformation
+#ifdef VECCORE_CUDA
+                                                                             ,
+                                                                             id, copy_no, child_id
+#endif
+  );
+}
+
+#ifndef VECCORE_CUDA
+VPlacedVolume *UnplacedHype::SpecializedVolume(LogicalVolume const *const volume,
+                                               Transformation3D const *const transformation,
+                                               const TranslationCode trans_code, const RotationCode rot_code,
+                                               VPlacedVolume *const placement) const
+{
+  return VolumeFactory::CreateByTransformation<UnplacedHype>(volume, transformation, trans_code, rot_code,
+                                                             placement);
+}
+
+#else
+VECCORE_ATT_DEVICE
+VPlacedVolume *UnplacedHype::SpecializedVolume(LogicalVolume const *const volume,
+                                               Transformation3D const *const transformation,
+                                               const TranslationCode trans_code, const RotationCode rot_code, const int id,
+                                               const int copy_no, const int child_id,
+                                               VPlacedVolume *const placement) const
+{
+  return VolumeFactory::CreateByTransformation<UnplacedHype>(volume, transformation, trans_code, rot_code,
+                                                             id, copy_no, child_id, placement);
+}
+#endif
 
 #ifndef VECCORE_CUDA
 SolidMesh *UnplacedHype::CreateMesh3D(Transformation3D const &trans, size_t nSegments) const
@@ -287,13 +328,13 @@ SolidMesh *UnplacedHype::CreateMesh3D(Transformation3D const &trans, size_t nSeg
 #ifdef VECGEOM_CUDA_INTERFACE
 DevicePtr<cuda::VUnplacedVolume> UnplacedHype::CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const in_gpu_ptr) const
 {
-  return CopyToGpuImpl<SUnplacedHype<HypeTypes::UniversalHype>>(in_gpu_ptr, fHype.fRmin, fHype.fRmax, fHype.fStIn,
-                                                                fHype.fStOut, fHype.fDz);
+  return CopyToGpuImpl<UnplacedHype>(in_gpu_ptr, fHype.fRmin, fHype.fRmax, fHype.fStIn,
+                                    fHype.fStOut, fHype.fDz);
 }
 
 DevicePtr<cuda::VUnplacedVolume> UnplacedHype::CopyToGpu() const
 {
-  return CopyToGpuImpl<SUnplacedHype<HypeTypes::UniversalHype>>();
+  return CopyToGpuImpl<UnplacedHype>();
 }
 #endif // VECGEOM_CUDA_INTERFACE
 
@@ -303,8 +344,8 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedHype::CopyToGpu() const
 
 namespace cxx {
 
-template size_t DevicePtr<cuda::SUnplacedHype<cuda::HypeTypes::UniversalHype>>::SizeOf();
-template void DevicePtr<cuda::SUnplacedHype<cuda::HypeTypes::UniversalHype>>::Construct(
+template size_t DevicePtr<cuda::UnplacedHype>::SizeOf();
+template void DevicePtr<cuda::UnplacedHype>::Construct(
     const Precision rmin, const Precision rmax, const Precision stIn, const Precision stOut, const Precision z) const;
 
 } // namespace cxx

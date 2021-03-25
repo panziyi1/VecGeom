@@ -27,17 +27,15 @@ VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE(struct, PolyconeImplementation, typename);
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-template <typename T>
-class SPlacedPolycone;
-template <typename T>
-class SUnplacedPolycone;
+class PlacedPolycone;
+class UnplacedPolycone;
 
 template <typename polyconeTypeT>
 struct PolyconeImplementation {
 
   using UnplacedStruct_t = PolyconeStruct<Precision>;
-  using UnplacedVolume_t = SUnplacedPolycone<polyconeTypeT>;
-  using PlacedShape_t    = SPlacedPolycone<UnplacedVolume_t>;
+  using UnplacedVolume_t = UnplacedPolycone;
+  using PlacedShape_t    = PlacedPolycone;
 
   VECCORE_ATT_HOST_DEVICE
   static void PrintType()

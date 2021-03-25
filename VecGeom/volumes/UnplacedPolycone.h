@@ -20,11 +20,11 @@ namespace vecgeom {
 
 VECGEOM_DEVICE_FORWARD_DECLARE(class UnplacedPolycone;);
 VECGEOM_DEVICE_DECLARE_CONV(class, UnplacedPolycone);
-VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE(class, SUnplacedPolycone, typename);
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-class UnplacedPolycone : public VUnplacedVolume {
+class UnplacedPolycone : public UnplacedVolumeImplHelper<PolyconeImplementation<ConeTypes::UniversalCone>>,
+                         public AlignedBase {
 
 private:
   PolyconeStruct<Precision> fPolycone;
@@ -190,10 +190,32 @@ public:
   std::ostream &StreamInfo(std::ostream &os) const;
   std::string GetEntityType() const { return "Polycone"; }
 
+  template <TranslationCode transCodeT, RotationCode rotCodeT>
+  VECCORE_ATT_DEVICE
+  static VPlacedVolume *Create(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
+#ifdef VECCORE_CUDA
+                               const int id, const int copy_no, const int child_id,
+#endif
+                               VPlacedVolume *const placement = NULL);
+
+#ifndef VECCORE_CUDA
+  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
+                                           Transformation3D const *const transformation,
+                                           const TranslationCode trans_code, const RotationCode rot_code,
+                                           VPlacedVolume *const placement = NULL) const override;
+
+#else
+  VECCORE_ATT_DEVICE
+  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
+                                           Transformation3D const *const transformation,
+                                           const TranslationCode trans_code, const RotationCode rot_code, const int id,
+                                           const int copy_no, const int child_id,
+                                           VPlacedVolume *const placement = NULL) const override;
+#endif
 #ifdef VECGEOM_CUDA_INTERFACE
   virtual size_t DeviceSizeOf() const override
   {
-    return DevicePtr<cuda::SUnplacedPolycone<cuda::ConeTypes::UniversalCone>>::SizeOf();
+    return DevicePtr<cuda::UnplacedPolycone>::SizeOf();
   }
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu() const override;
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const gpu_ptr) const override;
@@ -252,51 +274,10 @@ void UnplacedPolycone::ReconstructSectionArrays(PushableContainer &z, PushableCo
   }
 }
 
-template <typename PolyconeType = ConeTypes::UniversalCone>
-class SUnplacedPolycone : public UnplacedVolumeImplHelper<PolyconeImplementation<PolyconeType>, UnplacedPolycone>,
-                          public AlignedBase {
-public:
-  using BaseType_t = UnplacedVolumeImplHelper<PolyconeImplementation<PolyconeType>, UnplacedPolycone>;
-  using BaseType_t::BaseType_t;
-
-  template <TranslationCode transCodeT, RotationCode rotCodeT>
-  VECCORE_ATT_DEVICE
-  static VPlacedVolume *Create(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
-#ifdef VECCORE_CUDA
-                               const int id, const int copy_no, const int child_id,
-#endif
-                               VPlacedVolume *const placement = NULL);
-
-#ifndef VECCORE_CUDA
-  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                           Transformation3D const *const transformation,
-                                           const TranslationCode trans_code, const RotationCode rot_code,
-                                           VPlacedVolume *const placement = NULL) const override
-  {
-    return VolumeFactory::CreateByTransformation<SUnplacedPolycone<PolyconeType>>(volume, transformation, trans_code,
-                                                                                  rot_code, placement);
-  }
-
-#else
-  VECCORE_ATT_DEVICE
-  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                           Transformation3D const *const transformation,
-                                           const TranslationCode trans_code, const RotationCode rot_code, const int id,
-                                           const int copy_no, const int child_id,
-                                           VPlacedVolume *const placement = NULL) const override
-  {
-    return VolumeFactory::CreateByTransformation<SUnplacedPolycone<PolyconeType>>(
-        volume, transformation, trans_code, rot_code, id, copy_no, child_id, placement);
-  }
-#endif
-};
-
-using GenericUnplacedPolycone = SUnplacedPolycone<ConeTypes::UniversalCone>;
+using GenericUnplacedPolycone = UnplacedPolycone;
 
 } // namespace VECGEOM_IMPL_NAMESPACE
 
 } // namespace vecgeom
-
-#include "VecGeom/volumes/SpecializedPolycone.h"
 
 #endif /* VECGEOM_VOLUMES_UNPLACEDPOLYCONE_H_ */

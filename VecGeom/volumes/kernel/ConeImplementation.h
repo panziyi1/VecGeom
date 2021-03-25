@@ -26,17 +26,15 @@ VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE(struct, ConeImplementation, typename);
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-template <typename T>
-class SPlacedCone;
-template <typename T>
-class SUnplacedCone;
+class PlacedCone;
+class UnplacedCone;
 
 template <typename coneTypeT>
 struct ConeImplementation {
 
   using UnplacedStruct_t = ConeStruct<Precision>;
-  using UnplacedVolume_t = SUnplacedCone<coneTypeT>;
-  using PlacedShape_t    = SPlacedCone<UnplacedVolume_t>;
+  using UnplacedVolume_t = UnplacedCone;
+  using PlacedShape_t    = PlacedCone;
 
   VECCORE_ATT_HOST_DEVICE
   static void PrintType() {}

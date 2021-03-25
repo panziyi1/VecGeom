@@ -13,12 +13,12 @@ namespace vecgeom {
 
 VECGEOM_DEVICE_FORWARD_DECLARE(class UnplacedTube;);
 VECGEOM_DEVICE_DECLARE_CONV(class, UnplacedTube);
-VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE(class, SUnplacedTube, typename);
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
 // Introduce Intermediate class ( so that we can do typecasting )
-class UnplacedTube : public VUnplacedVolume {
+class UnplacedTube : public UnplacedVolumeImplHelper<TubeImplementation<TubeTypes::UniversalTube>>,
+                     public AlignedBase {
 private:
   // tube defining parameters
   TubeStruct<Precision> fTube;
@@ -144,29 +144,11 @@ public:
 #ifdef VECGEOM_CUDA_INTERFACE
   virtual size_t DeviceSizeOf() const override
   {
-    return DevicePtr<cuda::SUnplacedTube<cuda::TubeTypes::UniversalTube>>::SizeOf();
+    return DevicePtr<cuda::UnplacedTube>::SizeOf();
   }
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu() const override;
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const gpu_ptr) const override;
 #endif
-};
-
-template <>
-struct Maker<UnplacedTube> {
-  template <typename... ArgTypes>
-  static UnplacedTube *MakeInstance(Precision const &_rmin, Precision const &_rmax, Precision const &_z,
-                                    Precision const &_sphi, Precision const &_dphi);
-};
-
-// this class finishes the implementation
-
-template <typename TubeType = TubeTypes::UniversalTube>
-class SUnplacedTube : public UnplacedVolumeImplHelper<TubeImplementation<TubeType>, UnplacedTube>,
-                      public AlignedBase {
-public:
-  using Kernel     = TubeImplementation<TubeType>;
-  using BaseType_t = UnplacedVolumeImplHelper<TubeImplementation<TubeType>, UnplacedTube>;
-  using BaseType_t::BaseType_t;
 
   template <TranslationCode transCodeT, RotationCode rotCodeT>
   VECCORE_ATT_DEVICE
@@ -180,11 +162,7 @@ public:
   virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
                                            Transformation3D const *const transformation,
                                            const TranslationCode trans_code, const RotationCode rot_code,
-                                           VPlacedVolume *const placement = NULL) const override
-  {
-    return VolumeFactory::CreateByTransformation<SUnplacedTube<TubeType>>(volume, transformation, trans_code, rot_code,
-                                                                          placement);
-  }
+                                           VPlacedVolume *const placement = NULL) const override;
 
 #else
   VECCORE_ATT_DEVICE
@@ -192,21 +170,20 @@ public:
                                            Transformation3D const *const transformation,
                                            const TranslationCode trans_code, const RotationCode rot_code, const int id,
                                            const int copy_no, const int child_id,
-                                           VPlacedVolume *const placement = NULL) const override
-  {
-    return VolumeFactory::CreateByTransformation<SUnplacedTube<TubeType>>(volume, transformation, trans_code, rot_code,
-                                                                          id, copy_no, child_id, placement);
-  }
+                                           VPlacedVolume *const placement = NULL) const override;
 #endif
 };
 
-using GenericUnplacedTube = SUnplacedTube<TubeTypes::UniversalTube>;
+template <>
+struct Maker<UnplacedTube> {
+  template <typename... ArgTypes>
+  static UnplacedTube *MakeInstance(Precision const &_rmin, Precision const &_rmax, Precision const &_z,
+                                    Precision const &_sphi, Precision const &_dphi);
+};
+
+using GenericUnplacedTube = UnplacedTube;
 
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // namespace vecgeom
-
-// we include this header here because SpecializedTube
-// implements the Create function of SUnplacedTube<> (and to avoid a circular dependency)
-#include "VecGeom/volumes/SpecializedTube.h"
 
 #endif // VECGEOM_VOLUMES_UNPLACEDTUBE_H_

@@ -35,17 +35,15 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 template <typename T>
 struct HypeStruct;
 
-template <typename T>
-class SPlacedHype;
-template <typename T>
-class SUnplacedHype;
+class PlacedHype;
+class UnplacedHype;
 
 template <typename hypeTypeT>
 struct HypeImplementation {
 
   using UnplacedStruct_t = HypeStruct<Precision>;
-  using UnplacedVolume_t = SUnplacedHype<hypeTypeT>;
-  using PlacedShape_t    = SPlacedHype<UnplacedVolume_t>;
+  using UnplacedVolume_t = UnplacedHype;
+  using PlacedShape_t    = PlacedHype;
 
   VECCORE_ATT_HOST_DEVICE
   static void PrintType()

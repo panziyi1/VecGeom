@@ -20,7 +20,6 @@ namespace vecgeom {
 
 VECGEOM_DEVICE_FORWARD_DECLARE(class UnplacedTrd;);
 VECGEOM_DEVICE_DECLARE_CONV(class, UnplacedTrd);
-VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE(class, SUnplacedTrd, typename);
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
@@ -29,7 +28,8 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 /// Trd is a trapezoid with x and y dimensions varying along z:
 /// - bases at z = -dz and z = +dz are rectangles
 /// - lateral surface consists of four isosceles trapeziums
-class UnplacedTrd : public VUnplacedVolume {
+class UnplacedTrd : public UnplacedVolumeImplHelper<TrdImplementation<TrdTypes::UniversalTrd>>,
+                    public AlignedBase {
 private:
   TrdStruct<Precision> fTrd; ///< Structure with trapezoid parameters
 
@@ -257,10 +257,32 @@ public:
   /// @return Name of the solid type
   std::string GetEntityType() const { return "Trd"; }
 
+  template <TranslationCode transCodeT, RotationCode rotCodeT>
+  VECCORE_ATT_DEVICE
+  static VPlacedVolume *Create(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
+#ifdef VECCORE_CUDA
+                               const int id, const int copy_no, const int child_id,
+#endif
+                               VPlacedVolume *const placement = NULL);
+
+#ifndef VECCORE_CUDA
+  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
+                                           Transformation3D const *const transformation,
+                                           const TranslationCode trans_code, const RotationCode rot_code,
+                                           VPlacedVolume *const placement = NULL) const override;
+
+#else
+  VECCORE_ATT_DEVICE
+  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
+                                           Transformation3D const *const transformation,
+                                           const TranslationCode trans_code, const RotationCode rot_code, const int id,
+                                           const int copy_no, const int child_id,
+                                           VPlacedVolume *const placement = NULL) const override;
+#endif
 #ifdef VECGEOM_CUDA_INTERFACE
   virtual size_t DeviceSizeOf() const override
   {
-    return DevicePtr<cuda::SUnplacedTrd<cuda::TrdTypes::UniversalTrd>>::SizeOf();
+    return DevicePtr<cuda::UnplacedTrd>::SizeOf();
   }
 
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu() const override;
@@ -289,50 +311,9 @@ struct Maker<UnplacedTrd> {
   static UnplacedTrd *MakeInstance(const Precision x1, const Precision x2, const Precision y1, const Precision z);
 };
 
-template <typename TrdType = TrdTypes::UniversalTrd>
-class SUnplacedTrd : public UnplacedVolumeImplHelper<TrdImplementation<TrdType>, UnplacedTrd>, public AlignedBase {
-public:
-  using Kernel     = TrdImplementation<TrdType>;
-  using BaseType_t = UnplacedVolumeImplHelper<TrdImplementation<TrdType>, UnplacedTrd>;
-  using BaseType_t::BaseType_t;
-
-  template <TranslationCode transCodeT, RotationCode rotCodeT>
-  VECCORE_ATT_DEVICE
-  static VPlacedVolume *Create(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
-#ifdef VECCORE_CUDA
-                               const int id, const int copy_no, const int child_id,
-#endif
-                               VPlacedVolume *const placement = NULL);
-
-#ifndef VECCORE_CUDA
-  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                           Transformation3D const *const transformation,
-                                           const TranslationCode trans_code, const RotationCode rot_code,
-                                           VPlacedVolume *const placement = NULL) const override
-  {
-    return VolumeFactory::CreateByTransformation<SUnplacedTrd<TrdType>>(volume, transformation, trans_code, rot_code,
-                                                                        placement);
-  }
-
-#else
-  VECCORE_ATT_DEVICE
-  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                           Transformation3D const *const transformation,
-                                           const TranslationCode trans_code, const RotationCode rot_code, const int id,
-                                           const int copy_no, const int child_id,
-                                           VPlacedVolume *const placement = NULL) const override
-  {
-    return VolumeFactory::CreateByTransformation<SUnplacedTrd<TrdType>>(volume, transformation, trans_code, rot_code,
-                                                                        id, copy_no, child_id, placement);
-  }
-#endif
-};
-
-using GenericUnplacedTrd = SUnplacedTrd<TrdTypes::UniversalTrd>;
+using GenericUnplacedTrd = UnplacedTrd;
 
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // namespace vecgeom
-
-#include "VecGeom/volumes/SpecializedTrd.h"
 
 #endif // VECGEOM_VOLUMES_UNPLACEDTRD_H_

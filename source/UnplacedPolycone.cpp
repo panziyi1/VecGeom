@@ -43,14 +43,14 @@ UnplacedPolycone *Maker<UnplacedPolycone>::MakeInstance(Precision phistart, Prec
                                                         Precision const *z, Precision const *rmin,
                                                         Precision const *rmax)
 {
-  return new SUnplacedPolycone<ConeTypes::UniversalCone>(phistart, deltaphi, Nz, z, rmin, rmax);
+  return new UnplacedPolycone(phistart, deltaphi, Nz, z, rmin, rmax);
 }
 
 template <>
 UnplacedPolycone *Maker<UnplacedPolycone>::MakeInstance(Precision phistart, Precision deltaphi, int Nz,
                                                         Precision const *r, Precision const *z)
 {
-  return new SUnplacedPolycone<ConeTypes::UniversalCone>(phistart, deltaphi, Nz, r, z);
+  return new UnplacedPolycone(phistart, deltaphi, Nz, r, z);
 }
 
 #ifndef VECCORE_CUDA
@@ -194,6 +194,47 @@ void UnplacedPolycone::Print(std::ostream &os) const
   Print();
 }
 
+template <TranslationCode transCodeT, RotationCode rotCodeT>
+VECCORE_ATT_DEVICE
+VPlacedVolume *UnplacedPolycone::Create(LogicalVolume const *const logical_volume,
+                                        Transformation3D const *const transformation,
+#ifdef VECCORE_CUDA
+                                        const int id, const int copy_no, const int child_id,
+#endif
+                                        VPlacedVolume *const placement)
+{
+  (void)placement;
+  return new SpecializedPolycone<transCodeT, rotCodeT, ConeTypes::UniversalCone>(logical_volume, transformation
+#ifdef VECCORE_CUDA
+                                                                                 ,
+                                                                                 id, copy_no, child_id
+#endif
+  );
+}
+
+#ifndef VECCORE_CUDA
+VPlacedVolume *UnplacedPolycone::SpecializedVolume(LogicalVolume const *const volume,
+                                                   Transformation3D const *const transformation,
+                                                   const TranslationCode trans_code, const RotationCode rot_code,
+                                                   VPlacedVolume *const placement) const
+{
+  return VolumeFactory::CreateByTransformation<UnplacedPolycone>(volume, transformation, trans_code,
+                                                                 rot_code, placement);
+}
+
+#else
+VECCORE_ATT_DEVICE
+VPlacedVolume *UnplacedPolycone::SpecializedVolume(LogicalVolume const *const volume,
+                                                   Transformation3D const *const transformation,
+                                                   const TranslationCode trans_code, const RotationCode rot_code, const int id,
+                                                   const int copy_no, const int child_id,
+                                                   VPlacedVolume *const placement) const
+{
+  return VolumeFactory::CreateByTransformation<UnplacedPolycone>(
+      volume, transformation, trans_code, rot_code, id, copy_no, child_id, placement);
+}
+#endif
+
 #ifndef VECCORE_CUDA
 SolidMesh *UnplacedPolycone::CreateMesh3D(Transformation3D const &trans, size_t nSegments) const
 {
@@ -316,7 +357,7 @@ std::ostream &UnplacedPolycone::StreamInfo(std::ostream &os) const
 
 DevicePtr<cuda::VUnplacedVolume> UnplacedPolycone::CopyToGpu() const
 {
-  return CopyToGpuImpl<SUnplacedPolycone<ConeTypes::UniversalCone>>();
+  return CopyToGpuImpl<UnplacedPolycone>();
 }
 
 DevicePtr<cuda::VUnplacedVolume> UnplacedPolycone::CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const gpu_ptr) const
@@ -342,7 +383,7 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedPolycone::CopyToGpu(DevicePtr<cuda::VUn
   int s = z.size();
 
   // attention here z.size() might be different than fNz due to compactification during Reconstruction
-  DevicePtr<cuda::VUnplacedVolume> gpupolycon = CopyToGpuImpl<SUnplacedPolycone<ConeTypes::UniversalCone>>(
+  DevicePtr<cuda::VUnplacedVolume> gpupolycon = CopyToGpuImpl<UnplacedPolycone>(
       gpu_ptr, fPolycone.fStartPhi, fPolycone.fDeltaPhi, s, z_gpu_ptr, rmin_gpu_ptr, rmax_gpu_ptr);
 
   // remove temporary space from GPU
@@ -761,8 +802,8 @@ void UnplacedPolycone::Extent(Vector3D<Precision> &aMin, Vector3D<Precision> &aM
   // Using Cone to get Extent in X and Y Direction
   Precision minz = aMin.z();
   Precision maxz = aMax.z();
-  SUnplacedCone<ConeTypes::UniversalCone> tempCone(minR, maxR, minR, maxR, 1, fSPhi, fDPhi);
-  tempCone.BaseType_t::Extent(aMin, aMax);
+  UnplacedCone tempCone(minR, maxR, minR, maxR, 1, fSPhi, fDPhi);
+  tempCone.Extent(aMin, aMax);
   aMin.z() = minz;
   aMax.z() = maxz;
 
@@ -908,8 +949,8 @@ void UnplacedPolycone::DetectConvexity()
 
 namespace cxx {
 
-template size_t DevicePtr<cuda::SUnplacedPolycone<ConeTypes::UniversalCone>>::SizeOf();
-template void DevicePtr<cuda::SUnplacedPolycone<ConeTypes::UniversalCone>>::Construct(Precision, Precision, int,
+template size_t DevicePtr<cuda::UnplacedPolycone>::SizeOf();
+template void DevicePtr<cuda::UnplacedPolycone>::Construct(Precision, Precision, int,
                                                                                       Precision *, Precision *,
                                                                                       Precision *) const;
 

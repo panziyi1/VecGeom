@@ -26,12 +26,6 @@ namespace HypeTypes {
 // will do extra checks at runtime
 DEFINE_HYPE_TYPE(UniversalHype);
 
-// A Hype with rmin=0
-DEFINE_HYPE_TYPE(NonHollowHype);
-
-// A Hype with rmin!=0
-DEFINE_HYPE_TYPE(HollowHype);
-
 #undef DEFINE_HYPE_TYPE
 
 // Mapping of Hype types to certain characteristics
@@ -41,10 +35,6 @@ enum ETreatmentType { kYes = 0, kNo, kUnknown };
 template <typename T>
 struct NeedsRminTreatment {
   static const ETreatmentType value = kYes;
-};
-template <>
-struct NeedsRminTreatment<NonHollowHype> {
-  static const ETreatmentType value = kNo;
 };
 
 template <>

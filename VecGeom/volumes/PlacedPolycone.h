@@ -25,13 +25,15 @@ VECGEOM_DEVICE_DECLARE_CONV(class, PlacedPolycone);
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-class PlacedPolycone : public VPlacedVolume {
+class PlacedPolycone : public PlacedVolumeImplHelper<UnplacedPolycone> {
+  using Base = PlacedVolumeImplHelper<UnplacedPolycone>;
 
 public:
+  using Base::Base;
 #ifndef VECCORE_CUDA
   PlacedPolycone(char const *const label, LogicalVolume const *const logicalVolume,
                  Transformation3D const *const transformation)
-      : VPlacedVolume(label, logicalVolume, transformation)
+      : Base(label, logicalVolume, transformation)
   {
   }
 
@@ -43,7 +45,7 @@ public:
   VECCORE_ATT_DEVICE PlacedPolycone(LogicalVolume const *const logicalVolume,
                                     Transformation3D const *const transformation, const int id, const int copy_no,
                                     const int child_id)
-      : VPlacedVolume(logicalVolume, transformation, id, copy_no, child_id)
+      : Base(logicalVolume, transformation, id, copy_no, child_id)
   {
   }
 #endif
@@ -81,15 +83,6 @@ public:
 #endif
 
 }; // end class
-
-template <typename UnplacedPolycone_t>
-class SPlacedPolycone : public PlacedVolumeImplHelper<UnplacedPolycone_t, PlacedPolycone> {
-  using Base = PlacedVolumeImplHelper<UnplacedPolycone_t, PlacedPolycone>;
-
-public:
-  typedef UnplacedPolycone UnplacedShape_t;
-  using Base::Base;
-};
 
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // namespace vecgeom

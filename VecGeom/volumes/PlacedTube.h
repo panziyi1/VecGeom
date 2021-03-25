@@ -19,16 +19,16 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 // exists for stronger typing reasons and to be able
 // to do runtime type inference on placed volumes
 
-class PlacedTube : public VPlacedVolume {
-  // some common functionality for all placed tubes
-  // like constructors
+class PlacedTube : public PlacedVolumeImplHelper<UnplacedTube> {
+  using Base = PlacedVolumeImplHelper<UnplacedTube, VPlacedVolume>;
+
 public:
-  using VPlacedVolume::VPlacedVolume;
+  using Base::Base;
 
 #ifndef VECCORE_CUDA
   PlacedTube(char const *const label, LogicalVolume const *const logical_volume,
              Transformation3D const *const transformation)
-      : VPlacedVolume(label, logical_volume, transformation)
+      : Base(label, logical_volume, transformation)
   {
   }
 
@@ -39,7 +39,7 @@ public:
 #else
   VECCORE_ATT_DEVICE PlacedTube(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
                                 const int id, const int copy_no, const int child_id)
-      : VPlacedVolume(logical_volume, transformation, id, copy_no, child_id)
+      : Base(logical_volume, transformation, id, copy_no, child_id)
   {
   }
 #endif
@@ -59,15 +59,6 @@ public:
 #endif
 };
 
-// a placed tube knowing abouts its volume/structural specialization
-template <typename UnplacedTube_t>
-class SPlacedTube : public PlacedVolumeImplHelper<UnplacedTube_t, PlacedTube> {
-  using Base = PlacedVolumeImplHelper<UnplacedTube_t, PlacedTube>;
-
-public:
-  typedef UnplacedTube UnplacedShape_t;
-  using Base::Base;
-};
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // namespace vecgeom
 

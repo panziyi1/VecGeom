@@ -15,25 +15,6 @@ using SpecializedTube = SpecializedVolImplHelper<TubeImplementation<tubeTypeT>, 
 
 using SimpleTube = SpecializedTube<translation::kGeneric, rotation::kGeneric, TubeTypes::UniversalTube>;
 
-template <typename Type>
-template <TranslationCode transCodeT, RotationCode rotCodeT>
-VECCORE_ATT_DEVICE
-VPlacedVolume *SUnplacedTube<Type>::Create(LogicalVolume const *const logical_volume,
-                                           Transformation3D const *const transformation,
-#ifdef VECCORE_CUDA
-                                           const int id, const int copy_no, const int child_id,
-#endif
-                                           VPlacedVolume *const placement)
-{
-  (void)placement;
-  return new SpecializedTube<transCodeT, rotCodeT, Type>(logical_volume, transformation
-#ifdef VECCORE_CUDA
-                                                         ,
-                                                         id, copy_no, child_id
-#endif
-  );
-}
-
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // namespace vecgeom
 

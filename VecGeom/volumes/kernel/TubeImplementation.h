@@ -343,16 +343,15 @@ typename vecCore::Mask_v<Real_v> IsMovingInsideTubeSurface(UnplacedStruct_t cons
 
 } // namespace TubeUtilities
 
-template <typename T>
-class SPlacedTube;
-template <typename T>
-class SUnplacedTube;
+class UnplacedTube;
+class PlacedTube;
+
 template <typename tubeTypeT>
 struct TubeImplementation {
 
   using UnplacedStruct_t = ::vecgeom::TubeStruct<Precision>;
-  using UnplacedVolume_t = SUnplacedTube<tubeTypeT>;
-  using PlacedShape_t    = SPlacedTube<UnplacedVolume_t>;
+  using UnplacedVolume_t = UnplacedTube;
+  using PlacedShape_t    = PlacedTube;
 
   VECCORE_ATT_HOST_DEVICE
   static void PrintType()

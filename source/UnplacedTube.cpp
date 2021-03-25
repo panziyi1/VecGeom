@@ -93,8 +93,49 @@ template <>
 UnplacedTube *Maker<UnplacedTube>::MakeInstance(const Precision &rmin, const Precision &rmax, const Precision &z,
                                                 const Precision &sphi, const Precision &dphi)
 {
-  return new SUnplacedTube<TubeTypes::UniversalTube>(rmin, rmax, z, sphi, dphi);
+  return new UnplacedTube(rmin, rmax, z, sphi, dphi);
 }
+
+template <TranslationCode transCodeT, RotationCode rotCodeT>
+VECCORE_ATT_DEVICE
+VPlacedVolume *UnplacedTube::Create(LogicalVolume const *const logical_volume,
+                                    Transformation3D const *const transformation,
+#ifdef VECCORE_CUDA
+                                    const int id, const int copy_no, const int child_id,
+#endif
+                                    VPlacedVolume *const placement)
+{
+  (void)placement;
+  return new SpecializedTube<transCodeT, rotCodeT, TubeTypes::UniversalTube>(logical_volume, transformation
+#ifdef VECCORE_CUDA
+                                                                             ,
+                                                                             id, copy_no, child_id
+#endif
+  );
+}
+
+#ifndef VECCORE_CUDA
+VPlacedVolume *UnplacedTube::SpecializedVolume(LogicalVolume const *const volume,
+                                               Transformation3D const *const transformation,
+                                               const TranslationCode trans_code, const RotationCode rot_code,
+                                               VPlacedVolume *const placement) const
+{
+  return VolumeFactory::CreateByTransformation<UnplacedTube>(volume, transformation, trans_code, rot_code,
+                                                             placement);
+}
+
+#else
+VECCORE_ATT_DEVICE
+VPlacedVolume *UnplacedTube::SpecializedVolume(LogicalVolume const *const volume,
+                                               Transformation3D const *const transformation,
+                                               const TranslationCode trans_code, const RotationCode rot_code, const int id,
+                                               const int copy_no, const int child_id,
+                                               VPlacedVolume *const placement) const
+{
+  return VolumeFactory::CreateByTransformation<UnplacedTube>(volume, transformation, trans_code, rot_code,
+                                                             id, copy_no, child_id, placement);
+}
+#endif
 
 int UnplacedTube::ChooseSurface() const
 {
@@ -245,12 +286,12 @@ void UnplacedTube::Extent(Vector3D<Precision> &aMin, Vector3D<Precision> &aMax) 
 
 DevicePtr<cuda::VUnplacedVolume> UnplacedTube::CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const in_gpu_ptr) const
 {
-  return CopyToGpuImpl<SUnplacedTube<TubeTypes::UniversalTube>>(in_gpu_ptr, rmin(), rmax(), z(), sphi(), dphi());
+  return CopyToGpuImpl<UnplacedTube>(in_gpu_ptr, rmin(), rmax(), z(), sphi(), dphi());
 }
 
 DevicePtr<cuda::VUnplacedVolume> UnplacedTube::CopyToGpu() const
 {
-  return CopyToGpuImpl<SUnplacedTube<TubeTypes::UniversalTube>>();
+  return CopyToGpuImpl<UnplacedTube>();
 }
 
 #endif // VECGEOM_CUDA_INTERFACE
@@ -261,8 +302,8 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedTube::CopyToGpu() const
 
 namespace cxx {
 
-template size_t DevicePtr<cuda::SUnplacedTube<cuda::TubeTypes::UniversalTube>>::SizeOf();
-template void DevicePtr<cuda::SUnplacedTube<cuda::TubeTypes::UniversalTube>>::Construct(
+template size_t DevicePtr<cuda::UnplacedTube>::SizeOf();
+template void DevicePtr<cuda::UnplacedTube>::Construct(
     const Precision rmin, const Precision rmax, const Precision z, const Precision sphi, const Precision dphi) const;
 
 } // namespace cxx

@@ -50,7 +50,7 @@ template <>
 UnplacedTrd *Maker<UnplacedTrd>::MakeInstance(const Precision x1, const Precision x2, const Precision y1,
                                               const Precision y2, const Precision z)
 {
-  return new SUnplacedTrd<TrdTypes::UniversalTrd>(x1, x2, y1, y2, z);
+  return new UnplacedTrd(x1, x2, y1, y2, z);
 }
 
 // special case Trd1 when dY1 == dY2
@@ -58,7 +58,7 @@ template <>
 UnplacedTrd *Maker<UnplacedTrd>::MakeInstance(const Precision x1, const Precision x2, const Precision y1,
                                               const Precision z)
 {
-  return new SUnplacedTrd<TrdTypes::UniversalTrd>(x1, x2, y1, z);
+  return new UnplacedTrd(x1, x2, y1, z);
 }
 
 void UnplacedTrd::Print() const
@@ -70,6 +70,47 @@ void UnplacedTrd::Print(std::ostream &os) const
 {
   os << "UnplacedTrd {" << dx1() << ", " << dx2() << ", " << dy1() << ", " << dy2() << ", " << dz();
 }
+
+template <TranslationCode transCodeT, RotationCode rotCodeT>
+VECCORE_ATT_DEVICE
+VPlacedVolume *UnplacedTrd::Create(LogicalVolume const *const logical_volume,
+                                   Transformation3D const *const transformation,
+#ifdef VECCORE_CUDA
+                                   const int id, const int copy_no, const int child_id,
+#endif
+                                   VPlacedVolume *const placement)
+{
+  (void)placement;
+  return new SpecializedTrd<transCodeT, rotCodeT, TrdTypes::UniversalTrd>(logical_volume, transformation
+#ifdef VECCORE_CUDA
+                                                                          ,
+                                                                          id, copy_no, child_id
+#endif
+  );
+}
+
+#ifndef VECCORE_CUDA
+VPlacedVolume *UnplacedTrd::SpecializedVolume(LogicalVolume const *const volume,
+                                              Transformation3D const *const transformation,
+                                              const TranslationCode trans_code, const RotationCode rot_code,
+                                              VPlacedVolume *const placement) const
+{
+  return VolumeFactory::CreateByTransformation<UnplacedTrd>(volume, transformation, trans_code, rot_code,
+                                                            placement);
+}
+
+#else
+VECCORE_ATT_DEVICE
+VPlacedVolume *UnplacedTrd::SpecializedVolume(LogicalVolume const *const volume,
+                                              Transformation3D const *const transformation,
+                                              const TranslationCode trans_code, const RotationCode rot_code, const int id,
+                                              const int copy_no, const int child_id,
+                                              VPlacedVolume *const placement) const
+{
+  return VolumeFactory::CreateByTransformation<UnplacedTrd>(volume, transformation, trans_code, rot_code,
+                                                            id, copy_no, child_id, placement);
+}
+#endif
 
 #ifndef VECCORE_CUDA
 SolidMesh *UnplacedTrd::CreateMesh3D(Transformation3D const &trans, size_t nSegments) const
@@ -341,12 +382,12 @@ std::ostream &UnplacedTrd::StreamInfo(std::ostream &os) const
 
 DevicePtr<cuda::VUnplacedVolume> UnplacedTrd::CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const in_gpu_ptr) const
 {
-  return CopyToGpuImpl<SUnplacedTrd<TrdTypes::UniversalTrd>>(in_gpu_ptr, dx1(), dx2(), dy1(), dy2(), dz());
+  return CopyToGpuImpl<UnplacedTrd>(in_gpu_ptr, dx1(), dx2(), dy1(), dy2(), dz());
 }
 
 DevicePtr<cuda::VUnplacedVolume> UnplacedTrd::CopyToGpu() const
 {
-  return CopyToGpuImpl<SUnplacedTrd<TrdTypes::UniversalTrd>>();
+  return CopyToGpuImpl<UnplacedTrd>();
 }
 
 #endif // VECGEOM_CUDA_INTERFACE
@@ -357,10 +398,10 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedTrd::CopyToGpu() const
 
 namespace cxx {
 
-template size_t DevicePtr<cuda::SUnplacedTrd<cuda::TrdTypes::UniversalTrd>>::SizeOf();
-template void DevicePtr<cuda::SUnplacedTrd<cuda::TrdTypes::UniversalTrd>>::Construct(
+template size_t DevicePtr<cuda::UnplacedTrd>::SizeOf();
+template void DevicePtr<cuda::UnplacedTrd>::Construct(
     const Precision dx1, const Precision dx2, const Precision dy1, const Precision dy2, const Precision z) const;
-template void DevicePtr<cuda::SUnplacedTrd<cuda::TrdTypes::UniversalTrd>>::Construct(const Precision dx1,
+template void DevicePtr<cuda::UnplacedTrd>::Construct(const Precision dx1,
                                                                                      const Precision dx2,
                                                                                      const Precision dy1,
                                                                                      const Precision z) const;

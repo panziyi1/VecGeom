@@ -15,7 +15,6 @@ namespace vecgeom {
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-using GenericUnplacedTube = SUnplacedTube<TubeTypes::UniversalTube>;
 /*
  * A Torus struct without member functions
  *

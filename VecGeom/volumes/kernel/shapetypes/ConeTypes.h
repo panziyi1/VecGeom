@@ -30,24 +30,6 @@ namespace ConeTypes {
 // A cone that encompasses all cases - not specialized and will do extra checks at runtime
 DEFINE_CONE_TYPE(UniversalCone);
 
-// A cone not having rmin or phi sector
-DEFINE_CONE_TYPE(NonHollowCone);
-// A cone without rmin but with a phi sector smaller than pi
-DEFINE_CONE_TYPE(NonHollowConeWithSmallerThanPiSector);
-// A cone without rmin but with a phi sector greater than pi
-DEFINE_CONE_TYPE(NonHollowConeWithBiggerThanPiSector);
-// A cone without rmin but with a phi sector equal to pi
-DEFINE_CONE_TYPE(NonHollowConeWithPiSector);
-
-// A cone with rmin and no phi sector
-DEFINE_CONE_TYPE(HollowCone);
-// A cone with rmin and a phi sector smaller than pi
-DEFINE_CONE_TYPE(HollowConeWithSmallerThanPiSector);
-// A cone with rmin and a phi sector greater than pi
-DEFINE_CONE_TYPE(HollowConeWithBiggerThanPiSector);
-// A cone with rmin and a phi sector equal to pi
-DEFINE_CONE_TYPE(HollowConeWithPiSector);
-
 #undef DEFINE_CONE_TYPE
 
 // Mapping of cone types to certain characteristics

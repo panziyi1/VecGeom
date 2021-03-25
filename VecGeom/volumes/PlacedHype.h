@@ -21,15 +21,16 @@ VECGEOM_DEVICE_FORWARD_DECLARE(class PlacedHype;);
 VECGEOM_DEVICE_DECLARE_CONV(class, PlacedHype);
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-class PlacedHype : public VPlacedVolume {
+class PlacedHype : public PlacedVolumeImplHelper<UnplacedHype> {
+  using Base = PlacedVolumeImplHelper<UnplacedHype>;
 
 public:
-  using VPlacedVolume::VPlacedVolume;
+  using Base::Base;
 #ifndef VECCORE_CUDA
 
   PlacedHype(char const *const label, LogicalVolume const *const logicalVolume,
              Transformation3D const *const transformation)
-      : VPlacedVolume(label, logicalVolume, transformation)
+      : Base(label, logicalVolume, transformation)
   {
   }
 
@@ -40,7 +41,7 @@ public:
 #else
   VECCORE_ATT_DEVICE PlacedHype(LogicalVolume const *const logicalVolume, Transformation3D const *const transformation,
                                 const int id, const int copy_no, const int child_id)
-      : VPlacedVolume(logicalVolume, transformation, id, copy_no, child_id)
+      : Base(logicalVolume, transformation, id, copy_no, child_id)
   {
   }
 #endif
@@ -183,15 +184,6 @@ public:
 #endif
 
 #endif // VECCORE_CUDA
-};
-
-template <typename UnplacedHype_t>
-class SPlacedHype : public PlacedVolumeImplHelper<UnplacedHype_t, PlacedHype> {
-  using Base = PlacedVolumeImplHelper<UnplacedHype_t, PlacedHype>;
-
-public:
-  typedef UnplacedHype UnplacedShape_t;
-  using Base::Base;
 };
 
 } // namespace VECGEOM_IMPL_NAMESPACE

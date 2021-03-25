@@ -215,10 +215,8 @@ static void UnplacedInside(TrdStruct<Precision> const &trd, Vector3D<Real_v> con
 
 } // namespace TrdUtilities
 
-template <typename T>
-class SPlacedTrd;
-template <typename T>
-class SUnplacedTrd;
+class PlacedTrd;
+class UnplacedTrd;
 
 template <typename T>
 struct TrdStruct;
@@ -227,8 +225,8 @@ template <typename trdTypeT>
 struct TrdImplementation {
 
   using UnplacedStruct_t = TrdStruct<Precision>;
-  using UnplacedVolume_t = SUnplacedTrd<trdTypeT>;
-  using PlacedShape_t    = SPlacedTrd<UnplacedVolume_t>;
+  using UnplacedVolume_t = UnplacedTrd;
+  using PlacedShape_t    = PlacedTrd;
 
   VECCORE_ATT_HOST_DEVICE
   static void PrintType() {}

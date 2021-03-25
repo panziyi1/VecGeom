@@ -8,7 +8,6 @@ set(TEST_EXECUTABLES_BENCHMARK
   ${PROJECT_SOURCE_DIR}/test/benchmark/ParallelepipedBenchmark.cpp
   ${PROJECT_SOURCE_DIR}/test/benchmark/PolyhedronBenchmark.cpp
   ${PROJECT_SOURCE_DIR}/test/benchmark/TubeBenchmark.cpp
-#  ${PROJECT_SOURCE_DIR}/test/benchmark/BoxMinusHollowTubeBenchmark.cpp
   ${PROJECT_SOURCE_DIR}/test/benchmark/BoxMinusHollowTubeBenchmark_virtual.cpp
   ${PROJECT_SOURCE_DIR}/test/benchmark/BoxUnionHollowTubeBenchmark_virtual.cpp
   ${PROJECT_SOURCE_DIR}/test/benchmark/BoxIntersectHollowTubeBenchmark_virtual.cpp

@@ -20,7 +20,6 @@ namespace vecgeom {
 
 VECGEOM_DEVICE_FORWARD_DECLARE(class UnplacedHype;);
 VECGEOM_DEVICE_DECLARE_CONV(class, UnplacedHype);
-VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE(class, SUnplacedHype, typename);
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
@@ -37,7 +36,8 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
   surface.
   a = distance between hyperbola and Z axis at z=0
 */
-class UnplacedHype : public VUnplacedVolume {
+class UnplacedHype : public UnplacedVolumeImplHelper<HypeImplementation<HypeTypes::UniversalHype>>,
+                     public AlignedBase {
 
 private:
   HypeStruct<Precision> fHype; ///< Structure holding the data for Hype
@@ -334,10 +334,33 @@ public:
   virtual SolidMesh *CreateMesh3D(Transformation3D const &trans, size_t nSegments) const override;
 #endif
 
+  template <TranslationCode transCodeT, RotationCode rotCodeT>
+  VECCORE_ATT_DEVICE
+  static VPlacedVolume *Create(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
+#ifdef VECCORE_CUDA
+                               const int id, const int copy_no, const int child_id,
+#endif
+                               VPlacedVolume *const placement = NULL);
+
+private:
+#ifndef VECCORE_CUDA
+  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
+                                           Transformation3D const *const transformation,
+                                           const TranslationCode trans_code, const RotationCode rot_code,
+                                           VPlacedVolume *const placement = NULL) const override;
+
+#else
+  VECCORE_ATT_DEVICE
+  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
+                                           Transformation3D const *const transformation,
+                                           const TranslationCode trans_code, const RotationCode rot_code, const int id,
+                                           const int copy_no, const int child_id,
+                                           VPlacedVolume *const placement = NULL) const override;
+#endif
 #ifdef VECGEOM_CUDA_INTERFACE
   virtual size_t DeviceSizeOf() const override
   {
-    return DevicePtr<cuda::SUnplacedHype<cuda::HypeTypes::UniversalHype>>::SizeOf();
+    return DevicePtr<cuda::UnplacedHype>::SizeOf();
   }
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu() const override;
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const gpu_ptr) const override;
@@ -361,52 +384,9 @@ struct Maker<UnplacedHype> {
                                     const Precision stOut, const Precision dz);
 };
 
-/** Specialized version of the unplaced hyperboloid, supporting universal/hollow/non-hollow types.*/
-template <typename HypeType = HypeTypes::UniversalHype>
-class SUnplacedHype : public UnplacedVolumeImplHelper<HypeImplementation<HypeType>, UnplacedHype>,
-                      public AlignedBase {
-public:
-  using BaseType_t = UnplacedVolumeImplHelper<HypeImplementation<HypeType>, UnplacedHype>;
-  using BaseType_t::BaseType_t;
-
-  template <TranslationCode transCodeT, RotationCode rotCodeT>
-  VECCORE_ATT_DEVICE
-  static VPlacedVolume *Create(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
-#ifdef VECCORE_CUDA
-                               const int id, const int copy_no, const int child_id,
-#endif
-                               VPlacedVolume *const placement = NULL);
-
-private:
-#ifndef VECCORE_CUDA
-  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                           Transformation3D const *const transformation,
-                                           const TranslationCode trans_code, const RotationCode rot_code,
-                                           VPlacedVolume *const placement = NULL) const override
-  {
-    return VolumeFactory::CreateByTransformation<SUnplacedHype<HypeType>>(volume, transformation, trans_code, rot_code,
-                                                                          placement);
-  }
-
-#else
-  VECCORE_ATT_DEVICE
-  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                           Transformation3D const *const transformation,
-                                           const TranslationCode trans_code, const RotationCode rot_code, const int id,
-                                           const int copy_no, const int child_id,
-                                           VPlacedVolume *const placement = NULL) const override
-  {
-    return VolumeFactory::CreateByTransformation<SUnplacedHype<HypeType>>(volume, transformation, trans_code, rot_code,
-                                                                          id, copy_no, child_id, placement);
-  }
-#endif
-};
-
-using GenericUnplacedHype = SUnplacedHype<HypeTypes::UniversalHype>;
+using GenericUnplacedHype = UnplacedHype;
 
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // namespace vecgeom
-
-#include "VecGeom/volumes/SpecializedHype.h"
 
 #endif // VECGEOM_VOLUMES_UNPLACEDHYPE_H_

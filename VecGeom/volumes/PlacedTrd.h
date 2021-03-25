@@ -28,10 +28,11 @@ VECGEOM_DEVICE_DECLARE_CONV(class, PlacedTrd);
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
 /// Class for the positioned Trd volume
-class PlacedTrd : public VPlacedVolume {
+class PlacedTrd : public PlacedVolumeImplHelper<UnplacedTrd> {
+  using Base = PlacedVolumeImplHelper<UnplacedTrd>;
 
 public:
-  using VPlacedVolume::VPlacedVolume;
+  using Base::Base;
 #ifndef VECCORE_CUDA
   /// Constructor
   /// @param label Name of logical volume.
@@ -39,7 +40,7 @@ public:
   /// @param transformation The positioning transformation.
   PlacedTrd(char const *const label, LogicalVolume const *const logicalVolume,
             Transformation3D const *const transformation)
-      : VPlacedVolume(label, logicalVolume, transformation)
+      : Base(label, logicalVolume, transformation)
   {
   }
 
@@ -54,7 +55,7 @@ public:
   /// CUDA version of constructor
   VECCORE_ATT_DEVICE PlacedTrd(LogicalVolume const *const logicalVolume, Transformation3D const *const transformation,
                                const int id, const int copy_no, const int child_id)
-      : VPlacedVolume(logicalVolume, transformation, id, copy_no, child_id)
+      : Base(logicalVolume, transformation, id, copy_no, child_id)
   {
   }
 #endif
@@ -150,15 +151,6 @@ public:
   G4VSolid const *ConvertToGeant4() const override;
 #endif
 #endif // VECCORE_CUDA
-};
-
-template <typename UnplacedTrd_t>
-class SPlacedTrd : public PlacedVolumeImplHelper<UnplacedTrd_t, PlacedTrd> {
-  using Base = PlacedVolumeImplHelper<UnplacedTrd_t, PlacedTrd>;
-
-public:
-  typedef UnplacedTrd UnplacedShape_t;
-  using Base::Base;
 };
 
 } // namespace VECGEOM_IMPL_NAMESPACE

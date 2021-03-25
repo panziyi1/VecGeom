@@ -19,7 +19,6 @@ namespace vecgeom {
 
 VECGEOM_DEVICE_FORWARD_DECLARE(class UnplacedCone;);
 VECGEOM_DEVICE_DECLARE_CONV(class, UnplacedCone);
-VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE(class, SUnplacedCone, typename);
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
@@ -39,7 +38,8 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
  * fCone.fSPhi starting angle of the segment in radians
  * fCone.fDPhi delta angle of the segment in radians
  */
-class UnplacedCone : public VUnplacedVolume {
+class UnplacedCone : public UnplacedVolumeImplHelper<ConeImplementation<ConeTypes::UniversalCone>>,
+                     public AlignedBase {
 
 private:
   // cone parameters
@@ -209,10 +209,25 @@ public:
 #endif
                                VPlacedVolume *const placement = NULL);
 
+#ifndef VECCORE_CUDA
+  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
+                                           Transformation3D const *const transformation,
+                                           const TranslationCode trans_code, const RotationCode rot_code,
+                                           VPlacedVolume *const placement = NULL) const override;
+
+#else
+  VECCORE_ATT_DEVICE
+  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
+                                           Transformation3D const *const transformation,
+                                           const TranslationCode trans_code, const RotationCode rot_code, const int id,
+                                           const int copy_no, const int child_id,
+                                           VPlacedVolume *const placement = NULL) const override;
+#endif
+
 #ifdef VECGEOM_CUDA_INTERFACE
   virtual size_t DeviceSizeOf() const override
   {
-    return DevicePtr<cuda::SUnplacedCone<cuda::ConeTypes::UniversalCone>>::SizeOf();
+    return DevicePtr<cuda::UnplacedCone>::SizeOf();
   }
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu() const override;
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const gpu_ptr) const override;
@@ -278,55 +293,9 @@ struct Maker<UnplacedCone> {
                                     Precision const &_deltaphi);
 };
 
-// this class finishes the implementation
-
-template <typename ConeType = ConeTypes::UniversalCone>
-class SUnplacedCone : public UnplacedVolumeImplHelper<ConeImplementation<ConeType>, UnplacedCone>,
-                      public vecgeom::AlignedBase {
-public:
-  using Kernel     = ConeImplementation<ConeType>;
-  using BaseType_t = UnplacedVolumeImplHelper<ConeImplementation<ConeType>, UnplacedCone>;
-  using BaseType_t::BaseType_t;
-
-  template <TranslationCode transCodeT, RotationCode rotCodeT>
-  VECCORE_ATT_DEVICE
-  static VPlacedVolume *Create(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
-#ifdef VECCORE_CUDA
-                               const int id, const int copy_no, const int child_id,
-#endif
-                               VPlacedVolume *const placement = NULL);
-
-#ifndef VECCORE_CUDA
-  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                           Transformation3D const *const transformation,
-                                           const TranslationCode trans_code, const RotationCode rot_code,
-                                           VPlacedVolume *const placement = NULL) const override
-  {
-    return VolumeFactory::CreateByTransformation<SUnplacedCone<ConeType>>(volume, transformation, trans_code, rot_code,
-                                                                          placement);
-  }
-
-#else
-  VECCORE_ATT_DEVICE
-  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                           Transformation3D const *const transformation,
-                                           const TranslationCode trans_code, const RotationCode rot_code, const int id,
-                                           const int copy_no, const int child_id,
-                                           VPlacedVolume *const placement = NULL) const override
-  {
-    return VolumeFactory::CreateByTransformation<SUnplacedCone<ConeType>>(volume, transformation, trans_code, rot_code,
-                                                                          id, copy_no, child_id, placement);
-  }
-#endif
-};
-
-using GenericUnplacedCone = SUnplacedCone<ConeTypes::UniversalCone>;
+using GenericUnplacedCone = UnplacedCone;
 
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // namespace vecgeom
-
-// we include this header here because SpecializedCone
-// implements the Create function of SUnplacedCone<> (and to avoid a circular dependency)
-#include "VecGeom/volumes/SpecializedCone.h"
 
 #endif // VECGEOM_VOLUMES_UNPLACEDCONE_H_

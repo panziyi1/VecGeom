@@ -563,19 +563,60 @@ UnplacedCone *Maker<UnplacedCone>::MakeInstance(const Precision &rmin1, const Pr
                                                 const Precision &rmax2, const Precision &dz, const Precision &phimin,
                                                 const Precision &deltaphi)
 {
-  return new SUnplacedCone<ConeTypes::UniversalCone>(rmin1, rmax1, rmin2, rmax2, dz, phimin, deltaphi);
+  return new UnplacedCone(rmin1, rmax1, rmin2, rmax2, dz, phimin, deltaphi);
 }
+
+template <TranslationCode transCodeT, RotationCode rotCodeT>
+VECCORE_ATT_DEVICE
+VPlacedVolume *UnplacedCone::Create(LogicalVolume const *const logical_volume,
+                                    Transformation3D const *const transformation,
+#ifdef VECCORE_CUDA
+                                    const int id, const int copy_no, const int child_id,
+#endif
+                                    VPlacedVolume *const placement)
+{
+  (void)placement;
+  return new SpecializedCone<transCodeT, rotCodeT, ConeTypes::UniversalCone>(logical_volume, transformation
+#ifdef VECCORE_CUDA
+                                                                             ,
+                                                                             id, copy_no, child_id
+#endif
+  );
+}
+
+#ifndef VECCORE_CUDA
+VPlacedVolume *UnplacedCone::SpecializedVolume(LogicalVolume const *const volume,
+                                               Transformation3D const *const transformation,
+                                               const TranslationCode trans_code, const RotationCode rot_code,
+                                               VPlacedVolume *const placement) const
+{
+  return VolumeFactory::CreateByTransformation<UnplacedCone>(volume, transformation, trans_code, rot_code,
+                                                             placement);
+}
+
+#else
+VECCORE_ATT_DEVICE
+VPlacedVolume *UnplacedCone::SpecializedVolume(LogicalVolume const *const volume,
+                                               Transformation3D const *const transformation,
+                                               const TranslationCode trans_code, const RotationCode rot_code, const int id,
+                                               const int copy_no, const int child_id,
+                                               VPlacedVolume *const placement) const
+{
+  return VolumeFactory::CreateByTransformation<UnplacedCone>(volume, transformation, trans_code, rot_code,
+                                                             id, copy_no, child_id, placement);
+}
+#endif
 
 #ifdef VECGEOM_CUDA_INTERFACE
 DevicePtr<cuda::VUnplacedVolume> UnplacedCone::CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const in_gpu_ptr) const
 {
-  return CopyToGpuImpl<SUnplacedCone<ConeTypes::UniversalCone>>(in_gpu_ptr, GetRmin1(), GetRmax1(), GetRmin2(),
-                                                                GetRmax2(), GetDz(), GetSPhi(), GetDPhi());
+  return CopyToGpuImpl<UnplacedCone>(in_gpu_ptr, GetRmin1(), GetRmax1(), GetRmin2(),
+                                     GetRmax2(), GetDz(), GetSPhi(), GetDPhi());
 }
 
 DevicePtr<cuda::VUnplacedVolume> UnplacedCone::CopyToGpu() const
 {
-  return CopyToGpuImpl<SUnplacedCone<ConeTypes::UniversalCone>>();
+  return CopyToGpuImpl<UnplacedCone>();
 }
 
 #endif // VECGEOM_CUDA_INTERFACE
@@ -586,8 +627,8 @@ DevicePtr<cuda::VUnplacedVolume> UnplacedCone::CopyToGpu() const
 
 namespace cxx {
 
-template size_t DevicePtr<cuda::SUnplacedCone<cuda::ConeTypes::UniversalCone>>::SizeOf();
-template void DevicePtr<cuda::SUnplacedCone<cuda::ConeTypes::UniversalCone>>::Construct(
+template size_t DevicePtr<cuda::UnplacedCone>::SizeOf();
+template void DevicePtr<cuda::UnplacedCone>::Construct(
     const Precision rmin1, const Precision rmax1, const Precision rmin2, const Precision rmax2, const Precision z,
     const Precision sphi, const Precision dphi) const;
 

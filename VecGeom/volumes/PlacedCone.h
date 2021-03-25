@@ -22,25 +22,27 @@ VECGEOM_DEVICE_DECLARE_CONV(class, PlacedCone);
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-class PlacedCone : public VPlacedVolume {
+class PlacedCone : public PlacedVolumeImplHelper<UnplacedCone> {
+  using Base = PlacedVolumeImplHelper<UnplacedCone, VPlacedVolume>;
 
 public:
+  using Base::Base;
 #ifndef VECCORE_CUDA
   // constructor inheritance;
   PlacedCone(char const *const label, LogicalVolume const *const logicalVolume,
              Transformation3D const *const transformation)
-      : VPlacedVolume(label, logicalVolume, transformation)
+      : Base(label, logicalVolume, transformation)
   {
   }
 
   PlacedCone(LogicalVolume const *const logicalVolume, Transformation3D const *const transformation)
-      : PlacedCone("", logicalVolume, transformation)
+      : Base("", logicalVolume, transformation)
   {
   }
 #else
   VECCORE_ATT_DEVICE PlacedCone(LogicalVolume const *const logicalVolume, Transformation3D const *const transformation,
                                 const int id, const int copy_no, const int child_id)
-      : VPlacedVolume(logicalVolume, transformation, id, copy_no, child_id)
+      : Base(logicalVolume, transformation, id, copy_no, child_id)
   {
   }
 #endif
@@ -95,15 +97,6 @@ public:
   void SetDeltaPhiAngle(Precision xin) { const_cast<UnplacedCone *>(GetUnplacedVolume())->SetDPhi(xin); }
 }; // end class
 
-// a placed cone knowing abouts its volume/structural specialization
-template <typename UnplacedCone_t>
-class SPlacedCone : public PlacedVolumeImplHelper<UnplacedCone_t, PlacedCone> {
-  using Base = PlacedVolumeImplHelper<UnplacedCone_t, PlacedCone>;
-
-public:
-  typedef UnplacedCone UnplacedShape_t;
-  using Base::Base;
-};
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // namespace vecgeom
 

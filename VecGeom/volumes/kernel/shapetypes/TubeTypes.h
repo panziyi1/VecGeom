@@ -24,24 +24,6 @@ namespace TubeTypes {
 // A tube that encompasses all cases - not specialized and will do extra checks at runtime
 DEFINE_TUBE_TYPE(UniversalTube);
 
-// A tube not having rmin or phi sector
-DEFINE_TUBE_TYPE(NonHollowTube);
-// A tube without rmin but with a phi sector smaller than pi
-DEFINE_TUBE_TYPE(NonHollowTubeWithSmallerThanPiSector);
-// A tube without rmin but with a phi sector greater than pi
-DEFINE_TUBE_TYPE(NonHollowTubeWithBiggerThanPiSector);
-// A tube without rmin but with a phi sector equal to pi
-DEFINE_TUBE_TYPE(NonHollowTubeWithPiSector);
-
-// A tube with rmin and no phi sector
-DEFINE_TUBE_TYPE(HollowTube);
-// A tube with rmin and a phi sector smaller than pi
-DEFINE_TUBE_TYPE(HollowTubeWithSmallerThanPiSector);
-// A tube with rmin and a phi sector greater than pi
-DEFINE_TUBE_TYPE(HollowTubeWithBiggerThanPiSector);
-// A tube with rmin and a phi sector equal to pi
-DEFINE_TUBE_TYPE(HollowTubeWithPiSector);
-
 #undef DEFINE_TUBE_TYPE
 
 // Mapping of tube types to certain characteristics
