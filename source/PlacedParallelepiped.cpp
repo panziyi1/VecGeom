@@ -21,11 +21,6 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 
 #ifndef VECCORE_CUDA
 
-VPlacedVolume const *PlacedParallelepiped::ConvertToUnspecialized() const
-{
-  return new SimpleParallelepiped(GetLabel().c_str(), GetLogicalVolume(), GetTransformation());
-}
-
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedParallelepiped::ConvertToRoot() const
 {

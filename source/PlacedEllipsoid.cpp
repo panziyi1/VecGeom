@@ -33,11 +33,6 @@ void PlacedEllipsoid::PrintType(std::ostream &s) const
 
 #ifndef VECCORE_CUDA
 
-VPlacedVolume const *PlacedEllipsoid::ConvertToUnspecialized() const
-{
-  return new SimpleEllipsoid(GetLabel().c_str(), GetLogicalVolume(), GetTransformation());
-}
-
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedEllipsoid::ConvertToRoot() const
 {

@@ -28,11 +28,6 @@ void PlacedBox::PrintType(std::ostream &s) const
 
 #ifndef VECCORE_CUDA
 
-VPlacedVolume const *PlacedBox::ConvertToUnspecialized() const
-{
-  return new SimpleBox(GetLabel().c_str(), GetLogicalVolume(), GetTransformation());
-}
-
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedBox::ConvertToRoot() const
 {

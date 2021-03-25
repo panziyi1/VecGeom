@@ -21,10 +21,6 @@ namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
 #ifndef VECCORE_CUDA
-VPlacedVolume const *PlacedCone::ConvertToUnspecialized() const
-{
-  return new SimpleCone(GetLabel().c_str(), GetLogicalVolume(), GetTransformation());
-}
 
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedCone::ConvertToRoot() const

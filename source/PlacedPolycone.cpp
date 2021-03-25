@@ -20,11 +20,6 @@ namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
 #ifndef VECCORE_CUDA
-VPlacedVolume const *PlacedPolycone::ConvertToUnspecialized() const
-{
-  return new SimplePolycone(GetLabel().c_str(), GetLogicalVolume(), GetTransformation());
-}
-
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedPolycone::ConvertToRoot() const
 {

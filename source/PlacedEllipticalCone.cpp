@@ -35,11 +35,6 @@ void PlacedEllipticalCone::PrintType(std::ostream &s) const
 
 #ifndef VECCORE_CUDA
 
-VPlacedVolume const *PlacedEllipticalCone::ConvertToUnspecialized() const
-{
-  return new SimpleEllipticalCone(GetLabel().c_str(), GetLogicalVolume(), GetTransformation());
-}
-
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedEllipticalCone::ConvertToRoot() const
 {

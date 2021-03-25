@@ -30,11 +30,6 @@ void PlacedTet::PrintType(std::ostream &s) const
 
 #ifndef VECCORE_CUDA
 
-VPlacedVolume const *PlacedTet::ConvertToUnspecialized() const
-{
-  return new SimpleTet(GetLabel().c_str(), GetLogicalVolume(), GetTransformation());
-}
-
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedTet::ConvertToRoot() const
 {

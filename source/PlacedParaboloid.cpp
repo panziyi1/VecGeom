@@ -32,11 +32,6 @@ void PlacedParaboloid::PrintType(std::ostream &s) const
 
 #ifndef VECCORE_CUDA
 
-VPlacedVolume const *PlacedParaboloid::ConvertToUnspecialized() const
-{
-  return new SimpleParaboloid(GetLabel().c_str(), GetLogicalVolume(), GetTransformation());
-}
-
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedParaboloid::ConvertToRoot() const
 {

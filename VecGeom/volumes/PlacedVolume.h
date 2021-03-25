@@ -377,8 +377,6 @@ public:
 #endif
 
 #ifndef VECCORE_CUDA
-  /// A conversion function creating a generic unspecialized instance of the placed volume
-  virtual VPlacedVolume const *ConvertToUnspecialized() const = 0;
 #ifdef VECGEOM_ROOT
   /// A conversion function to a TGeoShape (when TGeo support is available)
   virtual TGeoShape const *ConvertToRoot() const = 0;

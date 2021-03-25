@@ -8,14 +8,6 @@
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-#ifndef VECCORE_CUDA
-
-VPlacedVolume const *PlacedSphere::ConvertToUnspecialized() const
-{
-  return new SimpleSphere(GetLabel().c_str(), GetLogicalVolume(), GetTransformation());
-}
-#endif // VECCORE_CUDA
-
 } // End impl namespace
 
 #ifdef VECCORE_CUDA

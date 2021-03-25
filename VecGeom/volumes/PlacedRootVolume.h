@@ -81,7 +81,6 @@ public:
     return -1.;
   }
 
-  virtual VPlacedVolume const *ConvertToUnspecialized() const override;
 #ifdef VECGEOM_ROOT
   virtual TGeoShape const *ConvertToRoot() const override;
 #endif

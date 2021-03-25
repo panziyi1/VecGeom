@@ -32,11 +32,6 @@ void PlacedEllipticalTube::PrintType(std::ostream &s) const
 
 #ifndef VECCORE_CUDA
 
-VPlacedVolume const *PlacedEllipticalTube::ConvertToUnspecialized() const
-{
-  return new SimpleEllipticalTube(GetLabel().c_str(), GetLogicalVolume(), GetTransformation());
-}
-
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedEllipticalTube::ConvertToRoot() const
 {

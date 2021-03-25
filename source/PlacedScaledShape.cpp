@@ -27,11 +27,6 @@ void PlacedScaledShape::PrintType(std::ostream &os) const
 
 #ifndef VECCORE_CUDA
 
-VPlacedVolume const *PlacedScaledShape::ConvertToUnspecialized() const
-{
-  return new SimpleScaledShape(GetLabel().c_str(), logical_volume_, GetTransformation());
-}
-
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedScaledShape::ConvertToRoot() const
 {

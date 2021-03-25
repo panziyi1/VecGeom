@@ -18,11 +18,6 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 
 #ifndef VECCORE_CUDA
 
-VPlacedVolume const *PlacedMultiUnion::ConvertToUnspecialized() const
-{
-  return new SimpleMultiUnion(GetLabel().c_str(), GetLogicalVolume(), GetTransformation());
-}
-
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedMultiUnion::ConvertToRoot() const
 {

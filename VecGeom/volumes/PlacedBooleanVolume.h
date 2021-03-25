@@ -72,7 +72,6 @@ public:
   // Comparison specific
 
 #ifndef VECCORE_CUDA
-  virtual VPlacedVolume const *ConvertToUnspecialized() const override { return this; }
 #ifdef VECGEOM_ROOT
   virtual TGeoShape const *ConvertToRoot() const override;
 #endif

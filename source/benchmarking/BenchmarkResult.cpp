@@ -5,7 +5,7 @@
 
 namespace vecgeom {
 
-char const *const BenchmarkResult::fgLibraryLabels[] = {"Specialized", "Vectorized", "Unspecialized", "CUDA",
+char const *const BenchmarkResult::fgLibraryLabels[] = {"Specialized", "Vectorized", "CUDA",
                                                         "USolids",     "ROOT",       "CUDAMemory",    "Geant4"};
 
 char const *const BenchmarkResult::fgMethodLabels[] = {"Contains",   "Inside",        "DistanceToIn",

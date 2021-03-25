@@ -57,8 +57,6 @@ public:
   VECGEOM_FORCE_INLINE
   virtual int MemorySize() const override { return sizeof(*this); }
 
-  virtual VPlacedVolume const *ConvertToUnspecialized() const override;
-
 #ifdef VECGEOM_ROOT
   virtual TGeoShape const *ConvertToRoot() const override;
 #endif

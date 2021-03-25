@@ -12,8 +12,6 @@ namespace vecgeom {
 
 enum EBenchmarkedLibrary {
   kBenchmarkSpecialized   = 0,
-  kBenchmarkVectorized    = 1,
-  kBenchmarkUnspecialized = 2,
   kBenchmarkCuda          = 3,
   kBenchmarkUSolids       = 4,
   kBenchmarkRoot          = 5,

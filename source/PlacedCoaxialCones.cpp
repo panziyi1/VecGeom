@@ -28,11 +28,6 @@ void PlacedCoaxialCones::PrintType(std::ostream &s) const
 
 #ifndef VECCORE_CUDA
 
-VPlacedVolume const *PlacedCoaxialCones::ConvertToUnspecialized() const
-{
-  return new SimpleCoaxialCones(GetLabel().c_str(), GetLogicalVolume(), GetTransformation());
-}
-
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedCoaxialCones::ConvertToRoot() const
 {

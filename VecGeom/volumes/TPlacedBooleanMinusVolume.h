@@ -78,8 +78,6 @@ public:
 // Comparison specific
 
 #ifdef VECGEOM_BENCHMARK
-  virtual VPlacedVolume const *ConvertToUnspecialized() const { return this; }
-
 #ifdef VECGEOM_ROOT
   virtual TGeoShape const *ConvertToRoot() const
   {

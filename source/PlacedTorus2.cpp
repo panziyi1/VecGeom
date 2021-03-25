@@ -16,11 +16,6 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 
 #ifndef VECCORE_CUDA
 
-VPlacedVolume const *PlacedTorus2::ConvertToUnspecialized() const
-{
-  return new SimpleTorus2(GetLabel().c_str(), GetLogicalVolume(), GetTransformation());
-}
-
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedTorus2::ConvertToRoot() const
 {

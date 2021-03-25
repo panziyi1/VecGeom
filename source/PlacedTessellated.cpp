@@ -16,11 +16,6 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 
 #ifndef VECCORE_CUDA
 
-VPlacedVolume const *PlacedTessellated::ConvertToUnspecialized() const
-{
-  return new SimpleTessellated(GetLabel().c_str(), GetLogicalVolume(), GetTransformation());
-}
-
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedTessellated::ConvertToRoot() const
 {

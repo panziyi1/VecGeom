@@ -28,10 +28,6 @@ void PlacedSExtru::PrintType(std::ostream &s) const
 
 // Comparison specific
 #ifndef VECCORE_CUDA
-VPlacedVolume const *PlacedSExtru::ConvertToUnspecialized() const
-{
-  return this;
-}
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedSExtru::ConvertToRoot() const
 {

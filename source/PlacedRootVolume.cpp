@@ -118,11 +118,6 @@ void PlacedRootVolume::Extent(Vector3D<Precision> &aMin, Vector3D<Precision> &aM
   aMax.Set(o[0] + lx, o[1] + ly, o[2] + lz);
 }
 
-VPlacedVolume const *PlacedRootVolume::ConvertToUnspecialized() const
-{
-  assert(0 && "Attempted to perform conversion on unsupported ROOT volume.");
-  return NULL;
-}
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedRootVolume::ConvertToRoot() const
 {

@@ -23,13 +23,6 @@ void PlacedOrb::PrintType(std::ostream &s) const
   s << "PlacedOrb";
 }
 
-#ifndef VECCORE_CUDA
-VPlacedVolume const *PlacedOrb::ConvertToUnspecialized() const
-{
-  return new SimpleOrb(GetLabel().c_str(), GetLogicalVolume(), GetTransformation());
-}
-#endif // VECCORE_CUDA
-
 } // namespace VECGEOM_IMPL_NAMESPACE
 
 #ifdef VECCORE_CUDA

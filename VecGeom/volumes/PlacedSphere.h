@@ -250,8 +250,6 @@ public:
   Precision GetDTheta() const { return GetUnplacedVolume()->GetDTheta(); }
 
 #ifndef VECCORE_CUDA
-  virtual VPlacedVolume const *ConvertToUnspecialized() const override;
-
 #ifdef VECGEOM_ROOT
   virtual TGeoShape const *ConvertToRoot() const override { return GetUnplacedVolume()->ConvertToRoot(GetName()); }
 #endif

@@ -98,13 +98,8 @@ private:
   __itt_domain *__itt_RunToOutBenchmark  = __itt_domain_create("RunToOutBenchmark");
 
   __itt_string_handle *__itt_RunInsideSpecialized   = __itt_string_handle_create("RunInsideSpecialized");
-  __itt_string_handle *__itt_RunInsideUnspecialized = __itt_string_handle_create("RunInsideUnspecialized");
-
   __itt_string_handle *__itt_RunToInSpecialized   = __itt_string_handle_create("RunToInSpecialized");
-  __itt_string_handle *__itt_RunToInUnspecialized = __itt_string_handle_create("RunToInUnspecialized");
-
   __itt_string_handle *__itt_RunToOutSpecialized   = __itt_string_handle_create("RunToOutSpecialized");
-  __itt_string_handle *__itt_RunToOutUnspecialized = __itt_string_handle_create("RunToOutUnspecialized");
 #endif
 
 public:
@@ -258,10 +253,6 @@ private:
   void RunToInSpecialized(Precision *distances, Precision *safeties);
   void RunToOutSpecialized(Precision *distances, Precision *safeties);
 
-  void RunInsideUnspecialized(bool *contains, Inside_t *inside);
-  void RunToInUnspecialized(Precision *distances, Precision *safeties);
-  void RunToOutUnspecialized(Precision *distances, Precision *safeties);
-
 #ifdef VECGEOM_ROOT
   void RunInsideRoot(bool *inside);
   void RunToInRoot(Precision *distances, Precision *safeties);
@@ -289,7 +280,6 @@ private:
 
   // internal method to crosscheck results; fills a container with problematic cases
   int CompareDistances(SOA3D<Precision> *points, SOA3D<Precision> *directions, Precision const *const specialized,
-                       Precision const *const unspecialized,
 #ifdef VECGEOM_ROOT
                        Precision const *const root,
 #endif
@@ -304,7 +294,6 @@ private:
   // internal method to crosscheck results from boundary; fills a container with problematic cases
   int CheckDistancesFromBoundary(Precision expected, SOA3D<Precision> *points, SOA3D<Precision> *directions,
                                  Precision const *const specialized,
-                                 Precision const *const unspecialized,
 #ifdef VECGEOM_ROOT
                                  Precision const *const root,
 #endif
@@ -317,7 +306,6 @@ private:
                                  char const *const method);
 
   int CompareSafeties(SOA3D<Precision> *points, SOA3D<Precision> *directions, Precision const *const specialized,
-                      Precision const *const unspecialized,
 #ifdef VECGEOM_ROOT
                       Precision const *const root,
 #endif
@@ -333,7 +321,6 @@ private:
   // here we know that result has to be zero
   int CheckSafetiesOnBoundary(SOA3D<Precision> *points, SOA3D<Precision> *directions,
                               Precision const *const specialized,
-                              Precision const *const unspecialized,
 #ifdef VECGEOM_ROOT
                               Precision const *const root,
 #endif

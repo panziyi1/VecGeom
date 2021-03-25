@@ -19,11 +19,6 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 
 #ifndef VECCORE_CUDA
 
-VPlacedVolume const *PlacedTube::ConvertToUnspecialized() const
-{
-  return new SimpleTube(GetLabel().c_str(), GetLogicalVolume(), GetTransformation());
-}
-
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedTube::ConvertToRoot() const
 {

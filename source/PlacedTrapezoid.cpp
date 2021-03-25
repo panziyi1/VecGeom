@@ -28,11 +28,6 @@ void PlacedTrapezoid::PrintType(std::ostream &s) const
 
 #ifndef VECCORE_CUDA
 
-VPlacedVolume const *PlacedTrapezoid::ConvertToUnspecialized() const
-{
-  return new SimpleTrapezoid(GetLabel().c_str(), GetLogicalVolume(), GetTransformation());
-}
-
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedTrapezoid::ConvertToRoot() const
 {

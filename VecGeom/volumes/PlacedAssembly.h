@@ -146,7 +146,6 @@ public:
   }
 
 #ifndef VECCORE_CUDA
-  virtual VPlacedVolume const *ConvertToUnspecialized() const override { return this; }
 #ifdef VECGEOM_ROOT
   virtual TGeoShape const *ConvertToRoot() const override { throw std::runtime_error("unimplemented function called"); }
 #endif

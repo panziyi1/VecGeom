@@ -16,7 +16,7 @@ namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
 VolumePointers::VolumePointers(VPlacedVolume const *const volume)
-    : fSpecialized(volume), fUnspecialized(NULL),
+    : fSpecialized(volume),
 #ifdef VECGEOM_ROOT
       fRoot(NULL),
 #endif
@@ -29,7 +29,7 @@ VolumePointers::VolumePointers(VPlacedVolume const *const volume)
 }
 
 VolumePointers::VolumePointers(VolumePointers const &other)
-    : fSpecialized(other.fSpecialized), fUnspecialized(NULL),
+    : fSpecialized(other.fSpecialized),
 #ifdef VECGEOM_ROOT
       fRoot(NULL),
 #endif
@@ -56,7 +56,6 @@ VolumePointers &VolumePointers::operator=(VolumePointers const &other)
 
 void VolumePointers::ConvertVolume()
 {
-  if (!fUnspecialized) fUnspecialized = fSpecialized->ConvertToUnspecialized();
 #ifdef VECGEOM_ROOT
   if (!fRoot) fRoot = fSpecialized->ConvertToRoot();
 #endif
@@ -69,7 +68,6 @@ void VolumePointers::Deallocate()
 {
   /*
   if (fInitial != kBenchmarkSpecialized)   delete fSpecialized;
-  if (fInitial != kBenchmarkUnspecialized) delete fUnspecialized;
 >>>>>>> master
 #ifdef VECGEOM_ROOT
  // if (initial_ != kBenchmarkRoot)          delete root_;

@@ -31,12 +31,6 @@ void PlacedGenTrap::PrintType(std::ostream &os) const
 
 #ifndef VECCORE_CUDA
 
-//______________________________________________________________________________
-VPlacedVolume const *PlacedGenTrap::ConvertToUnspecialized() const
-{
-  return new SimpleGenTrap(GetLabel().c_str(), GetLogicalVolume(), GetTransformation());
-}
-
 #ifdef VECGEOM_ROOT
 //______________________________________________________________________________
 TGeoShape const *PlacedGenTrap::ConvertToRoot() const

@@ -22,7 +22,6 @@ class VolumePointers {
 
 private:
   VPlacedVolume const *fSpecialized;
-  VPlacedVolume const *fUnspecialized;
 #ifdef VECGEOM_ROOT
   TGeoShape const *fRoot;
 #endif
@@ -45,8 +44,6 @@ public:
   VolumePointers &operator=(VolumePointers const &other);
 
   VPlacedVolume const *Specialized() const { return fSpecialized; }
-
-  VPlacedVolume const *Unspecialized() const { return fUnspecialized; }
 
 #ifdef VECGEOM_ROOT
   TGeoShape const *ROOT() const { return fRoot; }

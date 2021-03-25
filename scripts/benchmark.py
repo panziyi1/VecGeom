@@ -33,7 +33,7 @@ def fetch(output, source, function):
 def simpleTable(shape, out, f):
     # f.write(shape + "\n")
     functions = ["Inside", "Contains", "DistanceToIn", "DistanceToOut", "SafetyToIn", "SafetyToOut"]
-    sources = ["ROOT", "USolids", "Unspecialized", "Specialized", "Vectorized", "Geant4"]
+    sources = ["ROOT", "USolids", "Specialized", "Vectorized", "Geant4"]
 
     f.write(shape + "," + ",".join(sources) + "\n")
     for function in functions:

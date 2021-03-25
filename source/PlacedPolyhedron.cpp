@@ -26,12 +26,6 @@ int PlacedPolyhedron::PhiSegmentIndex(Vector3D<Precision> const &point) const
 }
 
 #ifndef VECCORE_CUDA
-
-VPlacedVolume const *PlacedPolyhedron::ConvertToUnspecialized() const
-{
-  return new SimplePolyhedron(GetLabel().c_str(), GetLogicalVolume(), GetTransformation());
-}
-
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedPolyhedron::ConvertToRoot() const
 {
