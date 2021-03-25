@@ -76,9 +76,6 @@ public:
 
   virtual int MemorySize() const override { return sizeof(*this); }
 
-  int GetTransCode() const final { return transC; }
-  int GetRotCode() const final { return rotC; }
-
   VECCORE_ATT_HOST_DEVICE
   virtual EnumInside Inside(Vector3D<Precision> const &point) const override
   {
