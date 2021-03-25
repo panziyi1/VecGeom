@@ -32,15 +32,6 @@ struct PolyhedronImplementation {
   using UnplacedStruct_t = PolyhedronStruct<Precision>;
   using UnplacedVolume_t = UnplacedPolyhedron;
 
-  VECCORE_ATT_HOST_DEVICE
-  static void PrintType() {}
-
-  template <typename Stream>
-  static void PrintType(Stream &s, int transCodeT = translation::kGeneric, int rotCodeT = rotation::kGeneric)
-  {
-    s << "SpecializedPolyhedron<" << transCodeT << "," << rotCodeT << ">";
-  }
-
   /// \param pointZ Z-coordinate of a point.
   /// \return Index of the Z-segment in which the passed point is located. If
   ///         point is outside the polyhedron, -1 will be returned for Z smaller

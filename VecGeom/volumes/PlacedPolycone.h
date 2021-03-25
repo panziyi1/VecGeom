@@ -54,6 +54,10 @@ public:
   virtual ~PlacedPolycone() {}
 
   VECCORE_ATT_HOST_DEVICE
+  virtual void PrintType() const override;
+  virtual void PrintType(std::ostream &os) const override;
+
+  VECCORE_ATT_HOST_DEVICE
   UnplacedPolycone const *GetUnplacedVolume() const
   {
     return static_cast<UnplacedPolycone const *>(GetLogicalVolume()->GetUnplacedVolume());

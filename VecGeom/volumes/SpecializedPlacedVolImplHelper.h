@@ -76,11 +76,6 @@ public:
 
   virtual int MemorySize() const override { return sizeof(*this); }
 
-  VECCORE_ATT_HOST_DEVICE
-  virtual void PrintType() const override { Specialization::PrintType(); }
-
-  virtual void PrintType(std::ostream &os) const override { Specialization::PrintType(os, transC, rotC); }
-
   int GetTransCode() const final { return transC; }
   int GetRotCode() const final { return rotC; }
 

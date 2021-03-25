@@ -30,18 +30,6 @@ struct CoaxialConesImplementation {
   using UnplacedStruct_t = CoaxialConesStruct<Precision>;
   using UnplacedVolume_t = UnplacedCoaxialCones;
 
-  VECCORE_ATT_HOST_DEVICE
-  static void PrintType()
-  {
-    //  printf("SpecializedCoaxialCones<%i, %i>", transCodeT, rotCodeT);
-  }
-
-  template <typename Stream>
-  static void PrintType(Stream &st, int transCodeT = translation::kGeneric, int rotCodeT = rotation::kGeneric)
-  {
-    st << "SpecializedCoaxialCones<" << transCodeT << "," << rotCodeT << ">";
-  }
-
   template <typename Real_v, bool ForLowerZ>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE

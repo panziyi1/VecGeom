@@ -34,15 +34,6 @@ struct CutTubeImplementation {
   using UnplacedStruct_t = CutTubeStruct<Precision>;
   using UnplacedVolume_t = UnplacedCutTube;
 
-  VECCORE_ATT_HOST_DEVICE
-  static void PrintType() {}
-
-  template <typename Stream>
-  static void PrintType(Stream &s, int transCodeT = translation::kGeneric, int rotCodeT = rotation::kGeneric)
-  {
-    s << "SpecializedCutTube<" << transCodeT << "," << rotCodeT << ">";
-  }
-
   template <typename Real_v, typename Bool_v>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE

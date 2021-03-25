@@ -353,20 +353,6 @@ struct TubeImplementation {
   using UnplacedVolume_t = UnplacedTube;
   using PlacedShape_t    = PlacedTube;
 
-  VECCORE_ATT_HOST_DEVICE
-  static void PrintType()
-  {
-    // have to implement this somewhere else
-    // printf("SpecializedTube<%i, %i, %s>", transCodeT, rotCodeT,
-    // tubeTypeT::toString());
-  }
-
-  template <typename Stream>
-  static void PrintType(Stream &s, int transCodeT = translation::kGeneric, int rotCodeT = rotation::kGeneric)
-  {
-    s << "SpecializedTube<" << transCodeT << "," << rotCodeT << ",TubeTypes::" << tubeTypeT::toString() << ">";
-  }
-
   /////GenericKernel Contains/Inside implementation
   template <typename Real_v, bool ForInside>
   VECGEOM_FORCE_INLINE

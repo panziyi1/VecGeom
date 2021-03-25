@@ -37,18 +37,6 @@ struct PolyconeImplementation {
   using UnplacedVolume_t = UnplacedPolycone;
   using PlacedShape_t    = PlacedPolycone;
 
-  VECCORE_ATT_HOST_DEVICE
-  static void PrintType()
-  {
-    //  printf("SpecializedPolycone<%i, %i>", transCodeT, rotCodeT);
-  }
-
-  template <typename Stream>
-  static void PrintType(Stream &st, int transCodeT = translation::kGeneric, int rotCodeT = rotation::kGeneric)
-  {
-    st << "SpecializedPolycone<" << transCodeT << "," << rotCodeT << ">";
-  }
-
   template <typename Real_v, bool ForInside>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE

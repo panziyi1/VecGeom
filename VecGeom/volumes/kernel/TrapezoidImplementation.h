@@ -41,18 +41,6 @@ struct TrapezoidImplementation {
   using TrapSidePlane = TrapezoidStruct<Precision>::TrapSidePlane;
 #endif
 
-  VECCORE_ATT_HOST_DEVICE
-  static void PrintType()
-  {
-    // printf("SpecializedTrapezoid<%i, %i>", transCodeT, rotCodeT);
-  }
-
-  template <typename Stream>
-  static void PrintType(Stream &st, int transCodeT = translation::kGeneric, int rotCodeT = rotation::kGeneric)
-  {
-    st << "SpecializedTrapezoid<" << transCodeT << "," << rotCodeT << ">";
-  }
-
 #ifdef VECGEOM_PLANESHELL_DISABLE
   template <typename Real_v>
   VECGEOM_FORCE_INLINE

@@ -31,18 +31,6 @@ struct TessellatedImplementation {
   using UnplacedStruct_t = TessellatedStruct<3, Precision>;
   using UnplacedVolume_t = UnplacedTessellated;
 
-  VECCORE_ATT_HOST_DEVICE
-  static void PrintType()
-  {
-    //  printf("SpecializedBox<%i, %i>", transCodeT, rotCodeT);
-  }
-
-  template <typename Stream>
-  static void PrintType(Stream &st, int transCodeT = translation::kGeneric, int rotCodeT = rotation::kGeneric)
-  {
-    st << "SpecializedTessellated<" << transCodeT << "," << rotCodeT << ">";
-  }
-
   template <typename Real_v, typename Bool_v>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE

@@ -22,18 +22,6 @@ struct SExtruImplementation {
   using UnplacedStruct_t = PolygonalShell;
   using UnplacedVolume_t = UnplacedSExtruVolume;
 
-  VECCORE_ATT_HOST_DEVICE
-  static void PrintType()
-  {
-    //
-  }
-
-  template <typename Stream>
-  static void PrintType(Stream &st, int transC = translation::kGeneric, int rotC = rotation::kGeneric)
-  {
-    st << "SpecializedSExtru<" << transC << "," << rotC << "\n";
-  }
-
   template <typename Real_v, typename Bool_v>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE

@@ -26,24 +26,6 @@ struct BooleanImplementation<kUnion> {
   using UnplacedVolume_t = UnplacedBooleanVolume<kUnion>;
   using UnplacedStruct_t = BooleanStruct;
 
-  VECCORE_ATT_HOST_DEVICE
-  static void PrintType()
-  { /* printf("SpecializedBooleanVolume<%i, %i, %i>", kUnion, transCodeT, rotCodeT); */
-  }
-
-  template <typename Stream>
-  static void PrintType(Stream &st, int transCodeT = translation::kGeneric, int rotCodeT = rotation::kGeneric)
-  {
-    st << "SpecializedBooleanVolume<kUnion" << transCodeT << "," << rotCodeT << ">";
-  }
-
-  template <typename Stream>
-  static void PrintType(Stream &s)
-  {
-    //  s << "SpecializedBooleanVolume<kUnion"
-    //    << "," << transCodeT << "," << rotCodeT << ">";
-  }
-
   template <typename Real_v, typename Bool_v>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE

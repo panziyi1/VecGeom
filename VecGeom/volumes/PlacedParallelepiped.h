@@ -62,6 +62,10 @@ public:
   VECCORE_ATT_HOST_DEVICE
   virtual ~PlacedParallelepiped() {}
 
+  VECCORE_ATT_HOST_DEVICE
+  virtual void PrintType() const override;
+  virtual void PrintType(std::ostream &os) const override;
+
   /// Getter for unplaced volume
   VECCORE_ATT_HOST_DEVICE
   UnplacedParallelepiped const *GetUnplacedVolume() const

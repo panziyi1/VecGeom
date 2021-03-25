@@ -38,18 +38,6 @@ struct OrbImplementation {
   using UnplacedStruct_t = OrbStruct<Precision>;
   using UnplacedVolume_t = UnplacedOrb;
 
-  VECCORE_ATT_HOST_DEVICE
-  static void PrintType()
-  {
-    //  printf("SpecializedOrb<%i, %i>", transCodeT, rotCodeT);
-  }
-
-  template <typename Stream>
-  static void PrintType(Stream &st, int transCodeT = translation::kGeneric, int rotCodeT = rotation::kGeneric)
-  {
-    st << "SpecializedOrb<" << transCodeT << "," << rotCodeT << ">";
-  }
-
   template <typename Real_v, typename Bool_v>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE

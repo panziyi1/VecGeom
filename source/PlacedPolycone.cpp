@@ -19,6 +19,17 @@
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
+VECCORE_ATT_HOST_DEVICE
+void PlacedPolycone::PrintType() const
+{
+  printf("PlacedPolycone");
+}
+
+void PlacedPolycone::PrintType(std::ostream &s) const
+{
+  s << "PlacedPolycone";
+}
+
 #ifndef VECCORE_CUDA
 #ifdef VECGEOM_ROOT
 TGeoShape const *PlacedPolycone::ConvertToRoot() const

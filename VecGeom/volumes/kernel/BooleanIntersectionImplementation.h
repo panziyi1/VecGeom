@@ -23,24 +23,6 @@ struct BooleanImplementation<kIntersection> {
   using UnplacedVolume_t = UnplacedBooleanVolume<kIntersection>;
   using UnplacedStruct_t = BooleanStruct;
 
-  VECCORE_ATT_HOST_DEVICE
-  static void PrintType()
-  { /* printf("SpecializedBooleanVolume<%i, %i, %i>", kIntersection, transCodeT, rotCodeT); */
-  }
-
-  template <typename Stream>
-  static void PrintType(Stream &s)
-  {
-    // s << "SpecializedBooleanVolume<kIntersection"
-    //  << "," << transCodeT << "," << rotCodeT << ">";
-  }
-
-  template <typename Stream>
-  static void PrintType(Stream &st, int transCodeT = translation::kGeneric, int rotCodeT = rotation::kGeneric)
-  {
-    st << "SpecializedBooleanVolume<kIntersection" << transCodeT << "," << rotCodeT << ">";
-  }
-
   template <typename Real_v, typename Bool_v>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE

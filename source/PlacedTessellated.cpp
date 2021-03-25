@@ -14,6 +14,17 @@
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
+VECCORE_ATT_HOST_DEVICE
+void PlacedTessellated::PrintType() const
+{
+  printf("PlacedTessellated");
+}
+
+void PlacedTessellated::PrintType(std::ostream &s) const
+{
+  s << "PlacedTessellated";
+}
+
 #ifndef VECCORE_CUDA
 
 #ifdef VECGEOM_ROOT

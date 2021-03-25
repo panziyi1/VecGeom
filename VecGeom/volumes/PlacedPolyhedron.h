@@ -54,6 +54,10 @@ public:
   VECCORE_ATT_HOST_DEVICE
   virtual ~PlacedPolyhedron() {}
 
+  VECCORE_ATT_HOST_DEVICE
+  virtual void PrintType() const override;
+  virtual void PrintType(std::ostream &os) const override;
+
   // Accessors
 
   VECCORE_ATT_HOST_DEVICE

@@ -47,6 +47,10 @@ public:
   virtual ~PlacedMultiUnion() {}
 
   VECCORE_ATT_HOST_DEVICE
+  virtual void PrintType() const override;
+  virtual void PrintType(std::ostream &os) const override;
+
+  VECCORE_ATT_HOST_DEVICE
   UnplacedMultiUnion const *GetUnplacedVolume() const
   {
     return static_cast<UnplacedMultiUnion const *>(GetLogicalVolume()->GetUnplacedVolume());

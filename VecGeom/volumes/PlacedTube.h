@@ -46,6 +46,10 @@ public:
   VECCORE_ATT_HOST_DEVICE
   virtual ~PlacedTube() {}
 
+  VECCORE_ATT_HOST_DEVICE
+  virtual void PrintType() const override;
+  virtual void PrintType(std::ostream &os) const override;
+
 #ifndef VECCORE_CUDA
 #ifdef VECGEOM_ROOT
   virtual TGeoShape const *ConvertToRoot() const override;

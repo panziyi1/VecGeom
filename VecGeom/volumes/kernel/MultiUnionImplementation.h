@@ -30,15 +30,6 @@ struct MultiUnionImplementation {
   using UnplacedStruct_t = MultiUnionStruct;
   using UnplacedVolume_t = UnplacedMultiUnion;
 
-  VECCORE_ATT_HOST_DEVICE
-  static void PrintType() {}
-
-  template <typename Stream>
-  static void PrintType(Stream &st, int transCodeT = translation::kGeneric, int rotCodeT = rotation::kGeneric)
-  {
-    st << "SpecializedMultiUnion<" << transCodeT << "," << rotCodeT << ">";
-  }
-
   template <typename Real_v, typename Bool_v>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE

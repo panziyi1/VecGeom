@@ -228,15 +228,6 @@ struct TrdImplementation {
   using UnplacedVolume_t = UnplacedTrd;
   using PlacedShape_t    = PlacedTrd;
 
-  VECCORE_ATT_HOST_DEVICE
-  static void PrintType() {}
-
-  template <typename Stream>
-  static void PrintType(Stream &s, int transCodeT = translation::kGeneric, int rotCodeT = rotation::kGeneric)
-  {
-    s << "SpecializedTrd<" << transCodeT << "," << rotCodeT << ">";
-  }
-
   template <typename Real_v, typename Bool_v>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE

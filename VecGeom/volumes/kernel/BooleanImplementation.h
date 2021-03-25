@@ -42,25 +42,6 @@ struct BooleanImplementation<kSubtraction> {
   using UnplacedVolume_t = UnplacedBooleanVolume<kSubtraction>;
   using UnplacedStruct_t = BooleanStruct;
 
-  VECCORE_ATT_HOST_DEVICE
-  static void PrintType()
-  { /*printf("SpecializedBooleanVolume<%i, %i, %i>", kSubtraction, transCodeT, rotCodeT);*/
-  }
-
-  template <typename Stream>
-  static void PrintType(Stream &s)
-  {
-    /*s << "SpecializedBooleanVolume<kSubtraction"
-      << "," << transCodeT << "," << rotCodeT << ">";
-    */
-  }
-
-  template <typename Stream>
-  static void PrintType(Stream &st, int transCodeT = translation::kGeneric, int rotCodeT = rotation::kGeneric)
-  {
-    st << "SpecializedBooleanVolume<kSubtraction" << transCodeT << "," << rotCodeT << ">";
-  }
-
   template <typename Real_v, typename Bool_v>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE

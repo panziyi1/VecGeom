@@ -32,18 +32,6 @@ struct SphereImplementation {
   using UnplacedStruct_t = SphereStruct<Precision>;
   using UnplacedVolume_t = UnplacedSphere;
 
-  VECCORE_ATT_HOST_DEVICE
-  static void PrintType()
-  {
-    //  printf("SpecializedSphere<%i, %i>", transCodeT, rotCodeT);
-  }
-
-  template <typename Stream>
-  static void PrintType(Stream &st, int transCodeT = translation::kGeneric, int rotCodeT = rotation::kGeneric)
-  {
-    st << "SpecializedSphere<" << transCodeT << "," << rotCodeT << ">";
-  }
-
   template <typename Real_v, typename Bool_v>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
