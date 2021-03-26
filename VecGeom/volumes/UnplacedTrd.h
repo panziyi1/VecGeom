@@ -36,14 +36,20 @@ private:
 public:
   /// Default constructor
   VECCORE_ATT_HOST_DEVICE
-  UnplacedTrd() : fTrd() { fGlobalConvexity = true; }
+  UnplacedTrd() : fTrd() {
+    fType = VolumeTypes::kTrd;
+    fGlobalConvexity = true;
+  }
 
   /// Constructor, special case where Trd is a box
   /// @param x Half-length in x
   /// @param y Half-length in y
   /// @param z Half-length in z
   VECCORE_ATT_HOST_DEVICE
-  UnplacedTrd(const Precision x, const Precision y, const Precision z) : fTrd(x, y, z) { fGlobalConvexity = true; }
+  UnplacedTrd(const Precision x, const Precision y, const Precision z) : fTrd(x, y, z) {
+    fType = VolumeTypes::kTrd;
+    fGlobalConvexity = true;
+  }
 
   /// Constructor, special case where y dimension remains constant
   /// @param x1 Half-length along x at the surface positioned at -dz
@@ -53,6 +59,7 @@ public:
   VECCORE_ATT_HOST_DEVICE
   UnplacedTrd(const Precision x1, const Precision x2, const Precision y, const Precision z) : fTrd(x1, x2, y, z)
   {
+    fType = VolumeTypes::kTrd;
     fGlobalConvexity = true;
   }
 
@@ -66,6 +73,7 @@ public:
   UnplacedTrd(const Precision x1, const Precision x2, const Precision y1, const Precision y2, const Precision z)
       : fTrd(x1, x2, y1, y2, z)
   {
+    fType = VolumeTypes::kTrd;
     fGlobalConvexity = true;
   }
 

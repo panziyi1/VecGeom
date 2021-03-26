@@ -32,8 +32,8 @@ class PlacedTrd : public PlacedVolumeImplHelper<UnplacedTrd> {
   using Base = PlacedVolumeImplHelper<UnplacedTrd>;
 
 public:
-  using Base::Base;
 #ifndef VECCORE_CUDA
+  using Base::Base;
   /// Constructor
   /// @param label Name of logical volume.
   /// @param logicalVolume The logical volume to be positioned.
@@ -42,6 +42,7 @@ public:
             Transformation3D const *const transformation)
       : Base(label, logicalVolume, transformation)
   {
+    type = VolumeTypes::kTrd;
   }
 
   /// Constructor
@@ -57,6 +58,7 @@ public:
                                const int id, const int copy_no, const int child_id)
       : Base(logicalVolume, transformation, id, copy_no, child_id)
   {
+    type = VolumeTypes::kTrd;
   }
 #endif
 

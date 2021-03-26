@@ -10,6 +10,7 @@
 
 #include "VecGeom/base/Global.h"
 #include "VecGeom/volumes/LogicalVolume.h"
+#include "VecGeom/volumes/VolumeTypes.h"
 #include <string>
 
 #ifdef VECGEOM_GEANT4
@@ -62,6 +63,7 @@ private:
   static unsigned int g_id_count; ///< Static instance counter
 
 protected:
+  VolumeTypes type = VolumeTypes::kUnknown;
   LogicalVolume const *logical_volume_; ///< Pointer to positioned logical volume
 #ifdef VECGEOM_INPLACE_TRANSFORMATIONS
   Transformation3D fTransformation; ///< The positioning transformation
@@ -253,7 +255,7 @@ public:
    * the positioning of the shape due to the placement.
    */
   VECCORE_ATT_HOST_DEVICE
-  virtual bool Contains(Vector3D<Precision> const &point) const = 0;
+  virtual bool Contains(Vector3D<Precision> const &point) const;
 
   /*!
    * Returns whether a space point is contained or not in the placed volume.
@@ -266,18 +268,18 @@ public:
    * the positioning of the shape due to the placement.
    */
   VECCORE_ATT_HOST_DEVICE
-  virtual bool Contains(Vector3D<Precision> const &point, Vector3D<Precision> &localPoint) const = 0;
+  virtual bool Contains(Vector3D<Precision> const &point, Vector3D<Precision> &localPoint) const;
 
   /// Direct dispatch to Contains of underlying unplaced volume without coordinate/placement transformation.
   VECCORE_ATT_HOST_DEVICE
-  virtual bool UnplacedContains(Vector3D<Precision> const &localPoint) const = 0;
+  virtual bool UnplacedContains(Vector3D<Precision> const &localPoint) const;
 
   /**
    * Like similar function in VUnplacedVolume but taking into account
    * the positioning of the shape due to the placement.
    */
   VECCORE_ATT_HOST_DEVICE
-  virtual EnumInside Inside(Vector3D<Precision> const &point) const = 0;
+  virtual EnumInside Inside(Vector3D<Precision> const &point) const;
 
   /**
    * Like similar function in VUnplacedVolume but taking into account
@@ -285,7 +287,7 @@ public:
    */
   VECCORE_ATT_HOST_DEVICE
   virtual Precision DistanceToIn(Vector3D<Precision> const &position, Vector3D<Precision> const &direction,
-                                 const Precision step_max = kInfLength) const = 0;
+                                 const Precision step_max = kInfLength) const;
 
   /**
    * Like similar function in VUnplacedVolume. Here position and direction are supposed to be
@@ -293,7 +295,7 @@ public:
    */
   VECCORE_ATT_HOST_DEVICE
   virtual Precision DistanceToOut(Vector3D<Precision> const &position, Vector3D<Precision> const &direction,
-                                  Precision const step_max = kInfLength) const = 0;
+                                  Precision const step_max = kInfLength) const;
 
   /** A "placed" version of the DistanceToOut function; here
    * the point and direction are first of all transformed into the reference frame of the
@@ -303,21 +305,21 @@ public:
    */
   VECCORE_ATT_HOST_DEVICE
   virtual Precision PlacedDistanceToOut(Vector3D<Precision> const &position, Vector3D<Precision> const &direction,
-                                        Precision const step_max = kInfLength) const = 0;
+                                        Precision const step_max = kInfLength) const;
 
   /**
    * Like similar function in VUnplacedVolume but taking into account
    * the positioning of the shape due to the placement.
    */
   VECCORE_ATT_HOST_DEVICE
-  virtual Precision SafetyToIn(Vector3D<Precision> const &position) const = 0;
+  virtual Precision SafetyToIn(Vector3D<Precision> const &position) const;
 
   /**
    * Like similar function in VUnplacedVolume. Here position is supposed to be
    * in the frame of the placed volume.
    */
   VECCORE_ATT_HOST_DEVICE
-  virtual Precision SafetyToOut(Vector3D<Precision> const &position) const = 0;
+  virtual Precision SafetyToOut(Vector3D<Precision> const &position) const;
 
   /// Simple forward to capacity on VUnplacedVolume
   virtual Precision Capacity();

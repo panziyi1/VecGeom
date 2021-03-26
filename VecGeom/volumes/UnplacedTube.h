@@ -29,6 +29,7 @@ public:
                Precision const &_dphi)
       : fTube(_rmin, _rmax, _z, _sphi, _dphi)
   {
+    fType = VolumeTypes::kTube;
     DetectConvexity();
   }
 

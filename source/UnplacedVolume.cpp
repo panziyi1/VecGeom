@@ -3,6 +3,10 @@
 #include "VecGeom/base/SOA3D.h"
 #include "VecGeom/volumes/utilities/VolumeUtilities.h"
 
+#include "VecGeom/volumes/UnplacedBox.h"
+#include "VecGeom/volumes/UnplacedTrd.h"
+#include "VecGeom/volumes/UnplacedTube.h"
+
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
@@ -189,6 +193,57 @@ std::ostream &operator<<(std::ostream &os, VUnplacedVolume const &vol)
 {
   vol.Print(os);
   return os;
+}
+
+#define DISPATCH_TO_UNPLACED_VOLUME_KIND(kind, class, func, args) \
+  case VolumeTypes::kind: \
+    return static_cast<const class *>(this)->class::func args
+
+#define DISPATCH_TO_UNPLACED_VOLUME(func, args) \
+  switch (this->fType) { \
+  DISPATCH_TO_UNPLACED_VOLUME_KIND(kBox, UnplacedBox, func, args); \
+  DISPATCH_TO_UNPLACED_VOLUME_KIND(kTrd, UnplacedTrd, func, args); \
+  DISPATCH_TO_UNPLACED_VOLUME_KIND(kTube, UnplacedTube, func, args); \
+  default: break; \
+  }
+  // return this->func args
+
+bool VUnplacedVolume::Contains(Vector3D<Precision> const &pos) const
+{
+  DISPATCH_TO_UNPLACED_VOLUME(Contains, (pos));
+  return 0;
+}
+
+EnumInside VUnplacedVolume::Inside(Vector3D<Precision> const &pos) const
+{
+  DISPATCH_TO_UNPLACED_VOLUME(Inside, (pos));
+  return kOutside;
+}
+
+Precision VUnplacedVolume::DistanceToOut(Vector3D<Precision> const &pos, Vector3D<Precision> const &dir,
+                                         Precision step_max) const
+{
+  DISPATCH_TO_UNPLACED_VOLUME(DistanceToOut, (pos, dir, step_max));
+  return step_max;
+}
+
+Precision VUnplacedVolume::SafetyToOut(Vector3D<Precision> const &pos) const
+{
+  DISPATCH_TO_UNPLACED_VOLUME(SafetyToOut, (pos));
+  return 0;
+}
+
+Precision VUnplacedVolume::DistanceToIn(Vector3D<Precision> const &position, Vector3D<Precision> const &direction,
+                                        const Precision step_max) const
+{
+  DISPATCH_TO_UNPLACED_VOLUME(DistanceToIn, (position, direction, step_max));
+  return step_max;
+}
+
+Precision VUnplacedVolume::SafetyToIn(Vector3D<Precision> const &pos) const
+{
+  DISPATCH_TO_UNPLACED_VOLUME(SafetyToIn, (pos));
+  return 0;
 }
 
 #ifndef VECCORE_CUDA

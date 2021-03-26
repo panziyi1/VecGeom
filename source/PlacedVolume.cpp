@@ -12,6 +12,10 @@
 #include "VecGeom/volumes/utilities/VolumeUtilities.h"
 #include "VecGeom/base/SOA3D.h"
 
+#include "VecGeom/volumes/PlacedBox.h"
+#include "VecGeom/volumes/PlacedTrd.h"
+#include "VecGeom/volumes/PlacedTube.h"
+
 #include <stdio.h>
 
 namespace vecgeom {
@@ -108,6 +112,76 @@ std::ostream &operator<<(std::ostream &os, VPlacedVolume const &vol)
 {
   os << "(" << (*vol.GetUnplacedVolume()) << ", " << (*vol.GetTransformation()) << ")";
   return os;
+}
+
+#define DISPATCH_TO_PLACED_VOLUME_KIND(kind, class, func, args) \
+  case VolumeTypes::kind: \
+    return static_cast<const class *>(this)->class::func args
+
+#define DISPATCH_TO_PLACED_VOLUME(func, args) \
+  switch (this->type) { \
+  DISPATCH_TO_PLACED_VOLUME_KIND(kBox, PlacedBox, func, args); \
+  DISPATCH_TO_PLACED_VOLUME_KIND(kTrd, PlacedTrd, func, args); \
+  DISPATCH_TO_PLACED_VOLUME_KIND(kTube, PlacedTube, func, args); \
+  default: break; \
+  }
+  // return this->func args
+
+bool VPlacedVolume::Contains(Vector3D<Precision> const &point) const
+{
+  DISPATCH_TO_PLACED_VOLUME(Contains, (point));
+  return false;
+}
+
+bool VPlacedVolume::Contains(Vector3D<Precision> const &point, Vector3D<Precision> &localPoint) const
+{
+  DISPATCH_TO_PLACED_VOLUME(Contains, (point, localPoint));
+  return false;
+}
+
+bool VPlacedVolume::UnplacedContains(Vector3D<Precision> const &localPoint) const
+{
+  DISPATCH_TO_PLACED_VOLUME(UnplacedContains, (localPoint));
+  return false;
+}
+
+EnumInside VPlacedVolume::Inside(Vector3D<Precision> const &point) const
+{
+  DISPATCH_TO_PLACED_VOLUME(Inside, (point));
+  return kOutside;
+}
+
+Precision VPlacedVolume::DistanceToIn(Vector3D<Precision> const &position, Vector3D<Precision> const &direction,
+                       const Precision step_max) const
+{
+  DISPATCH_TO_PLACED_VOLUME(DistanceToIn, (position, direction, step_max));
+  return step_max;
+}
+
+Precision VPlacedVolume::DistanceToOut(Vector3D<Precision> const &position, Vector3D<Precision> const &direction,
+                        Precision const step_max) const
+{
+  DISPATCH_TO_PLACED_VOLUME(DistanceToOut, (position, direction, step_max));
+  return step_max;
+}
+
+Precision VPlacedVolume::PlacedDistanceToOut(Vector3D<Precision> const &position, Vector3D<Precision> const &direction,
+                              Precision const step_max) const
+{
+  DISPATCH_TO_PLACED_VOLUME(PlacedDistanceToOut, (position, direction, step_max));
+  return step_max;
+}
+
+Precision VPlacedVolume::SafetyToIn(Vector3D<Precision> const &position) const
+{
+  DISPATCH_TO_PLACED_VOLUME(SafetyToIn, (position));
+  return 0;
+}
+
+Precision VPlacedVolume::SafetyToOut(Vector3D<Precision> const &position) const
+{
+  DISPATCH_TO_PLACED_VOLUME(SafetyToOut, (position));
+  return 0;
 }
 
 // implement a default function for SamplePointOnSurface

@@ -11,6 +11,7 @@
 
 #include "VecGeom/base/Global.h"
 #include "VecGeom/base/Transformation3D.h"
+#include "VecGeom/volumes/VolumeTypes.h"
 #include <string>
 #include <ostream>
 
@@ -41,6 +42,7 @@ private:
   friend class CudaManager;
 
 protected:
+  VolumeTypes fType = VolumeTypes::kUnknown;
   bool fGlobalConvexity;
   bool fIsAssembly = false; // indicates if this volume is an assembly
 
@@ -54,14 +56,14 @@ public:
    * Returns whether a space point pos is contained or not in the shape.
    */
   VECCORE_ATT_HOST_DEVICE
-  virtual bool Contains(Vector3D<Precision> const &pos) const = 0;
+  virtual bool Contains(Vector3D<Precision> const &pos) const;
 
   /*!
    * Returns whether a space point pos is inside, on the surface or outside
    * the shape. The surface is defined by a thickness constant.
    */
   VECCORE_ATT_HOST_DEVICE
-  virtual EnumInside Inside(Vector3D<Precision> const &pos) const = 0;
+  virtual EnumInside Inside(Vector3D<Precision> const &pos) const;
 
   // ---------------- DistanceToOut functions -----------------------------------------------------
 
@@ -75,7 +77,7 @@ public:
    */
   VECCORE_ATT_HOST_DEVICE
   virtual Precision DistanceToOut(Vector3D<Precision> const &pos, Vector3D<Precision> const &dir,
-                                  Precision step_max = kInfLength) const = 0;
+                                  Precision step_max = kInfLength) const;
 
   // ---------------- SafetyToOut functions -----------------------------------------------------
 
@@ -85,7 +87,7 @@ public:
    * Calling it with an outside point might result in undefined behaviour.
    */
   VECCORE_ATT_HOST_DEVICE
-  virtual Precision SafetyToOut(Vector3D<Precision> const &pos) const = 0;
+  virtual Precision SafetyToOut(Vector3D<Precision> const &pos) const;
 
   // ---------------- DistanceToIn functions -----------------------------------------------------
 
@@ -99,7 +101,7 @@ public:
    */
   VECCORE_ATT_HOST_DEVICE
   virtual Precision DistanceToIn(Vector3D<Precision> const &position, Vector3D<Precision> const &direction,
-                                 const Precision step_max = kInfLength) const = 0;
+                                 const Precision step_max = kInfLength) const;
 
   // ---------------- SafetyToIn functions -------------------------------------------------------
 
@@ -109,7 +111,7 @@ public:
    * Calling it with an inside point is undefined behaviour.
    */
   VECCORE_ATT_HOST_DEVICE
-  virtual Precision SafetyToIn(Vector3D<Precision> const &pos) const = 0;
+  virtual Precision SafetyToIn(Vector3D<Precision> const &pos) const;
 
   // ---------------- Normal ---------------------------------------------------------------------
 
