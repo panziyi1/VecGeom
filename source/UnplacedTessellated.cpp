@@ -1,8 +1,8 @@
 /// @file UnplacedTessellated.cpp
 /// @author Mihaela Gheata (mihaela.gheata@cern.ch)
 
+#include "VecGeom/volumes/PlacedTessellated.h"
 #include "VecGeom/volumes/UnplacedTessellated.h"
-#include "VecGeom/volumes/SpecializedTessellated.h"
 #include "VecGeom/volumes/utilities/GenerationUtilities.h"
 #include "VecGeom/base/RNG.h"
 
@@ -96,10 +96,10 @@ VPlacedVolume *UnplacedTessellated::Create(LogicalVolume const *const logical_vo
                                            VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedTessellated<transCodeT, rotCodeT>(logical_volume, transformation, id);
+    new (placement) PlacedTessellated(logical_volume, transformation, id);
     return placement;
   }
-  return new SpecializedTessellated<transCodeT, rotCodeT>(logical_volume, transformation, id);
+  return new PlacedTessellated(logical_volume, transformation, id);
 }
 #else
 template <TranslationCode transCodeT, RotationCode rotCodeT>
@@ -107,10 +107,10 @@ VPlacedVolume *UnplacedTessellated::Create(LogicalVolume const *const logical_vo
                                            Transformation3D const *const transformation, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedTessellated<transCodeT, rotCodeT>(logical_volume, transformation);
+    new (placement) PlacedTessellated(logical_volume, transformation);
     return placement;
   }
-  return new SpecializedTessellated<transCodeT, rotCodeT>(logical_volume, transformation);
+  return new PlacedTessellated(logical_volume, transformation);
 }
 #endif
 

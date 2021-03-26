@@ -1,5 +1,5 @@
+#include "VecGeom/volumes/PlacedMultiUnion.h"
 #include "VecGeom/volumes/UnplacedMultiUnion.h"
-#include "VecGeom/volumes/SpecializedMultiUnion.h"
 #include "VecGeom/base/RNG.h"
 #include <stdio.h>
 
@@ -71,10 +71,10 @@ VPlacedVolume *UnplacedMultiUnion::Create(LogicalVolume const *const logical_vol
                                           Transformation3D const *const transformation, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedMultiUnion<trans_code, rot_code>(logical_volume, transformation);
+    new (placement) PlacedMultiUnion(logical_volume, transformation);
     return placement;
   }
-  return new SpecializedMultiUnion<trans_code, rot_code>(logical_volume, transformation);
+  return new PlacedMultiUnion(logical_volume, transformation);
 }
 
 VPlacedVolume *UnplacedMultiUnion::SpecializedVolume(LogicalVolume const *const volume,
@@ -94,10 +94,10 @@ VPlacedVolume *UnplacedMultiUnion::Create(LogicalVolume const *const logical_vol
                                           VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedMultiUnion<trans_code, rot_code>(logical_volume, transformation, id);
+    new (placement) PlacedMultiUnion(logical_volume, transformation, id);
     return placement;
   }
-  return new SpecializedMultiUnion<trans_code, rot_code>(logical_volume, transformation, id);
+  return new PlacedMultiUnion(logical_volume, transformation, id);
 }
 
 VECCORE_ATT_DEVICE

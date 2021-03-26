@@ -6,9 +6,9 @@
 /// @author Raman Sehgal, Evgueni Tcherniaev
 
 #include "VecGeom/volumes/EllipticUtilities.h"
+#include "VecGeom/volumes/PlacedEllipticalCone.h"
 #include "VecGeom/volumes/UnplacedEllipticalCone.h"
 #include "VecGeom/management/VolumeFactory.h"
-#include "VecGeom/volumes/SpecializedEllipticalCone.h"
 #include "VecGeom/base/RNG.h"
 #include <stdio.h>
 #include <cmath>
@@ -255,10 +255,10 @@ VPlacedVolume *UnplacedEllipticalCone::Create(LogicalVolume const *const logical
                                               VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedEllipticalCone<trans_code, rot_code>(logical_volume, transformation);
+    new (placement) PlacedEllipticalCone(logical_volume, transformation);
     return placement;
   }
-  return new SpecializedEllipticalCone<trans_code, rot_code>(logical_volume, transformation);
+  return new PlacedEllipticalCone(logical_volume, transformation);
 }
 
 VPlacedVolume *UnplacedEllipticalCone::SpecializedVolume(LogicalVolume const *const volume,
@@ -278,11 +278,10 @@ VPlacedVolume *UnplacedEllipticalCone::Create(LogicalVolume const *const logical
                                               const int copy_no, const int child_id, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement)
-        SpecializedEllipticalCone<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+    new (placement) PlacedEllipticalCone(logical_volume, transformation, id, copy_no, child_id);
     return placement;
   }
-  return new SpecializedEllipticalCone<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+  return new PlacedEllipticalCone(logical_volume, transformation, id, copy_no, child_id);
 }
 
 VECCORE_ATT_DEVICE

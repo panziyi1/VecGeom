@@ -6,7 +6,6 @@
 /// @author Raman Sehgal, Evgueni Tcherniaev
 
 #include "VecGeom/volumes/PlacedEllipticalTube.h"
-#include "VecGeom/volumes/SpecializedEllipticalTube.h"
 #ifdef VECGEOM_ROOT
 #include "TGeoEltu.h"
 #endif

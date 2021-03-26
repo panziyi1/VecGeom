@@ -2,11 +2,11 @@
 /// @author Raman Sehgal (raman.sehgal@cern.ch)
 
 #include "VecGeom/volumes/Cone.h"
+#include "VecGeom/volumes/PlacedGenericPolycone.h"
 #include "VecGeom/volumes/UnplacedCoaxialCones.h"
 #include "VecGeom/management/GeoManager.h"
 #include "VecGeom/volumes/UnplacedGenericPolycone.h"
 #include "VecGeom/management/VolumeFactory.h"
-#include "VecGeom/volumes/SpecializedGenericPolycone.h"
 #include "VecGeom/base/RNG.h"
 #include <stdio.h>
 #include <cmath>
@@ -189,10 +189,10 @@ VPlacedVolume *UnplacedGenericPolycone::Create(LogicalVolume const *const logica
                                                VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedGenericPolycone<trans_code, rot_code>(logical_volume, transformation);
+    new (placement) PlacedGenericPolycone(logical_volume, transformation);
     return placement;
   }
-  return new SpecializedGenericPolycone<trans_code, rot_code>(logical_volume, transformation);
+  return new PlacedGenericPolycone(logical_volume, transformation);
 }
 
 VPlacedVolume *UnplacedGenericPolycone::SpecializedVolume(LogicalVolume const *const volume,
@@ -212,11 +212,10 @@ VPlacedVolume *UnplacedGenericPolycone::Create(LogicalVolume const *const logica
                                                const int copy_no, const int child_id, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement)
-        SpecializedGenericPolycone<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+    new (placement) PlacedGenericPolycone(logical_volume, transformation, id, copy_no, child_id);
     return placement;
   }
-  return new SpecializedGenericPolycone<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+  return new PlacedGenericPolycone(logical_volume, transformation, id, copy_no, child_id);
 }
 
 VECCORE_ATT_DEVICE

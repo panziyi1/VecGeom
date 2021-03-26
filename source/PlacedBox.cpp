@@ -2,7 +2,6 @@
 /// \author Johannes de Fine Licht (johannes.definelicht@cern.ch)
 
 #include "VecGeom/volumes/PlacedBox.h"
-#include "VecGeom/volumes/SpecializedBox.h"
 #ifdef VECGEOM_ROOT
 #include "TGeoBBox.h"
 #endif

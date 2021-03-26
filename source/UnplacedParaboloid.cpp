@@ -5,9 +5,9 @@
 /// @file source/UnplacedParaboloid.cpp
 /// @author Marilena Bandieramonte (marilena.bandieramonte@cern.ch)
 
+#include "VecGeom/volumes/PlacedParaboloid.h"
 #include "VecGeom/volumes/UnplacedParaboloid.h"
 #include "VecGeom/management/VolumeFactory.h"
-#include "VecGeom/volumes/SpecializedParaboloid.h"
 #include "VecGeom/base/RNG.h"
 #include <stdio.h>
 
@@ -212,10 +212,10 @@ VPlacedVolume *UnplacedParaboloid::Create(LogicalVolume const *const logical_vol
                                           Transformation3D const *const transformation, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedParaboloid<trans_code, rot_code>(logical_volume, transformation);
+    new (placement) PlacedParaboloid(logical_volume, transformation);
     return placement;
   }
-  return new SpecializedParaboloid<trans_code, rot_code>(logical_volume, transformation);
+  return new PlacedParaboloid(logical_volume, transformation);
 }
 
 VPlacedVolume *UnplacedParaboloid::SpecializedVolume(LogicalVolume const *const volume,
@@ -235,10 +235,10 @@ VPlacedVolume *UnplacedParaboloid::Create(LogicalVolume const *const logical_vol
                                           const int child_id, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedParaboloid<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+    new (placement) PlacedParaboloid(logical_volume, transformation, id, copy_no, child_id);
     return placement;
   }
-  return new SpecializedParaboloid<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+  return new PlacedParaboloid(logical_volume, transformation, id, copy_no, child_id);
 }
 
 VECCORE_ATT_DEVICE

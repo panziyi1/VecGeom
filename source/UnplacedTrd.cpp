@@ -7,7 +7,7 @@
 
 #include "VecGeom/volumes/UnplacedBox.h"
 #include "VecGeom/volumes/UnplacedTrd.h"
-#include "VecGeom/volumes/SpecializedTrd.h"
+#include "VecGeom/volumes/PlacedTrd.h"
 #include "VecGeom/volumes/utilities/GenerationUtilities.h"
 #include "VecGeom/base/RNG.h"
 #ifdef VECGEOM_ROOT
@@ -81,10 +81,10 @@ VPlacedVolume *UnplacedTrd::Create(LogicalVolume const *const logical_volume,
                                    VPlacedVolume *const placement)
 {
   (void)placement;
-  return new SpecializedTrd<transCodeT, rotCodeT, TrdTypes::UniversalTrd>(logical_volume, transformation
+  return new PlacedTrd(logical_volume, transformation
 #ifdef VECCORE_CUDA
-                                                                          ,
-                                                                          id, copy_no, child_id
+                       ,
+                       id, copy_no, child_id
 #endif
   );
 }

@@ -5,9 +5,9 @@
 /// \file source/UnplacedOrb.cpp
 /// \author Raman Sehgal
 
+#include "VecGeom/volumes/PlacedOrb.h"
 #include "VecGeom/volumes/UnplacedOrb.h"
 #include "VecGeom/management/VolumeFactory.h"
-#include "VecGeom/volumes/SpecializedOrb.h"
 #include "VecGeom/base/RNG.h"
 #include <stdio.h>
 #ifdef VECGEOM_ROOT
@@ -186,10 +186,10 @@ VPlacedVolume *UnplacedOrb::Create(LogicalVolume const *const logical_volume,
                                    Transformation3D const *const transformation, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedOrb<trans_code, rot_code>(logical_volume, transformation);
+    new (placement) PlacedOrb(logical_volume, transformation);
     return placement;
   }
-  return new SpecializedOrb<trans_code, rot_code>(logical_volume, transformation);
+  return new PlacedOrb(logical_volume, transformation);
 }
 
 VPlacedVolume *UnplacedOrb::SpecializedVolume(LogicalVolume const *const volume,
@@ -208,10 +208,10 @@ VPlacedVolume *UnplacedOrb::Create(LogicalVolume const *const logical_volume,
                                    const int child_id, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedOrb<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+    new (placement) PlacedOrb(logical_volume, transformation, id, copy_no, child_id);
     return placement;
   }
-  return new SpecializedOrb<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+  return new PlacedOrb(logical_volume, transformation, id, copy_no, child_id);
 }
 
 VECCORE_ATT_DEVICE

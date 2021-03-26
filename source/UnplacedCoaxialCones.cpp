@@ -2,9 +2,9 @@
 /// @author Raman Sehgal (raman.sehgal@cern.ch)
 
 #include "VecGeom/volumes/EllipticUtilities.h"
+#include "VecGeom/volumes/PlacedCoaxialCones.h"
 #include "VecGeom/volumes/UnplacedCoaxialCones.h"
 #include "VecGeom/management/VolumeFactory.h"
-#include "VecGeom/volumes/SpecializedCoaxialCones.h"
 #include "VecGeom/base/RNG.h"
 #include <stdio.h>
 #include <cmath>
@@ -48,10 +48,10 @@ VPlacedVolume *UnplacedCoaxialCones::Create(LogicalVolume const *const logical_v
                                             VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedCoaxialCones<trans_code, rot_code>(logical_volume, transformation);
+    new (placement) PlacedCoaxialCones(logical_volume, transformation);
     return placement;
   }
-  return new SpecializedCoaxialCones<trans_code, rot_code>(logical_volume, transformation);
+  return new PlacedCoaxialCones(logical_volume, transformation);
 }
 
 VPlacedVolume *UnplacedCoaxialCones::SpecializedVolume(LogicalVolume const *const volume,
@@ -71,11 +71,10 @@ VPlacedVolume *UnplacedCoaxialCones::Create(LogicalVolume const *const logical_v
                                             const int copy_no, const int child_id, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement)
-        SpecializedCoaxialCones<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+    new (placement) PlacedCoaxialCones(logical_volume, transformation, id, copy_no, child_id);
     return placement;
   }
-  return new SpecializedCoaxialCones<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+  return new PlacedCoaxialCones(logical_volume, transformation, id, copy_no, child_id);
 }
 
 VECCORE_ATT_DEVICE

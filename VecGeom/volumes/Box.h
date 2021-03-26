@@ -8,7 +8,6 @@
 
 #include "VecGeom/base/Global.h"
 #include "VecGeom/volumes/PlacedBox.h"
-#include "VecGeom/volumes/SpecializedBox.h"
 #include "VecGeom/volumes/UnplacedBox.h"
 
 #endif // VECGEOM_VOLUMES_BOX_H_

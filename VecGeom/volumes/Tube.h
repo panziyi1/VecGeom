@@ -9,7 +9,6 @@
 
 #include "VecGeom/base/Global.h"
 #include "VecGeom/volumes/PlacedTube.h"
-#include "VecGeom/volumes/SpecializedTube.h"
 #include "VecGeom/volumes/UnplacedTube.h"
 
 #endif // VECGEOM_VOLUMES_TUBE_H_

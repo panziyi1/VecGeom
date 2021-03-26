@@ -11,7 +11,6 @@
 #include "VecGeom/base/Global.h"
 
 #include "VecGeom/volumes/PlacedParallelepiped.h"
-#include "VecGeom/volumes/SpecializedParallelepiped.h"
 #include "VecGeom/volumes/UnplacedParallelepiped.h"
 
 #endif // VECGEOM_VOLUMES_PARALLELEPIPED_H_

@@ -5,7 +5,6 @@
  *      Author: mgheata
  */
 #include "VecGeom/volumes/PlacedCutTube.h"
-#include "VecGeom/volumes/SpecializedCutTube.h"
 #include "VecGeom/base/Vector3D.h"
 
 #ifdef VECGEOM_ROOT

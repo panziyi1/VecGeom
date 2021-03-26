@@ -11,7 +11,7 @@
 #include "VecGeom/volumes/UnplacedTube.h"
 #include "VecGeom/volumes/PlacedPolycone.h"
 #include "VecGeom/volumes/PlacedCone.h"
-#include "VecGeom/volumes/SpecializedPolycone.h"
+#include "VecGeom/volumes/PlacedPolycone.h"
 #include "VecGeom/management/VolumeFactory.h"
 #include "VecGeom/volumes/utilities/GenerationUtilities.h"
 #ifndef VECCORE_CUDA
@@ -204,10 +204,10 @@ VPlacedVolume *UnplacedPolycone::Create(LogicalVolume const *const logical_volum
                                         VPlacedVolume *const placement)
 {
   (void)placement;
-  return new SpecializedPolycone<transCodeT, rotCodeT, ConeTypes::UniversalCone>(logical_volume, transformation
+  return new PlacedPolycone(logical_volume, transformation
 #ifdef VECCORE_CUDA
-                                                                                 ,
-                                                                                 id, copy_no, child_id
+                            ,
+                            id, copy_no, child_id
 #endif
   );
 }

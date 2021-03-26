@@ -11,7 +11,6 @@
 #include "VecGeom/base/Global.h"
 
 #include "VecGeom/volumes/PlacedEllipticalCone.h"
-#include "VecGeom/volumes/SpecializedEllipticalCone.h"
 #include "VecGeom/volumes/UnplacedEllipticalCone.h"
 
 #endif // VECGEOM_VOLUMES_ELLIPTICALCONE_H_

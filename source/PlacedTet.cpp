@@ -6,7 +6,6 @@
 /// @author Raman Sehgal, Evgueni Tcherniaev
 
 #include "VecGeom/volumes/PlacedTet.h"
-#include "VecGeom/volumes/SpecializedTet.h"
 #ifdef VECGEOM_GEANT4
 #include "G4Tet.hh"
 #include "G4ThreeVector.hh"

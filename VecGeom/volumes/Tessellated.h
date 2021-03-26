@@ -11,7 +11,6 @@
 
 #include "VecGeom/base/Global.h"
 #include "VecGeom/volumes/PlacedTessellated.h"
-#include "VecGeom/volumes/SpecializedTessellated.h"
 #include "VecGeom/volumes/UnplacedTessellated.h"
 
 #endif // VECGEOM_VOLUMES_TESSELLATED_H_

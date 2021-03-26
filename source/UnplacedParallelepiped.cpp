@@ -10,7 +10,7 @@
 
 #include <stdio.h>
 #include "VecGeom/management/VolumeFactory.h"
-#include "VecGeom/volumes/SpecializedParallelepiped.h"
+#include "VecGeom/volumes/PlacedParallelepiped.h"
 #include "VecGeom/volumes/utilities/GenerationUtilities.h"
 #include "VecGeom/base/RNG.h"
 
@@ -164,13 +164,19 @@ VPlacedVolume *UnplacedParallelepiped::Create(LogicalVolume const *const logical
 #endif
                                               VPlacedVolume *const placement)
 {
-
-  return CreateSpecializedWithPlacement<SpecializedParallelepiped<transCodeT, rotCodeT>>(
+  if (placement) {
+    new (placement) PlacedParallelepiped(logical_volume, transformation
 #ifdef VECCORE_CUDA
-      logical_volume, transformation, id, copy_no, child_id, placement); // TODO: add bounding box?
-#else
-      logical_volume, transformation, placement);
+                                         , id, copy_no, child_id
 #endif
+                                         ); // TODO: add bounding box?
+    return placement;
+  }
+  return new PlacedParallelepiped(logical_volume, transformation
+#ifdef VECCORE_CUDA
+                                  , id, copy_no, child_id
+#endif
+                                   ); // TODO: add bounding box?
 }
 
 //______________________________________________________________________________

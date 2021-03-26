@@ -6,9 +6,9 @@
 /// @author Raman Sehgal, Evgueni Tcherniaev
 
 #include "VecGeom/volumes/EllipticUtilities.h"
+#include "VecGeom/volumes/PlacedEllipticalTube.h"
 #include "VecGeom/volumes/UnplacedEllipticalTube.h"
 #include "VecGeom/management/VolumeFactory.h"
-#include "VecGeom/volumes/SpecializedEllipticalTube.h"
 #include "VecGeom/base/RNG.h"
 #include <stdio.h>
 #include <cmath>
@@ -195,10 +195,10 @@ VPlacedVolume *UnplacedEllipticalTube::Create(LogicalVolume const *const logical
                                               VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedEllipticalTube<trans_code, rot_code>(logical_volume, transformation);
+    new (placement) PlacedEllipticalTube(logical_volume, transformation);
     return placement;
   }
-  return new SpecializedEllipticalTube<trans_code, rot_code>(logical_volume, transformation);
+  return new PlacedEllipticalTube(logical_volume, transformation);
 }
 
 VPlacedVolume *UnplacedEllipticalTube::SpecializedVolume(LogicalVolume const *const volume,
@@ -218,11 +218,10 @@ VPlacedVolume *UnplacedEllipticalTube::Create(LogicalVolume const *const logical
                                               const int copy_no, const int child_id, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement)
-        SpecializedEllipticalTube<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+    new (placement) PlacedEllipticalTube(logical_volume, transformation, id, copy_no, child_id);
     return placement;
   }
-  return new SpecializedEllipticalTube<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+  return new PlacedEllipticalTube(logical_volume, transformation, id, copy_no, child_id);
 }
 
 VECCORE_ATT_DEVICE

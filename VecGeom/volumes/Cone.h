@@ -8,7 +8,6 @@
 
 #include "VecGeom/base/Global.h"
 #include "VecGeom/volumes/PlacedCone.h"
-#include "VecGeom/volumes/SpecializedCone.h"
 #include "VecGeom/volumes/UnplacedCone.h"
 
 #endif // VECGEOM_VOLUMES_CONE_H_

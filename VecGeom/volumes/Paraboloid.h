@@ -11,7 +11,6 @@
 #include "VecGeom/base/Global.h"
 
 #include "VecGeom/volumes/PlacedParaboloid.h"
-#include "VecGeom/volumes/SpecializedParaboloid.h"
 #include "VecGeom/volumes/UnplacedParaboloid.h"
 
 #endif // VECGEOM_VOLUMES_PARABOLOID_H_

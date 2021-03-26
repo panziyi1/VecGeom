@@ -4,7 +4,7 @@
 #include "VecGeom/volumes/UnplacedHype.h"
 
 #include "VecGeom/management/VolumeFactory.h"
-#include "VecGeom/volumes/SpecializedHype.h"
+#include "VecGeom/volumes/PlacedHype.h"
 #include "VecGeom/volumes/utilities/GenerationUtilities.h"
 
 #ifdef VECGEOM_ROOT
@@ -220,10 +220,10 @@ VPlacedVolume *UnplacedHype::Create(LogicalVolume const *const logical_volume,
                                     VPlacedVolume *const placement)
 {
   (void)placement;
-  return new SpecializedHype<transCodeT, rotCodeT, HypeTypes::UniversalHype>(logical_volume, transformation
+  return new PlacedHype(logical_volume, transformation
 #ifdef VECCORE_CUDA
-                                                                             ,
-                                                                             id, copy_no, child_id
+                        ,
+                        id, copy_no, child_id
 #endif
   );
 }

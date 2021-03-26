@@ -4,7 +4,6 @@
 #include "VecGeom/volumes/PlacedPolyhedron.h"
 
 #include "VecGeom/volumes/kernel/GenericKernels.h"
-#include "VecGeom/volumes/SpecializedPolyhedron.h"
 
 #ifdef VECGEOM_ROOT
 #include "TGeoPgon.h"

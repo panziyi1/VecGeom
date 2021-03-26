@@ -10,7 +10,7 @@
 #include "VecGeom/volumes/UnplacedParallelepiped.h"
 #include "VecGeom/management/GeoManager.h"
 #include "VecGeom/management/VolumeFactory.h"
-#include "VecGeom/volumes/SpecializedTrapezoid.h"
+#include "VecGeom/volumes/PlacedTrapezoid.h"
 #include "VecGeom/base/RNG.h"
 #include "VecGeom/volumes/kernel/shapetypes/TrdTypes.h"
 #include <cstdio>
@@ -615,10 +615,10 @@ VPlacedVolume *UnplacedTrapezoid::Create(LogicalVolume const *const logical_volu
                                          Transformation3D const *const transformation, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedTrapezoid<trans_code, rot_code>(logical_volume, transformation);
+    new (placement) PlacedTrapezoid(logical_volume, transformation);
     return placement;
   }
-  return new SpecializedTrapezoid<trans_code, rot_code>(logical_volume, transformation);
+  return new PlacedTrapezoid(logical_volume, transformation);
 }
 
 VPlacedVolume *UnplacedTrapezoid::SpecializedVolume(LogicalVolume const *const volume,
@@ -639,10 +639,10 @@ VPlacedVolume *UnplacedTrapezoid::Create(LogicalVolume const *const logical_volu
                                          const int child_id, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedTrapezoid<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+    new (placement) PlacedTrapezoid(logical_volume, transformation, id, copy_no, child_id);
     return placement;
   }
-  return new SpecializedTrapezoid<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+  return new PlacedTrapezoid(logical_volume, transformation, id, copy_no, child_id);
 }
 
 VECCORE_ATT_DEVICE VPlacedVolume *UnplacedTrapezoid::SpecializedVolume(LogicalVolume const *const volume,

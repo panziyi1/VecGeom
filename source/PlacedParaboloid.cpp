@@ -6,7 +6,6 @@
 /// @author Marilena Bandieramonte
 
 #include "VecGeom/volumes/PlacedParaboloid.h"
-#include "VecGeom/volumes/SpecializedParaboloid.h"
 #ifdef VECGEOM_ROOT
 #include "TGeoParaboloid.h"
 #endif

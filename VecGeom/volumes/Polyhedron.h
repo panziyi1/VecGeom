@@ -6,6 +6,5 @@
 
 #include "VecGeom/volumes/UnplacedPolyhedron.h"
 #include "VecGeom/volumes/PlacedPolyhedron.h"
-#include "VecGeom/volumes/SpecializedPolyhedron.h"
 
 #endif // VECGEOM_VOLUMES_POLYHEDRON_H_

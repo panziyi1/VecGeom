@@ -3,7 +3,6 @@
 
 #include "VecGeom/volumes/PlacedSphere.h"
 #include "VecGeom/volumes/Sphere.h"
-#include "VecGeom/volumes/SpecializedSphere.h"
 
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {

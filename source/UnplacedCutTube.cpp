@@ -4,8 +4,8 @@
  *  Created on: 03.11.2016
  *      Author: mgheata
  */
+#include "VecGeom/volumes/PlacedCutTube.h"
 #include "VecGeom/volumes/UnplacedCutTube.h"
-#include "VecGeom/volumes/SpecializedCutTube.h"
 
 #ifndef VECCORE_CUDA
 #include "VecGeom/base/RNG.h"
@@ -264,18 +264,18 @@ VPlacedVolume *UnplacedCutTube::Create(LogicalVolume const *const logical_volume
                                        VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedCutTube<trans_code, rot_code>(logical_volume, transformation
+    new (placement) PlacedCutTube(logical_volume, transformation
 #ifdef VECCORE_CUDA
-                                                             ,
-                                                             id, copy_no, child_id
+                                  ,
+                                  id, copy_no, child_id
 #endif
     );
     return placement;
   }
-  return new SpecializedCutTube<trans_code, rot_code>(logical_volume, transformation
+  return new PlacedCutTube(logical_volume, transformation
 #ifdef VECCORE_CUDA
-                                                      ,
-                                                      id, copy_no, child_id
+                           ,
+                           id, copy_no, child_id
 #endif
   );
 }

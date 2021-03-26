@@ -2,7 +2,6 @@
 /// @author Raman Sehgal (raman.sehgal@cern.ch)
 
 #include "VecGeom/volumes/PlacedCoaxialCones.h"
-#include "VecGeom/volumes/SpecializedCoaxialCones.h"
 #ifdef VECGEOM_ROOT
 
 #endif

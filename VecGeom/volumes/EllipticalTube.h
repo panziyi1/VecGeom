@@ -11,7 +11,6 @@
 #include "VecGeom/base/Global.h"
 
 #include "VecGeom/volumes/PlacedEllipticalTube.h"
-#include "VecGeom/volumes/SpecializedEllipticalTube.h"
 #include "VecGeom/volumes/UnplacedEllipticalTube.h"
 
 #endif // VECGEOM_VOLUMES_ELLIPTICALTUBE_H_

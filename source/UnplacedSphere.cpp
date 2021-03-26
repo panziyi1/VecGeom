@@ -8,7 +8,7 @@
 #ifndef VECCORE_CUDA
 #include "VecGeom/volumes/UnplacedImplAs.h"
 #endif
-#include "VecGeom/volumes/SpecializedSphere.h"
+#include "VecGeom/volumes/PlacedSphere.h"
 #include "VecGeom/volumes/utilities/VolumeUtilities.h"
 #include "VecGeom/volumes/utilities/GenerationUtilities.h"
 #ifndef VECCORE_CUDA
@@ -406,10 +406,10 @@ VPlacedVolume *UnplacedSphere::Create(LogicalVolume const *const logical_volume,
                                       Transformation3D const *const transformation, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedSphere<trans_code, rot_code>(logical_volume, transformation);
+    new (placement) PlacedSphere(logical_volume, transformation);
     return placement;
   }
-  return new SpecializedSphere<trans_code, rot_code>(logical_volume, transformation);
+  return new PlacedSphere(logical_volume, transformation);
 }
 
 VPlacedVolume *UnplacedSphere::CreateSpecializedVolume(LogicalVolume const *const volume,
@@ -429,10 +429,10 @@ VPlacedVolume *UnplacedSphere::Create(LogicalVolume const *const logical_volume,
                                       const int child_id, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedSphere<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+    new (placement) PlacedSphere(logical_volume, transformation, id, copy_no, child_id);
     return placement;
   }
-  return new SpecializedSphere<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+  return new PlacedSphere(logical_volume, transformation, id, copy_no, child_id);
 }
 
 VECCORE_ATT_DEVICE VPlacedVolume *UnplacedSphere::CreateSpecializedVolume(

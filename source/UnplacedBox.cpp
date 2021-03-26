@@ -1,6 +1,6 @@
+#include "VecGeom/volumes/PlacedBox.h"
 #include "VecGeom/volumes/UnplacedBox.h"
 #include "VecGeom/management/VolumeFactory.h"
-#include "VecGeom/volumes/SpecializedBox.h"
 #include "VecGeom/base/RNG.h"
 
 #include "VecGeom/base/Utils3D.h"
@@ -78,10 +78,10 @@ VPlacedVolume *UnplacedBox::Create(LogicalVolume const *const logical_volume,
                                    Transformation3D const *const transformation, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedBox<trans_code, rot_code>(logical_volume, transformation);
+    new (placement) PlacedBox(logical_volume, transformation);
     return placement;
   }
-  return new SpecializedBox<trans_code, rot_code>(logical_volume, transformation);
+  return new PlacedBox(logical_volume, transformation);
 }
 
 VPlacedVolume *UnplacedBox::SpecializedVolume(LogicalVolume const *const volume,
@@ -100,10 +100,10 @@ VPlacedVolume *UnplacedBox::Create(LogicalVolume const *const logical_volume,
                                    const int child_id, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedBox<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+    new (placement) PlacedBox(logical_volume, transformation, id, copy_no, child_id);
     return placement;
   }
-  return new SpecializedBox<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+  return new PlacedBox(logical_volume, transformation, id, copy_no, child_id);
 }
 
 VECCORE_ATT_DEVICE

@@ -2,7 +2,6 @@
 /// \author Mihaela Gheata (mihaela.gheata@cern.ch)
 
 #include "VecGeom/volumes/PlacedScaledShape.h"
-#include "VecGeom/volumes/SpecializedScaledShape.h"
 
 #include <stdio.h>
 

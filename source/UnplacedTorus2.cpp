@@ -1,7 +1,7 @@
 /// \file UnplacedTorus2.cpp
 
+#include "VecGeom/volumes/PlacedTorus2.h"
 #include "VecGeom/volumes/UnplacedTorus2.h"
-#include "VecGeom/volumes/SpecializedTorus2.h"
 
 #include "VecGeom/volumes/utilities/VolumeUtilities.h"
 #include "VecGeom/management/VolumeFactory.h"
@@ -170,7 +170,7 @@ VPlacedVolume *UnplacedTorus2::Create(LogicalVolume const *const logical_volume,
                                       VPlacedVolume *const placement)
 {
   (void)placement;
-  return new SimpleTorus2(logical_volume, transformation
+  return new PlacedTorus2(logical_volume, transformation
 #ifdef VECCORE_CUDA
                           ,
                           id, copy_no, child_id

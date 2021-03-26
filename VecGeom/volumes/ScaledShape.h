@@ -9,7 +9,6 @@
 
 #include "VecGeom/base/Global.h"
 #include "VecGeom/volumes/PlacedScaledShape.h"
-#include "VecGeom/volumes/SpecializedScaledShape.h"
 #include "VecGeom/volumes/UnplacedScaledShape.h"
 
 #endif // VECGEOM_VOLUMES_SCALEDSHAPE_H_

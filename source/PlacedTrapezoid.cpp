@@ -2,7 +2,6 @@
 /// \author Guilherme Lima (lima at fnal dot gov)
 
 #include "VecGeom/volumes/PlacedTrapezoid.h"
-#include "VecGeom/volumes/SpecializedTrapezoid.h"
 #ifdef VECGEOM_ROOT
 #include "TGeoArb8.h"
 #endif

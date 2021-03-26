@@ -5,9 +5,9 @@
  *      Author: swenzel
  */
 
+#include "VecGeom/volumes/PlacedCone.h"
 #include "VecGeom/volumes/UnplacedCone.h"
 #include "VecGeom/volumes/UnplacedTube.h"
-#include "VecGeom/volumes/SpecializedCone.h"
 #include "VecGeom/volumes/utilities/VolumeUtilities.h"
 #include "VecGeom/volumes/utilities/GenerationUtilities.h"
 #include "VecGeom/base/RNG.h"
@@ -576,7 +576,7 @@ VPlacedVolume *UnplacedCone::Create(LogicalVolume const *const logical_volume,
                                     VPlacedVolume *const placement)
 {
   (void)placement;
-  return new SpecializedCone<transCodeT, rotCodeT, ConeTypes::UniversalCone>(logical_volume, transformation
+  return new PlacedCone(logical_volume, transformation
 #ifdef VECCORE_CUDA
                                                                              ,
                                                                              id, copy_no, child_id

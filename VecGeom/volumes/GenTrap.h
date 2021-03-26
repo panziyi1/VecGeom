@@ -10,7 +10,6 @@
 
 #include "VecGeom/base/Global.h"
 #include "VecGeom/volumes/PlacedGenTrap.h"
-#include "VecGeom/volumes/SpecializedGenTrap.h"
 #include "VecGeom/volumes/UnplacedGenTrap.h"
 
 #endif /* GENTRAP_H_ */

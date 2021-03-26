@@ -10,7 +10,6 @@
 
 #include "VecGeom/base/Global.h"
 #include "VecGeom/volumes/PlacedTrd.h"
-#include "VecGeom/volumes/SpecializedTrd.h"
 #include "VecGeom/volumes/UnplacedTrd.h"
 
 #endif // VECGEOM_VOLUMES_TRD_H_

@@ -6,7 +6,6 @@
 
 #include "VecGeom/base/Global.h"
 #include "VecGeom/volumes/PlacedTorus2.h"
-#include "VecGeom/volumes/SpecializedTorus2.h"
 #include "VecGeom/volumes/UnplacedTorus2.h"
 
 #endif // VECGEOM_VOLUMES_TORUS2_H_

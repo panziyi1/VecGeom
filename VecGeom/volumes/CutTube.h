@@ -11,7 +11,6 @@
 
 #include "VecGeom/base/Global.h"
 #include "VecGeom/volumes/PlacedCutTube.h"
-#include "VecGeom/volumes/SpecializedCutTube.h"
 #include "VecGeom/volumes/UnplacedCutTube.h"
 
 #endif // VECGEOM_VOLUMES_CUTTUBE_H_

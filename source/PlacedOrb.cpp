@@ -6,7 +6,6 @@
 /// \author Raman Sehgal
 
 #include "VecGeom/volumes/PlacedOrb.h"
-#include "VecGeom/volumes/SpecializedOrb.h"
 #include <stdio.h>
 
 namespace vecgeom {

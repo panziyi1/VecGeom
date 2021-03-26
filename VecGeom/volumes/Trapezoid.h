@@ -13,7 +13,6 @@
 #include "VecGeom/base/Global.h"
 
 #include "VecGeom/volumes/PlacedTrapezoid.h"
-#include "VecGeom/volumes/SpecializedTrapezoid.h"
 #include "VecGeom/volumes/UnplacedTrapezoid.h"
 
 #endif // VECGEOM_VOLUMES_TRAPEZOID_H_

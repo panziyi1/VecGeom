@@ -2,9 +2,9 @@
 /// @author Mihaela Gheata (mihaela.gheata@cern.ch)
 
 #include "VecGeom/volumes/Tessellated.h"
+#include "VecGeom/volumes/PlacedExtruded.h"
 #include "VecGeom/volumes/UnplacedExtruded.h"
 #include "VecGeom/volumes/UnplacedSExtruVolume.h"
-#include "VecGeom/volumes/SpecializedExtruded.h"
 #include "VecGeom/volumes/utilities/GenerationUtilities.h"
 #include "VecGeom/base/RNG.h"
 
@@ -269,10 +269,10 @@ VPlacedVolume *UnplacedExtruded::Create(LogicalVolume const *const logical_volum
                                         VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedExtruded<transCodeT, rotCodeT>(logical_volume, transformation, id);
+    new (placement) PlacedExtruded(logical_volume, transformation, id);
     return placement;
   }
-  return new SpecializedExtruded<transCodeT, rotCodeT>(logical_volume, transformation, id);
+  return new PlacedExtruded(logical_volume, transformation, id);
 }
 #else
 template <TranslationCode transCodeT, RotationCode rotCodeT>
@@ -280,10 +280,10 @@ VPlacedVolume *UnplacedExtruded::Create(LogicalVolume const *const logical_volum
                                         Transformation3D const *const transformation, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedExtruded<transCodeT, rotCodeT>(logical_volume, transformation);
+    new (placement) PlacedExtruded(logical_volume, transformation);
     return placement;
   }
-  return new SpecializedExtruded<transCodeT, rotCodeT>(logical_volume, transformation);
+  return new PlacedExtruded(logical_volume, transformation);
 }
 #endif
 

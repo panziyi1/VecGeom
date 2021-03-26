@@ -15,15 +15,9 @@
 
 using namespace vecgeom;
 
-// now create a specialized box by hand (instead of the factory)
-// we know that it is only translated
-typedef SpecializedBox<translation::kIdentity, rotation::kIdentity> OriginBox_t;
-typedef SpecializedBox<translation::kGeneric, rotation::kIdentity> TranslatedBox_t;
-// typedef TUnplacedBooleanMinusVolume<
-//             OriginBox_t, TranslatedBox_t > BoxMinusBox_t;
 typedef TUnplacedBooleanMinusVolume BoxMinusBox_t;
 
-typedef TSpecializedBooleanMinusVolume<OriginBox_t, TranslatedBox_t, translation::kGeneric, rotation::kIdentity>
+typedef TSpecializedBooleanMinusVolume<PlacedBox, PlacedBox, translation::kGeneric, rotation::kIdentity>
     SpecializedVol_t;
 
 int main()
@@ -40,16 +34,8 @@ int main()
   VPlacedVolume *worldPlaced = world.Place();
   GeoManager::Instance().SetWorld(worldPlaced);
 
-  // now create a specialized box by hand (instead of the factory)
-  // we know that it is only translated
-  typedef SpecializedBox<translation::kIdentity, rotation::kIdentity> OriginBox_t;
-  typedef SpecializedBox<translation::kGeneric, rotation::kIdentity> TranslatedBox_t;
-
-  TranslatedBox_t const *placedsubtractedbox = new TranslatedBox_t(new LogicalVolume("", &subtractedbox), &translation);
-
-  // now create a specialized box by hand (instead of the factory)
-  // we know that it is only translated
-  OriginBox_t const *placedmotherbox = new OriginBox_t(new LogicalVolume("", &motherbox), &Transformation3D::kIdentity);
+  PlacedBox const *placedsubtractedbox = new PlacedBox(new LogicalVolume("", &subtractedbox), &translation);
+  PlacedBox const *placedmotherbox = new PlacedBox(new LogicalVolume("", &motherbox), &Transformation3D::kIdentity);
 
   // now make the unplaced boolean solid
   BoxMinusBox_t booleansolid(placedmotherbox, placedsubtractedbox);

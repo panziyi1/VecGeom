@@ -6,8 +6,8 @@
  */
 
 #include "VecGeom/base/Global.h"
+#include "VecGeom/volumes/PlacedBooleanVolume.h"
 #include "VecGeom/volumes/UnplacedBooleanVolume.h"
-#include "VecGeom/volumes/SpecializedBooleanVolume.h"
 #include "VecGeom/management/VolumeFactory.h"
 #include "VecGeom/volumes/utilities/GenerationUtilities.h"
 #include "VecGeom/volumes/utilities/VolumeUtilities.h"
@@ -269,12 +269,12 @@ VPlacedVolume *UnplacedBooleanVolume<kSubtraction>::Create(LogicalVolume const *
 #endif
                                                            VPlacedVolume *const placement)
 {
-  return CreateSpecializedWithPlacement<SpecializedBooleanVolume<kSubtraction, transCodeT, rotCodeT>>(
-      logical_volume, transformation,
+  return new PlacedBooleanVolume<kSubtraction>(
+      logical_volume, transformation
 #ifdef VECCORE_CUDA
-      id, copy_no, child_id,
+      , id, copy_no, child_id
 #endif
-      placement); // TODO: add bounding box?
+      ); // TODO: add bounding box?
 }
 
 template <>
@@ -287,12 +287,12 @@ VPlacedVolume *UnplacedBooleanVolume<kUnion>::Create(LogicalVolume const *const 
 #endif
                                                      VPlacedVolume *const placement)
 {
-  return CreateSpecializedWithPlacement<SpecializedBooleanVolume<kUnion, transCodeT, rotCodeT>>(
-      logical_volume, transformation,
+  return new PlacedBooleanVolume<kUnion>(
+      logical_volume, transformation
 #ifdef VECCORE_CUDA
-      id, copy_no, child_id,
+      , id, copy_no, child_id
 #endif
-      placement); // TODO: add bounding box?
+      ); // TODO: add bounding box?
 }
 
 template <>
@@ -305,12 +305,12 @@ VPlacedVolume *UnplacedBooleanVolume<kIntersection>::Create(LogicalVolume const 
 #endif
                                                             VPlacedVolume *const placement)
 {
-  return CreateSpecializedWithPlacement<SpecializedBooleanVolume<kIntersection, transCodeT, rotCodeT>>(
-      logical_volume, transformation,
+  return new PlacedBooleanVolume<kIntersection>(
+      logical_volume, transformation
 #ifdef VECCORE_CUDA
-      id, copy_no, child_id,
+      , id, copy_no, child_id
 #endif
-      placement); // TODO: add bounding box?
+      ); // TODO: add bounding box?
 }
 
 template <>

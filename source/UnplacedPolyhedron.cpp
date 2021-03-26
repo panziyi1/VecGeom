@@ -4,7 +4,7 @@
 #include "VecGeom/base/Global.h"
 #include "VecGeom/volumes/UnplacedPolyhedron.h"
 #include "VecGeom/volumes/PlacedPolyhedron.h"
-#include "VecGeom/volumes/SpecializedPolyhedron.h"
+#include "VecGeom/volumes/PlacedPolyhedron.h"
 #include "VecGeom/volumes/utilities/GenerationUtilities.h"
 #include "VecGeom/management/VolumeFactory.h"
 
@@ -67,58 +67,20 @@ VPlacedVolume *UnplacedPolyhedron::Create(LogicalVolume const *const logical_vol
 #endif
                                           VPlacedVolume *const placement)
 {
-  UnplacedPolyhedron const *unplaced = static_cast<UnplacedPolyhedron const *>(logical_volume->GetUnplacedVolume());
-
-  EInnerRadii innerRadii = unplaced->HasInnerRadii() ? EInnerRadii::kTrue : EInnerRadii::kFalse;
-
-  EPhiCutout phiCutout = unplaced->HasPhiCutout()
-                             ? (unplaced->HasLargePhiCutout() ? EPhiCutout::kLarge : EPhiCutout::kTrue)
-                             : EPhiCutout::kFalse;
-
-#ifndef VECCORE_CUDA
-// for the moment we do not propagate placement specialization
-// (We should in the future select a few important specializations here such as rotation or no rotation)
-#define POLYHEDRON_CREATE_SPECIALIZATION(INNER, PHI)                                                                   \
-  return CreateSpecializedWithPlacement<SpecializedPolyhedron<translation::kGeneric, rotation::kGeneric, INNER, PHI>>( \
-      logical_volume, transformation, placement)
-#else
-#define POLYHEDRON_CREATE_SPECIALIZATION(INNER, PHI)                                                                   \
-  return CreateSpecializedWithPlacement<SpecializedPolyhedron<translation::kGeneric, rotation::kGeneric, INNER, PHI>>( \
-      logical_volume, transformation, id, copy_no, child_id, placement)
-#endif
-
-  if (innerRadii == EInnerRadii::kTrue) {
-    if (phiCutout == EPhiCutout::kFalse) POLYHEDRON_CREATE_SPECIALIZATION(EInnerRadii::kTrue, EPhiCutout::kFalse);
-    if (phiCutout == EPhiCutout::kTrue) POLYHEDRON_CREATE_SPECIALIZATION(EInnerRadii::kTrue, EPhiCutout::kTrue);
-    if (phiCutout == EPhiCutout::kLarge) POLYHEDRON_CREATE_SPECIALIZATION(EInnerRadii::kTrue, EPhiCutout::kLarge);
-
-  } else {
-    if (phiCutout == EPhiCutout::kFalse) POLYHEDRON_CREATE_SPECIALIZATION(EInnerRadii::kFalse, EPhiCutout::kFalse);
-    if (phiCutout == EPhiCutout::kTrue) POLYHEDRON_CREATE_SPECIALIZATION(EInnerRadii::kFalse, EPhiCutout::kTrue);
-    if (phiCutout == EPhiCutout::kLarge) POLYHEDRON_CREATE_SPECIALIZATION(EInnerRadii::kFalse, EPhiCutout::kLarge);
-  }
-
-  // Return value in case of NO_SPECIALIZATION
   if (placement) {
-    new (placement)
-        SpecializedPolyhedron<transCodeT, rotCodeT, Polyhedron::EInnerRadii::kGeneric,
+    new (placement) PlacedPolyhedron(logical_volume, transformation
 #ifdef VECCORE_CUDA
-                              Polyhedron::EPhiCutout::kGeneric>(logical_volume, transformation, id, copy_no, child_id);
-#else
-                              Polyhedron::EPhiCutout::kGeneric>(logical_volume, transformation);
+                                     , id, copy_no, child_id
 #endif
+                                     );
     return placement;
   }
 
-  return new SpecializedPolyhedron<translation::kGeneric, rotation::kGeneric, Polyhedron::EInnerRadii::kGeneric,
+  return new PlacedPolyhedron(logical_volume, transformation
 #ifdef VECCORE_CUDA
-                                   Polyhedron::EPhiCutout::kGeneric>(logical_volume, transformation, id, copy_no,
-                                                                     child_id);
-#else
-                                   Polyhedron::EPhiCutout::kGeneric>(logical_volume, transformation);
+                              , id, copy_no, child_id
 #endif
-
-#undef POLYHEDRON_CREATE_SPECIALIZATION
+                              );
 }
 
 VECCORE_ATT_DEVICE

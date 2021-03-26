@@ -15,13 +15,6 @@
 
 using namespace vecgeom;
 
-// now create a specialized box by hand (instead of the factory)
-// we know that it is only translated
-typedef SpecializedBox<translation::kIdentity, rotation::kIdentity> OriginBox_t;
-typedef SpecializedBox<translation::kGeneric, rotation::kIdentity> TranslatedBox_t;
-// typedef TUnplacedBooleanMinusVolume<
-//             OriginBox_t, TranslatedBox_t > BoxMinusBox_t;
-
 // if we don't want to give all this information, we can also be very unprecise and construct something based on
 // virtual functions
 typedef TUnplacedBooleanMinusVolume<VPlacedVolume, VPlacedVolume> GenericSubtraction_t;
@@ -69,16 +62,8 @@ int main()
   UnplacedBox subtractedbox(2., 2., 2);
   Transformation3D translation(-2.5, 0, 0);
 
-  // now create a specialized box by hand (instead of the factory)
-  // we know that it is only translated
-  typedef SpecializedBox<translation::kIdentity, rotation::kIdentity> OriginBox_t;
-  typedef SpecializedBox<translation::kGeneric, rotation::kIdentity> TranslatedBox_t;
-
-  TranslatedBox_t const *placedsubtractedbox = new TranslatedBox_t(new LogicalVolume("", &subtractedbox), &translation);
-
-  // now create a specialized box by hand (instead of the factory)
-  // we know that it is only translated
-  OriginBox_t const *placedmotherbox = new OriginBox_t(new LogicalVolume("", &motherbox), &Transformation3D::kIdentity);
+  PlacedBox const *placedsubtractedbox = new PlacedBox(new LogicalVolume("", &subtractedbox), &translation);
+  PlacedBox const *placedmotherbox = new PlacedBox(new LogicalVolume("", &motherbox), &Transformation3D::kIdentity);
 
   // now make the boolean solid
   BoxMinusBox_t complexsolid(placedmotherbox, placedsubtractedbox);

@@ -5,9 +5,9 @@
 /// @file source/UnplacedTet.cpp
 /// @author Raman Sehgal, Evgueni Tcherniaev
 
+#include "VecGeom/volumes/PlacedTet.h"
 #include "VecGeom/volumes/UnplacedTet.h"
 #include "VecGeom/management/VolumeFactory.h"
-#include "VecGeom/volumes/SpecializedTet.h"
 #include "VecGeom/base/RNG.h"
 #include <stdio.h>
 namespace vecgeom {
@@ -177,10 +177,10 @@ VPlacedVolume *UnplacedTet::Create(LogicalVolume const *const logical_volume,
                                    Transformation3D const *const transformation, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedTet<trans_code, rot_code>(logical_volume, transformation);
+    new (placement) PlacedTet(logical_volume, transformation);
     return placement;
   }
-  return new SpecializedTet<trans_code, rot_code>(logical_volume, transformation);
+  return new PlacedTet(logical_volume, transformation);
 }
 
 VPlacedVolume *UnplacedTet::SpecializedVolume(LogicalVolume const *const volume,
@@ -199,10 +199,10 @@ VPlacedVolume *UnplacedTet::Create(LogicalVolume const *const logical_volume,
                                    const int child_id, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedTet<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+    new (placement) PlacedTet(logical_volume, transformation, id, copy_no, child_id);
     return placement;
   }
-  return new SpecializedTet<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+  return new PlacedTet(logical_volume, transformation, id, copy_no, child_id);
 }
 
 VECCORE_ATT_DEVICE

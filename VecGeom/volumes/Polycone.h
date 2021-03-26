@@ -10,7 +10,6 @@
 
 #include "VecGeom/base/Global.h"
 #include "VecGeom/volumes/PlacedPolycone.h"
-#include "VecGeom/volumes/SpecializedPolycone.h"
 #include "VecGeom/volumes/UnplacedPolycone.h"
 
 #endif /* VECGEOM_VOLUMES_POLYCONE_H_ */

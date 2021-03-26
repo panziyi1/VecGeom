@@ -11,7 +11,6 @@
 #include "VecGeom/base/Global.h"
 
 #include "VecGeom/volumes/PlacedTet.h"
-#include "VecGeom/volumes/SpecializedTet.h"
 #include "VecGeom/volumes/UnplacedTet.h"
 
 #endif // VECGEOM_VOLUMES_TET_H_

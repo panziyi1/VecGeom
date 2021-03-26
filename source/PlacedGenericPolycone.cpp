@@ -2,7 +2,6 @@
 /// @author Raman Sehgal (raman.sehgal@cern.ch)
 
 #include "VecGeom/volumes/PlacedGenericPolycone.h"
-#include "VecGeom/volumes/SpecializedGenericPolycone.h"
 #ifdef VECGEOM_ROOT
 
 #endif

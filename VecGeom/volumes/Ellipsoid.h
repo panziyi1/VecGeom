@@ -11,7 +11,6 @@
 #include "VecGeom/base/Global.h"
 
 #include "VecGeom/volumes/PlacedEllipsoid.h"
-#include "VecGeom/volumes/SpecializedEllipsoid.h"
 #include "VecGeom/volumes/UnplacedEllipsoid.h"
 
 #endif // VECGEOM_VOLUMES_ELLIPSOID_H_

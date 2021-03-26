@@ -8,7 +8,6 @@
 
 #include "VecGeom/base/Global.h"
 #include "VecGeom/volumes/PlacedMultiUnion.h"
-#include "VecGeom/volumes/SpecializedMultiUnion.h"
 #include "VecGeom/volumes/UnplacedMultiUnion.h"
 
 #endif // VECGEOM_VOLUMES_MULTIUNION_H_

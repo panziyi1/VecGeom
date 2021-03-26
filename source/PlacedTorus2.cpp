@@ -1,7 +1,6 @@
 /// \file PlacedTorus2.cpp
 #include "VecGeom/volumes/PlacedTorus2.h"
 #include "VecGeom/volumes/Torus2.h"
-#include "VecGeom/volumes/SpecializedTorus2.h"
 
 #ifdef VECGEOM_ROOT
 #include "TGeoTorus.h"

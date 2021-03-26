@@ -6,9 +6,9 @@
 /// @author Evgueni Tcherniaev
 
 #include "VecGeom/volumes/EllipticUtilities.h"
+#include "VecGeom/volumes/PlacedEllipsoid.h"
 #include "VecGeom/volumes/UnplacedEllipsoid.h"
 #include "VecGeom/management/VolumeFactory.h"
-#include "VecGeom/volumes/SpecializedEllipsoid.h"
 #include "VecGeom/base/RNG.h"
 #include <stdio.h>
 #include <cmath>
@@ -329,10 +329,10 @@ VPlacedVolume *UnplacedEllipsoid::Create(LogicalVolume const *const logical_volu
                                          Transformation3D const *const transformation, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedEllipsoid<trans_code, rot_code>(logical_volume, transformation);
+    new (placement) PlacedEllipsoid(logical_volume, transformation);
     return placement;
   }
-  return new SpecializedEllipsoid<trans_code, rot_code>(logical_volume, transformation);
+  return new PlacedEllipsoid(logical_volume, transformation);
 }
 
 VPlacedVolume *UnplacedEllipsoid::SpecializedVolume(LogicalVolume const *const volume,
@@ -352,10 +352,10 @@ VPlacedVolume *UnplacedEllipsoid::Create(LogicalVolume const *const logical_volu
                                          const int child_id, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedEllipsoid<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+    new (placement) PlacedEllipsoid(logical_volume, transformation, id, copy_no, child_id);
     return placement;
   }
-  return new SpecializedEllipsoid<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+  return new PlacedEllipsoid(logical_volume, transformation, id, copy_no, child_id);
 }
 
 VECCORE_ATT_DEVICE

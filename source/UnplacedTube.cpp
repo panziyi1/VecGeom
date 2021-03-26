@@ -2,7 +2,7 @@
 /// \author Georgios Bitzes (georgios.bitzes@cern.ch)
 
 #include "VecGeom/volumes/UnplacedTube.h"
-#include "VecGeom/volumes/SpecializedTube.h"
+#include "VecGeom/volumes/PlacedTube.h"
 #include "VecGeom/base/RNG.h"
 #ifndef VECCORE_CUDA
 #include <cmath>
@@ -106,10 +106,10 @@ VPlacedVolume *UnplacedTube::Create(LogicalVolume const *const logical_volume,
                                     VPlacedVolume *const placement)
 {
   (void)placement;
-  return new SpecializedTube<transCodeT, rotCodeT, TubeTypes::UniversalTube>(logical_volume, transformation
+  return new PlacedTube(logical_volume, transformation
 #ifdef VECCORE_CUDA
-                                                                             ,
-                                                                             id, copy_no, child_id
+                        ,
+                        id, copy_no, child_id
 #endif
   );
 }

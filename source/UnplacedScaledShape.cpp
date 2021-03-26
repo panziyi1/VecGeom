@@ -3,7 +3,7 @@
 
 #include "VecGeom/volumes/UnplacedScaledShape.h"
 #include "VecGeom/management/VolumeFactory.h"
-#include "VecGeom/volumes/SpecializedScaledShape.h"
+#include "VecGeom/volumes/PlacedScaledShape.h"
 #ifndef VECCORE_CUDA
 #include "VecGeom/base/RNG.h"
 #endif
@@ -76,18 +76,18 @@ VPlacedVolume *UnplacedScaledShape::Create(LogicalVolume const *const logical_vo
                                            VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedScaledShape<trans_code, rot_code>(logical_volume, transformation
+    new (placement) PlacedScaledShape(logical_volume, transformation
 #ifdef VECCORE_CUDA
-                                                                 ,
-                                                                 id, copy_no, child_id
+                                      ,
+                                      id, copy_no, child_id
 #endif
     );
     return placement;
   }
-  return new SpecializedScaledShape<trans_code, rot_code>(logical_volume, transformation
+  return new PlacedScaledShape(logical_volume, transformation
 #ifdef VECCORE_CUDA
-                                                          ,
-                                                          id, copy_no, child_id
+                               ,
+                               id, copy_no, child_id
 #endif
   );
 }

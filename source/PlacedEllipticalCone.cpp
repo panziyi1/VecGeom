@@ -6,7 +6,6 @@
 /// @author Raman Sehgal, Evgueni Tcherniaev
 
 #include "VecGeom/volumes/PlacedEllipticalCone.h"
-#include "VecGeom/volumes/SpecializedEllipticalCone.h"
 
 #ifdef VECGEOM_ROOT
 // Include header file for ROOT Elliptical Cone as done for Tube below

@@ -6,7 +6,6 @@
  */
 
 #include "VecGeom/volumes/PlacedBooleanVolume.h"
-#include "VecGeom/volumes/SpecializedBooleanVolume.h"
 #include "VecGeom/volumes/UnplacedBooleanVolume.h"
 #include "VecGeom/volumes/LogicalVolume.h"
 #include "VecGeom/base/Vector3D.h"

@@ -12,7 +12,6 @@
 #include "VecGeom/base/Global.h"
 
 #include "VecGeom/volumes/PlacedOrb.h"
-#include "VecGeom/volumes/SpecializedOrb.h"
 #include "VecGeom/volumes/UnplacedOrb.h"
 
 #endif // VECGEOM_VOLUMES_ORB_H_

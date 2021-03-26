@@ -2,12 +2,12 @@
 /// \author: swenzel
 ///  Modified and completed: mihaela.gheata@cern.ch
 
+#include "VecGeom/volumes/PlacedGenTrap.h"
 #include "VecGeom/volumes/UnplacedGenTrap.h"
 #include <ostream>
 #include <iomanip>
 #include <iostream>
 #include "VecGeom/management/VolumeFactory.h"
-#include "VecGeom/volumes/SpecializedGenTrap.h"
 #ifndef VECCORE_CUDA
 #include "VecGeom/base/RNG.h"
 #endif
@@ -304,18 +304,18 @@ VPlacedVolume *UnplacedGenTrap::Create(LogicalVolume const *const logical_volume
                                        VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedGenTrap<trans_code, rot_code>(logical_volume, transformation
+    new (placement) PlacedGenTrap(logical_volume, transformation
 #ifdef VECCORE_CUDA
-                                                             ,
-                                                             id, copy_no, child_id
+                                  ,
+                                  id, copy_no, child_id
 #endif
     );
     return placement;
   }
-  return new SpecializedGenTrap<trans_code, rot_code>(logical_volume, transformation
+  return new PlacedGenTrap(logical_volume, transformation
 #ifdef VECCORE_CUDA
-                                                      ,
-                                                      id, copy_no, child_id
+                           ,
+                           id, copy_no, child_id
 #endif
   );
 }

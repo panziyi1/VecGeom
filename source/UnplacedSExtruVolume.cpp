@@ -1,6 +1,6 @@
 #include "VecGeom/volumes/UnplacedSExtruVolume.h"
 #include "VecGeom/management/VolumeFactory.h"
-#include "VecGeom/volumes/SpecializedSExtru.h"
+#include "VecGeom/volumes/PlacedSExtru.h"
 #include "VecGeom/base/RNG.h"
 #include <stdio.h>
 
@@ -82,10 +82,10 @@ VPlacedVolume *UnplacedSExtruVolume::Create(LogicalVolume const *const logical_v
                                             VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedSExtru<trans_code, rot_code>(logical_volume, transformation);
+    new (placement) PlacedSExtru(logical_volume, transformation);
     return placement;
   }
-  return new SpecializedSExtru<trans_code, rot_code>(logical_volume, transformation);
+  return new PlacedSExtru(logical_volume, transformation);
 }
 
 VPlacedVolume *UnplacedSExtruVolume::SpecializedVolume(LogicalVolume const *const volume,
@@ -105,10 +105,10 @@ VPlacedVolume *UnplacedSExtruVolume::Create(LogicalVolume const *const logical_v
                                             const int copy_no, const int child_id, VPlacedVolume *const placement)
 {
   if (placement) {
-    new (placement) SpecializedSExtru<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+    new (placement) PlacedSExtru(logical_volume, transformation, id, copy_no, child_id);
     return placement;
   }
-  return new SpecializedSExtru<trans_code, rot_code>(logical_volume, transformation, id, copy_no, child_id);
+  return new PlacedSExtru(logical_volume, transformation, id, copy_no, child_id);
 }
 
 VECCORE_ATT_DEVICE VPlacedVolume *UnplacedSExtruVolume::SpecializedVolume(LogicalVolume const *const volume,
