@@ -19,15 +19,26 @@ void UnplacedRootVolume::Print(std::ostream &os) const
   os << "UnplacedRootVolume";
 }
 
-VPlacedVolume *UnplacedRootVolume::SpecializedVolume(LogicalVolume const *const volume,
-                                                     Transformation3D const *const transformation,
-                                                     const TranslationCode trans_code, const RotationCode rot_code,
-                                                     VPlacedVolume *const placement) const
+VECCORE_ATT_DEVICE
+VPlacedVolume *UnplacedRootVolume::PlaceVolume(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
+#ifdef VECCORE_CUDA
+                                               const int id, const int copy_no, const int child_id,
+#endif
+                                               VPlacedVolume *const placement) const
 {
   if (placement) {
-    return new (placement) PlacedRootVolume(fRootShape, volume, transformation);
+    return new (placement) PlacedRootVolume(logical_volume, transformation
+#ifdef VECCORE_CUDA
+                                            , id, copy_no, child_id
+#endif
+    );
+    return placement;
   }
-  return new PlacedRootVolume(fRootShape, volume, transformation);
+  return new PlacedRootVolume(logical_volume, transformation
+#ifdef VECCORE_CUDA
+                              , id, copy_no, child_id
+#endif
+  );
 }
 
 #ifdef VECGEOM_CUDA_INTERFACE

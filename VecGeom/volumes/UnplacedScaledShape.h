@@ -160,39 +160,14 @@ public:
 
   virtual void Print(std::ostream &os) const final;
 
-  template <TranslationCode trans_code, RotationCode rot_code>
   VECCORE_ATT_DEVICE
-  static VPlacedVolume *Create(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
+  virtual VPlacedVolume *PlaceVolume(LogicalVolume const *const volume, Transformation3D const *const transformation,
 #ifdef VECCORE_CUDA
-                               const int id, const int copy_no, const int child_id,
-#endif // !VECCORE_CUDA
-                               VPlacedVolume *const placement = NULL);
-
-  VECCORE_ATT_DEVICE
-  static VPlacedVolume *CreateSpecializedVolume(LogicalVolume const *const volume,
-                                                Transformation3D const *const transformation,
-                                                const TranslationCode trans_code, const RotationCode rot_code,
-#ifdef VECCORE_CUDA
-                                                const int id, const int copy_no, const int child_id,
-#endif // !VECCORE_CUDA
-                                                VPlacedVolume *const placement = NULL);
+                                     const int id, const int copy_no, const int child_id,
+#endif
+                                     VPlacedVolume *const placement = NULL) const override;
 
 private:
-  VECCORE_ATT_DEVICE
-  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                           Transformation3D const *const transformation,
-                                           const TranslationCode trans_code, const RotationCode rot_code,
-#ifdef VECCORE_CUDA
-                                           const int id, const int copy_no, const int child_id,
-#endif
-                                           VPlacedVolume *const placement = NULL) const final
-  {
-    return CreateSpecializedVolume(volume, transformation, trans_code, rot_code,
-#ifdef VECCORE_CUDA
-                                   id, copy_no, child_id,
-#endif
-                                   placement);
-  }
   void SetPlaced(VPlacedVolume const *pvol) { fScaled.fPlaced = pvol; }
   void SetScale(Scale3D const &scale) { fScaled.fScale = scale; }
 

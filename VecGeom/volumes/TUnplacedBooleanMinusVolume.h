@@ -87,67 +87,11 @@ public:
 
   virtual void Print(std::ostream &os) const {};
 
-#ifndef VECCORE_CUDA
-  template <typename LeftUnplacedVolume_t, typename RightPlacedVolume_t, TranslationCode trans_code,
-            RotationCode rot_code>
-  static VPlacedVolume *Create(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
-                               VPlacedVolume *const placement = NULL)
-  {
-    //      if (placement) {
-    //          new(placement) TSpecializedBooleanMinusVolume<LeftUnplacedVolume_t, RightPlacedVolume_t,
-    //                  trans_code, rot_code>(logical_volume,
-    //                                                              transformation);
-    //          return placement;
-    //        }
-    //      return new TSpecializedBooleanMinusVolume<LeftUnplacedVolume_t, RightPlacedVolume_t, trans_code,
-    //      rot_code>(logical_volume,
-    //                                                     transformation);
-  }
-
-  static VPlacedVolume *CreateSpecializedVolume(LogicalVolume const *const volume,
-                                                Transformation3D const *const transformation,
-                                                const TranslationCode trans_code, const RotationCode rot_code,
-                                                VPlacedVolume *const placement = NULL)
-  {
-
-    // return VolumeFactory::CreateByTransformation<TUnplacedBooleanMinusVolume<LeftUnplacedVolume_t,
-    // RightPlacedVolume_t> >(
-    //           volume, transformation, trans_code, rot_code, placement
-    //         );
-  }
-
-#else // for CUDA
-  template <TranslationCode trans_code, RotationCode rot_code>
-  VECCORE_ATT_DEVICE
-  static VPlacedVolume *Create(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
-                               const int id, VPlacedVolume *const placement = NULL);
-
-  VECCORE_ATT_DEVICE static VPlacedVolume *CreateSpecializedVolume(LogicalVolume const *const volume,
-                                                                   Transformation3D const *const transformation,
-                                                                   const TranslationCode trans_code,
-                                                                   const RotationCode rot_code, const int id,
-                                                                   VPlacedVolume *const placement = NULL);
+  virtual VPlacedVolume *PlaceVolume(LogicalVolume const *const volume, Transformation3D const *const transformation,
+#ifdef VECCORE_CUDA
+                                     const int copy_no, const int child_id,
 #endif
-
-private:
-#ifndef VECCORE_CUDA
-  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                           Transformation3D const *const transformation,
-                                           const TranslationCode trans_code, const RotationCode rot_code,
-                                           VPlacedVolume *const placement = NULL) const
-  {
-    return CreateSpecializedVolume(volume, transformation, trans_code, rot_code, placement);
-  }
-#else
-  VECCORE_ATT_DEVICE virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                                              Transformation3D const *const transformation,
-                                                              const TranslationCode trans_code,
-                                                              const RotationCode rot_code, const int id,
-                                                              VPlacedVolume *const placement = NULL) const
-  {
-    return CreateSpecializedVolume(volume, transformation, trans_code, rot_code, id, placement);
-  }
-#endif
+                                     VPlacedVolume *const placement = NULL) const override;
 
 }; // End class
 

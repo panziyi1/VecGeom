@@ -254,46 +254,26 @@ SolidMesh *UnplacedCutTube::CreateMesh3D(Transformation3D const &trans, size_t n
 }
 #endif
 
-template <TranslationCode trans_code, RotationCode rot_code>
 VECCORE_ATT_DEVICE
-VPlacedVolume *UnplacedCutTube::Create(LogicalVolume const *const logical_volume,
-                                       Transformation3D const *const transformation,
+VPlacedVolume *UnplacedCutTube::PlaceVolume(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
 #ifdef VECCORE_CUDA
-                                       const int id, const int copy_no, const int child_id,
+                                            const int id, const int copy_no, const int child_id,
 #endif
-                                       VPlacedVolume *const placement)
+                                            VPlacedVolume *const placement) const
 {
   if (placement) {
-    new (placement) PlacedCutTube(logical_volume, transformation
+    return new (placement) PlacedCutTube(logical_volume, transformation
 #ifdef VECCORE_CUDA
-                                  ,
-                                  id, copy_no, child_id
+                                         , id, copy_no, child_id
 #endif
     );
     return placement;
   }
   return new PlacedCutTube(logical_volume, transformation
 #ifdef VECCORE_CUDA
-                           ,
-                           id, copy_no, child_id
+                           , id, copy_no, child_id
 #endif
   );
-}
-
-VECCORE_ATT_DEVICE
-VPlacedVolume *UnplacedCutTube::SpecializedVolume(LogicalVolume const *const volume,
-                                                  Transformation3D const *const transformation,
-                                                  const TranslationCode trans_code, const RotationCode rot_code,
-#ifdef VECCORE_CUDA
-                                                  const int id, const int copy_no, const int child_id,
-#endif
-                                                  VPlacedVolume *const placement) const
-{
-  return VolumeFactory::CreateByTransformation<UnplacedCutTube>(volume, transformation, trans_code, rot_code,
-#ifdef VECCORE_CUDA
-                                                                id, copy_no, child_id,
-#endif
-                                                                placement);
 }
 
 #ifdef VECGEOM_CUDA_INTERFACE

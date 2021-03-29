@@ -73,11 +73,12 @@ public:
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const gpu_ptr) const override;
 #endif
 
-private:
-  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                           Transformation3D const *const transformation,
-                                           const TranslationCode trans_code, const RotationCode rot_code,
-                                           VPlacedVolume *const placement = NULL) const override;
+  VECCORE_ATT_DEVICE
+  virtual VPlacedVolume *PlaceVolume(LogicalVolume const *const volume, Transformation3D const *const transformation,
+#ifdef VECCORE_CUDA
+                                     const int id, const int copy_no, const int child_id,
+#endif
+                                     VPlacedVolume *const placement = NULL) const override;
 };
 
 } // End namespace vecgeom

@@ -88,47 +88,26 @@ bool UnplacedTessellated::Normal(Vector3D<Precision> const &point, Vector3D<Prec
   return valid;
 }
 
-#ifdef VECCORE_CUDA
-template <TranslationCode transCodeT, RotationCode rotCodeT>
 VECCORE_ATT_DEVICE
-VPlacedVolume *UnplacedTessellated::Create(LogicalVolume const *const logical_volume,
-                                           Transformation3D const *const transformation, const int id,
-                                           VPlacedVolume *const placement)
+VPlacedVolume *UnplacedTessellated::PlaceVolume(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
+#ifdef VECCORE_CUDA
+                                                const int id, const int copy_no, const int child_id,
+#endif
+                                                VPlacedVolume *const placement) const
 {
   if (placement) {
-    new (placement) PlacedTessellated(logical_volume, transformation, id);
+    return new (placement) PlacedTessellated(logical_volume, transformation
+#ifdef VECCORE_CUDA
+                                             , id, copy_no, child_id
+#endif
+    );
     return placement;
   }
-  return new PlacedTessellated(logical_volume, transformation, id);
-}
-#else
-template <TranslationCode transCodeT, RotationCode rotCodeT>
-VPlacedVolume *UnplacedTessellated::Create(LogicalVolume const *const logical_volume,
-                                           Transformation3D const *const transformation, VPlacedVolume *const placement)
-{
-  if (placement) {
-    new (placement) PlacedTessellated(logical_volume, transformation);
-    return placement;
-  }
-  return new PlacedTessellated(logical_volume, transformation);
-}
-#endif
-
-VECCORE_ATT_DEVICE
-VPlacedVolume *UnplacedTessellated::SpecializedVolume(LogicalVolume const *const volume,
-                                                      Transformation3D const *const transformation,
-                                                      const TranslationCode trans_code, const RotationCode rot_code,
+  return new PlacedTessellated(logical_volume, transformation
 #ifdef VECCORE_CUDA
-                                                      const int id,
+                               , id, copy_no, child_id
 #endif
-                                                      VPlacedVolume *const placement) const
-{
-
-  return VolumeFactory::CreateByTransformation<UnplacedTessellated>(volume, transformation, trans_code, rot_code,
-#ifdef VECCORE_CUDA
-                                                                    id,
-#endif
-                                                                    placement);
+  );
 }
 
 std::ostream &UnplacedTessellated::StreamInfo(std::ostream &os) const

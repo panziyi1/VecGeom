@@ -155,45 +155,26 @@ Vector3D<Precision> UnplacedParallelepiped::SamplePointOnSurface() const
 }
 
 //______________________________________________________________________________
-template <TranslationCode transCodeT, RotationCode rotCodeT>
 VECCORE_ATT_DEVICE
-VPlacedVolume *UnplacedParallelepiped::Create(LogicalVolume const *const logical_volume,
-                                              Transformation3D const *const transformation,
+VPlacedVolume *UnplacedParallelepiped::PlaceVolume(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
 #ifdef VECCORE_CUDA
-                                              const int id, const int copy_no, const int child_id,
+                                                   const int id, const int copy_no, const int child_id,
 #endif
-                                              VPlacedVolume *const placement)
+                                                   VPlacedVolume *const placement) const
 {
   if (placement) {
-    new (placement) PlacedParallelepiped(logical_volume, transformation
+    return new (placement) PlacedParallelepiped(logical_volume, transformation
 #ifdef VECCORE_CUDA
-                                         , id, copy_no, child_id
+                                                , id, copy_no, child_id
 #endif
-                                         ); // TODO: add bounding box?
+    );
     return placement;
   }
   return new PlacedParallelepiped(logical_volume, transformation
 #ifdef VECCORE_CUDA
                                   , id, copy_no, child_id
 #endif
-                                   ); // TODO: add bounding box?
-}
-
-//______________________________________________________________________________
-VECCORE_ATT_DEVICE
-VPlacedVolume *UnplacedParallelepiped::SpecializedVolume(LogicalVolume const *const volume,
-                                                         Transformation3D const *const transformation,
-                                                         const TranslationCode trans_code, const RotationCode rot_code,
-#ifdef VECCORE_CUDA
-                                                         const int id, const int copy_no, const int child_id,
-#endif
-                                                         VPlacedVolume *const placement) const
-{
-  return VolumeFactory::CreateByTransformation<UnplacedParallelepiped>(volume, transformation, trans_code, rot_code,
-#ifdef VECCORE_CUDA
-                                                                       id, copy_no, child_id,
-#endif
-                                                                       placement);
+  );
 }
 
 #ifdef VECGEOM_CUDA_INTERFACE

@@ -84,26 +84,27 @@ SolidMesh *UnplacedTorus2::CreateMesh3D(Transformation3D const &trans, size_t nS
 }
 #endif
 
-#ifndef VECCORE_CUDA
-VPlacedVolume *UnplacedTorus2::SpecializedVolume(LogicalVolume const *const volume,
-                                                 Transformation3D const *const transformation,
-                                                 const TranslationCode trans_code, const RotationCode rot_code,
-                                                 VPlacedVolume *const placement) const
-{
-  return VolumeFactory::CreateByTransformation<UnplacedTorus2>(volume, transformation, trans_code, rot_code, placement);
-}
-#else
-__device__ VPlacedVolume *UnplacedTorus2::SpecializedVolume(LogicalVolume const *const volume,
-                                                            Transformation3D const *const transformation,
-                                                            const TranslationCode trans_code,
-                                                            const RotationCode rot_code, const int id,
-                                                            const int copy_no, const int child_id,
-                                                            VPlacedVolume *const placement) const
-{
-  return VolumeFactory::CreateByTransformation<UnplacedTorus2>(volume, transformation, trans_code, rot_code, id,
-                                                               copy_no, child_id, placement);
-}
+VECCORE_ATT_DEVICE
+VPlacedVolume *UnplacedTorus2::PlaceVolume(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
+#ifdef VECCORE_CUDA
+                                           const int id, const int copy_no, const int child_id,
 #endif
+                                           VPlacedVolume *const placement) const
+{
+  if (placement) {
+    return new (placement) PlacedTorus2(logical_volume, transformation
+#ifdef VECCORE_CUDA
+                                        , id, copy_no, child_id
+#endif
+    );
+    return placement;
+  }
+  return new PlacedTorus2(logical_volume, transformation
+#ifdef VECCORE_CUDA
+                          , id, copy_no, child_id
+#endif
+  );
+}
 
 Vector3D<Precision> UnplacedTorus2::SamplePointOnSurface() const
 {
@@ -158,24 +159,6 @@ void UnplacedTorus2::DetectConvexity()
       if (fTorus.fDphi <= kPi || fTorus.fDphi == kTwoPi) fGlobalConvexity = true;
     }
   }
-}
-
-template <TranslationCode transCodeT, RotationCode rotCodeT>
-VECCORE_ATT_DEVICE
-VPlacedVolume *UnplacedTorus2::Create(LogicalVolume const *const logical_volume,
-                                      Transformation3D const *const transformation,
-#ifdef VECCORE_CUDA
-                                      const int id, const int copy_no, const int child_id,
-#endif
-                                      VPlacedVolume *const placement)
-{
-  (void)placement;
-  return new PlacedTorus2(logical_volume, transformation
-#ifdef VECCORE_CUDA
-                          ,
-                          id, copy_no, child_id
-#endif
-  );
 }
 
 #ifdef VECGEOM_CUDA_INTERFACE

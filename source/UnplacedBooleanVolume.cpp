@@ -259,145 +259,53 @@ UnplacedMultiUnion *BooleanHelper::Flatten(VUnplacedVolume const *unplaced, size
 }
 #endif
 
-template <>
-template <TranslationCode transCodeT, RotationCode rotCodeT>
+template <BooleanOperation Op>
 VECCORE_ATT_DEVICE
-VPlacedVolume *UnplacedBooleanVolume<kSubtraction>::Create(LogicalVolume const *const logical_volume,
-                                                           Transformation3D const *const transformation,
+VPlacedVolume *UnplacedBooleanVolume<Op>::PlaceVolume(LogicalVolume const *const logical_volume,
+                                                      Transformation3D const *const transformation,
 #ifdef VECCORE_CUDA
-                                                           const int id, const int copy_no, const int child_id,
+                                                      const int id, const int copy_no, const int child_id,
 #endif
-                                                           VPlacedVolume *const placement)
+                                                      VPlacedVolume *const placement) const
 {
-  return new PlacedBooleanVolume<kSubtraction>(
-      logical_volume, transformation
+  if (placement) {
+    return new (placement) PlacedBooleanVolume<Op>(logical_volume, transformation
 #ifdef VECCORE_CUDA
-      , id, copy_no, child_id
+                                                   , id, copy_no, child_id
 #endif
-      ); // TODO: add bounding box?
+    ); // TODO: add bounding box?
+  }
+  return new PlacedBooleanVolume<Op>(logical_volume, transformation
+#ifdef VECCORE_CUDA
+                                     , id, copy_no, child_id
+#endif
+  ); // TODO: add bounding box?
 }
 
-template <>
-template <TranslationCode transCodeT, RotationCode rotCodeT>
+template
 VECCORE_ATT_DEVICE
-VPlacedVolume *UnplacedBooleanVolume<kUnion>::Create(LogicalVolume const *const logical_volume,
-                                                     Transformation3D const *const transformation,
+VPlacedVolume *UnplacedBooleanVolume<kUnion>::PlaceVolume(LogicalVolume const *const logical_volume,
+                                                          Transformation3D const *const transformation,
 #ifdef VECCORE_CUDA
-                                                     const int id, const int copy_no, const int child_id,
+                                                          const int id, const int copy_no, const int child_id,
 #endif
-                                                     VPlacedVolume *const placement)
-{
-  return new PlacedBooleanVolume<kUnion>(
-      logical_volume, transformation
-#ifdef VECCORE_CUDA
-      , id, copy_no, child_id
-#endif
-      ); // TODO: add bounding box?
-}
-
-template <>
-template <TranslationCode transCodeT, RotationCode rotCodeT>
+                                                          VPlacedVolume *const placement) const;
+template
 VECCORE_ATT_DEVICE
-VPlacedVolume *UnplacedBooleanVolume<kIntersection>::Create(LogicalVolume const *const logical_volume,
-                                                            Transformation3D const *const transformation,
+VPlacedVolume *UnplacedBooleanVolume<kIntersection>::PlaceVolume(LogicalVolume const *const logical_volume,
+                                                                 Transformation3D const *const transformation,
 #ifdef VECCORE_CUDA
-                                                            const int id, const int copy_no, const int child_id,
+                                                                 const int id, const int copy_no, const int child_id,
 #endif
-                                                            VPlacedVolume *const placement)
-{
-  return new PlacedBooleanVolume<kIntersection>(
-      logical_volume, transformation
-#ifdef VECCORE_CUDA
-      , id, copy_no, child_id
-#endif
-      ); // TODO: add bounding box?
-}
-
-template <>
+                                                                 VPlacedVolume *const placement) const;
+template
 VECCORE_ATT_DEVICE
-VPlacedVolume *UnplacedBooleanVolume<kSubtraction>::SpecializedVolume(LogicalVolume const *const volume,
-                                                                      Transformation3D const *const transformation,
-                                                                      const TranslationCode trans_code,
-                                                                      const RotationCode rot_code,
-#ifdef VECCORE_CUDA
-                                                                      const int id, const int copy_no,
-                                                                      const int child_id,
-#endif
-                                                                      VPlacedVolume *const placement) const
-{
-#ifndef VECCORE_CUDA
-
-  return VolumeFactory::CreateByTransformation<UnplacedBooleanVolume<kSubtraction>>(volume, transformation, trans_code,
-                                                                                    rot_code,
-#ifdef VECCORE_CUDA
-                                                                                    id, copy_no, child_id,
-#endif
-                                                                                    placement);
-
-#else
-  // Compiling the above code with nvcc 6.5 faile with the error:
-  // nvcc error   : 'ptxas' died due to signal 11 (Invalid memory reference)
-  // at least when optimized.
-  return nullptr;
-#endif
-}
-
-template <>
-VECCORE_ATT_DEVICE
-VPlacedVolume *UnplacedBooleanVolume<kUnion>::SpecializedVolume(LogicalVolume const *const volume,
+VPlacedVolume *UnplacedBooleanVolume<kSubtraction>::PlaceVolume(LogicalVolume const *const logical_volume,
                                                                 Transformation3D const *const transformation,
-                                                                const TranslationCode trans_code,
-                                                                const RotationCode rot_code,
 #ifdef VECCORE_CUDA
                                                                 const int id, const int copy_no, const int child_id,
 #endif
-                                                                VPlacedVolume *const placement) const
-{
-#ifndef VECCORE_CUDA
-
-  return VolumeFactory::CreateByTransformation<UnplacedBooleanVolume<kUnion>>(volume, transformation, trans_code,
-                                                                              rot_code,
-#ifdef VECCORE_CUDA
-                                                                              id, copy_no, child_id,
-#endif
-                                                                              placement);
-
-#else
-  // Compiling the above code with nvcc 6.5 faile with the error:
-  // nvcc error   : 'ptxas' died due to signal 11 (Invalid memory reference)
-  // at least when optimized.
-  return nullptr;
-#endif
-}
-
-template <>
-VECCORE_ATT_DEVICE
-VPlacedVolume *UnplacedBooleanVolume<kIntersection>::SpecializedVolume(LogicalVolume const *const volume,
-                                                                       Transformation3D const *const transformation,
-                                                                       const TranslationCode trans_code,
-                                                                       const RotationCode rot_code,
-#ifdef VECCORE_CUDA
-                                                                       const int id, const int copy_no,
-                                                                       const int child_id,
-#endif
-                                                                       VPlacedVolume *const placement) const
-{
-#ifndef VECCORE_CUDA
-
-  return VolumeFactory::CreateByTransformation<UnplacedBooleanVolume<kIntersection>>(volume, transformation, trans_code,
-                                                                                     rot_code,
-#ifdef VECCORE_CUDA
-                                                                                     id, copy_no, child_id,
-#endif
-                                                                                     placement);
-
-#else
-  // Compiling the above code with nvcc 6.5 faile with the error:
-  // nvcc error   : 'ptxas' died due to signal 11 (Invalid memory reference)
-  // at least when optimized.
-  return nullptr;
-#endif
-}
+                                                                VPlacedVolume *const placement) const;
 
 VECCORE_ATT_HOST_DEVICE
 void TransformedExtent(VPlacedVolume const *pvol, Vector3D<Precision> &aMin, Vector3D<Precision> &aMax)

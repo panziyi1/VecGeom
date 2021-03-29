@@ -194,34 +194,18 @@ public:
   /// @return Name of the solid type
   std::string GetEntityType() const { return "parallelepiped"; }
 
-  /// Templated factory for creating a placed volume
-  template <TranslationCode transCodeT, RotationCode rotCodeT>
-#ifdef VECCORE_CUDA
-  VECCORE_ATT_DEVICE
-#endif
-      static VPlacedVolume *
-      Create(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
-#ifdef VECCORE_CUDA
-             const int id, const int copy_no, const int child_id,
-#endif
-             VPlacedVolume *const placement = NULL);
-
 #ifdef VECGEOM_CUDA_INTERFACE
   virtual size_t DeviceSizeOf() const override { return DevicePtr<cuda::UnplacedParallelepiped>::SizeOf(); }
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu() const override;
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const gpu_ptr) const override;
 #endif
 
-#ifdef VECCORE_CUDA
   VECCORE_ATT_DEVICE
-#endif
-  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                           Transformation3D const *const transformation,
-                                           const TranslationCode trans_code, const RotationCode rot_code,
+  virtual VPlacedVolume *PlaceVolume(LogicalVolume const *const volume, Transformation3D const *const transformation,
 #ifdef VECCORE_CUDA
-                                           const int id, const int copy_no, const int child_id,
+                                     const int id, const int copy_no, const int child_id,
 #endif
-                                           VPlacedVolume *const placement = NULL) const final;
+                                     VPlacedVolume *const placement = NULL) const override;
 };
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // namespace vecgeom

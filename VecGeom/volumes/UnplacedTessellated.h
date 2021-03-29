@@ -130,13 +130,12 @@ public:
   /** @return Name of the solid type as string*/
   std::string GetEntityType() const { return "Tessellated"; }
 
-  template <TranslationCode transCodeT, RotationCode rotCodeT>
   VECCORE_ATT_DEVICE
-  static VPlacedVolume *Create(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
+  virtual VPlacedVolume *PlaceVolume(LogicalVolume const *const volume, Transformation3D const *const transformation,
 #ifdef VECCORE_CUDA
-                               const int id,
+                                     const int id, const int copy_no, const int child_id,
 #endif
-                               VPlacedVolume *const placement = NULL);
+                                     VPlacedVolume *const placement = NULL) const override;
 
 #ifdef VECGEOM_CUDA_INTERFACE
 #ifdef HYBRID_NAVIGATOR_PORTED_TO_CUDA
@@ -153,15 +152,6 @@ public:
 
   virtual void Print(std::ostream &os) const override;
 
-private:
-  VECCORE_ATT_DEVICE
-  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                           Transformation3D const *const transformation,
-                                           const TranslationCode trans_code, const RotationCode rot_code,
-#ifdef VECCORE_CUDA
-                                           const int id,
-#endif
-                                           VPlacedVolume *const placement = NULL) const override;
 };
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // namespace vecgeom

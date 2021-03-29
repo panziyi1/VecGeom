@@ -89,46 +89,27 @@ SolidMesh *UnplacedTube::CreateMesh3D(Transformation3D const &trans, size_t nSeg
 }
 #endif
 
-template <TranslationCode transCodeT, RotationCode rotCodeT>
 VECCORE_ATT_DEVICE
-VPlacedVolume *UnplacedTube::Create(LogicalVolume const *const logical_volume,
-                                    Transformation3D const *const transformation,
+VPlacedVolume *UnplacedTube::PlaceVolume(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
 #ifdef VECCORE_CUDA
-                                    const int id, const int copy_no, const int child_id,
+                                         const int id, const int copy_no, const int child_id,
 #endif
-                                    VPlacedVolume *const placement)
+                                         VPlacedVolume *const placement) const
 {
-  (void)placement;
+  if (placement) {
+    return new (placement) PlacedTube(logical_volume, transformation
+#ifdef VECCORE_CUDA
+                                      , id, copy_no, child_id
+#endif
+    );
+    return placement;
+  }
   return new PlacedTube(logical_volume, transformation
 #ifdef VECCORE_CUDA
-                        ,
-                        id, copy_no, child_id
+                        , id, copy_no, child_id
 #endif
   );
 }
-
-#ifndef VECCORE_CUDA
-VPlacedVolume *UnplacedTube::SpecializedVolume(LogicalVolume const *const volume,
-                                               Transformation3D const *const transformation,
-                                               const TranslationCode trans_code, const RotationCode rot_code,
-                                               VPlacedVolume *const placement) const
-{
-  return VolumeFactory::CreateByTransformation<UnplacedTube>(volume, transformation, trans_code, rot_code,
-                                                             placement);
-}
-
-#else
-VECCORE_ATT_DEVICE
-VPlacedVolume *UnplacedTube::SpecializedVolume(LogicalVolume const *const volume,
-                                               Transformation3D const *const transformation,
-                                               const TranslationCode trans_code, const RotationCode rot_code, const int id,
-                                               const int copy_no, const int child_id,
-                                               VPlacedVolume *const placement) const
-{
-  return VolumeFactory::CreateByTransformation<UnplacedTube>(volume, transformation, trans_code, rot_code,
-                                                             id, copy_no, child_id, placement);
-}
-#endif
 
 int UnplacedTube::ChooseSurface() const
 {

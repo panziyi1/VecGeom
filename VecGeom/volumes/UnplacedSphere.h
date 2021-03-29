@@ -300,33 +300,12 @@ public:
   virtual SolidMesh *CreateMesh3D(Transformation3D const &trans, size_t nSegments) const override;
 #endif
 
-#ifndef VECCORE_CUDA
-
-  template <TranslationCode trans_code, RotationCode rot_code>
-  static VPlacedVolume *Create(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
-                               VPlacedVolume *const placement = NULL);
-
-  static VPlacedVolume *CreateSpecializedVolume(LogicalVolume const *const volume,
-                                                Transformation3D const *const transformation,
-                                                const TranslationCode trans_code, const RotationCode rot_code,
-                                                VPlacedVolume *const placement = NULL);
-
-#else
-
-  template <TranslationCode trans_code, RotationCode rot_code>
   VECCORE_ATT_DEVICE
-  static VPlacedVolume *Create(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
-                               const int id, const int copy_no, const int child_id,
-                               VPlacedVolume *const placement = NULL);
-
-  VECCORE_ATT_DEVICE static VPlacedVolume *CreateSpecializedVolume(LogicalVolume const *const volume,
-                                                                   Transformation3D const *const transformation,
-                                                                   const TranslationCode trans_code,
-                                                                   const RotationCode rot_code, const int id,
-                                                                   const int copy_no, const int child_id,
-                                                                   VPlacedVolume *const placement = NULL);
-
+  virtual VPlacedVolume *PlaceVolume(LogicalVolume const *const volume, Transformation3D const *const transformation,
+#ifdef VECCORE_CUDA
+                                     const int id, const int copy_no, const int child_id,
 #endif
+                                     VPlacedVolume *const placement = NULL) const override;
 
 #ifdef VECGEOM_CUDA_INTERFACE
   virtual size_t DeviceSizeOf() const override { return DevicePtr<cuda::UnplacedSphere>::SizeOf(); }
@@ -334,30 +313,6 @@ public:
   virtual DevicePtr<cuda::VUnplacedVolume> CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const gpu_ptr) const override;
 #endif
 
-private:
-#ifndef VECCORE_CUDA
-
-  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                           Transformation3D const *const transformation,
-                                           const TranslationCode trans_code, const RotationCode rot_code,
-                                           VPlacedVolume *const placement = NULL) const override
-  {
-    return CreateSpecializedVolume(volume, transformation, trans_code, rot_code, placement);
-  }
-
-#else
-
-  VECCORE_ATT_DEVICE virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                                              Transformation3D const *const transformation,
-                                                              const TranslationCode trans_code,
-                                                              const RotationCode rot_code, const int id,
-                                                              const int copy_no, const int child_id,
-                                                              VPlacedVolume *const placement = NULL) const override
-  {
-    return CreateSpecializedVolume(volume, transformation, trans_code, rot_code, id, copy_no, child_id, placement);
-  }
-
-#endif
 };
 
 } // namespace VECGEOM_IMPL_NAMESPACE

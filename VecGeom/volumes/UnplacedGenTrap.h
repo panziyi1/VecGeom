@@ -187,31 +187,15 @@ public:
 #endif
                                VPlacedVolume *const placement = NULL);
 
-  /*
-    // Is this still needed?
-    VECCORE_ATT_DEVICE
-    static VPlacedVolume *CreateSpecializedVolume(LogicalVolume const *const volume,
-                                                  Transformation3D const *const transformation,
-                                                  const TranslationCode trans_code, const RotationCode rot_code,
-  #ifdef VECCORE_CUDA
-                                                  const int id,
-  #endif
-                                                  VPlacedVolume *const placement = NULL);
-  */
   /** @brief Stream trapezoid information in the Geant4 style */
   std::ostream &StreamInfo(std::ostream &os) const;
 
-private:
-  /** @brief Factory for specializing the volume */
   VECCORE_ATT_DEVICE
-  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                           Transformation3D const *const transformation,
-                                           const TranslationCode trans_code, const RotationCode rot_code,
+  virtual VPlacedVolume *PlaceVolume(LogicalVolume const *const volume, Transformation3D const *const transformation,
 #ifdef VECCORE_CUDA
-                                           const int id, const int copy_no, const int child_id,
+                                     const int id, const int copy_no, const int child_id,
 #endif
-                                           VPlacedVolume *const placement = NULL) const final;
-
+                                     VPlacedVolume *const placement = NULL) const override;
 }; // end of class declaration
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // namespace vecgeom

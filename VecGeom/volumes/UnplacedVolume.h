@@ -242,32 +242,18 @@ public:
   };
 #endif
 
-  // Is not static because a virtual function must be called to initialize
-  // specialized volume as the shape of the deriving class.
-  // TODO: clarify
+#ifndef VECCORE_CUDA
   VPlacedVolume *PlaceVolume(char const *const label, LogicalVolume const *const volume,
                              Transformation3D const *const transformation, VPlacedVolume *const placement = NULL) const;
-
-  VPlacedVolume *PlaceVolume(LogicalVolume const *const volume, Transformation3D const *const transformation,
-                             VPlacedVolume *const placement = NULL) const;
-
-private:
-#ifndef VECCORE_CUDA
-
-  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                           Transformation3D const *const transformation,
-                                           const TranslationCode trans_code, const RotationCode rot_code,
-                                           VPlacedVolume *const placement = NULL) const = 0;
-
-#else
-  VECCORE_ATT_DEVICE
-  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                           Transformation3D const *const transformation,
-                                           const TranslationCode trans_code, const RotationCode rot_code, const int id,
-                                           const int copy_no, const int child_id,
-                                           VPlacedVolume *const placement = NULL) const = 0;
-
 #endif
+
+  VECCORE_ATT_DEVICE
+  virtual VPlacedVolume *PlaceVolume(LogicalVolume const *const volume, Transformation3D const *const transformation,
+#ifdef VECCORE_CUDA
+                                     const int id, const int copy_no, const int child_id,
+#endif
+                                     VPlacedVolume *const placement = NULL) const = 0;
+
 };
 
 std::ostream &operator<<(std::ostream &os, VUnplacedVolume const &vol);

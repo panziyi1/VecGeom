@@ -87,31 +87,27 @@ Precision UnplacedAssembly::SurfaceArea() const
   return area;
 }
 
-#ifndef VECCORE_CUDA
-VPlacedVolume *UnplacedAssembly::SpecializedVolume(LogicalVolume const *const volume,
-                                                   Transformation3D const *const transformation,
-                                                   const TranslationCode trans_code, const RotationCode rot_code,
-                                                   VPlacedVolume *const placement) const
-{
-  if (placement) {
-    return new (placement) PlacedAssembly("", volume, transformation);
-  }
-  return new PlacedAssembly("", volume, transformation);
-}
-#else
 VECCORE_ATT_DEVICE
-VPlacedVolume *UnplacedAssembly::SpecializedVolume(LogicalVolume const *const volume,
-                                                   Transformation3D const *const transformation,
-                                                   const TranslationCode trans_code, const RotationCode rot_code,
-                                                   const int id, const int copy_no, const int child_id,
-                                                   VPlacedVolume *const placement) const
+VPlacedVolume *UnplacedAssembly::PlaceVolume(LogicalVolume const *const volume,
+                                            Transformation3D const *const transformation,
+#ifdef VECCORE_CUDA
+                                            const int id, const int copy_no, const int child_id,
+#endif
+                                            VPlacedVolume *const placement) const
 {
   if (placement) {
-    return new (placement) PlacedAssembly("", volume, transformation, id, copy_no, child_id);
-  }
-  return new PlacedAssembly("", volume, transformation, id, copy_no, child_id);
-}
+    return new (placement) PlacedAssembly("", volume, transformation
+#ifdef VECCORE_CUDA
+                                          , id, copy_no, child_id
 #endif
+    );
+  }
+  return new PlacedAssembly("", volume, transformation
+#ifdef VECCORE_CUDA
+                            , id, copy_no, child_id
+#endif
+  );
+}
 
 #ifdef VECGEOM_CUDA_INTERFACE
 

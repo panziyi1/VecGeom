@@ -323,53 +323,27 @@ SolidMesh *UnplacedEllipsoid::CreateMesh3D(Transformation3D const &trans, size_t
 }
 #endif
 
-#ifndef VECCORE_CUDA
-template <TranslationCode trans_code, RotationCode rot_code>
-VPlacedVolume *UnplacedEllipsoid::Create(LogicalVolume const *const logical_volume,
-                                         Transformation3D const *const transformation, VPlacedVolume *const placement)
-{
-  if (placement) {
-    new (placement) PlacedEllipsoid(logical_volume, transformation);
-    return placement;
-  }
-  return new PlacedEllipsoid(logical_volume, transformation);
-}
-
-VPlacedVolume *UnplacedEllipsoid::SpecializedVolume(LogicalVolume const *const volume,
-                                                    Transformation3D const *const transformation,
-                                                    const TranslationCode trans_code, const RotationCode rot_code,
-                                                    VPlacedVolume *const placement) const
-{
-  return VolumeFactory::CreateByTransformation<UnplacedEllipsoid>(volume, transformation, trans_code, rot_code,
-                                                                  placement);
-}
-#else
-
-template <TranslationCode trans_code, RotationCode rot_code>
 VECCORE_ATT_DEVICE
-VPlacedVolume *UnplacedEllipsoid::Create(LogicalVolume const *const logical_volume,
-                                         Transformation3D const *const transformation, const int id, const int copy_no,
-                                         const int child_id, VPlacedVolume *const placement)
-{
-  if (placement) {
-    new (placement) PlacedEllipsoid(logical_volume, transformation, id, copy_no, child_id);
-    return placement;
-  }
-  return new PlacedEllipsoid(logical_volume, transformation, id, copy_no, child_id);
-}
-
-VECCORE_ATT_DEVICE
-VPlacedVolume *UnplacedEllipsoid::SpecializedVolume(LogicalVolume const *const volume,
-                                                    Transformation3D const *const transformation,
-                                                    const TranslationCode trans_code, const RotationCode rot_code,
-                                                    const int id, const int copy_no, const int child_id,
-                                                    VPlacedVolume *const placement) const
-{
-  return VolumeFactory::CreateByTransformation<UnplacedEllipsoid>(volume, transformation, trans_code, rot_code, id,
-                                                                  copy_no, child_id, placement);
-}
-
+VPlacedVolume *UnplacedEllipsoid::PlaceVolume(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
+#ifdef VECCORE_CUDA
+                                              const int id, const int copy_no, const int child_id,
 #endif
+                                              VPlacedVolume *const placement) const
+{
+  if (placement) {
+    return new (placement) PlacedEllipsoid(logical_volume, transformation
+#ifdef VECCORE_CUDA
+                                           , id, copy_no, child_id
+#endif
+    );
+    return placement;
+  }
+  return new PlacedEllipsoid(logical_volume, transformation
+#ifdef VECCORE_CUDA
+                             , id, copy_no, child_id
+#endif
+  );
+}
 
 #ifdef VECGEOM_CUDA_INTERFACE
 

@@ -248,54 +248,27 @@ SolidMesh *UnplacedEllipticalCone::CreateMesh3D(Transformation3D const &trans, s
 }
 #endif
 
-#ifndef VECCORE_CUDA
-template <TranslationCode trans_code, RotationCode rot_code>
-VPlacedVolume *UnplacedEllipticalCone::Create(LogicalVolume const *const logical_volume,
-                                              Transformation3D const *const transformation,
-                                              VPlacedVolume *const placement)
-{
-  if (placement) {
-    new (placement) PlacedEllipticalCone(logical_volume, transformation);
-    return placement;
-  }
-  return new PlacedEllipticalCone(logical_volume, transformation);
-}
-
-VPlacedVolume *UnplacedEllipticalCone::SpecializedVolume(LogicalVolume const *const volume,
-                                                         Transformation3D const *const transformation,
-                                                         const TranslationCode trans_code, const RotationCode rot_code,
-                                                         VPlacedVolume *const placement) const
-{
-  return VolumeFactory::CreateByTransformation<UnplacedEllipticalCone>(volume, transformation, trans_code, rot_code,
-                                                                       placement);
-}
-#else
-
-template <TranslationCode trans_code, RotationCode rot_code>
 VECCORE_ATT_DEVICE
-VPlacedVolume *UnplacedEllipticalCone::Create(LogicalVolume const *const logical_volume,
-                                              Transformation3D const *const transformation, const int id,
-                                              const int copy_no, const int child_id, VPlacedVolume *const placement)
-{
-  if (placement) {
-    new (placement) PlacedEllipticalCone(logical_volume, transformation, id, copy_no, child_id);
-    return placement;
-  }
-  return new PlacedEllipticalCone(logical_volume, transformation, id, copy_no, child_id);
-}
-
-VECCORE_ATT_DEVICE
-VPlacedVolume *UnplacedEllipticalCone::SpecializedVolume(LogicalVolume const *const volume,
-                                                         Transformation3D const *const transformation,
-                                                         const TranslationCode trans_code, const RotationCode rot_code,
-                                                         const int id, const int copy_no, const int child_id,
-                                                         VPlacedVolume *const placement) const
-{
-  return VolumeFactory::CreateByTransformation<UnplacedEllipticalCone>(volume, transformation, trans_code, rot_code, id,
-                                                                       copy_no, child_id, placement);
-}
-
+VPlacedVolume *UnplacedEllipticalCone::PlaceVolume(LogicalVolume const *const logical_volume, Transformation3D const *const transformation,
+#ifdef VECCORE_CUDA
+                                                   const int id, const int copy_no, const int child_id,
 #endif
+                                                   VPlacedVolume *const placement) const
+{
+  if (placement) {
+    return new (placement) PlacedEllipticalCone(logical_volume, transformation
+#ifdef VECCORE_CUDA
+                                                , id, copy_no, child_id
+#endif
+    );
+    return placement;
+  }
+  return new PlacedEllipticalCone(logical_volume, transformation
+#ifdef VECCORE_CUDA
+                                  , id, copy_no, child_id
+#endif
+  );
+}
 
 #ifdef VECGEOM_CUDA_INTERFACE
 

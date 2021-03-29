@@ -193,17 +193,6 @@ std::ostream &operator<<(std::ostream &os, VUnplacedVolume const &vol)
 
 #ifndef VECCORE_CUDA
 
-VPlacedVolume *VUnplacedVolume::PlaceVolume(LogicalVolume const *const volume,
-                                            Transformation3D const *const transformation,
-                                            VPlacedVolume *const placement) const
-{
-
-  const TranslationCode trans_code = transformation->GenerateTranslationCode();
-  const RotationCode rot_code      = transformation->GenerateRotationCode();
-
-  return SpecializedVolume(volume, transformation, trans_code, rot_code, placement);
-}
-
 VPlacedVolume *VUnplacedVolume::PlaceVolume(char const *const label, LogicalVolume const *const volume,
                                             Transformation3D const *const transformation,
                                             VPlacedVolume *const placement) const

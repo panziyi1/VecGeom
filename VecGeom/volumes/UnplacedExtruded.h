@@ -138,15 +138,12 @@ public:
 #endif
 #endif
 
-private:
   VECCORE_ATT_DEVICE
-  virtual VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume,
-                                           Transformation3D const *const transformation,
-                                           const TranslationCode trans_code, const RotationCode rot_code,
+  virtual VPlacedVolume *PlaceVolume(LogicalVolume const *const volume, Transformation3D const *const transformation,
 #ifdef VECCORE_CUDA
-                                           const int id,
+                                     const int id, const int copy_no, const int child_id,
 #endif
-                                           VPlacedVolume *const placement = NULL) const override; // final;
+                                     VPlacedVolume *const placement = NULL) const override;
 };
 
 using GenericUnplacedExtruded = UnplacedExtruded;
