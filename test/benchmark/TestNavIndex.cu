@@ -2,13 +2,11 @@
 /// \author Andrei Gheata (andrei.gheata@cern.ch)
 
 #include <VecGeom/base/Transformation3D.h>
-#include <VecGeom/management/GeoManager.h>
 #include <VecGeom/management/CudaManager.h>
 #include <VecGeom/navigation/NavigationState.h>
 #include <VecGeom/volumes/PlacedVolume.h>
 #include <VecGeom/base/Stopwatch.h>
 
-#include <iomanip>
 #include <cassert>
 #include <cstdio>
 
@@ -121,6 +119,7 @@ int visitAllPlacedVolumesPassNavIndex(VPlacedVolume const *currentvolume, Visito
   if (currentvolume != NULL) {
     state->Push(currentvolume);
     visitor->apply(state, nav_ind);
+    //printf(" %i: ", nav_ind); state->Print();
     auto ierr = visitor->GetError();
     if (ierr) {
       printf("=== EEE === TestNavIndex: %s\n", errcodes[ierr]);

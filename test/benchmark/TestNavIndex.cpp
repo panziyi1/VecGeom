@@ -1,13 +1,11 @@
 /*
- * RaytraceBenchmark.cpp
+ *  TestNavIndex.cpp
  *
  *  Created on: May 8, 2020
  *      Author: andrei.gheata@cern.ch
  */
 
-#include <iomanip>
 #include <VecGeom/management/GeoManager.h>
-#include <VecGeom/management/NavIndexTable.h>
 #include <VecGeom/navigation/NavigationState.h>
 #include <VecGeom/base/Stopwatch.h>
 #include "ArgParser.h"
@@ -113,6 +111,7 @@ int visitAllPlacedVolumesPassNavIndex(VPlacedVolume const *currentvolume, Visito
   if (currentvolume != NULL) {
     state->Push(currentvolume);
     visitor->apply(state, nav_ind);
+    //printf(" %i: ", nav_ind); state->Print();
     auto ierr = visitor->GetError();
     if (ierr) {
       printf("=== EEE === TestNavIndex: %s\n", errcodes[ierr]);
@@ -156,6 +155,8 @@ int main(int argc, char *argv[])
   OPTION_STRING(gdml_name, "default.gdml");
   OPTION_INT(max_depth, 0);
   OPTION_INT(on_gpu, 0);
+  OPTION_INT(use_root, 0);
+
 #ifndef VECGEOM_GDML
   (void)max_depth;
   std::cout << "### VecGeom must be compiled with GDML support to run this.\n";
@@ -164,11 +165,23 @@ int main(int argc, char *argv[])
 
   Stopwatch timer;
   // Try to open the input file
-#ifdef VECGEOM_GDML
+
+  constexpr bool validate_xml_schema = false;
   GeoManager::Instance().SetTransformationCacheDepth(max_depth);
-  auto load = vgdml::Frontend::Load(gdml_name.c_str(), false);
-  if (!load) return 2;
-#endif
+
+  if (use_root) {
+    // use Root available from VecGeom
+    std::cout << "RootGeoManager parsing: Loading from GDML at "
+	      << gdml_name << std::endl;
+    vecgeom::RootGeoManager::Instance().set_verbose(0);
+    vecgeom::RootGeoManager::Instance().LoadRootGeometry(gdml_name.c_str());
+  }
+  else {
+    std::cout << "VecGeom parsing: Loading from GDML at "
+	      << gdml_name << std::endl;
+    auto load = vgdml::Frontend::Load(gdml_name.c_str(), validate_xml_schema);
+    if (!load) return 2;
+  }
 
   auto world = GeoManager::Instance().GetWorld();
   if (!world) return 3;
@@ -188,7 +201,7 @@ int main(int argc, char *argv[])
   }
   auto validation_time = timer.Stop();
   if (ierr)
-    std::cout << "TestNavIndex FAILED\n";
+    std::cout << "TestNavIndex FAILED with ierr="<< ierr <<".\n";
   else {
     std::cout << "Navigation index table validation took " << validation_time << " seconds\n";
     std::cout << "TestNavIndex PASSED\n";
