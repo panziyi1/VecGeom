@@ -558,14 +558,6 @@ std::ostream &UnplacedCone::StreamInfo(std::ostream &os) const
 
 // this is repetitive code:
 
-template <>
-UnplacedCone *Maker<UnplacedCone>::MakeInstance(const Precision &rmin1, const Precision &rmax1, const Precision &rmin2,
-                                                const Precision &rmax2, const Precision &dz, const Precision &phimin,
-                                                const Precision &deltaphi)
-{
-  return new UnplacedCone(rmin1, rmax1, rmin2, rmax2, dz, phimin, deltaphi);
-}
-
 template <TranslationCode transCodeT, RotationCode rotCodeT>
 VECCORE_ATT_DEVICE
 VPlacedVolume *UnplacedCone::Create(LogicalVolume const *const logical_volume,

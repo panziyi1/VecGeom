@@ -26,13 +26,6 @@
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-template <>
-UnplacedHype *Maker<UnplacedHype>::MakeInstance(const Precision rMin, const Precision rMax, const Precision stIn,
-                                                const Precision stOut, const Precision dz)
-{
-  return new UnplacedHype(rMin, rMax, stIn, stOut, dz);
-}
-
 #ifndef VECCORE_CUDA
 #ifdef VECGEOM_ROOT
 TGeoShape const *UnplacedHype::ConvertToRoot(char const *label) const

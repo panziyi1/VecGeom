@@ -360,12 +360,6 @@ private:
 #endif
 };
 
-template <>
-struct Maker<UnplacedSphere> {
-  template <typename... ArgTypes>
-  static UnplacedSphere *MakeInstance(Precision pRmin, Precision pRmax, Precision pSPhi, Precision pDPhi,
-                                      Precision pSTheta, Precision pDTheta);
-};
 } // namespace VECGEOM_IMPL_NAMESPACE
 } // namespace vecgeom
 

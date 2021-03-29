@@ -38,21 +38,6 @@
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-template <>
-UnplacedPolycone *Maker<UnplacedPolycone>::MakeInstance(Precision phistart, Precision deltaphi, int Nz,
-                                                        Precision const *z, Precision const *rmin,
-                                                        Precision const *rmax)
-{
-  return new UnplacedPolycone(phistart, deltaphi, Nz, z, rmin, rmax);
-}
-
-template <>
-UnplacedPolycone *Maker<UnplacedPolycone>::MakeInstance(Precision phistart, Precision deltaphi, int Nz,
-                                                        Precision const *r, Precision const *z)
-{
-  return new UnplacedPolycone(phistart, deltaphi, Nz, r, z);
-}
-
 #ifndef VECCORE_CUDA
 #ifdef VECGEOM_ROOT
 TGeoShape const *UnplacedPolycone::ConvertToRoot(char const *label) const

@@ -46,21 +46,6 @@ G4VSolid const *UnplacedTrd::ConvertToGeant4(char const *label) const
 #endif
 #endif
 
-template <>
-UnplacedTrd *Maker<UnplacedTrd>::MakeInstance(const Precision x1, const Precision x2, const Precision y1,
-                                              const Precision y2, const Precision z)
-{
-  return new UnplacedTrd(x1, x2, y1, y2, z);
-}
-
-// special case Trd1 when dY1 == dY2
-template <>
-UnplacedTrd *Maker<UnplacedTrd>::MakeInstance(const Precision x1, const Precision x2, const Precision y1,
-                                              const Precision z)
-{
-  return new UnplacedTrd(x1, x2, y1, z);
-}
-
 void UnplacedTrd::Print() const
 {
   printf("UnplacedTrd {%.2f, %.2f, %.2f, %.2f, %.2f}", dx1(), dx2(), dy1(), dy2(), dz());

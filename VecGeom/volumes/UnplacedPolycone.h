@@ -233,16 +233,6 @@ public:
 
 }; // end class UnplacedPolycone
 
-template <>
-struct Maker<UnplacedPolycone> {
-  template <typename... ArgTypes>
-  static UnplacedPolycone *MakeInstance(Precision phistart, Precision deltaphi, int Nz, Precision const *z,
-                                        Precision const *rmin, Precision const *rmax);
-  template <typename... ArgTypes>
-  static UnplacedPolycone *MakeInstance(Precision phistart, Precision deltaphi, int Nz, Precision const *r,
-                                        Precision const *z);
-};
-
 template <typename PushableContainer>
 void UnplacedPolycone::ReconstructSectionArrays(PushableContainer &z, PushableContainer &rmin,
                                                 PushableContainer &rmax) const

@@ -285,14 +285,6 @@ public:
 #endif
 };
 
-template <>
-struct Maker<UnplacedCone> {
-  template <typename... ArgTypes>
-  static UnplacedCone *MakeInstance(Precision const &_rmin1, Precision const &_rmax1, Precision const &_rmin2,
-                                    Precision const &_rmax2, Precision const &_dz, Precision const &_phimin,
-                                    Precision const &_deltaphi);
-};
-
 using GenericUnplacedCone = UnplacedCone;
 
 } // namespace VECGEOM_IMPL_NAMESPACE

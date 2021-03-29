@@ -377,13 +377,6 @@ private:
 #endif
 };
 
-template <>
-struct Maker<UnplacedHype> {
-  template <typename... ArgTypes>
-  static UnplacedHype *MakeInstance(const Precision rMin, const Precision rMax, const Precision stIn,
-                                    const Precision stOut, const Precision dz);
-};
-
 using GenericUnplacedHype = UnplacedHype;
 
 } // namespace VECGEOM_IMPL_NAMESPACE

@@ -302,15 +302,6 @@ public:
 #endif
 };
 
-template <>
-struct Maker<UnplacedTrd> {
-  template <typename... ArgTypes>
-  static UnplacedTrd *MakeInstance(const Precision x1, const Precision x2, const Precision y1, const Precision y2,
-                                   const Precision z);
-  template <typename... ArgTypes>
-  static UnplacedTrd *MakeInstance(const Precision x1, const Precision x2, const Precision y1, const Precision z);
-};
-
 using GenericUnplacedTrd = UnplacedTrd;
 
 } // namespace VECGEOM_IMPL_NAMESPACE

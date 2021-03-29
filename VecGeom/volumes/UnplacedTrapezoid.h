@@ -423,19 +423,6 @@ public:
 #endif
 };
 
-// Adding specialized factory.
-template <>
-struct Maker<UnplacedTrapezoid> {
-  template <typename... ArgTypes>
-  static UnplacedTrapezoid *MakeInstance(const Precision dz, const Precision theta, const Precision phi,
-                                         const Precision dy1, const Precision dx1, const Precision dx2,
-                                         const Precision Alpha1, const Precision dy2, const Precision dx3,
-                                         const Precision dx4, const Precision Alpha2);
-
-  template <typename... ArgTypes>
-  static UnplacedTrapezoid *MakeInstance(TrapCorners const pt);
-};
-
 using GenericUnplacedTrapezoid = UnplacedTrapezoid;
 
 } // namespace VECGEOM_IMPL_NAMESPACE

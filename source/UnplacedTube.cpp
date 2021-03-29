@@ -89,13 +89,6 @@ SolidMesh *UnplacedTube::CreateMesh3D(Transformation3D const &trans, size_t nSeg
 }
 #endif
 
-template <>
-UnplacedTube *Maker<UnplacedTube>::MakeInstance(const Precision &rmin, const Precision &rmax, const Precision &z,
-                                                const Precision &sphi, const Precision &dphi)
-{
-  return new UnplacedTube(rmin, rmax, z, sphi, dphi);
-}
-
 template <TranslationCode transCodeT, RotationCode rotCodeT>
 VECCORE_ATT_DEVICE
 VPlacedVolume *UnplacedTube::Create(LogicalVolume const *const logical_volume,

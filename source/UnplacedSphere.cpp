@@ -282,13 +282,6 @@ std::ostream &UnplacedSphere::StreamInfo(std::ostream &os) const
   return os;
 }
 
-template <>
-UnplacedSphere *Maker<UnplacedSphere>::MakeInstance(Precision pRmin, Precision pRmax, Precision pSPhi, Precision pDPhi,
-                                                    Precision pSTheta, Precision pDTheta)
-{
-  return new UnplacedSphere(pRmin, pRmax, pSPhi, pDPhi, pSTheta, pDTheta);
-}
-
 void UnplacedSphere::Print() const
 {
   printf("UnplacedSphere {%.2f , %.2f , %.2f , %.2f , %.2f , %.2f}", GetInnerRadius(), GetOuterRadius(),

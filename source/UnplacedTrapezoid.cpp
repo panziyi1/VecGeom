@@ -48,22 +48,6 @@ G4VSolid const *UnplacedTrapezoid::ConvertToGeant4(char const *label) const
 #endif
 #endif
 
-template <>
-UnplacedTrapezoid *Maker<UnplacedTrapezoid>::MakeInstance(const Precision dz, const Precision theta,
-                                                          const Precision phi, const Precision dy1, const Precision dx1,
-                                                          const Precision dx2, const Precision Alpha1,
-                                                          const Precision dy2, const Precision dx3, const Precision dx4,
-                                                          const Precision Alpha2)
-{
-  return new UnplacedTrapezoid(dz, theta, phi, dy1, dx1, dx2, Alpha1, dy2, dx3, dx4, Alpha2);
-}
-
-template <>
-UnplacedTrapezoid *Maker<UnplacedTrapezoid>::MakeInstance(TrapCorners const pt)
-{
-  return new UnplacedTrapezoid(pt);
-}
-
 VECCORE_ATT_HOST_DEVICE
 UnplacedTrapezoid::UnplacedTrapezoid(TrapCorners const corners) : fTrap()
 {

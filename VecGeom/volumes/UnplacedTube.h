@@ -174,13 +174,6 @@ public:
 #endif
 };
 
-template <>
-struct Maker<UnplacedTube> {
-  template <typename... ArgTypes>
-  static UnplacedTube *MakeInstance(Precision const &_rmin, Precision const &_rmax, Precision const &_z,
-                                    Precision const &_sphi, Precision const &_dphi);
-};
-
 using GenericUnplacedTube = UnplacedTube;
 
 } // namespace VECGEOM_IMPL_NAMESPACE

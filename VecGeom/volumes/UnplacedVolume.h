@@ -270,20 +270,6 @@ private:
 #endif
 };
 
-/*!
- * A template structure used to create specialized instances
- * of a shape. Used by the shape factory mechanism.
- */
-template <typename Shape_t>
-struct Maker {
-  template <typename... ArgTypes>
-  static Shape_t *MakeInstance(ArgTypes... args)
-  {
-    // the default case calls the standard constructor
-    return new Shape_t(args...);
-  }
-};
-
 std::ostream &operator<<(std::ostream &os, VUnplacedVolume const &vol);
 
 } // namespace VECGEOM_IMPL_NAMESPACE

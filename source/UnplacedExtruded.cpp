@@ -80,13 +80,6 @@ G4VSolid const *UnplacedExtruded::ConvertToGeant4(char const *label) const
 #endif
 #endif
 
-template <>
-UnplacedExtruded *Maker<UnplacedExtruded>::MakeInstance(const size_t nvertices, XtruVertex2 const *vertices,
-                                                        const int nsections, XtruSection const *sections)
-{
-  return new UnplacedExtruded(nvertices, vertices, nsections, sections);
-}
-
 void UnplacedExtruded::Print() const
 {
   std::cout << "UnplacedExtruded: vertices {";

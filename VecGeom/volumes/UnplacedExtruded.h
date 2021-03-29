@@ -149,13 +149,6 @@ private:
                                            VPlacedVolume *const placement = NULL) const override; // final;
 };
 
-template <>
-struct Maker<UnplacedExtruded> {
-  template <typename... ArgTypes>
-  static UnplacedExtruded *MakeInstance(const size_t nvertices, XtruVertex2 const *vertices, const int nsections,
-                                        XtruSection const *sections);
-};
-
 using GenericUnplacedExtruded = UnplacedExtruded;
 
 } // namespace VECGEOM_IMPL_NAMESPACE
