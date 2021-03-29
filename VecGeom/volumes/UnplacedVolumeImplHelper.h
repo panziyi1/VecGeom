@@ -12,7 +12,6 @@
 
 #include "VecGeom/base/Global.h"
 #include "VecGeom/volumes/UnplacedVolume.h"
-#include "VecGeom/management/VolumeFactory.h"
 
 namespace vecgeom {
 

@@ -7,7 +7,6 @@
 
 #include "VecGeom/volumes/PlacedParaboloid.h"
 #include "VecGeom/volumes/UnplacedParaboloid.h"
-#include "VecGeom/management/VolumeFactory.h"
 #include "VecGeom/base/RNG.h"
 #include <stdio.h>
 

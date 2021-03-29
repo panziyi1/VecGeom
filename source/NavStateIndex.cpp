@@ -53,8 +53,6 @@ void NavStateIndex::DeltaTransformation(NavStateIndex const &other, Transformati
   this->TopMatrix(g1);
   g1.Inverse(delta);
   // Trans/rot properties already correctly set
-  // g2.SetProperties();
-  // delta.SetProperties();
   delta.FixZeroes();
   delta.MultiplyFromRight(g2);
   delta.FixZeroes();

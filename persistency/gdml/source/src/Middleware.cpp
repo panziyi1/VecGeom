@@ -36,7 +36,6 @@
 
 #include "VecGeom/volumes/LogicalVolume.h"
 #include "VecGeom/volumes/PlacedVolume.h"
-#include "VecGeom/management/VolumeFactory.h"
 #include "VecGeom/management/GeoManager.h"
 
 #include <iostream>

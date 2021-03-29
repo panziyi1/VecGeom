@@ -4,7 +4,6 @@
 #include "VecGeom/volumes/UnplacedTorus2.h"
 
 #include "VecGeom/volumes/utilities/VolumeUtilities.h"
-#include "VecGeom/management/VolumeFactory.h"
 
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {

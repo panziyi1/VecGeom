@@ -9,7 +9,6 @@
 #include "VecGeom/volumes/UnplacedParallelepiped.h"
 
 #include <stdio.h>
-#include "VecGeom/management/VolumeFactory.h"
 #include "VecGeom/volumes/PlacedParallelepiped.h"
 #include "VecGeom/volumes/utilities/GenerationUtilities.h"
 #include "VecGeom/base/RNG.h"

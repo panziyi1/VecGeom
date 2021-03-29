@@ -22,8 +22,6 @@
 #include "VecGeom/volumes/UnplacedImplAs.h"
 #endif
 
-#include "VecGeom/management/VolumeFactory.h"
-
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 

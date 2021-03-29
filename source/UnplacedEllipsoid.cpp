@@ -8,7 +8,6 @@
 #include "VecGeom/volumes/EllipticUtilities.h"
 #include "VecGeom/volumes/PlacedEllipsoid.h"
 #include "VecGeom/volumes/UnplacedEllipsoid.h"
-#include "VecGeom/management/VolumeFactory.h"
 #include "VecGeom/base/RNG.h"
 #include <stdio.h>
 #include <cmath>

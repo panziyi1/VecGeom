@@ -1,5 +1,4 @@
 #include "VecGeom/volumes/UnplacedSExtruVolume.h"
-#include "VecGeom/management/VolumeFactory.h"
 #include "VecGeom/volumes/PlacedSExtru.h"
 #include "VecGeom/base/RNG.h"
 #include <stdio.h>

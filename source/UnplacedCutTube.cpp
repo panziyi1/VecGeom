@@ -14,7 +14,6 @@
 #endif
 
 #include "VecGeom/volumes/utilities/GenerationUtilities.h"
-#include "VecGeom/management/VolumeFactory.h"
 
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {

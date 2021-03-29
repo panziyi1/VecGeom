@@ -49,7 +49,6 @@ public:
   UnplacedScaledShape(VPlacedVolume const *placed, Precision sx, Precision sy, Precision sz, bool globalConvexity)
       : fScaled(placed, sx, sy, sz)
   {
-    /* assert(placed->GetTransformation()->IsIdentity());*/
     fGlobalConvexity = globalConvexity;
     /* We must have
          assert(globalConvexity == fPlaced->GetUnplacedVolume()->IsConvex())

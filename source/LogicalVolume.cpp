@@ -14,7 +14,6 @@
 #include "VecGeom/base/Transformation3D.h"
 #include "VecGeom/base/Vector.h"
 #include "VecGeom/management/GeoManager.h"
-#include "VecGeom/management/VolumeFactory.h"
 #include "VecGeom/volumes/PlacedVolume.h"
 #include "VecGeom/navigation/SimpleSafetyEstimator.h"
 #include "VecGeom/navigation/NewSimpleNavigator.h"

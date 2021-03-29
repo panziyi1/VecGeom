@@ -8,8 +8,6 @@
 #include "VecGeom/volumes/utilities/GenerationUtilities.h"
 #include "VecGeom/base/RNG.h"
 
-#include "VecGeom/management/VolumeFactory.h"
-
 #ifndef VECCORE_CUDA
 #include "VecGeom/volumes/UnplacedImplAs.h"
 #endif

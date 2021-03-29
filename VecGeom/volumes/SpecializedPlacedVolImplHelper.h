@@ -12,12 +12,11 @@
 namespace vecgeom {
 
 // putting a forward declaration by hand
-VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE_1t_2v(class, SpecializedVolImplHelper, typename, TranslationCode,
-                                           translation::kGeneric, RotationCode, rotation::kGeneric);
+VECGEOM_DEVICE_DECLARE_CONV_TEMPLATE(class, SpecializedVolImplHelper, typename);
 
 inline namespace VECGEOM_IMPL_NAMESPACE {
 
-template <class Specialization, TranslationCode transC, RotationCode rotC>
+template <class Specialization>
 class SpecializedVolImplHelper : public Specialization::PlacedShape_t {
 
   using PlacedShape_t    = typename Specialization::PlacedShape_t;

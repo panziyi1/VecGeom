@@ -42,7 +42,6 @@ int main(int argc, char *argv[])
         (i == 0) ? new Transformation3D()
                  : new Transformation3D(pos.x(), pos.y(), pos.z(), RNG::Instance().uniform(-180, 180),
                                         RNG::Instance().uniform(-180, 180), RNG::Instance().uniform(-180, 180));
-    trans->SetProperties();
     UnplacedBox *box = new UnplacedBox(sizernd, sizernd, sizernd);
     std::string name = "box";
     name += std::to_string(i);

@@ -104,19 +104,12 @@ void GeomCppExporter::DumpTransformations(std::vector<std::string> &trafoconstrl
   for (auto t : tvlist) {
     // register transformation
     if (fTrafoToStringMap.find(t) == fTrafoToStringMap.cend()) {
-      // many transformation are identity: we can filter them out and allocate only one
-      // identity
-      // TODO: such reduction can be applied for other transformations
-      if (t->IsIdentity()) {
-        fTrafoToStringMap[t] = "idtrans";
-      } else {
-        // create a variable name
-        std::stringstream s;
-        s << "transf" << counter;
-        // do mapping from existing pointer value to variable name
-        fTrafoToStringMap[t] = s.str();
-        counter++;
-      }
+      // create a variable name
+      std::stringstream s;
+      s << "transf" << counter;
+      // do mapping from existing pointer value to variable name
+      fTrafoToStringMap[t] = s.str();
+      counter++;
     }
   }
 
@@ -129,11 +122,8 @@ void GeomCppExporter::DumpTransformations(std::vector<std::string> &trafoconstrl
   // generate function that instantiates the transformations
   int groupcounter = 0;
   trafoconstr << "void GenerateTransformations_part" << group << "(){\n";
-  bool iddone = false;
   for (auto t : fTrafoToStringMap) {
     Transformation3D const *tp = t.first;
-    if (tp->IsIdentity() && iddone) continue;
-    if (tp->IsIdentity()) iddone = true;
 
     // we take a limit if 5000 transformations per translation unit
     // which compiles reasonably fast
@@ -165,12 +155,10 @@ void GeomCppExporter::DumpTransformations(std::vector<std::string> &trafoconstrl
     line << tp->Translation(0) << " , ";
     line << tp->Translation(1) << " , ";
     line << tp->Translation(2);
-    if (tp->HasRotation()) {
-      line << " , ";
-      for (auto i = 0; i < 8; ++i)
-        line << tp->Rotation(i) << " , ";
-      line << tp->Rotation(8);
-    }
+    line << " , ";
+    for (auto i = 0; i < 8; ++i)
+      line << tp->Rotation(i) << " , ";
+    line << tp->Rotation(8);
     line << ");\n";
     trafoconstr << line.str();
   }

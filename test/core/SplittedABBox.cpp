@@ -67,7 +67,6 @@ void Visualize(Visualizer *visualizer, VPlacedVolume const *pvol, std::vector<Ve
     delta       = (*itUpper - *itLower) / 2;
     translation = (*itUpper + *itLower) / 2;
     trans.SetTranslation(translation);
-    trans.SetProperties();
     UnplacedBox unplacedSplittedABBox(delta);
     VPlacedVolume const *placedSplittedABBox = LogicalVolume("", &unplacedSplittedABBox).Place(&trans);
     visualizer->AddVolume(*placedSplittedABBox, trans);

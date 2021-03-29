@@ -7,7 +7,6 @@
 
 #include "VecGeom/volumes/PlacedTet.h"
 #include "VecGeom/volumes/UnplacedTet.h"
-#include "VecGeom/management/VolumeFactory.h"
 #include "VecGeom/base/RNG.h"
 #include <stdio.h>
 namespace vecgeom {

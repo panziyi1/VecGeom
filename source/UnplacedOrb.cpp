@@ -7,7 +7,6 @@
 
 #include "VecGeom/volumes/PlacedOrb.h"
 #include "VecGeom/volumes/UnplacedOrb.h"
-#include "VecGeom/management/VolumeFactory.h"
 #include "VecGeom/base/RNG.h"
 #include <stdio.h>
 #ifdef VECGEOM_ROOT

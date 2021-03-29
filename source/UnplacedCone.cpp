@@ -23,8 +23,6 @@
 #include "G4Cons.hh"
 #endif
 
-#include "VecGeom/management/VolumeFactory.h"
-
 namespace vecgeom {
 inline namespace VECGEOM_IMPL_NAMESPACE {
 

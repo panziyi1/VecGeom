@@ -60,11 +60,6 @@ A placed solid corresponds to a Geant4 physical volume (G4VPhysicalVolume) and a
 
 OLD text **which I believe is wrong** A placed solid does not have a direct correspodance in Geant4 - it combines characteristics of 'solid' (G4VSolid) with the transformation that resides in physical volumes (G4VPhysicalVolume).
 
-### How we create geometry objects via factories
-The factory class VolumeFactory is the recommended way to create placed volume with different specialisations.
-
-[ Creating a shape/solid optimally in VecGeom ]
-
 ### The struct describing each shape
 
 How to create a geometry setup in VecGeom

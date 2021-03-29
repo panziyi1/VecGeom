@@ -2,7 +2,6 @@
 /// \author Mihaela Gheata (mihaela.gheata@cern.ch)
 
 #include "VecGeom/volumes/UnplacedScaledShape.h"
-#include "VecGeom/management/VolumeFactory.h"
 #include "VecGeom/volumes/PlacedScaledShape.h"
 #ifndef VECCORE_CUDA
 #include "VecGeom/base/RNG.h"

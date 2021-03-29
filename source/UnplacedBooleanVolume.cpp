@@ -8,7 +8,6 @@
 #include "VecGeom/base/Global.h"
 #include "VecGeom/volumes/PlacedBooleanVolume.h"
 #include "VecGeom/volumes/UnplacedBooleanVolume.h"
-#include "VecGeom/management/VolumeFactory.h"
 #include "VecGeom/volumes/utilities/GenerationUtilities.h"
 #include "VecGeom/volumes/utilities/VolumeUtilities.h"
 #include "VecGeom/base/RNG.h"

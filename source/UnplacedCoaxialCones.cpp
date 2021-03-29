@@ -4,7 +4,6 @@
 #include "VecGeom/volumes/EllipticUtilities.h"
 #include "VecGeom/volumes/PlacedCoaxialCones.h"
 #include "VecGeom/volumes/UnplacedCoaxialCones.h"
-#include "VecGeom/management/VolumeFactory.h"
 #include "VecGeom/base/RNG.h"
 #include <stdio.h>
 #include <cmath>

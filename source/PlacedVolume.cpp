@@ -148,36 +148,31 @@ void VPlacedVolume::Extent(Vector3D<Precision> &aMin, Vector3D<Precision> &aMax)
   GetUnplacedVolume()->Extent(pmin, pmax);
   // transform bounding box to master space and recalculate it
   const Transformation3D *tr = GetTransformation();
-  if (tr->HasRotation()) {
-    Vector3D<Precision> bbox[8];
-    tr->InverseTransform(Vector3D<Precision>(pmin.x(), pmin.y(), pmin.z()), bbox[0]);
-    tr->InverseTransform(Vector3D<Precision>(pmax.x(), pmin.y(), pmin.z()), bbox[1]);
-    tr->InverseTransform(Vector3D<Precision>(pmin.x(), pmax.y(), pmin.z()), bbox[2]);
-    tr->InverseTransform(Vector3D<Precision>(pmax.x(), pmax.y(), pmin.z()), bbox[3]);
-    tr->InverseTransform(Vector3D<Precision>(pmin.x(), pmin.y(), pmax.z()), bbox[4]);
-    tr->InverseTransform(Vector3D<Precision>(pmax.x(), pmin.y(), pmax.z()), bbox[5]);
-    tr->InverseTransform(Vector3D<Precision>(pmin.x(), pmax.y(), pmax.z()), bbox[6]);
-    tr->InverseTransform(Vector3D<Precision>(pmax.x(), pmax.y(), pmax.z()), bbox[7]);
-    Precision xmin = bbox[0].x();
-    Precision ymin = bbox[0].y();
-    Precision zmin = bbox[0].z();
-    Precision xmax = bbox[0].x();
-    Precision ymax = bbox[0].y();
-    Precision zmax = bbox[0].z();
-    for (int i = 1; i < 8; ++i) {
-      xmin = vecCore::math::Min(xmin, bbox[i].x());
-      ymin = vecCore::math::Min(ymin, bbox[i].y());
-      zmin = vecCore::math::Min(zmin, bbox[i].z());
-      xmax = vecCore::math::Max(xmax, bbox[i].x());
-      ymax = vecCore::math::Max(ymax, bbox[i].y());
-      zmax = vecCore::math::Max(zmax, bbox[i].z());
-    }
-    aMin.Set(xmin, ymin, zmin);
-    aMax.Set(xmax, ymax, zmax);
-  } else {
-    tr->InverseTransform(pmin, aMin);
-    tr->InverseTransform(pmax, aMax);
+  Vector3D<Precision> bbox[8];
+  tr->InverseTransform(Vector3D<Precision>(pmin.x(), pmin.y(), pmin.z()), bbox[0]);
+  tr->InverseTransform(Vector3D<Precision>(pmax.x(), pmin.y(), pmin.z()), bbox[1]);
+  tr->InverseTransform(Vector3D<Precision>(pmin.x(), pmax.y(), pmin.z()), bbox[2]);
+  tr->InverseTransform(Vector3D<Precision>(pmax.x(), pmax.y(), pmin.z()), bbox[3]);
+  tr->InverseTransform(Vector3D<Precision>(pmin.x(), pmin.y(), pmax.z()), bbox[4]);
+  tr->InverseTransform(Vector3D<Precision>(pmax.x(), pmin.y(), pmax.z()), bbox[5]);
+  tr->InverseTransform(Vector3D<Precision>(pmin.x(), pmax.y(), pmax.z()), bbox[6]);
+  tr->InverseTransform(Vector3D<Precision>(pmax.x(), pmax.y(), pmax.z()), bbox[7]);
+  Precision xmin = bbox[0].x();
+  Precision ymin = bbox[0].y();
+  Precision zmin = bbox[0].z();
+  Precision xmax = bbox[0].x();
+  Precision ymax = bbox[0].y();
+  Precision zmax = bbox[0].z();
+  for (int i = 1; i < 8; ++i) {
+    xmin = vecCore::math::Min(xmin, bbox[i].x());
+    ymin = vecCore::math::Min(ymin, bbox[i].y());
+    zmin = vecCore::math::Min(zmin, bbox[i].z());
+    xmax = vecCore::math::Max(xmax, bbox[i].x());
+    ymax = vecCore::math::Max(ymax, bbox[i].y());
+    zmax = vecCore::math::Max(zmax, bbox[i].z());
   }
+  aMin.Set(xmin, ymin, zmin);
+  aMax.Set(xmax, ymax, zmax);
 #endif
 }
 

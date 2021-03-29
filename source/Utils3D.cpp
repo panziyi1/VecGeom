@@ -854,17 +854,6 @@ EBodyXing_t BoxCollision(Vector3D<Precision> const &box1, Transformation3D const
   double dsq  = (orig2 - orig1).Mag2();
   if (dsq > r1sq + r2sq + 2. * Sqrt(r1sq * r2sq)) return kDisjoint;
 
-  if (!tr1.HasRotation() && !tr2.HasRotation()) {
-    // Aligned boxes case
-    Vector3D<double> eps1 = (orig2 - box2) - (orig1 + box1);
-    Vector3D<double> eps2 = (orig1 - box1) - (orig2 + box2);
-    double deps           = Max(eps1.Max(), eps2.Max());
-    if (deps > kTolerance)
-      return kDisjoint;
-    else if (deps > -kTolerance)
-      return kTouching;
-    return kOverlapping;
-  }
   // General case: use separating plane theorem (3D version of SAT)
 
   // A lambda computing min for the i component

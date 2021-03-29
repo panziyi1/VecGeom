@@ -153,8 +153,6 @@ void analyseOutStates(NavStatePool &inpool, NavStatePool const &outpool)
 
     instate->TopMatrix(g);
     navstate->TopMatrix(g2);
-    g.SetProperties();
-    g2.SetProperties();
     g2.Inverse(invg2);
     invg2.MultiplyFromRight(g);
     invg2.FixZeroes();

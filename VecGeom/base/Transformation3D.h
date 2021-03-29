@@ -25,15 +25,6 @@ typedef int RotationCode;
 typedef int TranslationCode;
 
 namespace vecgeom {
-namespace rotation {
-enum RotationId { kGeneric = -1, kDiagonal = 0x111, kIdentity = 0x200 };
-}
-namespace translation {
-enum TranslationId { kGeneric = -1, kIdentity = 0 };
-}
-} // namespace vecgeom
-
-namespace vecgeom {
 
 VECGEOM_DEVICE_FORWARD_DECLARE(class Transformation3D;);
 
@@ -55,15 +46,13 @@ private:
   // and would allow for higher level abstraction
   Precision fTranslation[3];
   Precision fRotation[9];
-  bool fIdentity;
-  bool fHasRotation;
-  bool fHasTranslation;
 
 public:
   VECCORE_ATT_HOST_DEVICE
   constexpr Transformation3D()
-      : fTranslation{0., 0., 0.}, fRotation{1., 0., 0., 0., 1., 0., 0., 0., 1.}, fIdentity(true), fHasRotation(false),
-        fHasTranslation(false){};
+      : fTranslation{0., 0., 0.}, fRotation{1., 0., 0., 0., 1., 0., 0., 0., 1.}
+  {
+  }
 
   /**
    * Constructor for translation only.
@@ -73,8 +62,7 @@ public:
    */
   VECCORE_ATT_HOST_DEVICE
   Transformation3D(const Precision tx, const Precision ty, const Precision tz)
-      : fTranslation{tx, ty, tz}, fRotation{1., 0., 0., 0., 1., 0., 0., 0., 1.},
-        fIdentity(tx == 0 && ty == 0 && tz == 0), fHasRotation(false), fHasTranslation(tx != 0 || ty != 0 || tz != 0)
+      : fTranslation{tx, ty, tz}, fRotation{1., 0., 0., 0., 1., 0., 0., 0., 1.} 
   {
   }
 
@@ -148,9 +136,6 @@ public:
     fRotation[6]    = 0.;
     fRotation[7]    = 0.;
     fRotation[8]    = 1.;
-    fIdentity       = true;
-    fHasRotation    = false;
-    fHasTranslation = false;
   }
 
   int MemorySize() const { return sizeof(*this); }
@@ -194,18 +179,6 @@ public:
   Precision Rotation(const int index) const { return fRotation[index]; }
 
   VECCORE_ATT_HOST_DEVICE
-  VECGEOM_FORCE_INLINE
-  bool IsIdentity() const { return fIdentity; }
-
-  VECCORE_ATT_HOST_DEVICE
-  VECGEOM_FORCE_INLINE
-  bool HasRotation() const { return fHasRotation; }
-
-  VECCORE_ATT_HOST_DEVICE
-  VECGEOM_FORCE_INLINE
-  bool HasTranslation() const { return fHasTranslation; }
-
-  VECCORE_ATT_HOST_DEVICE
   void Print() const;
 
   // print to a stream
@@ -218,9 +191,6 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   void SetTranslation(Vector3D<Precision> const &vec);
-
-  VECCORE_ATT_HOST_DEVICE
-  void SetProperties();
 
   VECCORE_ATT_HOST_DEVICE
   void SetRotation(const Precision phi, const Precision theta, const Precision psi);
@@ -248,35 +218,14 @@ public:
       trans_dest[i] = trans_src[i];
     for (size_t i = 0; i < 9 * sizeof(Precision); ++i)
       rot_dest[i] = rot_src[i];
-
-    fHasTranslation = has_trans;
-    fHasRotation    = has_rot;
-    fIdentity       = !fHasTranslation && !fHasRotation;
   }
 
-  // Generation of template parameter codes
-
-  VECCORE_ATT_HOST_DEVICE
-  RotationCode GenerateRotationCode() const;
-
-  VECCORE_ATT_HOST_DEVICE
-  TranslationCode GenerateTranslationCode() const;
-
 private:
-  // Templated rotation and translation methods which inline and compile to
-  // optimized versions.
-
-  template <RotationCode code, typename InputType>
+  template <typename InputType>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
   void DoRotation(Vector3D<InputType> const &master, Vector3D<InputType> &local) const;
 
-  template <RotationCode code, typename InputType>
-  VECGEOM_FORCE_INLINE
-  VECCORE_ATT_HOST_DEVICE
-  void DoRotation_new(Vector3D<InputType> const &master, Vector3D<InputType> &local) const;
-
-private:
   template <typename InputType>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
@@ -290,16 +239,6 @@ private:
 public:
   // Transformation interface
 
-  template <TranslationCode trans_code, RotationCode rot_code, typename InputType>
-  VECGEOM_FORCE_INLINE
-  VECCORE_ATT_HOST_DEVICE
-  void Transform(Vector3D<InputType> const &master, Vector3D<InputType> &local) const;
-
-  template <TranslationCode trans_code, RotationCode rot_code, typename InputType>
-  VECGEOM_FORCE_INLINE
-  VECCORE_ATT_HOST_DEVICE
-  Vector3D<InputType> Transform(Vector3D<InputType> const &master) const;
-
   template <typename InputType>
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
@@ -309,16 +248,6 @@ public:
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
   Vector3D<InputType> Transform(Vector3D<InputType> const &master) const;
-
-  template <RotationCode code, typename InputType>
-  VECGEOM_FORCE_INLINE
-  VECCORE_ATT_HOST_DEVICE
-  void TransformDirection(Vector3D<InputType> const &master, Vector3D<InputType> &local) const;
-
-  template <RotationCode code, typename InputType>
-  VECGEOM_FORCE_INLINE
-  VECCORE_ATT_HOST_DEVICE
-  Vector3D<InputType> TransformDirection(Vector3D<InputType> const &master) const;
 
   template <typename InputType>
   VECGEOM_FORCE_INLINE
@@ -413,10 +342,6 @@ public:
     inverse.fTranslation[1] = detxy * dx_ - detyy * dy_ + detzy * dz_;
     inverse.fRotation[6] = detxz, inverse.fRotation[7] = -detyz, inverse.fRotation[8] = detzz,
     inverse.fTranslation[2] = -detxz * dx_ + detyz * dy_ - detzz * dz_;
-
-    inverse.fHasTranslation = HasTranslation();
-    inverse.fHasRotation    = HasRotation();
-    inverse.fIdentity       = fIdentity;
   }
 
   // Utility and CUDA
@@ -440,7 +365,6 @@ public:
 
 VECCORE_ATT_HOST_DEVICE
 Transformation3D::Transformation3D(Transformation3D const &other)
-    : fIdentity(false), fHasRotation(false), fHasTranslation(false)
 {
   *this = other;
 }
@@ -450,9 +374,6 @@ Transformation3D &Transformation3D::operator=(Transformation3D const &rhs)
 {
   copy(rhs.fTranslation, rhs.fTranslation + 3, fTranslation);
   copy(rhs.fRotation, rhs.fRotation + 9, fRotation);
-  fIdentity       = rhs.fIdentity;
-  fHasTranslation = rhs.fHasTranslation;
-  fHasRotation    = rhs.fHasRotation;
   return *this;
 }
 
@@ -470,112 +391,11 @@ bool Transformation3D::operator==(Transformation3D const &rhs) const
  * \param master Vector in original frame of reference.
  * \param local Output vector rotated to the new frame of reference.
  */
-template <RotationCode code, typename InputType>
+template <typename InputType>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
 void Transformation3D::DoRotation(Vector3D<InputType> const &master, Vector3D<InputType> &local) const
 {
-
-  if (code == 0x1B1) {
-    local[0] = master[0] * fRotation[0];
-    local[1] = master[1] * fRotation[4] + master[2] * fRotation[7];
-    local[2] = master[1] * fRotation[5] + master[2] * fRotation[8];
-    return;
-  }
-  if (code == 0x18E) {
-    local[0] = master[1] * fRotation[3];
-    local[1] = master[0] * fRotation[1] + master[2] * fRotation[7];
-    local[2] = master[0] * fRotation[2] + master[2] * fRotation[8];
-    return;
-  }
-  if (code == 0x076) {
-    local[0] = master[2] * fRotation[6];
-    local[1] = master[0] * fRotation[1] + master[1] * fRotation[4];
-    local[2] = master[0] * fRotation[2] + master[1] * fRotation[5];
-    return;
-  }
-  if (code == 0x16A) {
-    local[0] = master[1] * fRotation[3] + master[2] * fRotation[6];
-    local[1] = master[0] * fRotation[1];
-    local[2] = master[2] * fRotation[5] + master[2] * fRotation[8];
-    return;
-  }
-  if (code == 0x155) {
-    local[0] = master[0] * fRotation[0] + master[2] * fRotation[6];
-    local[1] = master[1] * fRotation[4];
-    local[2] = master[0] * fRotation[2] + master[2] * fRotation[8];
-    return;
-  }
-  if (code == 0x0AD) {
-    local[0] = master[0] * fRotation[0] + master[1] * fRotation[3];
-    local[1] = master[2] * fRotation[7];
-    local[2] = master[0] * fRotation[2] + master[1] * fRotation[5];
-    return;
-  }
-  if (code == 0x0DC) {
-    local[0] = master[1] * fRotation[3] + master[2] * fRotation[6];
-    local[1] = master[1] * fRotation[4] + master[2] * fRotation[7];
-    local[2] = master[0] * fRotation[2];
-    return;
-  }
-  if (code == 0x0E3) {
-    local[0] = master[0] * fRotation[0] + master[2] * fRotation[6];
-    local[1] = master[0] * fRotation[1] + master[2] * fRotation[7];
-    local[2] = master[1] * fRotation[5];
-    return;
-  }
-  if (code == 0x11B) {
-    local[0] = master[0] * fRotation[0] + master[1] * fRotation[3];
-    local[1] = master[0] * fRotation[1] + master[1] * fRotation[4];
-    local[2] = master[2] * fRotation[8];
-    return;
-  }
-  if (code == 0x0A1) {
-    local[0] = master[0] * fRotation[0];
-    local[1] = master[2] * fRotation[7];
-    local[2] = master[1] * fRotation[5];
-    return;
-  }
-  if (code == 0x10A) {
-    local[0] = master[1] * fRotation[3];
-    local[1] = master[0] * fRotation[1];
-    local[2] = master[2] * fRotation[8];
-    return;
-  }
-  if (code == 0x046) {
-    local[0] = master[1] * fRotation[3];
-    local[1] = master[2] * fRotation[7];
-    local[2] = master[0] * fRotation[2];
-    return;
-  }
-  if (code == 0x062) {
-    local[0] = master[2] * fRotation[6];
-    local[1] = master[0] * fRotation[1];
-    local[2] = master[1] * fRotation[5];
-    return;
-  }
-  if (code == 0x054) {
-    local[0] = master[2] * fRotation[6];
-    local[1] = master[1] * fRotation[4];
-    local[2] = master[0] * fRotation[2];
-    return;
-  }
-
-  // code = 0x111;
-  if (code == rotation::kDiagonal) {
-    local[0] = master[0] * fRotation[0];
-    local[1] = master[1] * fRotation[4];
-    local[2] = master[2] * fRotation[8];
-    return;
-  }
-
-  // code = 0x200;
-  if (code == rotation::kIdentity) {
-    local = master;
-    return;
-  }
-
-  // General case
   local[0] = master[0] * fRotation[0];
   local[1] = master[0] * fRotation[1];
   local[2] = master[0] * fRotation[2];
@@ -585,57 +405,6 @@ void Transformation3D::DoRotation(Vector3D<InputType> const &master, Vector3D<In
   local[0] += master[2] * fRotation[6];
   local[1] += master[2] * fRotation[7];
   local[2] += master[2] * fRotation[8];
-}
-
-/**
- * Rotates a vector to this transformation's frame of reference.
- * Templates on the RotationCode generated by GenerateTranslationCode() to
- * perform specialized rotation.
- * \sa GenerateTranslationCode()
- * \param master Vector in original frame of reference.
- * \param local Output vector rotated to the new frame of reference.
- */
-template <RotationCode code, typename InputType>
-VECGEOM_FORCE_INLINE
-VECCORE_ATT_HOST_DEVICE
-void Transformation3D::DoRotation_new(Vector3D<InputType> const &master, Vector3D<InputType> &local) const
-{
-
-  // code = 0x200;
-  if (code == rotation::kIdentity) {
-    local = master;
-    return;
-  }
-
-  // General case
-  local = Vector3D<double>(); // reset to zero -- any better way to do this???
-  if (code & 0x001) {
-    local[0] += master[0] * fRotation[0];
-  }
-  if (code & 0x002) {
-    local[1] += master[0] * fRotation[1];
-  }
-  if (code & 0x004) {
-    local[2] += master[0] * fRotation[2];
-  }
-  if (code & 0x008) {
-    local[0] += master[1] * fRotation[3];
-  }
-  if (code & 0x010) {
-    local[1] += master[1] * fRotation[4];
-  }
-  if (code & 0x020) {
-    local[2] += master[1] * fRotation[5];
-  }
-  if (code & 0x040) {
-    local[0] += master[2] * fRotation[6];
-  }
-  if (code & 0x080) {
-    local[1] += master[2] * fRotation[7];
-  }
-  if (code & 0x100) {
-    local[2] += master[2] * fRotation[8];
-  }
 }
 
 template <typename InputType>
@@ -655,34 +424,14 @@ void Transformation3D::DoTranslation(Vector3D<InputType> const &master, Vector3D
  * \param local Output destination. Should never be the same as the input
  *              vector!
  */
-template <TranslationCode trans_code, RotationCode rot_code, typename InputType>
+template <typename InputType>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
 void Transformation3D::Transform(Vector3D<InputType> const &master, Vector3D<InputType> &local) const
 {
-
-  // Identity
-  if (trans_code == translation::kIdentity && rot_code == rotation::kIdentity) {
-    local = master;
-    return;
-  }
-
-  // Only translation
-  if (trans_code != translation::kIdentity && rot_code == rotation::kIdentity) {
-    DoTranslation(master, local);
-    return;
-  }
-
-  // Only rotation
-  if (trans_code == translation::kIdentity && rot_code != rotation::kIdentity) {
-    DoRotation<rot_code>(master, local);
-    return;
-  }
-
-  // General case
   Vector3D<InputType> tmp;
   DoTranslation(master, tmp);
-  DoRotation<rot_code>(tmp, local);
+  DoRotation(tmp, local);
 }
 
 /**
@@ -691,30 +440,14 @@ void Transformation3D::Transform(Vector3D<InputType> const &master, Vector3D<Inp
  * \param master Point to be transformed.
  * \return Newly constructed Vector3D with the transformed coordinates.
  */
-template <TranslationCode trans_code, RotationCode rot_code, typename InputType>
+template <typename InputType>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
 Vector3D<InputType> Transformation3D::Transform(Vector3D<InputType> const &master) const
 {
-
   Vector3D<InputType> local;
-  Transform<trans_code, rot_code>(master, local);
+  Transform(master, local);
   return local;
-}
-
-template <typename InputType>
-VECGEOM_FORCE_INLINE
-VECCORE_ATT_HOST_DEVICE
-void Transformation3D::Transform(Vector3D<InputType> const &master, Vector3D<InputType> &local) const
-{
-  Transform<translation::kGeneric, rotation::kGeneric>(master, local);
-}
-template <typename InputType>
-VECGEOM_FORCE_INLINE
-VECCORE_ATT_HOST_DEVICE
-Vector3D<InputType> Transformation3D::Transform(Vector3D<InputType> const &master) const
-{
-  return Transform<translation::kGeneric, rotation::kGeneric>(master);
 }
 
 template <bool transform_direction, typename InputType>
@@ -794,72 +527,63 @@ void Transformation3D::MultiplyFromRight(Transformation3D const &rhs)
 {
   // TODO: this code should directly operator on Vector3D and Matrix3D
 
-  if (rhs.fIdentity) return;
-  fIdentity = false;
+  // ideal for fused multiply add
+  fTranslation[0] += fRotation[0] * rhs.fTranslation[0];
+  fTranslation[0] += fRotation[1] * rhs.fTranslation[1];
+  fTranslation[0] += fRotation[2] * rhs.fTranslation[2];
 
-  if (rhs.HasTranslation()) {
-    fHasTranslation = true;
-    // ideal for fused multiply add
-    fTranslation[0] += fRotation[0] * rhs.fTranslation[0];
-    fTranslation[0] += fRotation[1] * rhs.fTranslation[1];
-    fTranslation[0] += fRotation[2] * rhs.fTranslation[2];
+  fTranslation[1] += fRotation[3] * rhs.fTranslation[0];
+  fTranslation[1] += fRotation[4] * rhs.fTranslation[1];
+  fTranslation[1] += fRotation[5] * rhs.fTranslation[2];
 
-    fTranslation[1] += fRotation[3] * rhs.fTranslation[0];
-    fTranslation[1] += fRotation[4] * rhs.fTranslation[1];
-    fTranslation[1] += fRotation[5] * rhs.fTranslation[2];
+  fTranslation[2] += fRotation[6] * rhs.fTranslation[0];
+  fTranslation[2] += fRotation[7] * rhs.fTranslation[1];
+  fTranslation[2] += fRotation[8] * rhs.fTranslation[2];
 
-    fTranslation[2] += fRotation[6] * rhs.fTranslation[0];
-    fTranslation[2] += fRotation[7] * rhs.fTranslation[1];
-    fTranslation[2] += fRotation[8] * rhs.fTranslation[2];
-  }
+  Precision tmpx = fRotation[0];
+  Precision tmpy = fRotation[1];
+  Precision tmpz = fRotation[2];
 
-  if (rhs.HasRotation()) {
-    fHasRotation   = true;
-    Precision tmpx = fRotation[0];
-    Precision tmpy = fRotation[1];
-    Precision tmpz = fRotation[2];
+  // first row of matrix
+  fRotation[0] = tmpx * rhs.fRotation[0];
+  fRotation[1] = tmpx * rhs.fRotation[1];
+  fRotation[2] = tmpx * rhs.fRotation[2];
+  fRotation[0] += tmpy * rhs.fRotation[3];
+  fRotation[1] += tmpy * rhs.fRotation[4];
+  fRotation[2] += tmpy * rhs.fRotation[5];
+  fRotation[0] += tmpz * rhs.fRotation[6];
+  fRotation[1] += tmpz * rhs.fRotation[7];
+  fRotation[2] += tmpz * rhs.fRotation[8];
 
-    // first row of matrix
-    fRotation[0] = tmpx * rhs.fRotation[0];
-    fRotation[1] = tmpx * rhs.fRotation[1];
-    fRotation[2] = tmpx * rhs.fRotation[2];
-    fRotation[0] += tmpy * rhs.fRotation[3];
-    fRotation[1] += tmpy * rhs.fRotation[4];
-    fRotation[2] += tmpy * rhs.fRotation[5];
-    fRotation[0] += tmpz * rhs.fRotation[6];
-    fRotation[1] += tmpz * rhs.fRotation[7];
-    fRotation[2] += tmpz * rhs.fRotation[8];
+  tmpx = fRotation[3];
+  tmpy = fRotation[4];
+  tmpz = fRotation[5];
 
-    tmpx = fRotation[3];
-    tmpy = fRotation[4];
-    tmpz = fRotation[5];
+  // second row of matrix
+  fRotation[3] = tmpx * rhs.fRotation[0];
+  fRotation[4] = tmpx * rhs.fRotation[1];
+  fRotation[5] = tmpx * rhs.fRotation[2];
+  fRotation[3] += tmpy * rhs.fRotation[3];
+  fRotation[4] += tmpy * rhs.fRotation[4];
+  fRotation[5] += tmpy * rhs.fRotation[5];
+  fRotation[3] += tmpz * rhs.fRotation[6];
+  fRotation[4] += tmpz * rhs.fRotation[7];
+  fRotation[5] += tmpz * rhs.fRotation[8];
 
-    // second row of matrix
-    fRotation[3] = tmpx * rhs.fRotation[0];
-    fRotation[4] = tmpx * rhs.fRotation[1];
-    fRotation[5] = tmpx * rhs.fRotation[2];
-    fRotation[3] += tmpy * rhs.fRotation[3];
-    fRotation[4] += tmpy * rhs.fRotation[4];
-    fRotation[5] += tmpy * rhs.fRotation[5];
-    fRotation[3] += tmpz * rhs.fRotation[6];
-    fRotation[4] += tmpz * rhs.fRotation[7];
-    fRotation[5] += tmpz * rhs.fRotation[8];
+  tmpx = fRotation[6];
+  tmpy = fRotation[7];
+  tmpz = fRotation[8];
 
-    tmpx = fRotation[6];
-    tmpy = fRotation[7];
-    tmpz = fRotation[8];
-
-    // third row of matrix
-    fRotation[6] = tmpx * rhs.fRotation[0];
-    fRotation[7] = tmpx * rhs.fRotation[1];
-    fRotation[8] = tmpx * rhs.fRotation[2];
-    fRotation[6] += tmpy * rhs.fRotation[3];
-    fRotation[7] += tmpy * rhs.fRotation[4];
-    fRotation[8] += tmpy * rhs.fRotation[5];
-    fRotation[6] += tmpz * rhs.fRotation[6];
-    fRotation[7] += tmpz * rhs.fRotation[7];
-    fRotation[8] += tmpz * rhs.fRotation[8];
-  }
+  // third row of matrix
+  fRotation[6] = tmpx * rhs.fRotation[0];
+  fRotation[7] = tmpx * rhs.fRotation[1];
+  fRotation[8] = tmpx * rhs.fRotation[2];
+  fRotation[6] += tmpy * rhs.fRotation[3];
+  fRotation[7] += tmpy * rhs.fRotation[4];
+  fRotation[8] += tmpy * rhs.fRotation[5];
+  fRotation[6] += tmpz * rhs.fRotation[6];
+  fRotation[7] += tmpz * rhs.fRotation[7];
+  fRotation[8] += tmpz * rhs.fRotation[8];
 }
 
 /**
@@ -868,20 +592,12 @@ void Transformation3D::MultiplyFromRight(Transformation3D const &rhs)
  * \param master Point to be transformed.
  * \param local Output destination of transformation.
  */
-template <RotationCode code, typename InputType>
+template <typename InputType>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
 void Transformation3D::TransformDirection(Vector3D<InputType> const &master, Vector3D<InputType> &local) const
 {
-
-  // Rotational fIdentity
-  if (code == rotation::kIdentity) {
-    local = master;
-    return;
-  }
-
-  // General case
-  DoRotation<code>(master, local);
+  DoRotation(master, local);
 }
 
 /**
@@ -890,31 +606,15 @@ void Transformation3D::TransformDirection(Vector3D<InputType> const &master, Vec
  * \param master Point to be transformed.
  * \return Newly constructed Vector3D with the transformed coordinates.
  */
-template <RotationCode code, typename InputType>
+template <typename InputType>
 VECGEOM_FORCE_INLINE
 VECCORE_ATT_HOST_DEVICE
 Vector3D<InputType> Transformation3D::TransformDirection(Vector3D<InputType> const &master) const
 {
 
   Vector3D<InputType> local;
-  TransformDirection<code>(master, local);
+  TransformDirection(master, local);
   return local;
-}
-
-template <typename InputType>
-VECGEOM_FORCE_INLINE
-VECCORE_ATT_HOST_DEVICE
-void Transformation3D::TransformDirection(Vector3D<InputType> const &master, Vector3D<InputType> &local) const
-{
-  TransformDirection<rotation::kGeneric>(master, local);
-}
-
-template <typename InputType>
-VECGEOM_FORCE_INLINE
-VECCORE_ATT_HOST_DEVICE
-Vector3D<InputType> Transformation3D::TransformDirection(Vector3D<InputType> const &master) const
-{
-  return TransformDirection<rotation::kGeneric>(master);
 }
 
 std::ostream &operator<<(std::ostream &os, Transformation3D const &trans);

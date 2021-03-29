@@ -50,8 +50,6 @@ void NavStatePath::DeltaTransformation(NavStatePath const &other, Transformation
   other.TopMatrix(g2);
   this->TopMatrix(g1);
   g1.Inverse(delta);
-  g2.SetProperties();
-  delta.SetProperties();
   delta.FixZeroes();
   delta.MultiplyFromRight(g2);
   delta.FixZeroes();

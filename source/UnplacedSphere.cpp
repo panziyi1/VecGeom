@@ -14,7 +14,6 @@
 #ifndef VECCORE_CUDA
 #include "VecGeom/base/RNG.h"
 #endif
-#include "VecGeom/management/VolumeFactory.h"
 
 #ifdef VECGEOM_ROOT
 #include "TGeoSphere.h"

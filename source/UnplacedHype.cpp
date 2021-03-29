@@ -3,7 +3,6 @@
 
 #include "VecGeom/volumes/UnplacedHype.h"
 
-#include "VecGeom/management/VolumeFactory.h"
 #include "VecGeom/volumes/PlacedHype.h"
 #include "VecGeom/volumes/utilities/GenerationUtilities.h"
 

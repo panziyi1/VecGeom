@@ -181,9 +181,7 @@ bool RootGeoManager::PostAdjustTransformation(Transformation3D *tr, TGeoNode con
       }
       *adjustment = Transformation3D::kIdentity;
       adjustment->SetTranslation(o[0] * LUnit(), o[1] * LUnit(), o[2] * LUnit());
-      adjustment->SetProperties();
       tr->MultiplyFromRight(*adjustment);
-      tr->SetProperties();
       adjust = true;
     }
   }

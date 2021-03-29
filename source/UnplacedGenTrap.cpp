@@ -7,7 +7,6 @@
 #include <ostream>
 #include <iomanip>
 #include <iostream>
-#include "VecGeom/management/VolumeFactory.h"
 #ifndef VECCORE_CUDA
 #include "VecGeom/base/RNG.h"
 #endif

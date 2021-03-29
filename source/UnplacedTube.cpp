@@ -10,7 +10,6 @@
 #endif
 
 #include "VecGeom/volumes/utilities/GenerationUtilities.h"
-#include "VecGeom/management/VolumeFactory.h"
 #include "VecGeom/volumes/UnplacedEllipticalTube.h"
 
 namespace vecgeom {

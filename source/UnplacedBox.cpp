@@ -1,6 +1,5 @@
 #include "VecGeom/volumes/PlacedBox.h"
 #include "VecGeom/volumes/UnplacedBox.h"
-#include "VecGeom/management/VolumeFactory.h"
 #include "VecGeom/base/RNG.h"
 
 #include "VecGeom/base/Utils3D.h"

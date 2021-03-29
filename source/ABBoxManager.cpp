@@ -95,7 +95,6 @@ void ABBoxManager::ComputeSplittedABBox(VPlacedVolume const *pvol, std::vector<A
     transf2.SetRotation(transf->Rotation()[0], transf->Rotation()[1], transf->Rotation()[2], transf->Rotation()[3],
                         transf->Rotation()[4], transf->Rotation()[5], transf->Rotation()[6], transf->Rotation()[7],
                         transf->Rotation()[8]);
-    transf2.SetProperties();
 
     Vector3D<Precision> lower1(0., 0., 0.), upper1(0., 0., 0.);
     UnplacedBox newBox2(splitDx / 2., splitDy / 2., splitDz / 2.);

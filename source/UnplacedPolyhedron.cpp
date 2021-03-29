@@ -6,7 +6,6 @@
 #include "VecGeom/volumes/PlacedPolyhedron.h"
 #include "VecGeom/volumes/PlacedPolyhedron.h"
 #include "VecGeom/volumes/utilities/GenerationUtilities.h"
-#include "VecGeom/management/VolumeFactory.h"
 
 #include <cmath>
 #include <memory>

@@ -7,7 +7,6 @@
 #include "VecGeom/base/Array.h"
 #include "VecGeom/base/Stopwatch.h"
 #include "VecGeom/management/GeoManager.h"
-#include "VecGeom/management/VolumeFactory.h"
 #include "VecGeom/management/NavIndexTable.h"
 #include "VecGeom/volumes/PlacedVolume.h"
 #include "VecGeom/volumes/PlacedBooleanVolume.h"

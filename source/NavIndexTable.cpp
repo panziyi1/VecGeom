@@ -63,7 +63,7 @@ NavIndex_t BuildNavIndexVisitor::apply(NavStatePath *state, int level, NavIndex_
   Transformation3D mat;
   // encode has_trans, translation and rotation flags in the content_hasm byte
   state->TopMatrix(mat);
-  *content_hasm = 0x04 + 0x02 * (unsigned short)mat.HasTranslation() + (unsigned short)mat.HasRotation();
+  *content_hasm = 0x07;
 
   // Write the transformation elements
   auto content_mat = (double *)(&fNavInd[fCurrent]);

@@ -19,33 +19,19 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 
 const Transformation3D Transformation3D::kIdentity = Transformation3D();
 
-// Transformation3D::Transformation3D(const Precision tx,
-//                                   const Precision ty,
-//                                   const Precision tz) :
-//   fIdentity(false), fHasRotation(true), fHasTranslation(true)
-//{
-//  SetTranslation(tx, ty, tz);
-//  SetRotation(1, 0, 0, 0, 1, 0, 0, 0, 1);
-//  SetProperties();
-//}
-
 Transformation3D::Transformation3D(const Precision tx, const Precision ty, const Precision tz, const Precision phi,
                                    const Precision theta, const Precision psi)
-    : fIdentity(false), fHasRotation(true), fHasTranslation(true)
 {
   SetTranslation(tx, ty, tz);
   SetRotation(phi, theta, psi);
-  SetProperties();
 }
 
 Transformation3D::Transformation3D(const Precision tx, const Precision ty, const Precision tz, const Precision r0,
                                    const Precision r1, const Precision r2, const Precision r3, const Precision r4,
                                    const Precision r5, const Precision r6, const Precision r7, const Precision r8)
-    : fIdentity(false), fHasRotation(true), fHasTranslation(true)
 {
   SetTranslation(tx, ty, tz);
   SetRotation(r0, r1, r2, r3, r4, r5, r6, r7, r8);
-  SetProperties();
 }
 
 Transformation3D::Transformation3D(const Vector3D<Precision> &axis, bool inverse)
@@ -55,7 +41,6 @@ Transformation3D::Transformation3D(const Vector3D<Precision> &axis, bool inverse
     SetRotation(axis.Phi() * kRadToDeg - 90, -axis.Theta() * kRadToDeg, 0);
   else
     SetRotation(0, axis.Theta() * kRadToDeg, 90 - axis.Phi() * kRadToDeg);
-  SetProperties();
 }
 
 void Transformation3D::Print(std::ostream &s) const
@@ -85,17 +70,6 @@ VECCORE_ATT_HOST_DEVICE
 void Transformation3D::SetTranslation(Vector3D<Precision> const &vec)
 {
   SetTranslation(vec[0], vec[1], vec[2]);
-}
-
-VECCORE_ATT_HOST_DEVICE
-void Transformation3D::SetProperties()
-{
-  fHasTranslation =
-      (fabs(fTranslation[0]) > kTolerance || fabs(fTranslation[1]) > kTolerance || fabs(fTranslation[2]) > kTolerance)
-          ? true
-          : false;
-  fHasRotation = (GenerateRotationCode() == rotation::kIdentity) ? false : true;
-  fIdentity    = !fHasTranslation && !fHasRotation;
 }
 
 VECCORE_ATT_HOST_DEVICE
@@ -143,60 +117,18 @@ void Transformation3D::SetRotation(const Precision rot0, const Precision rot1, c
   fRotation[8] = rot8;
 }
 
-VECCORE_ATT_HOST_DEVICE
-RotationCode Transformation3D::GenerateRotationCode() const
-{
-  int code = 0;
-  for (int i = 0; i < 9; ++i) {
-    // Assign each bit
-    code |= (1 << i) * (fabs(fRotation[i]) > kTolerance);
-  }
-  if (code == rotation::kDiagonal && (fRotation[0] == 1. && fRotation[4] == 1. && fRotation[8] == 1.)) {
-    code = rotation::kIdentity;
-  }
-  return code;
-}
-
-/**
- * Very simple translation code. Kept as an integer in case other cases are to
- * be implemented in the future.
- * /return The transformation's translation code, which is 0 for transformations
- *         without translation and 1 otherwise.
- */
-VECCORE_ATT_HOST_DEVICE
-TranslationCode Transformation3D::GenerateTranslationCode() const
-{
-  return (fHasTranslation) ? translation::kGeneric : translation::kIdentity;
-}
-
 #ifdef VECGEOM_ROOT
 // function to convert this transformation to a TGeo transformation
 // mainly used for the benchmark comparisons with ROOT
 TGeoMatrix *Transformation3D::ConvertToTGeoMatrix() const
 {
   double rotd[9];
-  if (fHasRotation) {
-    for (auto i = 0; i < 9; ++i)
-      rotd[i] = Rotation()[i];
-  }
+  for (auto i = 0; i < 9; ++i)
+    rotd[i] = Rotation()[i];
 
-  if (fIdentity) {
-    return new TGeoIdentity();
-  }
-  if (fHasTranslation && !fHasRotation) {
-    return new TGeoTranslation(fTranslation[0], fTranslation[1], fTranslation[2]);
-  }
-  if (fHasRotation && !fHasTranslation) {
-    TGeoRotation *tmp = new TGeoRotation();
-    tmp->SetMatrix(rotd);
-    return tmp;
-  }
-  if (fHasTranslation && fHasRotation) {
-    TGeoRotation *tmp = new TGeoRotation();
-    tmp->SetMatrix(rotd);
-    return new TGeoCombiTrans(fTranslation[0], fTranslation[1], fTranslation[2], tmp);
-  }
-  return 0;
+  TGeoRotation *tmp = new TGeoRotation();
+  tmp->SetMatrix(rotd);
+  return new TGeoCombiTrans(fTranslation[0], fTranslation[1], fTranslation[2], tmp);
 }
 #endif
 
@@ -206,8 +138,7 @@ std::ostream &operator<<(std::ostream &os, Transformation3D const &transformatio
      << "(" << transformation.Rotation(0) << ", " << transformation.Rotation(1) << ", " << transformation.Rotation(2)
      << ", " << transformation.Rotation(3) << ", " << transformation.Rotation(4) << ", " << transformation.Rotation(5)
      << ", " << transformation.Rotation(6) << ", " << transformation.Rotation(7) << ", " << transformation.Rotation(8)
-     << ")}"
-     << "; identity(" << transformation.IsIdentity() << "); rotation(" << transformation.HasRotation() << ")";
+     << ")}";
   return os;
 }
 

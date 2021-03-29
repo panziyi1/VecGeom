@@ -12,7 +12,6 @@
 #include "VecGeom/volumes/PlacedPolycone.h"
 #include "VecGeom/volumes/PlacedCone.h"
 #include "VecGeom/volumes/PlacedPolycone.h"
-#include "VecGeom/management/VolumeFactory.h"
 #include "VecGeom/volumes/utilities/GenerationUtilities.h"
 #ifndef VECCORE_CUDA
 #include "VecGeom/base/RNG.h"

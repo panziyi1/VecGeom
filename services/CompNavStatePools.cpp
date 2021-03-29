@@ -46,7 +46,6 @@ void test_basic()
 
   Transformation3D m1inv;
   m1.Inverse(m1inv);
-  m1inv.SetProperties();
   std::cerr << "inverse\n";
   m1inv.Print();
   m3.MultiplyFromRight(m1inv);
@@ -86,9 +85,7 @@ void test_transformation_stuff(NavigationState const *state1, NavigationState co
   //    std::cerr << " ---- \n";
   //
   //    invg1.Print();
-  //    invg1.SetProperties();
   //    invg2.FixZeroes();
-  //    g1.SetProperties();
   //    g1.MultiplyFromRight(invg1);
   //    g1.Print();
 

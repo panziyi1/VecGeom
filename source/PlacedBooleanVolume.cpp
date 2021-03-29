@@ -82,10 +82,6 @@ G4VSolid const *PlacedBooleanVolume<kUnion>::ConvertToGeant4() const
   VPlacedVolume const *left  = GetUnplacedVolume()->GetLeft();
   VPlacedVolume const *right = GetUnplacedVolume()->GetRight();
 
-  if (!left->GetTransformation()->IsIdentity()) {
-    std::cerr << "WARNING : For the moment left transformations are not implemented\n";
-  }
-
   Transformation3D const *rightm = right->GetTransformation();
   G4RotationMatrix *g4rot        = new G4RotationMatrix();
   auto rot                       = rightm->Rotation();
@@ -100,10 +96,6 @@ G4VSolid const *PlacedBooleanVolume<kIntersection>::ConvertToGeant4() const
 {
   VPlacedVolume const *left  = GetUnplacedVolume()->GetLeft();
   VPlacedVolume const *right = GetUnplacedVolume()->GetRight();
-
-  if (!left->GetTransformation()->IsIdentity()) {
-    std::cerr << "WARNING : For the moment left transformations are not implemented\n";
-  }
 
   Transformation3D const *rightm = right->GetTransformation();
   G4RotationMatrix *g4rot        = new G4RotationMatrix();
@@ -120,9 +112,6 @@ G4VSolid const *PlacedBooleanVolume<kSubtraction>::ConvertToGeant4() const
   VPlacedVolume const *left  = GetUnplacedVolume()->GetLeft();
   VPlacedVolume const *right = GetUnplacedVolume()->GetRight();
 
-  if (!left->GetTransformation()->IsIdentity()) {
-    std::cerr << "WARNING : For the moment left transformations are not implemented\n";
-  }
   Transformation3D const *rightm = right->GetTransformation();
   G4RotationMatrix *g4rot        = new G4RotationMatrix();
   return new G4SubtractionSolid(GetLabel(), const_cast<G4VSolid *>(left->ConvertToGeant4()),

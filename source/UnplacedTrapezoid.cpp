@@ -9,7 +9,6 @@
 #include "VecGeom/volumes/UnplacedTrd.h"
 #include "VecGeom/volumes/UnplacedParallelepiped.h"
 #include "VecGeom/management/GeoManager.h"
-#include "VecGeom/management/VolumeFactory.h"
 #include "VecGeom/volumes/PlacedTrapezoid.h"
 #include "VecGeom/base/RNG.h"
 #include "VecGeom/volumes/kernel/shapetypes/TrdTypes.h"

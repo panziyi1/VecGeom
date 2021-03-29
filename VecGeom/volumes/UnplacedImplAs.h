@@ -4,7 +4,6 @@
 
 #include "VecGeom/base/Global.h"
 #include "VecGeom/volumes/UnplacedVolume.h"
-#include "VecGeom/management/VolumeFactory.h"
 #include "VecGeom/volumes/PlacedVolImplHelper.h"
 #include "VecGeom/volumes/SpecializedPlacedVolImplHelper.h"
 #include "VecGeom/volumes/kernel/ImplAsImplementation.h"
@@ -93,30 +92,6 @@ public:
   using StructType = decltype(std::declval<ImplementingUnplaced>().GetStruct());
   VECCORE_ATT_HOST_DEVICE
   StructType GetStruct() const { return fImplPtr->ImplementingUnplaced::GetStruct(); }
-
-private:
-  // select target specialization helpers with SFINAE
-  template <typename IUnplaced, typename ImplementingKernel>
-  VPlacedVolume *changeTypeKeepTransformation(VPlacedVolume const *p) const
-  {
-    auto c = VolumeFactory::ChangeTypeKeepTransformation<SpecializedVolImplHelper, ImplementingKernel>(p);
-    return c;
-  }
-
-  VPlacedVolume *SpecializedVolume(LogicalVolume const *const volume, Transformation3D const *const transformation,
-                                   const TranslationCode trans_code, const RotationCode rot_code,
-                                   VPlacedVolume *const placement = NULL) const override
-  {
-    auto p = fImplPtr->ImplementingUnplaced::SpecializedVolume(volume, transformation, trans_code, rot_code, placement);
-
-    using ImplementingKernel = IndirectImplementation<SUnplacedImplAs<UnplacedBase, ImplementingUnplaced>,
-                                                      typename ImplementingUnplaced::Kernel>;
-
-    // the right function to use will be selected with SFINAE and enable_if
-    return changeTypeKeepTransformation<ImplementingUnplaced, ImplementingKernel>(p);
-    // TODO: original p is no longer needed in principle: delete and deregister from GeoManager
-    // delete p;
-  }
 
   ImplementingUnplaced *fImplPtr;
 };

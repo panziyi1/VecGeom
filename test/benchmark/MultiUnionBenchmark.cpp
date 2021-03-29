@@ -36,7 +36,6 @@ int main(int argc, char *argv[])
     double sizernd = RNG::Instance().uniform(0.8 * sized, 1.2 * sized);
     Transformation3D trans(pos.x(), pos.y(), pos.z(), RNG::Instance().uniform(-180, 180),
                            RNG::Instance().uniform(-180, 180), RNG::Instance().uniform(-180, 180));
-    trans.SetProperties();
     UnplacedBox *box = new UnplacedBox(sizernd, sizernd, sizernd);
     multiunion.AddNode(box, trans);
   }
