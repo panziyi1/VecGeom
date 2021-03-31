@@ -29,13 +29,14 @@ private:
 
 public:
   VECCORE_ATT_HOST_DEVICE
-  UnplacedCutTube() : fCutTube() {}
+  UnplacedCutTube() : fCutTube() { fType = VolumeTypes::kCutTube; }
 
   VECCORE_ATT_HOST_DEVICE
   UnplacedCutTube(Precision const &rmin, Precision const &rmax, Precision const &z, Precision const &sphi,
                   Precision const &dphi, Vector3D<Precision> const &bottomNormal, Vector3D<Precision> const &topNormal)
       : fCutTube(rmin, rmax, z, sphi, dphi, bottomNormal, topNormal)
   {
+    fType = VolumeTypes::kCutTube;
     // Constructor
     if (bottomNormal.z() >= 0 || topNormal.z() <= 0) {
       Print();

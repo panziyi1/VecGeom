@@ -38,6 +38,7 @@ public:
                        Transformation3D const *const transformation)
       : Base(label, logical_volume, transformation)
   {
+    type = VolumeTypes::kParallelepiped;
   }
 
   /// Constructor
@@ -55,6 +56,7 @@ public:
                                           const int child_id)
       : Base(logical_volume, transformation, id, copy_no, child_id)
   {
+    type = VolumeTypes::kParallelepiped;
   }
 
 #endif

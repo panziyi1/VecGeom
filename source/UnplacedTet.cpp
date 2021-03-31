@@ -17,6 +17,7 @@ VECCORE_ATT_HOST_DEVICE
 UnplacedTet::UnplacedTet()
 {
   // default constructor
+  fType            = VolumeTypes::kTet;
   fGlobalConvexity = true;
 }
 
@@ -25,6 +26,7 @@ UnplacedTet::UnplacedTet(const Vector3D<Precision> &p0, const Vector3D<Precision
                          const Vector3D<Precision> &p3)
     : fTet(p0, p1, p2, p3)
 {
+  fType            = VolumeTypes::kTet;
   fGlobalConvexity = true;
 }
 

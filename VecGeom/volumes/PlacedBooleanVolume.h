@@ -37,6 +37,7 @@ public:
                       Transformation3D const *const transformation)
       : Base(label, logicalVolume, transformation)
   {
+    Base::type = VolumeTypes::kBoolean;
   }
 
   PlacedBooleanVolume(LogicalVolume const *const logicalVolume, Transformation3D const *const transformation)
@@ -49,6 +50,7 @@ public:
                                          const int child_id)
       : Base(logicalVolume, transformation, id, copy_no, child_id)
   {
+    Base::type = VolumeTypes::kBoolean;
   }
 #endif
 

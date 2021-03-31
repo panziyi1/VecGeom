@@ -30,6 +30,7 @@ public:
              Transformation3D const *const transformation)
       : VPlacedVolume(label, logical_volume, transformation)
   {
+    type = VolumeTypes::kTube;
   }
 
   PlacedTube(LogicalVolume const *const logical_volume, Transformation3D const *const transformation)
@@ -41,6 +42,7 @@ public:
                                 const int id, const int copy_no, const int child_id)
       : VPlacedVolume(logical_volume, transformation, id, copy_no, child_id)
   {
+    type = VolumeTypes::kTube;
   }
 #endif
   VECCORE_ATT_HOST_DEVICE

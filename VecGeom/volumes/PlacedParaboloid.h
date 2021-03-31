@@ -41,6 +41,7 @@ public:
                    Transformation3D const *const transformation)
       : Base(label, logicalVolume, transformation)
   {
+    type = VolumeTypes::kParaboloid;
   }
 
   /// Constructor
@@ -57,6 +58,7 @@ public:
                                       const int child_id)
       : Base(logicalVolume, transformation, id, copy_no, child_id)
   {
+    type = VolumeTypes::kParaboloid;
   }
 #endif
   /// Destructor

@@ -40,6 +40,7 @@ public:
                     Transformation3D const *const transformation)
       : Base(label, logicalVolume, transformation)
   {
+    type = VolumeTypes::kTessellated;
   }
 
   /// Constructor
@@ -55,6 +56,7 @@ public:
                                const int id)
       : Base(logicalVolume, transformation, id)
   {
+    type = VolumeTypes::kTessellated;
   }
 #endif
 

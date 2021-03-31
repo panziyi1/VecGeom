@@ -24,6 +24,7 @@ VECCORE_ATT_HOST_DEVICE
 UnplacedOrb::UnplacedOrb() : fCubicVolume(0), fSurfaceArea(0), fEpsilon(2.e-11), fRTolerance(0.)
 {
   // default constructor
+  fType            = VolumeTypes::kOrb;
   fGlobalConvexity = true;
   SetRadialTolerance();
 }
@@ -33,6 +34,7 @@ UnplacedOrb::UnplacedOrb(const Precision r) : fOrb(r), fEpsilon(2.e-11)
 {
   fCubicVolume     = (4 * kPi / 3) * fOrb.fR * fOrb.fR * fOrb.fR;
   fSurfaceArea     = (4 * kPi) * fOrb.fR * fOrb.fR;
+  fType            = VolumeTypes::kOrb;
   fGlobalConvexity = true;
   SetRadialTolerance();
 }

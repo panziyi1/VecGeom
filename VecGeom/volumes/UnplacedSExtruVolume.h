@@ -28,10 +28,14 @@ public:
   UnplacedSExtruVolume(int nvertices, Precision *x, Precision *y, Precision lowerz, Precision upperz)
       : fPolyShell(nvertices, x, y, lowerz, upperz)
   {
+    fType = VolumeTypes::kSExtru;
   }
 
   VECCORE_ATT_HOST_DEVICE
-  UnplacedSExtruVolume(UnplacedSExtruVolume const &other) : fPolyShell(other.fPolyShell) {}
+  UnplacedSExtruVolume(UnplacedSExtruVolume const &other) : fPolyShell(other.fPolyShell)
+  {
+    fType = VolumeTypes::kSExtru;
+  }
 
   VECCORE_ATT_HOST_DEVICE
   PolygonalShell const &GetStruct() const { return fPolyShell; }

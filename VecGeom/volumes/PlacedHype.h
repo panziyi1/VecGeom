@@ -31,6 +31,7 @@ public:
              Transformation3D const *const transformation)
       : VPlacedVolume(label, logicalVolume, transformation)
   {
+    type = VolumeTypes::kHype;
   }
 
   PlacedHype(LogicalVolume const *const logicalVolume, Transformation3D const *const transformation)
@@ -42,6 +43,7 @@ public:
                                 const int id, const int copy_no, const int child_id)
       : VPlacedVolume(logicalVolume, transformation, id, copy_no, child_id)
   {
+    type = VolumeTypes::kHype;
   }
 #endif
 

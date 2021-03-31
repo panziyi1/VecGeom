@@ -64,6 +64,7 @@ public:
                  Precision const &_dphi)
       : fTorus(_rmin, _rmax, _rtor, _sphi, _dphi), fPhiWedge(_dphi, _sphi), fBoundingTube(0, 1, 1, 0, _dphi)
   {
+    fType = VolumeTypes::kTorus2;
     calculateCached();
 
     fBoundingTube = GenericUnplacedTube(fTorus.fRtor - fTorus.fRmax - kTolerance,

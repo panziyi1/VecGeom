@@ -19,6 +19,7 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 VECCORE_ATT_HOST_DEVICE
 UnplacedEllipticalTube::UnplacedEllipticalTube(Precision dx, Precision dy, Precision dz)
 {
+  fType = VolumeTypes::kEllipticalTube;
   SetParameters(dx, dy, dz);
   fGlobalConvexity = true;
 }

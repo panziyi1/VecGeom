@@ -32,7 +32,7 @@ UnplacedSphere::UnplacedSphere(Precision pRmin, Precision pRmax, Precision pSPhi
                                Precision pDTheta)
     : fSphere(pRmin, pRmax, pSPhi, pDPhi, pSTheta, pDTheta)
 {
-
+  fType = VolumeTypes::kSphere;
   DetectConvexity();
 }
 

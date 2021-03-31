@@ -49,6 +49,7 @@ public:
                          const Precision phi)
       : fPara(dimensions, alpha, theta, phi)
   {
+    fType            = VolumeTypes::kParallelepiped;
     fGlobalConvexity = true;
   }
 
@@ -64,12 +65,17 @@ public:
                          const Precision theta, const Precision phi)
       : fPara(dx, dy, dz, alpha, theta, phi)
   {
+    fType            = VolumeTypes::kParallelepiped;
     fGlobalConvexity = true;
   }
 
   /// Default constructor
   VECCORE_ATT_HOST_DEVICE
-  UnplacedParallelepiped() : fPara(0., 0., 0., 0., 0., 0.) { fGlobalConvexity = true; }
+  UnplacedParallelepiped() : fPara(0., 0., 0., 0., 0., 0.)
+  {
+    fType            = VolumeTypes::kParallelepiped;
+    fGlobalConvexity = true;
+  }
 
   /// Getter for the structure storing parallepiped data.
   VECCORE_ATT_HOST_DEVICE

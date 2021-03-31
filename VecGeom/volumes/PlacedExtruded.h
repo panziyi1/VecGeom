@@ -28,6 +28,7 @@ public:
                  Transformation3D const *const transformation)
       : Base(label, logicalVolume, transformation)
   {
+    type = VolumeTypes::kExtruded;
   }
 
   PlacedExtruded(LogicalVolume const *const logicalVolume, Transformation3D const *const transformation)
@@ -39,6 +40,7 @@ public:
                             const int id)
       : Base(logicalVolume, transformation, id)
   {
+    type = VolumeTypes::kExtruded;
   }
 #endif
 

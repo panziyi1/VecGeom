@@ -56,6 +56,7 @@ public:
                const Precision dz)
       : fHype(rMin, rMax, stIn, stOut, dz)
   {
+    fType = kHype;
     DetectConvexity();
   }
 

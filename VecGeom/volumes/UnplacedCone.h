@@ -51,6 +51,7 @@ public:
                Precision deltaphi)
       : fCone(rmin1, rmax1, rmin2, rmax2, dz, phimin, deltaphi)
   {
+    fType = VolumeTypes::kCone;
     DetectConvexity();
   }
 
@@ -58,6 +59,7 @@ public:
   UnplacedCone(Precision rmin, Precision rmax, Precision dz, Precision phimin, Precision deltaphi)
       : fCone(rmin, rmax, rmin, rmax, dz, phimin, deltaphi)
   {
+    fType = VolumeTypes::kCone;
     DetectConvexity();
   }
 

@@ -27,6 +27,7 @@ public:
                Transformation3D const *const transformation)
       : Base(label, logical_volume, transformation)
   {
+    type = VolumeTypes::kTorus2;
   }
 
   PlacedTorus2(LogicalVolume const *const logical_volume, Transformation3D const *const transformation)
@@ -39,6 +40,7 @@ public:
                const int copy_no, const int child_id)
       : Base(logical_volume, transformation, id, copy_no, child_id)
   {
+    type = VolumeTypes::kTorus2;
   }
 #endif
   VECCORE_ATT_HOST_DEVICE

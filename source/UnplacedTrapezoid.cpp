@@ -128,6 +128,7 @@ UnplacedTrapezoid *GetSpecialized(const Precision dz, const Precision theta, con
 VECCORE_ATT_HOST_DEVICE
 UnplacedTrapezoid::UnplacedTrapezoid(TrapCorners const corners) : fTrap()
 {
+  fType = VolumeTypes::kTrapezoid;
   // fill data members
   fromCornersToParameters(corners);
 }
@@ -148,6 +149,7 @@ UnplacedTrapezoid::UnplacedTrapezoid(Precision dx1, Precision dx2, Precision dy,
     : fTrap(dz, 0., 0., dy, dx1, dx1, 0., dy, dx2, dx2, 0.)
 {
   MakePlanes();
+  fType            = VolumeTypes::kTrapezoid;
   fGlobalConvexity = true;
 }
 
@@ -155,6 +157,7 @@ UnplacedTrapezoid::UnplacedTrapezoid(Precision dx1, Precision dx2, Precision dy1
     : UnplacedTrapezoid(dz, 0., 0., dy1, dx1, dx1, 0., dy2, dx2, dx2, 0.)
 {
   MakePlanes();
+  fType            = VolumeTypes::kTrapezoid;
   fGlobalConvexity = true;
 }
 
@@ -166,6 +169,7 @@ UnplacedTrapezoid::UnplacedTrapezoid(Precision dx, Precision dy, Precision dz, P
   fTrap.fTanAlpha1 = std::tan(alpha);
   fTrap.fTanAlpha2 = fTrap.fTanAlpha1;
   MakePlanes();
+  fType            = VolumeTypes::kTrapezoid;
   fGlobalConvexity = true;
 }
 VECCORE_ATT_HOST_DEVICE
@@ -181,6 +185,7 @@ UnplacedTrapezoid::UnplacedTrapezoid(Precision xbox, Precision ybox, Precision z
   }
 
   MakePlanes();
+  fType            = VolumeTypes::kTrapezoid;
   fGlobalConvexity = true;
 }
 

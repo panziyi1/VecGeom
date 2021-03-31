@@ -34,6 +34,7 @@ public:
   UnplacedPolycone(Precision rmin1, Precision rmax1, Precision rmin2, Precision rmax2, Precision dz, Precision phistart,
                    Precision deltaphi)
   {
+    fType  = VolumeTypes::kPolycone;
     int Nz = 2;
     Precision rMin[2];
     Precision rMax[2];
@@ -54,6 +55,7 @@ public:
   // Constructor needed by specialization when Polycone becomes Tube
   UnplacedPolycone(Precision rmin, Precision rmax, Precision dz, Precision phistart, Precision deltaphi)
   {
+    fType  = VolumeTypes::kPolycone;
     int Nz = 2;
     Precision rMin[2];
     Precision rMax[2];
@@ -77,6 +79,7 @@ public:
                    Precision const *rmax)
   {
     // init internal members
+    fType                        = VolumeTypes::kPolycone;
     fPolycone.fContinuityOverAll = true;
     fPolycone.fConvexityPossible = true;
     fPolycone.fEqualRmax         = true;

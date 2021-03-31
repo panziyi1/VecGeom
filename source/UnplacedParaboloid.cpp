@@ -18,6 +18,7 @@ VECCORE_ATT_HOST_DEVICE
 UnplacedParaboloid::UnplacedParaboloid() : fCubicVolume(0), fSurfaceArea(0)
 {
   // default constructor
+  fType            = VolumeTypes::kParaboloid;
   fGlobalConvexity = true;
 }
 
@@ -27,6 +28,7 @@ UnplacedParaboloid::UnplacedParaboloid(const Precision rlo, const Precision rhi,
 {
   CalcCapacity();
   CalcSurfaceArea();
+  fType            = VolumeTypes::kParaboloid;
   fGlobalConvexity = true;
 }
 

@@ -30,6 +30,7 @@ public:
                         Transformation3D const *const transformation)
       : Base(label, logicalVolume, transformation)
   {
+    type = VolumeTypes::kGenericPolycone;
   }
 
   PlacedGenericPolycone(LogicalVolume const *const logicalVolume, Transformation3D const *const transformation)
@@ -42,6 +43,7 @@ public:
                                            const int copy_no, const int child_id)
       : Base(logicalVolume, transformation, id, copy_no, child_id)
   {
+    type = VolumeTypes::kGenericPolycone;
   }
 #endif
   VECCORE_ATT_HOST_DEVICE

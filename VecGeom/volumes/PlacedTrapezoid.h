@@ -37,11 +37,13 @@ public:
                   Transformation3D const *const transformation)
       : Base(label, logicalVolume, transformation)
   {
+    type = VolumeTypes::kTrapezoid;
   }
 
   PlacedTrapezoid(LogicalVolume const *const logicalVolume, Transformation3D const *const transformation)
       : PlacedTrapezoid("", logicalVolume, transformation)
   {
+    type = VolumeTypes::kTrapezoid;
   }
 
 #else

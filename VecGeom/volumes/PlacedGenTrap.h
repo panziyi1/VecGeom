@@ -39,6 +39,7 @@ public:
                 Transformation3D const *const transformation)
       : Base(label, logicalVolume, transformation)
   {
+    type = VolumeTypes::kGenTrap;
   }
 
   /** @brief PlacedGenTrap constructor
@@ -63,6 +64,7 @@ public:
                                    const int child_id)
       : Base(logicalVolume, transformation, id, copy_no, child_id)
   {
+    type = VolumeTypes::kGenTrap;
   }
 
 #endif

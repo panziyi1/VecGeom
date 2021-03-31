@@ -34,7 +34,7 @@ public:
 public:
   /** @brief UnplacedGenTrap dummy constructor */
   VECCORE_ATT_HOST_DEVICE
-  UnplacedGenTrap() : fGenTrap() {}
+  UnplacedGenTrap() : fGenTrap() { fType = VolumeTypes::kGenTrap; }
 
   /** @brief UnplacedGenTrap constructor
    * @param verticesx X positions of vertices in array form
@@ -45,6 +45,7 @@ public:
   UnplacedGenTrap(const Precision verticesx[], const Precision verticesy[], Precision halfzheight)
       : fGenTrap(verticesx, verticesy, halfzheight)
   {
+    fType            = VolumeTypes::kGenTrap;
     fGlobalConvexity = !fGenTrap.fIsTwisted;
   }
 

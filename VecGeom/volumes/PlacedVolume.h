@@ -10,6 +10,7 @@
 
 #include "VecGeom/base/Global.h"
 #include "VecGeom/volumes/LogicalVolume.h"
+#include "VecGeom/volumes/VolumeTypes.h"
 #include <string>
 
 #ifdef VECGEOM_GEANT4
@@ -66,6 +67,7 @@ private:
   static unsigned int g_id_count; ///< Static instance counter
 
 protected:
+  VolumeTypes type = VolumeTypes::kUnknown;
   LogicalVolume const *logical_volume_; ///< Pointer to positioned logical volume
 #ifdef VECGEOM_INPLACE_TRANSFORMATIONS
   Transformation3D fTransformation; ///< The positioning transformation
@@ -144,6 +146,10 @@ public:
 
   /// Returns name/label.
   std::string const &GetLabel() const { return *label_; }
+
+  /// Returns the type of this volume.
+  VECCORE_ATT_HOST_DEVICE
+  VolumeTypes GetType() const { return type; }
 
   /// Returns underlying logical volume.
   VECCORE_ATT_HOST_DEVICE

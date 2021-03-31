@@ -192,6 +192,7 @@ UnplacedPolycone::UnplacedPolycone(Precision phiStart, // initial phi starting a
                                    Precision const *z) // z coordinate of these corners
 
 {
+  fType               = VolumeTypes::kPolycone;
   fPolycone.fStartPhi = phiStart;
   fPolycone.fDeltaPhi = phiStart + phiTotal;
 

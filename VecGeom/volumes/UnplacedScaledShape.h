@@ -58,13 +58,18 @@ public:
 public:
   /// Dummy ctor
   VECCORE_ATT_HOST_DEVICE
-  UnplacedScaledShape() : fScaled() { fGlobalConvexity = fScaled.fPlaced->GetUnplacedVolume()->IsConvex(); }
+  UnplacedScaledShape() : fScaled()
+  {
+    fType            = VolumeTypes::kScaledShape;
+    fGlobalConvexity = fScaled.fPlaced->GetUnplacedVolume()->IsConvex();
+  }
 
   /// Constructor based on placed volume
   VECCORE_ATT_HOST_DEVICE
   UnplacedScaledShape(VPlacedVolume const *placed, Precision sx, Precision sy, Precision sz)
       : fScaled(placed, sx, sy, sz)
   {
+    fType            = VolumeTypes::kScaledShape;
     fGlobalConvexity = fScaled.fPlaced->GetUnplacedVolume()->IsConvex();
   }
 
@@ -75,6 +80,7 @@ public:
       : fScaled(placed, sx, sy, sz)
   {
     /* assert(placed->GetTransformation()->IsIdentity());*/
+    fType            = VolumeTypes::kScaledShape;
     fGlobalConvexity = globalConvexity;
     /* We must have
          assert(globalConvexity == fPlaced->GetUnplacedVolume()->IsConvex())
@@ -94,6 +100,7 @@ public:
     // Hopefully we don't need to create a logical volume
     LogicalVolume *lvol = new LogicalVolume("", shape);
     fScaled.fPlaced     = lvol->Place();
+    fType               = VolumeTypes::kScaledShape;
     fGlobalConvexity    = fScaled.fPlaced->GetUnplacedVolume()->IsConvex();
   }
 #endif
@@ -104,6 +111,7 @@ public:
   {
     fScaled.fPlaced  = other.fScaled.fPlaced->GetLogicalVolume()->Place();
     fScaled.fScale   = other.fScaled.fScale;
+    fType            = VolumeTypes::kScaledShape;
     fGlobalConvexity = other.fGlobalConvexity;
   }
 
@@ -114,6 +122,7 @@ public:
     if (&other != this) {
       fScaled.fPlaced  = other.fScaled.fPlaced->GetLogicalVolume()->Place();
       fScaled.fScale   = other.fScaled.fScale;
+      fType            = VolumeTypes::kScaledShape;
       fGlobalConvexity = other.fGlobalConvexity;
     }
     return *this;

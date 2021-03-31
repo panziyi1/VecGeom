@@ -51,6 +51,7 @@ class UnplacedBooleanVolume : public LoopUnplacedVolumeImplHelper<BooleanImpleme
 
 public:
   BooleanStruct fBoolean;
+  using LoopUnplacedVolumeImplHelper<BooleanImplementation<Op>>::fType;
   using LoopUnplacedVolumeImplHelper<BooleanImplementation<Op>>::fGlobalConvexity;
 
   // the constructor
@@ -58,6 +59,7 @@ public:
   UnplacedBooleanVolume(BooleanOperation op, VPlacedVolume const *left, VPlacedVolume const *right)
       : fBoolean(op, left, right)
   {
+    fType            = VolumeTypes::kBoolean;
     fGlobalConvexity = false;
 #ifndef VECCORE_CUDA
     if (fBoolean.fLeftVolume->IsAssembly() || fBoolean.fRightVolume->IsAssembly()) {

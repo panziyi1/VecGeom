@@ -56,6 +56,7 @@ public:
   UnplacedTet(const Precision p0[], const Precision p1[], const Precision p2[], const Precision p3[])
       : fTet(p0, p1, p2, p3)
   {
+    fType            = VolumeTypes::kTet;
     fGlobalConvexity = true;
   }
 

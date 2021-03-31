@@ -19,6 +19,7 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 VECCORE_ATT_HOST_DEVICE
 UnplacedEllipticalCone::UnplacedEllipticalCone(Precision a, Precision b, Precision h, Precision zcut)
 {
+  fType = VolumeTypes::kEllipticalCone;
   SetParameters(a, b, h, zcut);
   fGlobalConvexity = true;
 }

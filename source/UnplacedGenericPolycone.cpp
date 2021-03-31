@@ -25,6 +25,7 @@ UnplacedGenericPolycone::UnplacedGenericPolycone(Precision phiStart, // initial 
                                                  Precision const *r, // r coordinate of these corners
                                                  Precision const *z)
 {
+  fType            = VolumeTypes::kGenericPolycone;
   fGlobalConvexity = false;
   fSPhi            = phiStart;
   fDPhi            = phiTotal;

@@ -25,20 +25,24 @@ public:
   using Kernel = BoxImplementation;
   UnplacedBox(Vector3D<Precision> const &dim) : fBox(dim)
   {
+    fType            = VolumeTypes::kBox;
     fGlobalConvexity = true;
   }
   UnplacedBox(char const *, Vector3D<Precision> const &dim) : fBox(dim)
   {
+    fType            = VolumeTypes::kBox;
     fGlobalConvexity = true;
   }
 
   VECCORE_ATT_HOST_DEVICE
   UnplacedBox(const Precision dx, const Precision dy, const Precision dz) : fBox(dx, dy, dz)
   {
+    fType            = VolumeTypes::kBox;
     fGlobalConvexity = true;
   }
   UnplacedBox(char const *, const Precision dx, const Precision dy, const Precision dz) : fBox(dx, dy, dz)
   {
+    fType            = VolumeTypes::kBox;
     fGlobalConvexity = true;
   }
 

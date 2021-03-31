@@ -33,6 +33,7 @@ public:
                  Transformation3D const *const transformation)
       : VPlacedVolume(label, logicalVolume, transformation)
   {
+    type = VolumeTypes::kPolycone;
   }
 
   PlacedPolycone(LogicalVolume const *const logicalVolume, Transformation3D const *const transformation)
@@ -45,6 +46,7 @@ public:
                                     const int child_id)
       : VPlacedVolume(logicalVolume, transformation, id, copy_no, child_id)
   {
+    type = VolumeTypes::kPolycone;
   }
 #endif
 

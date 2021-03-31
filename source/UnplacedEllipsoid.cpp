@@ -19,12 +19,14 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 VECCORE_ATT_HOST_DEVICE
 UnplacedEllipsoid::UnplacedEllipsoid()
 {
+  fType            = VolumeTypes::kEllipsoid;
   fGlobalConvexity = true;
 }
 
 VECCORE_ATT_HOST_DEVICE
 UnplacedEllipsoid::UnplacedEllipsoid(Precision dx, Precision dy, Precision dz, Precision zBottomCut, Precision zTopCut)
 {
+  fType                  = VolumeTypes::kEllipsoid;
   fGlobalConvexity       = true;
   fEllipsoid.fDx         = dx;
   fEllipsoid.fDy         = dy;

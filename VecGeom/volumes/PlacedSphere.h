@@ -35,6 +35,7 @@ public:
                Transformation3D const *const transformation)
       : Base(label, logical_volume, transformation)
   {
+    type = VolumeTypes::kSphere;
   }
 
   PlacedSphere(LogicalVolume const *const logical_volume, Transformation3D const *const transformation)
@@ -49,6 +50,7 @@ public:
                                   const int child_id)
       : Base(logical_volume, transformation, id, copy_no, child_id)
   {
+    type = VolumeTypes::kSphere;
   }
 
 #endif

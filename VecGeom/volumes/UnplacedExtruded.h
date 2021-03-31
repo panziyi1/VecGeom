@@ -31,13 +31,14 @@ private:
 public:
   /** @brief Dummy constructor */
   VECCORE_ATT_HOST_DEVICE
-  UnplacedExtruded() : fXtru() {}
+  UnplacedExtruded() : fXtru() { fType = VolumeTypes::kExtruded; }
 
   /** @brief Constructor providing polygone vertices and sections */
   VECCORE_ATT_HOST_DEVICE
   UnplacedExtruded(int nvertices, XtruVertex2 const *vertices, int nsections, XtruSection const *sections)
       : fXtru(nvertices, vertices, nsections, sections)
   {
+    fType            = VolumeTypes::kExtruded;
     fGlobalConvexity = (nsections == 2) && fXtru.IsConvexPolygon();
   }
 
@@ -45,6 +46,7 @@ public:
   UnplacedExtruded(int nvertices, const Precision *x, const Precision *y, Precision zmin, Precision zmax)
       : fXtru(nvertices, x, y, zmin, zmax)
   {
+    fType            = VolumeTypes::kExtruded;
     fGlobalConvexity = fXtru.IsConvexPolygon();
   }
 

@@ -12,6 +12,7 @@
 #include "VecGeom/base/Global.h"
 #include "VecGeom/base/Transformation3D.h"
 #include "VecGeom/base/SOA3D.h"
+#include "VecGeom/volumes/VolumeTypes.h"
 #include <string>
 #include <ostream>
 
@@ -42,6 +43,7 @@ private:
   friend class CudaManager;
 
 protected:
+  VolumeTypes fType = VolumeTypes::kUnknown;
   bool fGlobalConvexity;
   bool fIsAssembly = false; // indicates if this volume is an assembly
 
@@ -51,6 +53,10 @@ public:
 
   VECCORE_ATT_HOST_DEVICE
   virtual ~VUnplacedVolume() {}
+
+  /// Returns the type of this volume.
+  VECCORE_ATT_HOST_DEVICE
+  VolumeTypes GetType() const { return fType; }
 
   // ---------------- Contains --------------------------------------------------------------------
 

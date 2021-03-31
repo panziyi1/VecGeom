@@ -21,6 +21,7 @@ UnplacedPolyhedron::UnplacedPolyhedron(const int sideCount, const int zPlaneCoun
                                        Precision const rMin[], Precision const rMax[])
     : UnplacedPolyhedron(0., kTwoPi, sideCount, zPlaneCount, zPlanes, rMin, rMax)
 {
+  fType = VolumeTypes::kPolyhedron;
   DetectConvexity();
 }
 
@@ -30,6 +31,7 @@ UnplacedPolyhedron::UnplacedPolyhedron(Precision phiStart, Precision phiDelta, c
                                        Precision const rMax[])
     : fPoly(phiStart, phiDelta, sideCount, zPlaneCount, zPlanes, rMin, rMax)
 {
+  fType = VolumeTypes::kPolyhedron;
   DetectConvexity();
 }
 
@@ -40,6 +42,7 @@ UnplacedPolyhedron::UnplacedPolyhedron(Precision phiStart, Precision phiDelta, c
                                        )
     : fPoly(phiStart, phiDelta, sideCount, verticesCount, r, z)
 {
+  fType = VolumeTypes::kPolyhedron;
   DetectConvexity();
 }
 

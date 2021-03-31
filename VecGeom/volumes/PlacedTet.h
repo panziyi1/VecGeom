@@ -41,6 +41,7 @@ public:
             Transformation3D const *const transformation)
       : Base(label, logicalVolume, transformation)
   {
+    type = VolumeTypes::kTet;
   }
 
   /// Constructor
@@ -56,6 +57,7 @@ public:
                                const int id, const int copy_no, const int child_id)
       : Base(logicalVolume, transformation, id, copy_no, child_id)
   {
+    type = VolumeTypes::kTet;
   }
 #endif
   /// Destructor

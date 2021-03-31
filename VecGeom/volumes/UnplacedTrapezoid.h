@@ -57,13 +57,18 @@ public:
                     const Precision dx3, const Precision dx4, const Precision Alpha2)
       : fTrap(dz, theta, phi, dy1, dx1, dx2, std::tan(Alpha1), dy2, dx3, dx4, std::tan(Alpha2))
   {
+    fType            = VolumeTypes::kTrapezoid;
     fGlobalConvexity = true;
     MakePlanes();
   }
 
   // default constructor
   VECCORE_ATT_HOST_DEVICE
-  UnplacedTrapezoid() : fTrap(0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.) { fGlobalConvexity = true; }
+  UnplacedTrapezoid() : fTrap(0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.)
+  {
+    fType            = VolumeTypes::kTrapezoid;
+    fGlobalConvexity = true;
+  }
 
   /// \brief Fast constructor: all parameters from one array
   VECCORE_ATT_HOST_DEVICE
