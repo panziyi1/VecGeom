@@ -72,6 +72,10 @@ public:
     return static_cast<UnplacedTrd const *>(GetLogicalVolume()->GetUnplacedVolume());
   }
 
+  /// Getter for the unplaced struct
+  VECCORE_ATT_HOST_DEVICE
+  TrdStruct<Precision> const *GetUnplacedStruct() const { return &GetUnplacedVolume()->GetStruct(); }
+
   /// Getter for half-length along x at -dz
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE

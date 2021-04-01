@@ -48,6 +48,17 @@ public:
   VECCORE_ATT_HOST_DEVICE
   virtual ~PlacedTube() {}
 
+  /// Getter for unplaced volume
+  VECCORE_ATT_HOST_DEVICE
+  UnplacedTube const *GetUnplacedVolume() const
+  {
+    return static_cast<UnplacedTube const *>(GetLogicalVolume()->GetUnplacedVolume());
+  }
+
+  /// Getter for the unplaced struct
+  VECCORE_ATT_HOST_DEVICE
+  TubeStruct<Precision> const *GetUnplacedStruct() const { return &GetUnplacedVolume()->GetStruct(); }
+
 #ifndef VECCORE_CUDA
   virtual VPlacedVolume const *ConvertToUnspecialized() const override;
 
