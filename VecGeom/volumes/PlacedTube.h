@@ -23,9 +23,8 @@ class PlacedTube : public VPlacedVolume {
   // some common functionality for all placed tubes
   // like constructors
 public:
-  using VPlacedVolume::VPlacedVolume;
-
 #ifndef VECCORE_CUDA
+  using VPlacedVolume::VPlacedVolume;
   PlacedTube(char const *const label, LogicalVolume const *const logical_volume,
              Transformation3D const *const transformation)
       : VPlacedVolume(label, logical_volume, transformation)

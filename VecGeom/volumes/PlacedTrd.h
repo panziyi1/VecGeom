@@ -31,8 +31,8 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 class PlacedTrd : public VPlacedVolume {
 
 public:
-  using VPlacedVolume::VPlacedVolume;
 #ifndef VECCORE_CUDA
+  using VPlacedVolume::VPlacedVolume;
   /// Constructor
   /// @param label Name of logical volume.
   /// @param logicalVolume The logical volume to be positioned.
