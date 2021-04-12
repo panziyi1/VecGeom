@@ -119,7 +119,6 @@ int visitAllPlacedVolumesPassNavIndex(VPlacedVolume const *currentvolume, Visito
   if (currentvolume != NULL) {
     state->Push(currentvolume);
     visitor->apply(state, nav_ind);
-    //printf(" %i: ", nav_ind); state->Print();
     auto ierr = visitor->GetError();
     if (ierr) {
       printf("=== EEE === TestNavIndex: %s\n", errcodes[ierr]);

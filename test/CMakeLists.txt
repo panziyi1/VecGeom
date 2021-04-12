@@ -133,6 +133,7 @@ if(VECGEOM_ROOT)
     globalbenchmarks/NavigationKernelBenchmarker.cpp
     globalbenchmarks/TraceTrack.cpp
     globalbenchmarks/XRayBenchmarkFromROOTFile.cpp
+    globalbenchmarks/check_parser.cpp
     # ???
     ${PROJECT_SOURCE_DIR}/services/NavigationSpecializerTest.cpp
     ${PROJECT_SOURCE_DIR}/services/LibraryGenerator.cpp)
@@ -144,6 +145,11 @@ if(VECGEOM_ROOT)
       root/CompareDistances.cpp
       root/GenerateSurfacePoints.cpp
       shape_tester/shapeDebug.cpp)
+
+    if(GDML)
+      list(APPEND TEST_EXECUTABLES_ROOT
+         globalbenchmarks/XRayBenchmarkVecGeomParser.cpp)
+    endif()
   endif()
 
   if(VECGEOM_EMBREE)

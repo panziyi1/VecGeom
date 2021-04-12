@@ -111,7 +111,6 @@ int visitAllPlacedVolumesPassNavIndex(VPlacedVolume const *currentvolume, Visito
   if (currentvolume != NULL) {
     state->Push(currentvolume);
     visitor->apply(state, nav_ind);
-    //printf(" %i: ", nav_ind); state->Print();
     auto ierr = visitor->GetError();
     if (ierr) {
       printf("=== EEE === TestNavIndex: %s\n", errcodes[ierr]);
@@ -166,21 +165,27 @@ int main(int argc, char *argv[])
   Stopwatch timer;
   // Try to open the input file
 
-  constexpr bool validate_xml_schema = false;
   GeoManager::Instance().SetTransformationCacheDepth(max_depth);
 
   if (use_root) {
+#ifdef VECGEOM_ROOT
     // use Root available from VecGeom
     std::cout << "RootGeoManager parsing: Loading from GDML at "
 	      << gdml_name << std::endl;
     vecgeom::RootGeoManager::Instance().set_verbose(0);
     vecgeom::RootGeoManager::Instance().LoadRootGeometry(gdml_name.c_str());
+#else
+    std::cerr<<"*** ERROR: Root GDML parsing requested on a ROOT=ON build configuration.\n";
+#endif
   }
   else {
+#ifdef VECGEOM_GDML
     std::cout << "VecGeom parsing: Loading from GDML at "
 	      << gdml_name << std::endl;
+    constexpr bool validate_xml_schema = false;
     auto load = vgdml::Frontend::Load(gdml_name.c_str(), validate_xml_schema);
     if (!load) return 2;
+#endif
   }
 
   auto world = GeoManager::Instance().GetWorld();

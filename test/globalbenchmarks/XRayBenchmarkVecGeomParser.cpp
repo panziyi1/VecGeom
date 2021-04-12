@@ -1,5 +1,5 @@
 /*
- * XRayBenchmarkFromROOTFile.cpp
+ * XRayBenchmarkVecGeomParser.cpp
  *
  * this benchmark performs an X-Ray scan of a (logical volume
  * in a) detector
@@ -10,6 +10,9 @@
 
 #include "VecGeom/management/RootGeoManager.h"
 #include "VecGeom/volumes/LogicalVolume.h"
+#ifdef VECGEOM_GDML
+  #include "Frontend.h"
+#endif
 
 #include "VecGeom/base/Global.h"
 #include "VecGeom/base/Vector3D.h"
@@ -576,17 +579,28 @@ int main(int argc, char *argv[])
   double pixel_axis  = 1.;
 
   if (argc < 5) {
-    std::cerr << std::endl;
-    std::cerr << "Need to give rootfile, volumename, axis and number of axis\n" << std::endl;
-    std::cerr << "USAGE : ./XRayBenchmarkFromROOTFile [rootfile] [VolumeName] [ViewDirection(Axis)] "
-              << "[NPixelsWidth(OutputImageSize)] [--novoxel(Default:voxel)]" << std::endl;
-    std::cerr << "  ex) ./XRayBenchmarkFromROOTFile cms2018.root BSCTrap y 100" << std::endl;
-    std::cerr << "      ./XRayBenchmarkFromROOTFile cms2018.root PLT z 500 --vecgeom --novoxel\n\n";
+    std::cout << std::endl;
+    std::cout << "Need to give rootfile, axis and pixel_width\n\n";
+    std::cout << "USAGE : ./XRayBenchmarkVecGeomParser <gdmlfile> <testVolume> <x|y|z> <PixelWidth(OutputImageSize)> "
+	      << "[--novoxel(Default:voxel)] [--noassembly] [--trackverbose] [--tolevel LEVEL]\n\n";
+    std::cout << "  ex) ./XRayBenchmarkVecGeomParser cms2018.root y 100" << std::endl;
+    std::cout << "      ./XRayBenchmarkVecGeomParser cms2018.root z 500 --novoxel\n\n";
     return 1;
   }
 
-  TGeoManager::Import(argv[1]);
+  //===== diff from original
+  //TGeoManager::Import(argv[1]);
+  constexpr bool validate_xml_schema = false;
+  vgdml::Frontend::Load(argv[1], validate_xml_schema);
   std::string testvolume(argv[2]);
+
+  // Exporting to ROOT file
+  RootGeoManager::Instance().ExportToROOTGeometry(GeoManager::Instance().GetWorld(), "vgdml2Root.root");
+  // Now try to read back in.  This is needed to make comparisons to VecGeom easily,
+  // since it builds VecGeom geometry based on the ROOT geometry and its TGeoNodes.
+  RootGeoManager::Instance().set_verbose(0);
+  RootGeoManager::Instance().LoadRootGeometry("vgdml2Root.root");
+  //===== end of diff from original
 
   if (strcmp(argv[3], "x") == 0)
     axis = 1;
@@ -631,7 +645,7 @@ int main(int argc, char *argv[])
       found++;
       foundvolume = vol;
 
-      std::cerr << "(" << i << ")found matching volume " << foundvolume->GetName() << " of type "
+      std::cerr << "(" << i << ") found matching volume " << foundvolume->GetName() << " of type "
                 << foundvolume->GetShape()->ClassName() << "\n";
     }
   }
@@ -762,7 +776,7 @@ int main(int argc, char *argv[])
       if (data_size_x * data_size_y > 1E7L) {
         pixel_width /= 2;
         std::cerr << data_size_x * data_size_y << "\n";
-        std::cerr << "warning: image to big " << pixel_width << " " << pixel_axis << "\n";
+        std::cerr << "warning: image too big " << pixel_width << " " << pixel_axis << "\n";
       } else {
         std::cerr << "size ok " << data_size_x * data_size_y << "\n";
       }
@@ -802,7 +816,7 @@ int main(int argc, char *argv[])
 
     // Make bitmap file; generate filename
     std::stringstream imagenamebase;
-    imagenamebase << "volumeImage_" << testvolume;
+    imagenamebase << "vgdmlXRay_" << testvolume;
     if (axis == 1) imagenamebase << "_x";
     if (axis == 2) imagenamebase << "_y";
     if (axis == 3) imagenamebase << "_z";
@@ -848,8 +862,7 @@ int main(int argc, char *argv[])
     // RootGeoManager::Instance().set_verbose(true);
     RootGeoManager::Instance().SetFlattenAssemblies(!assemblies);
     RootGeoManager::Instance().LoadRootGeometry();
-    std::cout << "Detector loaded "
-              << "\n";
+    std::cout << "Detector loaded\n";
     ABBoxManager::Instance().InitABBoxesForCompleteGeometry();
     std::cout << "voxelized "
               << "\n";
