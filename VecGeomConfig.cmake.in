@@ -38,6 +38,12 @@ endif()
 # To be reviewed - Geant4 may only be for testing/benchmarking
 set(VECGEOM_GEANT4 @VECGEOM_GEANT4@)
 
+# To be reviewed - ROOT may only be for testing/benchmarking
+set(VecGeom_ROOT_FOUND @VECGEOM_ROOT@)
+if(VecGeom_ROOT_FOUND)
+  find_dependency(ROOT @ROOT_VERSION@ Geom Graf3d Tree)
+endif()
+
 # Include our target definitions
 include("${CMAKE_CURRENT_LIST_DIR}/VecGeomTargets.cmake")
 
