@@ -17,8 +17,8 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 /**
  * partial template specialization for UNION implementation
  */
-template <>
-struct BooleanImplementation<kIntersection> {
+template <typename Dispatch>
+struct BooleanImplementation<kIntersection, Dispatch> {
   using PlacedShape_t    = PlacedBooleanVolume<kIntersection>;
   using UnplacedVolume_t = UnplacedBooleanVolume<kIntersection>;
   using UnplacedStruct_t = BooleanStruct;
@@ -59,8 +59,8 @@ struct BooleanImplementation<kIntersection> {
   VECCORE_ATT_HOST_DEVICE
   static void Contains(BooleanStruct const &unplaced, Vector3D<Real_v> const &point, Bool_v &inside)
   {
-    const auto insideA = unplaced.fLeftVolume->Contains(point);
-    const auto insideB = unplaced.fRightVolume->Contains(point);
+    const auto insideA = Dispatch::Contains(unplaced.fLeftVolume, point);
+    const auto insideB = Dispatch::Contains(unplaced.fRightVolume, point);
     inside             = insideA && insideB;
   }
 
@@ -74,14 +74,14 @@ struct BooleanImplementation<kIntersection> {
     VPlacedVolume const *const fPtrSolidA = unplaced.fLeftVolume;
     VPlacedVolume const *const fPtrSolidB = unplaced.fRightVolume;
 
-    const auto positionA = fPtrSolidA->Inside(point);
+    const auto positionA = Dispatch::Inside(fPtrSolidA, point);
 
     if (positionA == EInside::kOutside) {
       inside = EInside::kOutside;
       return;
     }
 
-    const auto positionB = fPtrSolidB->Inside(point);
+    const auto positionB = Dispatch::Inside(fPtrSolidB, point);
     if (positionA == EInside::kInside && positionB == EInside::kInside) {
       inside = EInside::kInside;
       return;
@@ -106,16 +106,16 @@ struct BooleanImplementation<kIntersection> {
   {
     Vector3D<Real_v> hitpoint = point;
 
-    auto inleft  = unplaced.fLeftVolume->Contains(hitpoint);
-    auto inright = unplaced.fRightVolume->Contains(hitpoint);
+    auto inleft  = Dispatch::Contains(unplaced.fLeftVolume, hitpoint);
+    auto inright = Dispatch::Contains(unplaced.fRightVolume, hitpoint);
     Real_v d1    = 0.;
     Real_v d2    = 0.;
     Real_v snext = 0.0;
 
     // just a pre-check before entering main algorithm
     if (inleft && inright) {
-      d1 = unplaced.fLeftVolume->PlacedDistanceToOut(hitpoint, dir, stepMax);
-      d2 = unplaced.fRightVolume->PlacedDistanceToOut(hitpoint, dir, stepMax);
+      d1 = Dispatch::PlacedDistanceToOut(unplaced.fLeftVolume, hitpoint, dir, stepMax);
+      d2 = Dispatch::PlacedDistanceToOut(unplaced.fRightVolume, hitpoint, dir, stepMax);
 
       // if we are close to a boundary continue
       if (d1 < 2 * kTolerance) inleft = false;  // Backend::kFalse;
@@ -133,7 +133,7 @@ struct BooleanImplementation<kIntersection> {
     while (1) {
       d1 = d2 = 0;
       if (!inleft) {
-        d1 = unplaced.fLeftVolume->DistanceToIn(hitpoint, dir);
+        d1 = Dispatch::DistanceToIn(unplaced.fLeftVolume, hitpoint, dir);
         d1 = Max(d1, kTolerance);
         if (d1 > 1E20) {
           distance = kInfLength;
@@ -141,7 +141,7 @@ struct BooleanImplementation<kIntersection> {
         }
       }
       if (!inright) {
-        d2 = unplaced.fRightVolume->DistanceToIn(hitpoint, dir);
+        d2 = Dispatch::DistanceToIn(unplaced.fRightVolume, hitpoint, dir);
         d2 = Max(d2, kTolerance);
         if (d2 > 1E20) {
           distance = kInfLength;
@@ -157,7 +157,7 @@ struct BooleanImplementation<kIntersection> {
 
         // check if propagated point is inside right shape
         // check is done with a little push
-        inright = unplaced.fRightVolume->Contains(hitpoint + kTolerance * dir);
+        inright = Dispatch::Contains(unplaced.fRightVolume, hitpoint + kTolerance * dir);
         if (inright) {
           distance = snext;
           return;
@@ -170,7 +170,7 @@ struct BooleanImplementation<kIntersection> {
         hitpoint += d2 * dir;
 
         // check if propagated point is inside left shape
-        inleft = unplaced.fLeftVolume->Contains(hitpoint + kTolerance * dir);
+        inleft = Dispatch::Contains(unplaced.fLeftVolume, hitpoint + kTolerance * dir);
         if (inleft) {
           distance = snext;
           return;
@@ -188,8 +188,8 @@ struct BooleanImplementation<kIntersection> {
   static void DistanceToOut(BooleanStruct const &unplaced, Vector3D<Real_v> const &point,
                             Vector3D<Real_v> const &direction, Real_v const &stepMax, Real_v &distance)
   {
-    distance = Min(unplaced.fLeftVolume->DistanceToOut(point, direction),
-                   unplaced.fRightVolume->PlacedDistanceToOut(point, direction));
+    distance = Min(Dispatch::DistanceToOut(unplaced.fLeftVolume, point, direction),
+                   Dispatch::DistanceToOut(unplaced.fRightVolume, point, direction));
   }
 
   template <typename Real_v>
@@ -199,16 +199,17 @@ struct BooleanImplementation<kIntersection> {
   {
     // This is the Geant4 algorithm
     // TODO: ROOT seems to produce better safeties
-    const auto insideA = unplaced.fLeftVolume->Contains(point);
-    const auto insideB = unplaced.fRightVolume->Contains(point);
+    const auto insideA = Dispatch::Contains(unplaced.fLeftVolume, point);
+    const auto insideB = Dispatch::Contains(unplaced.fRightVolume, point);
 
     if (!insideA && insideB) {
-      safety = unplaced.fLeftVolume->SafetyToIn(point);
+      safety = Dispatch::SafetyToIn(unplaced.fLeftVolume, point);
     } else {
       if (!insideB && insideA) {
-        safety = unplaced.fRightVolume->SafetyToIn(point);
+        safety = Dispatch::SafetyToIn(unplaced.fRightVolume, point);
       } else {
-        safety = Min(unplaced.fLeftVolume->SafetyToIn(point), unplaced.fRightVolume->SafetyToIn(point));
+        safety =
+            Min(Dispatch::SafetyToIn(unplaced.fLeftVolume, point), Dispatch::SafetyToIn(unplaced.fRightVolume, point));
       }
     }
     return;
@@ -221,10 +222,10 @@ struct BooleanImplementation<kIntersection> {
   {
     safety = Min(
         // TODO: could fail if left volume is placed shape
-        unplaced.fLeftVolume->SafetyToOut(point),
+        Dispatch::SafetyToOut(unplaced.fLeftVolume, point),
 
         // TODO: consider introducing PlacedSafetyToOut function
-        unplaced.fRightVolume->SafetyToOut(unplaced.fRightVolume->GetTransformation()->Transform(point)));
+        Dispatch::SafetyToOut(unplaced.fRightVolume, unplaced.fRightVolume->GetTransformation()->Transform(point)));
     vecCore::MaskedAssign(safety, safety < Real_v(0.), Real_v(0.));
   }
 
@@ -242,29 +243,29 @@ struct BooleanImplementation<kIntersection> {
     VPlacedVolume const *const fPtrSolidB = unplaced.fRightVolume;
     Real_v safetyA, safetyB;
 
-    if (fPtrSolidA->Contains(point)) {
+    if (Dispatch::Contains(fPtrSolidA, point)) {
       fPtrSolidA->GetTransformation()->Transform(point, localPoint);
-      safetyA = fPtrSolidA->SafetyToOut(localPoint);
+      safetyA = Dispatch::SafetyToOut(fPtrSolidA, localPoint);
     } else {
-      safetyA = fPtrSolidA->SafetyToIn(point);
+      safetyA = Dispatch::SafetyToIn(fPtrSolidA, point);
     }
 
-    if (fPtrSolidB->Contains(point)) {
+    if (Dispatch::Contains(fPtrSolidB, point)) {
       fPtrSolidB->GetTransformation()->Transform(point, localPoint);
-      safetyB = fPtrSolidB->SafetyToOut(localPoint);
+      safetyB = Dispatch::SafetyToOut(fPtrSolidB, localPoint);
     } else {
-      safetyB = fPtrSolidB->SafetyToIn(point);
+      safetyB = Dispatch::SafetyToIn(fPtrSolidB, point);
     }
     const auto onA = safetyA < safetyB;
     if (vecCore::MaskFull(onA)) {
       fPtrSolidA->GetTransformation()->Transform(point, localPoint);
-      valid = fPtrSolidA->Normal(localPoint, localNorm);
+      valid = Dispatch::Normal(fPtrSolidA, localPoint, localNorm);
       fPtrSolidA->GetTransformation()->InverseTransformDirection(localNorm, normal);
       return;
     } else {
       //  if (vecCore::MaskEmpty(onA)) {  // to use real mask operation when supporting vectors
       fPtrSolidB->GetTransformation()->Transform(point, localPoint);
-      valid = fPtrSolidB->Normal(localPoint, localNorm);
+      valid = Dispatch::Normal(fPtrSolidB, localPoint, localNorm);
       fPtrSolidB->GetTransformation()->InverseTransformDirection(localNorm, normal);
       return;
     }
