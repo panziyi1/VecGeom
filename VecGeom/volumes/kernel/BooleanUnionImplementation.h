@@ -20,8 +20,8 @@ inline namespace VECGEOM_IMPL_NAMESPACE {
 /**
  * partial template specialization for UNION implementation
  */
-template <>
-struct BooleanImplementation<kUnion> {
+template <typename Dispatch>
+struct BooleanImplementation<kUnion, Dispatch> {
   using PlacedShape_t    = PlacedBooleanVolume<kUnion>;
   using UnplacedVolume_t = UnplacedBooleanVolume<kUnion>;
   using UnplacedStruct_t = BooleanStruct;
@@ -62,9 +62,9 @@ struct BooleanImplementation<kUnion> {
   VECCORE_ATT_HOST_DEVICE
   static void Contains(BooleanStruct const &unplaced, Vector3D<Real_v> const &point, Bool_v &inside)
   {
-    inside = unplaced.fLeftVolume->Contains(point);
+    inside = Dispatch::Contains(unplaced.fLeftVolume, point);
     if (vecCore::MaskFull(inside)) return;
-    inside |= unplaced.fRightVolume->Contains(point);
+    inside |= Dispatch::Contains(unplaced.fRightVolume, point);
   }
 
   template <typename Real_v, typename Inside_t>
@@ -77,13 +77,13 @@ struct BooleanImplementation<kUnion> {
     VPlacedVolume const *const fPtrSolidA = unplaced.fLeftVolume;
     VPlacedVolume const *const fPtrSolidB = unplaced.fRightVolume;
 
-    const auto positionA = fPtrSolidA->Inside(point);
+    const auto positionA = Dispatch::Inside(fPtrSolidA, point);
     if (positionA == EInside::kInside) {
       inside = EInside::kInside;
       return;
     }
 
-    const auto positionB = fPtrSolidB->Inside(point);
+    const auto positionB = Dispatch::Inside(fPtrSolidB, point);
     if (positionB == EInside::kInside) {
       inside = EInside::kInside;
       return;
@@ -92,11 +92,11 @@ struct BooleanImplementation<kUnion> {
     if ((positionA == EInside::kSurface) && (positionB == EInside::kSurface)) {
       Vector3D<Precision> normalA, normalB, localPoint, localNorm;
       fPtrSolidA->GetTransformation()->Transform(point, localPoint);
-      fPtrSolidA->Normal(localPoint, localNorm);
+      Dispatch::Normal(fPtrSolidA, localPoint, localNorm);
       fPtrSolidA->GetTransformation()->InverseTransformDirection(localNorm, normalA);
 
       fPtrSolidB->GetTransformation()->Transform(point, localPoint);
-      fPtrSolidB->Normal(localPoint, localNorm);
+      Dispatch::Normal(fPtrSolidB, localPoint, localNorm);
       fPtrSolidB->GetTransformation()->InverseTransformDirection(localNorm, normalB);
 
       if (normalA.Dot(normalB) < 0)
@@ -121,8 +121,8 @@ struct BooleanImplementation<kUnion> {
   static void DistanceToIn(BooleanStruct const &unplaced, Vector3D<Real_v> const &point,
                            Vector3D<Real_v> const &direction, Real_v const &stepMax, Real_v &distance)
   {
-    const auto d1 = unplaced.fLeftVolume->DistanceToIn(point, direction, stepMax);
-    const auto d2 = unplaced.fRightVolume->DistanceToIn(point, direction, stepMax);
+    const auto d1 = Dispatch::DistanceToIn(unplaced.fLeftVolume, point, direction, stepMax);
+    const auto d2 = Dispatch::DistanceToIn(unplaced.fRightVolume, point, direction, stepMax);
     distance      = Min(d1, d2);
   }
 
@@ -138,7 +138,7 @@ struct BooleanImplementation<kUnion> {
     Real_v dist = 0.;
     Real_v pushdist(1E-6);
     // size_t push          = 0;
-    const auto positionA = ptrSolidA->Inside(point);
+    const auto positionA = Dispatch::Inside(ptrSolidA, point);
     Vector3D<Real_v> nextp(point);
     bool connectingstep(false);
 
@@ -146,7 +146,7 @@ struct BooleanImplementation<kUnion> {
     auto kernel = [&](VPlacedVolume const *A, VPlacedVolume const *B) {
       do {
         connectingstep    = false;
-        const auto disTmp = A->PlacedDistanceToOut(nextp, dir);
+        const auto disTmp = Dispatch::PlacedDistanceToOut(A, nextp, dir);
         dist += (disTmp >= 0. && disTmp < kInfLength) ? disTmp : 0;
         // give a push
         dist += pushdist;
@@ -154,15 +154,15 @@ struct BooleanImplementation<kUnion> {
         nextp = point + dist * dir;
         // B could be overlapping with A -- and/or connecting A to another part of A
         // if (B->Contains(nextp)) {
-        if (B->Inside(nextp) != vecgeom::kOutside) {
-          const auto disTmp = B->PlacedDistanceToOut(nextp, dir);
+        if (Dispatch::Inside(B, nextp) != vecgeom::kOutside) {
+          const auto disTmp = Dispatch::PlacedDistanceToOut(B, nextp, dir);
           dist += (disTmp >= 0. && disTmp < kInfLength) ? disTmp : 0;
           dist += pushdist;
           // push++;
           nextp          = point + dist * dir;
           connectingstep = true;
         }
-      } while (connectingstep && (A->Inside(nextp) != kOutside));
+      } while (connectingstep && (Dispatch::Inside(A, nextp) != kOutside));
     };
 
     if (positionA != kOutside) { // initially in A
@@ -175,7 +175,8 @@ struct BooleanImplementation<kUnion> {
     // At the end we need to subtract just one push distance, since intermediate distances
     // from pushed points are smaller than the real distance with the push value
     distance = dist - pushdist;
-    if (distance < kTolerance && positionA == kOutside && ptrSolidB->Inside(point) == kOutside) distance = -kTolerance;
+    if (distance < kTolerance && positionA == kOutside && Dispatch::Inside(ptrSolidB, point) == kOutside)
+      distance = -kTolerance;
     return;
   }
 
@@ -186,8 +187,8 @@ struct BooleanImplementation<kUnion> {
   {
     VPlacedVolume const *const fPtrSolidA = unplaced.fLeftVolume;
     VPlacedVolume const *const fPtrSolidB = unplaced.fRightVolume;
-    const auto distA                      = fPtrSolidA->SafetyToIn(point);
-    const auto distB                      = fPtrSolidB->SafetyToIn(point);
+    const auto distA                      = Dispatch::SafetyToIn(fPtrSolidA, point);
+    const auto distB                      = Dispatch::SafetyToIn(fPtrSolidB, point);
     safety                                = Min(distA, distB);
     // If safety is negative it should not be made 0 (convention)
     // vecCore::MaskedAssign(safety, safety < 0.0, 0.0);
@@ -203,23 +204,23 @@ struct BooleanImplementation<kUnion> {
     VPlacedVolume const *const fPtrSolidA = unplaced.fLeftVolume;
     VPlacedVolume const *const fPtrSolidB = unplaced.fRightVolume;
 
-    const auto insideA = fPtrSolidA->Inside(point);
-    const auto insideB = fPtrSolidB->Inside(point);
+    const auto insideA = Dispatch::Inside(fPtrSolidA, point);
+    const auto insideB = Dispatch::Inside(fPtrSolidB, point);
 
     // Is point already outside?
     if (insideA == kOutside && insideB == kOutside) return;
 
     if (insideA != kOutside && insideB != kOutside) /* in both */
     {
-      safety = Max(fPtrSolidA->SafetyToOut(point),
-                   fPtrSolidB->SafetyToOut(fPtrSolidB->GetTransformation()->Transform(point)));
+      safety = Max(Dispatch::SafetyToOut(fPtrSolidA, point),
+                   Dispatch::SafetyToOut(fPtrSolidB, fPtrSolidB->GetTransformation()->Transform(point)));
     } else {
       if (insideA == kSurface || insideB == kSurface) return;
       /* only contained in B */
       if (insideA == kOutside) {
-        safety = fPtrSolidB->SafetyToOut(fPtrSolidB->GetTransformation()->Transform(point));
+        safety = Dispatch::SafetyToOut(fPtrSolidB, fPtrSolidB->GetTransformation()->Transform(point));
       } else {
-        safety = fPtrSolidA->SafetyToOut(point);
+        safety = Dispatch::SafetyToOut(fPtrSolidA, point);
       }
     }
   }
@@ -240,32 +241,32 @@ struct BooleanImplementation<kUnion> {
     // If point is inside A, then it must be on a surface of A (points on the
     // intersection between A and B cannot be on surface, or if they are they
     // are on a common surface and the normal can be computer for A or B)
-    if (fPtrSolidA->Contains(point)) {
+    if (Dispatch::Contains(fPtrSolidA, point)) {
       fPtrSolidA->GetTransformation()->Transform(point, localPoint);
-      valid = fPtrSolidA->Normal(localPoint, localNorm);
+      valid = Dispatch::Normal(fPtrSolidA, localPoint, localNorm);
       fPtrSolidA->GetTransformation()->InverseTransformDirection(localNorm, normal);
       return;
     }
     // Same for points inside B
-    if (fPtrSolidB->Contains(point)) {
+    if (Dispatch::Contains(fPtrSolidB, point)) {
       fPtrSolidB->GetTransformation()->Transform(point, localPoint);
-      valid = fPtrSolidB->Normal(localPoint, localNorm);
+      valid = Dispatch::Normal(fPtrSolidB, localPoint, localNorm);
       fPtrSolidB->GetTransformation()->InverseTransformDirection(localNorm, normal);
       return;
     }
     // Points outside both A and B can be on any surface. We use the safety.
-    const auto safetyA = fPtrSolidA->SafetyToIn(point);
-    const auto safetyB = fPtrSolidB->SafetyToIn(point);
+    const auto safetyA = Dispatch::SafetyToIn(fPtrSolidA, point);
+    const auto safetyB = Dispatch::SafetyToIn(fPtrSolidB, point);
     auto onA           = safetyA < safetyB;
     if (vecCore::MaskFull(onA)) {
       fPtrSolidA->GetTransformation()->Transform(point, localPoint);
-      valid = fPtrSolidA->Normal(localPoint, localNorm);
+      valid = Dispatch::Normal(fPtrSolidA, localPoint, localNorm);
       fPtrSolidA->GetTransformation()->InverseTransformDirection(localNorm, normal);
       return;
     } else {
       //  if (vecCore::MaskEmpty(onA)) {  // to use real mask operation when supporting vectors
       fPtrSolidB->GetTransformation()->Transform(point, localPoint);
-      valid = fPtrSolidB->Normal(localPoint, localNorm);
+      valid = Dispatch::Normal(fPtrSolidB, localPoint, localNorm);
       fPtrSolidB->GetTransformation()->InverseTransformDirection(localNorm, normal);
       return;
     }
