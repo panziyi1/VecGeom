@@ -37,7 +37,12 @@ public:
                       Transformation3D const *const transformation)
       : Base(label, logicalVolume, transformation)
   {
-    Base::type = VolumeTypes::kBoolean;
+    if (Op == BooleanOperation::kUnion)
+      Base::type = VolumeTypes::kBUnion;
+    else if (Op == BooleanOperation::kSubtraction)
+      Base::type = VolumeTypes::kBSubtraction;
+    else
+      Base::type = VolumeTypes::kBIntersection;
   }
 
   PlacedBooleanVolume(LogicalVolume const *const logicalVolume, Transformation3D const *const transformation)
@@ -50,7 +55,12 @@ public:
                                          const int child_id)
       : Base(logicalVolume, transformation, id, copy_no, child_id)
   {
-    Base::type = VolumeTypes::kBoolean;
+    if (Op == BooleanOperation::kUnion)
+      Base::type = VolumeTypes::kBUnion;
+    else if (Op == BooleanOperation::kSubtraction)
+      Base::type = VolumeTypes::kBSubtraction;
+    else
+      Base::type = VolumeTypes::kBIntersection;
   }
 #endif
 

@@ -59,7 +59,12 @@ public:
   UnplacedBooleanVolume(BooleanOperation op, VPlacedVolume const *left, VPlacedVolume const *right)
       : fBoolean(op, left, right)
   {
-    fType            = VolumeTypes::kBoolean;
+    if (op == BooleanOperation::kUnion)
+      fType = VolumeTypes::kBUnion;
+    else if (op == BooleanOperation::kSubtraction)
+      fType = VolumeTypes::kBSubtraction;
+    else
+      fType = VolumeTypes::kBIntersection;
     fGlobalConvexity = false;
 #ifndef VECCORE_CUDA
     if (fBoolean.fLeftVolume->IsAssembly() || fBoolean.fRightVolume->IsAssembly()) {
