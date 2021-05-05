@@ -55,6 +55,11 @@ public:
         step         = valid ? ddistance : step;
 #ifdef CHECKCONTAINS
       } else {
+         std::cerr << " INDA " << " contained in daughter " << daughter
+                   << " - inside = "   << daughter->Inside(localpoint)
+                   << " , distToIn(p,v,s) = " << daughter->DistanceToIn(localpoint, localdir, step)
+                   << " \n";
+         
         std::cerr << " INDA ";
         step         = -1.;
         hitcandidate = daughter;
@@ -112,10 +117,11 @@ public:
       }
       else
       {
-         std::cerr << " INDA " << " contained in daughter " << daughter
+         std::cerr << " INDA: contained in daughter " << daughter
                    << " - inside = "   << daughter->Inside(localpoint)
                    << " , distToIn(p,v,s) = " << daughter->DistanceToIn(localpoint, localdir, step)
                    << " \n";
+        std::cerr << " INDA ";         
         step         = -1.;
         hitcandidate = daughter;
         break;
