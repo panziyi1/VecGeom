@@ -70,8 +70,6 @@ public:
     return false;
   }
 
-#define CHECKCONTAINS 1
-
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
   virtual bool CheckDaughterIntersections(LogicalVolume const * lvol, Vector3D<Precision> const & localpoint,
@@ -121,7 +119,6 @@ public:
                    << " - inside = "   << daughter->Inside(localpoint)
                    << " , distToIn(p,v,s) = " << daughter->DistanceToIn(localpoint, localdir, step)
                    << " \n";
-        std::cerr << " INDA ";         
         step         = -1.;
         hitcandidate = daughter;
         break;
@@ -265,7 +262,5 @@ public:
 }; // end of class
 }
 } // end namespace
-
-#undef CHECKCONTAINS
 
 #endif /* NAVIGATION_NEWSIMPLENAVIGATOR_H_ */

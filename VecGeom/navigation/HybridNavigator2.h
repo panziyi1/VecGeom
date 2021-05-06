@@ -245,7 +245,7 @@ public:
                                      vecgeom::Vector3D<double> normal; // To reuse in printing below - else move it into 'if'
                                      VPlacedVolume const *candidate = LookupDaughter(lvol, hitbox.first);
                                      if (candidate == blocked) {
-                                      // return false; // return early and go on in the looper
+                                       // return false; // return early and go on in the looper
                                        candidate->Normal(localpoint, normal);
                                        if( normal.Dot(localdir) >= 0.0 ){
                                           std::cerr << "HybridNav2> blocked " << candidate << " has normal.dir = " << normal.Dot(localdir) <<  " and distToIn = " << candidate->DistanceToIn(localpoint, localdir, step) << "\n";

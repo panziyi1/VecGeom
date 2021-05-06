@@ -319,9 +319,11 @@ bool FillUncontainedPoints(VPlacedVolume const &volume, TrackContainer &points)
     lastUncontCap = uncontainedCapacity;
   }
   if (uncontainedCapacity <= 1000 * kTolerance) {
-    std::cout << "\nVolUtil: FillUncontPts: WARNING: Volume <" << volume.GetLabel()
+    std::cout << "\nVolUtil: FillUncontPts: ERROR: Volume provided <" << volume.GetLabel()
               << "> does not have uncontained capacity! "
-              << "Continuing. \n";       
+       //     << "Aborting.\n";
+              << "NOT Aborting (trial JA 2021.03.03) .\n";       
+    // assert(false);
     return false;
   }
 
@@ -404,15 +406,28 @@ bool FillUncontainedPoints(VPlacedVolume const &volume, RandomEngine &rngengine,
     printf("Uncontained capacity for %s: %g units\n", volume.GetLabel().c_str(), uncontainedCapacity);
     lastUncontCap = uncontainedCapacity;
   }
+
   double totalcapacity = const_cast<VPlacedVolume &>(volume).Capacity();  
+  std::cout << "\nVolUtil: FillUncontPts: Volume <" << volume.GetLabel()
+            << "  capacities: total =  " << totalcapacity
+            << " uncontained = " << uncontainedCapacity << "\n"; 
   
   if (uncontainedCapacity <= 1000 * kTolerance) {
-    std::cout << "\nVolUtil: FillUncontPts: WARNING: Volume provided <" << volume.GetLabel()
+    // double checkUC= UncontainedCapacity(volume); // Rerun - for debugging ...
+
+    std::cout << "\nVolUtil: FillUncontPts: ERROR: Volume provided <" << volume.GetLabel()
               << "> does not have uncontained capacity!  "
-              << "    Estimated uncontained capacity = " << uncontainedCapacity 
-              << "      contained = " << totalcapacity << " \n";
+              << "    Value = " << uncontainedCapacity << " \n"
+              << "      contained = " << totalcapacity
+             // << "    check = " << checkUC << " \n"
+       ;
+    // if( checkUC < 0 ) { assert(false); }
+
+    // Best path currently / JA 2021.03.04
     return false;
-    // Alternative: try to find points anyway (return false only if few/none found).
+
+    // TRIAL --- try to find points anyway ...
+    // std::cout << " ... trying to find points anyway ... \n";
   }
 
   const int size = points.capacity();
@@ -464,7 +479,7 @@ bool FillUncontainedPoints(VPlacedVolume const &volume, RandomEngine &rngengine,
     if( tries >= maxtries )
        break;
   }
-  std::cout << " FillUncontained:  trials " << tries << " for num points = " << i << " out of " << size << " requested."
+  std::cout << " FillUncontained:  trials " << tries << " for num points = " << i << " ( out of " << size << " requested."
             << " success ratio = " << (i * 1.0) / tries << "\n";
   return (i>0);
 }
