@@ -101,7 +101,7 @@ FlatVoxelHashMap<int, false> *FlatVoxelManager::BuildSafetyVoxels(LogicalVolume 
   
   if( allkeys.begin() == allkeys.end() || allkeys.size() <= 1 ) {
      // No points found -- the daughthers fill the current volume
-     return nullptr; 
+     return nullptr;
   }
   std::sort(allkeys.begin(), allkeys.end());
 
@@ -402,7 +402,7 @@ FlatVoxelHashMap<int, false> *FlatVoxelManager::BuildSafetyVoxels(LogicalVolume 
 
               // we take the larger of boxsafety or candidatesafety as the safety for this object
               const auto thiscandidatesafetysqr =
-                  std::min(Precision(0.), std::max<Precision>(candsafetysqr, safetytoboxsqr));
+                  std::max<Precision>(candsafetysqr, safetytoboxsqr);
 
               // if this safety is smaller than the previously known safety
               if (thiscandidatesafetysqr <= finalsafetysqr) {
@@ -441,23 +441,23 @@ FlatVoxelHashMap<int, false> *FlatVoxelManager::BuildSafetyVoxels(LogicalVolume 
         }
 #endif
         std::sort(safetycandidates[i].begin(), safetycandidates[i].end());
-
       } // loop over keys/voxels
     });
     safetyfutures.push_back(std::move(fut));
   }
   std::for_each(safetyfutures.begin(), safetyfutures.end(), [](std::future<void> &fut) { fut.wait(); });
-  std::cout << "Generating safeties took " << timer.Stop() << " s \n";
-
+  std::cout << "Generating safeties took " << timer.Stop() << "s \n";
+  // bool verboseAdd= false;
   // finally register safety or locate candidates in voxel hash map
   for (size_t i = 0; i < sortedkeys.size(); ++i) {
     auto key = sortedkeys[i];
-    for (const auto &cand : safetycandidates[i]) {
+    for (const auto &cand : safetycandidates[i]) {  
+      // if( verboseAdd ) { std::cout << "Adding cand " << cand << " to key " << key << "\n"; }
       safetyvoxels->addPropertyForKey(key, cand);
     }
   }
   std::cerr << " done \n";
-
+     
   // safetyvoxels->print();
   // create cache
   safetyvoxels->dumpToTFile(createName(vol, Nx, Ny, Nz).c_str());
