@@ -1,8 +1,5 @@
 # - Setup the project
-cmake_minimum_required(VERSION 3.8...3.19)
-if(${CMAKE_VERSION} VERSION_LESS 3.12)
-  cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
-endif()
+cmake_minimum_required(VERSION 3.12...3.20)
 
 include(cmake/modules/RecordCmdLine.cmake)
 include(ExternalProject)
@@ -146,6 +143,7 @@ if(CUDA)
     set(VECGEOM_CUDA_VOLUME_SPECIALIZATION ON)
   endif()
 
+  # Yes, we still use FindCUDA for now, but with the newer CMake versions
   set(CUDA_ARCH 30 CACHE STRING "CUDA device architecture.")
   set(CUDA_ARCH "-arch=sm_${CUDA_ARCH}")
 
@@ -746,7 +744,7 @@ if(VECGEOM_ENABLE_CUDA)
   # This is a hack to force the project include dirs as the first in
   # the list passed to nvcc. Due to FindCUDA not respecting CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE
   # Will disappear once migration to native CMake CUDA support is done.
-  cuda_include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")
+  #cuda_include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")
 
   cuda_add_library(vecgeomcuda ${VECGEOM_CUDA_SRCS} SHARED
     OPTIONS ${CUDA_ARCH}
@@ -754,9 +752,11 @@ if(VECGEOM_ENABLE_CUDA)
     #    -O0 -g -G -lineinfo
     ${VECGEOM_NVCC_CONFIGS})
 
+  #add_library(vecgeomcuda SHARED ${VECGEOM_CUDA_SRCS})
   target_link_libraries(vecgeomcuda ${VECGEOM_LIBRARIES})
   set(VECGEOM_LIBRARIES ${VECGEOM_LIBRARIES} vecgeomcuda)
 
+  # Really only for testing, so *should* be under tests...
   # build the CUDA user-code library
   cuda_add_library(cudauserlib userexamples/src/TestNavigationStatePool.cu SHARED
     OPTIONS ${CUDA_ARCH})
