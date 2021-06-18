@@ -119,13 +119,19 @@ Wedge::Wedge(Precision angle, Precision zeroangle /* = 0 */) : fDPhi(angle), fAl
   // initialize angles
   fAlongVector1.x() = std::cos(zeroangle);
   fAlongVector1.y() = std::sin(zeroangle);
+  fAlongVector1.FixZeroes();
+
   fAlongVector2.x() = std::cos(zeroangle + angle);
   fAlongVector2.y() = std::sin(zeroangle + angle);
+  fAlongVector2.FixZeroes();
 
   fNormalVector1.x() = -std::sin(zeroangle);
   fNormalVector1.y() = std::cos(zeroangle); // not the + sign
+  fNormalVector1.FixZeroes();
+
   fNormalVector2.x() = std::sin(zeroangle + angle);
   fNormalVector2.y() = -std::cos(zeroangle + angle); // note the - sign
+  fNormalVector2.FixZeroes();
 }
 
 } // VECGEOM_IMPL_NAMESPACE

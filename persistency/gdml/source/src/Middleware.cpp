@@ -1307,8 +1307,9 @@ vecgeom::VECGEOM_IMPL_NAMESPACE::VPlacedVolume *const Middleware::processPhysica
   }
   if (!logicalVolume) return nullptr;
   auto const r              = makeRotationMatrixFromCartesianAngles(rotation.x(), rotation.y(), rotation.z());
-  auto const transformation = vecgeom::VECGEOM_IMPL_NAMESPACE::Transformation3D(
+  auto transformation = vecgeom::VECGEOM_IMPL_NAMESPACE::Transformation3D(
       position.x(), position.y(), position.z(), r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+  transformation.FixZeroes();
   auto const placedVolume = logicalVolume->Place(&transformation); // TODO position, rotation, label
   vecgeom::VECGEOM_IMPL_NAMESPACE::GeoManager::Instance().RegisterPlacedVolume(placedVolume);
   return placedVolume;
