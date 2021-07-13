@@ -439,6 +439,7 @@ if(VECGEOM_ENABLE_CUDA)
     cmake_policy(SET CMP0058 OLD)
   endif()
 
+  # FIXME: This should not be needed with modern CUDA.
   # Even-though VecCore (if enabled) has already enabled CUDA, if we do not do it a second time,
   # the compilation flags are incorrectly set.  The symptoms is that cuda_add_library for vecgeomcuda
   # misinterpret the ${VECGEOM_NVCC_CONFIGS} flag and rather than splitting in configurations, pass it as is
