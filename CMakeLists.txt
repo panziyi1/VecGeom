@@ -14,6 +14,8 @@ include(MacroUtilities)
 include(CMakeDependentOption)
 include(IntelCompileFeatures)
 
+include(CeleritasUtils)
+
 # - Though we check for some absolute paths, ensure there are no others
 set(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION ON)
 
@@ -138,13 +140,26 @@ cmake_dependent_option(CUDA_SEPARABLE_COMPILATION "Compile CUDA objects with sep
 cmake_dependent_option(CUDA_USE_STATIC_CUDA_RUNTIME "Use the static version of the CUDA runtime library if available" OFF "CUDA" OFF)
 
 if(CUDA)
+  set(CUDA_ARCH 30 CACHE STRING "CUDA device architecture.")
+  set(CMAKE_CUDA_ARCHITECTURES ${CUDA_ARCH})
+  set(CUDA_ARCH "-arch=sm_${CUDA_ARCH}")
+  set(CMAKE_CUDA_FLAGS ${CUDA_ARCH})
+  set(CMAKE_CUDA_STANDARD ${CMAKE_CXX_STANDARD})
+
+  # Use host compiler by default to ensure ABI consistency
+  set(CMAKE_CUDA_HOST_COMPILER "${CMAKE_CXX_COMPILER}" CACHE STRING
+    "Set to CMAKE_CXX_COMPILER by VecGeom CMakeLists")
+  # Default to building device debug code
+  set(CMAKE_CUDA_FLAGS_DEBUG "-g -G" CACHE STRING
+    "Set by VecGeom CMakeLists")
+
+  enable_language(CUDA)
+  find_package(CUDAToolkit REQUIRED QUIET)
+
   set(VECGEOM_ENABLE_CUDA ON)
   if(CUDA_VOLUME_SPECIALIZATION)
     set(VECGEOM_CUDA_VOLUME_SPECIALIZATION ON)
   endif()
-
-  set(CUDA_ARCH 30 CACHE STRING "CUDA device architecture.")
-  set(CUDA_ARCH "-arch=sm_${CUDA_ARCH}")
 
   set(VecCore_COMPONENTS ${VecCore_COMPONENTS} "CUDA")
 endif()
@@ -745,27 +760,21 @@ if(VECGEOM_ENABLE_CUDA)
   # Will disappear once migration to native CMake CUDA support is done.
   cuda_include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")
 
-  cuda_add_library(vecgeomcuda ${VECGEOM_CUDA_SRCS} SHARED
+  celeritas_add_library(vecgeomcuda ${VECGEOM_CUDA_SRCS} SHARED
     OPTIONS ${CUDA_ARCH}
     # For debug information we might need
     #    -O0 -g -G -lineinfo
     ${VECGEOM_NVCC_CONFIGS})
 
-  #add_library(vecgeomcuda SHARED ${VECGEOM_CUDA_SRCS})
-  target_link_libraries(vecgeomcuda ${VECGEOM_LIBRARIES})
+  celeritas_target_link_libraries(vecgeomcuda ${VECGEOM_LIBRARIES} CUDA::cudart)
   set(VECGEOM_LIBRARIES ${VECGEOM_LIBRARIES} vecgeomcuda)
 
   # Really only for testing, so *should* be under tests...
   # build the CUDA user-code library
-  cuda_add_library(cudauserlib userexamples/src/TestNavigationStatePool.cu SHARED
-    OPTIONS ${CUDA_ARCH})
-
-  # Note: the repeat below is due the author of  cuda_add_library_depend
-  # not knowing how to automatically go from the target to the real
-  # file in add_custom_command
-  cuda_add_library_depend(cudauserlib vecgeomcuda_static libvecgeomcuda_static.a)
-  target_link_libraries(cudauserlib ${VECGEOM_LIBRARIES})
+  celeritas_add_library(cudauserlib SHARED userexamples/src/TestNavigationStatePool.cu)
+  celeritas_target_link_libraries(cudauserlib ${VECGEOM_LIBRARIES})
   set(USERKERNELLIB cudauserlib)
+
 endif()
 
 # Make sure we build VecCore before building VecGeom
@@ -799,8 +808,7 @@ install(FILES ${PROJECT_BINARY_DIR}/VecGeom/base/Config.h
 install(TARGETS vecgeom EXPORT VecGeomTargets DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 
 if(VECGEOM_ENABLE_CUDA)
-  install(TARGETS vecgeomcuda EXPORT VecGeomTargets DESTINATION "${CMAKE_INSTALL_LIBDIR}")
-  install(TARGETS vecgeomcuda_static EXPORT VecGeomTargets DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+  celeritas_install(TARGETS vecgeomcuda EXPORT VecGeomTargets DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 endif()
 
 # CMake support files

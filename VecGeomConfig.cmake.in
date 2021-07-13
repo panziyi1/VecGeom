@@ -56,6 +56,7 @@ set(VECGEOM_LIBRARIES VecGeom::vecgeom)
 if(TARGET VecGeom::vecgeomcuda)
   list(APPEND VECGEOM_LIBRARIES VecGeom::vecgeomcuda)
 endif()
+# FIXME: To remove once all client migrate to using cuda_rdc_link_libraries
 if(TARGET VecGeom::vecgeomcuda_static)
   set(VECGEOM_CUDA_STATIC_LIBRARY VecGeom::vecgeomcuda_static)
 endif()
