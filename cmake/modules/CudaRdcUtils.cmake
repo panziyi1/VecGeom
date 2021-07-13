@@ -218,8 +218,9 @@ function(cuda_rdc_add_library target)
 
   cmake_parse_arguments(_ADDLIB_PARSE
     "STATIC;SHARED;MODULE"
+# Temporary support for OPTIONS
     ""
-    ""
+    "OPTIONS"
     ${ARGN}
   )
   set(_lib_requested_type "SHARED")
@@ -235,7 +236,7 @@ function(cuda_rdc_add_library target)
     message(FATAL_ERROR "cuda_rdc_add_library does not support MODULE library containing CUDA code")
   endif()
 
-  add_library(${target}_objects OBJECT ${ARGN})
+  add_library(${target}_objects OBJECT ${_ADDLIB_PARSE_UNPARSED_ARGUMENTS})
   if(NOT __static_build)
     add_library(${target}${_staticsuf} STATIC $<TARGET_OBJECTS:${target}_objects>)
   endif()
