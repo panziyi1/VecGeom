@@ -397,56 +397,23 @@ if(VECGEOM_ENABLE_CUDA)
   if(NOT DEFINED CMAKE_CUDA_STANDARD)
     set(CMAKE_CUDA_STANDARD ${CMAKE_CXX_STANDARD})
   endif()
-  set(VECGEOM_NVCC_COMPILATION_FLAGS ${VECGEOM_NVCC_COMPILATION_FLAGS}
-    -std=c++${CMAKE_CUDA_STANDARD}
-    -Xcompiler -Wno-unused-function
-    -Xcudafe "--diag_suppress=code_is_unreachable"
-    -Xcudafe "--diag_suppress=initialization_not_reachable")
+  string(CONCAT CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} "
+     "-Xcompiler -Wno-unused-function "
+     "-Xcudafe --diag_suppress=code_is_unreachable "
+     "-Xcudafe --diag_suppress=initialization_not_reachable")
 
   if(NOT NO_SPECIALIZATION)
-    set(VECGEOM_NVCC_COMPILATION_FLAGS ${VECGEOM_NVCC_COMPILATION_FLAGS}
-      -Xptxas --disable-optimizer-constants)
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xptxas --disable-optimizer-constants")
   endif()
 
-  set(VECGEOM_NVCC_CONFIGS
-    DEBUG -g -G -O0
-    RELEASE  -O3 -use_fast_math
-    RELWITHDEBINFO -g -G -O3 -use_fast_math
-    MINSIZEREL -use_fast_math)
+  # This setups the project wide default, we can not accumulate we the default
+  # or one passed by the user as nvcc can not deal with multiple -Ox flags
+  # [it complains about: incompatible redefinition for option 'optimize']
+  set(CMAKE_CUDA_FLAGS_DEBUG "-O0")
+  set(CMAKE_CUDA_FLAGS_RELEASE "-O3 -use_fast_math")
+  set(CMAKE_CUDA_FLAGS_RELWITHDEBINFO "-g -G -O3 -use_fast_math")
+  set(CMAKE_CUDA_FLAGS_MINSIZEREL "-use_fast_math")
 
-  # FindCUDA.mk generate cmake file for each .o file using
-  # the cmake command:
-  #   file(GENERATE
-  #      OUTPUT "${custom_target_script}"
-  #      INPUT "${custom_target_script_pregen}"
-  #      )
-  # However this fails to register the output as a 'BYPRODUCTS'
-  # and thus, since the .o file depends on it, trigger the CMP0058
-  # warning (when using Ninja).
-  # Using a add_custom_target/command does not work there as
-  # neither the OUTPUT not the BYPRODUCTS parameter supports
-  # generator expression (and ${custom_target_script} is a
-  # generator expression depending on the configuration type).
-  # Consequently there is no (known to the author) way of
-  # correctly adding the correct information at the moment.
-  # So let's just use the old policy (even-though it is
-  # deprecated ... )
-  # Note: this is a feature introduced in CMake 3.6 to
-  # support  generator expressions in CUDA_NVCC_FLAGS
-  # and since we imported that version's FindCUDA.cmake
-  # it applies to all cmake that support CMP0058.
-  if(NOT (CMAKE_VERSION LESS 3.3))
-    cmake_policy(SET CMP0058 OLD)
-  endif()
-
-  # FIXME: This should not be needed with modern CUDA.
-  # Even-though VecCore (if enabled) has already enabled CUDA, if we do not do it a second time,
-  # the compilation flags are incorrectly set.  The symptoms is that cuda_add_library for vecgeomcuda
-  # misinterpret the ${VECGEOM_NVCC_CONFIGS} flag and rather than splitting in configurations, pass it as is
-  # to the NVCC command line ...
-  find_package(CUDA REQUIRED)
-
-  set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${VECGEOM_NVCC_COMPILATION_FLAGS})
 endif()
 
 ### Set CXXFLAGS early, so that VECGEOM_GEANT4 and VECGEOM_ROOT are already defined when compiling benchmarks, or it breaks
@@ -463,7 +430,7 @@ string(REPLACE ";" " " CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 message(STATUS "Compiling with C++ flags: ${CMAKE_CXX_FLAGS}")
 if(VECGEOM_ENABLE_CUDA)
-  message(STATUS "Compiling with NVCC flags: ${CUDA_NVCC_FLAGS}")
+  message(STATUS "Compiling with NVCC flags: ${CMAKE_CUDA_FLAGS} ${CMAKE_CUDA_FLAGS_${_build_type}}")
 endif()
 
 if(VECGEOM_ROOT)
@@ -761,11 +728,7 @@ if(VECGEOM_ENABLE_CUDA)
   # Will disappear once migration to native CMake CUDA support is done.
   cuda_include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")
 
-  celeritas_add_library(vecgeomcuda ${VECGEOM_CUDA_SRCS} SHARED
-    OPTIONS ${CUDA_ARCH}
-    # For debug information we might need
-    #    -O0 -g -G -lineinfo
-    ${VECGEOM_NVCC_CONFIGS})
+  celeritas_add_library(vecgeomcuda ${VECGEOM_CUDA_SRCS} SHARED)
 
   celeritas_target_link_libraries(vecgeomcuda ${VECGEOM_LIBRARIES} CUDA::cudart)
   set(VECGEOM_LIBRARIES ${VECGEOM_LIBRARIES} vecgeomcuda)
