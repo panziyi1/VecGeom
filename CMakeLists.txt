@@ -824,6 +824,10 @@ install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/VecGeomConfig.cmake
 install(EXPORT VecGeomTargets
   NAMESPACE VecGeom::
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/VecGeom")
+if(VECGEOM_ENABLE_CUDA)
+  install(FILES "${PROJECT_SOURCE_DIR}/cmake/modules/CudaRdcUtils.cmake"
+          DESTINATION "${CMAKE_INSTALL_CMAKEDIR}/VecGeom" COMPONENT dev)
+endif()
 
 
 ################################################################################
