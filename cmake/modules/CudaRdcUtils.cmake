@@ -218,9 +218,8 @@ function(cuda_rdc_add_library target)
 
   cmake_parse_arguments(_ADDLIB_PARSE
     "STATIC;SHARED;MODULE"
-# Temporary support for OPTIONS
     ""
-    "OPTIONS"
+    ""
     ${ARGN}
   )
   set(_lib_requested_type "SHARED")
