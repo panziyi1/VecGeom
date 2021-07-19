@@ -394,9 +394,6 @@ if(CMAKE_BUILD_TYPE MATCHES MinSizeRel)
 endif()
 
 if(VECGEOM_ENABLE_CUDA)
-  if(NOT DEFINED CMAKE_CUDA_STANDARD)
-    set(CMAKE_CUDA_STANDARD ${CMAKE_CXX_STANDARD})
-  endif()
   string(CONCAT CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} "
      "-Xcompiler -Wno-unused-function "
      "-Xcudafe --diag_suppress=code_is_unreachable "
