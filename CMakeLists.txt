@@ -725,15 +725,15 @@ if(VECGEOM_ENABLE_CUDA)
   # Will disappear once migration to native CMake CUDA support is done.
   cuda_include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")
 
-  celeritas_add_library(vecgeomcuda ${VECGEOM_CUDA_SRCS} SHARED)
+  cuda_rdc_add_library(vecgeomcuda ${VECGEOM_CUDA_SRCS} SHARED)
 
-  celeritas_target_link_libraries(vecgeomcuda ${VECGEOM_LIBRARIES} CUDA::cudart)
+  cuda_rdc_target_link_libraries(vecgeomcuda ${VECGEOM_LIBRARIES} CUDA::cudart)
   set(VECGEOM_LIBRARIES ${VECGEOM_LIBRARIES} vecgeomcuda)
 
   # Really only for testing, so *should* be under tests...
   # build the CUDA user-code library
-  celeritas_add_library(cudauserlib SHARED userexamples/src/TestNavigationStatePool.cu)
-  celeritas_target_link_libraries(cudauserlib ${VECGEOM_LIBRARIES})
+  cuda_rdc_add_library(cudauserlib SHARED userexamples/src/TestNavigationStatePool.cu)
+  cuda_rdc_target_link_libraries(cudauserlib ${VECGEOM_LIBRARIES})
   set(USERKERNELLIB cudauserlib)
 
 endif()
@@ -769,7 +769,7 @@ install(FILES ${PROJECT_BINARY_DIR}/VecGeom/base/Config.h
 install(TARGETS vecgeom EXPORT VecGeomTargets DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 
 if(VECGEOM_ENABLE_CUDA)
-  celeritas_install(TARGETS vecgeomcuda EXPORT VecGeomTargets DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+  cuda_rdc_install(TARGETS vecgeomcuda EXPORT VecGeomTargets DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 endif()
 
 # CMake support files

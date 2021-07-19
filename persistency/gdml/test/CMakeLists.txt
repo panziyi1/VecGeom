@@ -9,7 +9,7 @@ foreach(_vgdml_test TestXercesBackend TestXercesFrontend TestXercesMiddleware Re
                     TestVGDMLAuxiliary TestVGDMLNavigation TestVGDMLVolumeAuxiliaryInfo)
   add_executable(${_vgdml_test} ${_vgdml_test}/${_vgdml_test}.cpp)
   # Not 100% clear that USERKERNELLIB is needed
-  celeritas_target_link_libraries(${_vgdml_test} vgdml ${USERKERNELLIB})
+  cuda_rdc_target_link_libraries(${_vgdml_test} vgdml ${USERKERNELLIB})
 endforeach()
 
 # Tests of VGDML's types for the GDML schema and translations
