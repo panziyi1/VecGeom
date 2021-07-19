@@ -14,7 +14,7 @@ include(MacroUtilities)
 include(CMakeDependentOption)
 include(IntelCompileFeatures)
 
-include(CeleritasUtils)
+include(CudaRdcUtils)
 
 # - Though we check for some absolute paths, ensure there are no others
 set(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION ON)
