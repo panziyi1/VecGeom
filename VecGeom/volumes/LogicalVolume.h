@@ -96,6 +96,8 @@ private:
   // possibility to change pointer of daughter volumes ( can be used by GeoManager )
   //  void SetDaughter(unsigned int i, VPlacedVolume const *pvol);
 
+  bool* Sensitivity; ///< Flag for logical volume sensitivity
+
 public:
 #ifndef VECCORE_CUDA
   /// Standard constructor taking a name and an unplaced volume
@@ -142,6 +144,20 @@ public:
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
   bool IsReqCaching() const { return false; }
+
+  // Returns user request for sensitivity info of given LogicalVolume
+  VECCORE_ATT_HOST_DEVICE
+    VECGEOM_FORCE_INLINE
+    bool* IsSensitive() {
+    return Sensitivity;
+  };
+  VECCORE_ATT_HOST_DEVICE
+    VECGEOM_FORCE_INLINE
+    void SetSensitivity(bool* flag)
+  {
+    Sensitivity=flag;
+  };
+    
 
   //  VECCORE_ATT_HOST_DEVICE
   //  VECGEOM_FORCE_INLINE
