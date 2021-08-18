@@ -64,19 +64,17 @@ private:
   // Use a pointer so the string won't be constructed on the GPU
   std::string *label_;            ///< Label/name of placed volume
   static unsigned int g_id_count; ///< Static instance counter
-  bool* Sensitivity; ///< Flag for logical volume sensitivity
+  int Sensitivity_=-42; ///< Flag for logical volume sensitivity
 
  public:
   VECCORE_ATT_HOST_DEVICE
-    VECGEOM_FORCE_INLINE
-    void SetSensitivity(bool* flag){
-    Sensitivity=flag;
+    void SetSensitivity(int customflag){
+    Sensitivity_=customflag;
   }
   //getter for sensitivity
   VECCORE_ATT_HOST_DEVICE
-    VECGEOM_FORCE_INLINE
-    bool* IsSensitive(){
-    return Sensitivity;
+    int IsSensitive() const{
+    return Sensitivity_;
   }
 protected:
   LogicalVolume const *logical_volume_; ///< Pointer to positioned logical volume

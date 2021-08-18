@@ -96,7 +96,7 @@ private:
   // possibility to change pointer of daughter volumes ( can be used by GeoManager )
   //  void SetDaughter(unsigned int i, VPlacedVolume const *pvol);
 
-  int Sensitivity_; ///< Flag for logical volume sensitivity
+  int Sensitivity_=-99; ///< Flag for logical volume sensitivity
 
 public:
 #ifndef VECCORE_CUDA
