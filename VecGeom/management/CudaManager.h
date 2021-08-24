@@ -170,6 +170,7 @@ public:
 
   DevicePtr<CudaDaughter_t> LookupDaughterArray(Vector<Daughter_t> *const host_ptr);
 
+  DevicePtr<int*> LookupSensitivity(int *const host_ptr);
 private:
   CudaManager();
   CudaManager(CudaManager const &);
