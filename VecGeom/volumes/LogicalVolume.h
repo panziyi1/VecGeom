@@ -96,7 +96,7 @@ private:
   // possibility to change pointer of daughter volumes ( can be used by GeoManager )
   //  void SetDaughter(unsigned int i, VPlacedVolume const *pvol);
   int defaultval= -99;
-  int* Sensitivity_=&defaultval; ///< Flag for logical volume sensitivity
+  int Sensitivity_=defaultval; ///< Flag for logical volume sensitivity
 
 public:
 #ifndef VECCORE_CUDA
@@ -150,13 +150,13 @@ public:
   VECCORE_ATT_HOST_DEVICE
     VECGEOM_FORCE_INLINE
     int IsSensitive() const {
-    return *Sensitivity_;
+    return Sensitivity_;
   };
   VECCORE_ATT_HOST_DEVICE
     VECGEOM_FORCE_INLINE
     void SetSensitivity(int flag)
   {
-    Sensitivity_= &flag;
+    Sensitivity_= flag;
   };
   
 
@@ -313,13 +313,14 @@ public:
   DevicePtr<cuda::LogicalVolume> CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const unplaced_vol, 
 					   int id,
                                            DevicePtr<cuda::Vector<CudaDaughter_t>> GetDaughter,
-					   DevicePtr<int*> const Sensitivity
+					   int Sensitivity
 					   ) const;
 
-  DevicePtr<cuda::LogicalVolume> CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const unplaced_vol, int id,
+  DevicePtr<cuda::LogicalVolume> CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const unplaced_vol, 
+					   int id,
                                            DevicePtr<cuda::Vector<CudaDaughter_t>> GetDaughter,
                                            DevicePtr<cuda::LogicalVolume> const gpu_ptr,
-					   DevicePtr<int*> const Sensitivity
+					   int Sensitivity
 					   ) const;
   
 #endif

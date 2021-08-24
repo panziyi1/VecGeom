@@ -168,7 +168,9 @@ void LogicalVolume::Print(const int indent) const
   }
 #endif
   printf(":\n");
-  printf("Sensitivity: [%i]",*Sensitivity_);
+  for (int i =0; i<=indent;++i)
+    printf("  ");
+  printf("Sensitivity: [%i]",Sensitivity_);
   printf(":\n");
   for (int i = 0; i <= indent; ++i)
     printf("  ");
@@ -241,7 +243,7 @@ DevicePtr<cuda::LogicalVolume> LogicalVolume::CopyToGpu(DevicePtr<cuda::VUnplace
 							int id,
                                                         DevicePtr<cuda::Vector<CudaDaughter_t>> GetDaughter,
                                                         DevicePtr<cuda::LogicalVolume> const gpu_ptr,
-							DevicePtr<int*> const sensitivity
+							int sensitivity
 							) const
 {
   gpu_ptr.Construct(unplaced_vol, id, GetDaughter);
@@ -253,7 +255,7 @@ DevicePtr<cuda::LogicalVolume> LogicalVolume::CopyToGpu(DevicePtr<cuda::VUnplace
 DevicePtr<cuda::LogicalVolume> LogicalVolume::CopyToGpu(DevicePtr<cuda::VUnplacedVolume> const unplaced_vol, 
 							int id,
                                                         DevicePtr<cuda::Vector<CudaDaughter_t>> daughter,
-							DevicePtr<int*> sensitivity
+							int sensitivity
 							) const
 {
   DevicePtr<cuda::LogicalVolume> gpu_ptr;
@@ -272,7 +274,7 @@ namespace cxx {
 template size_t DevicePtr<cuda::LogicalVolume>::SizeOf();
 template void DevicePtr<cuda::LogicalVolume>::Construct(DevicePtr<cuda::VUnplacedVolume> const, 
 							int,
-                                                        DevicePtr<cuda::Vector<cuda::VPlacedVolume const *>>
+                                                        DevicePtr<cuda::Vector<cuda::VPlacedVolume const *>>						       
 							) const;
 } // namespace cxx
 

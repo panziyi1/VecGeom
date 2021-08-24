@@ -82,15 +82,13 @@ vecgeom::DevicePtr<const vecgeom::cuda::VPlacedVolume> CudaManager::Synchronize(
   for (std::set<LogicalVolume const *>::const_iterator i = logical_volumes_.begin(); i != logical_volumes_.end(); ++i) {
 
     
-    int myval=((*i)->IsSensitive());
-    int *myptr=&myval;
 
     (*i)->CopyToGpu(
 		    LookupUnplaced((*i)->GetUnplacedVolume()), 
 		    (*i)->id(), 
 		    LookupDaughters((*i)->fDaughters),
                     LookupLogical(*i),
-		    LookupSensitivity(myptr)
+		    (*i)->IsSensitive()
 		    );
   }
   timer.Stop();
@@ -499,9 +497,9 @@ DevicePtr<CudaManager::CudaDaughter_t> CudaManager::LookupDaughterArray(Vector<D
   GpuAddress daughters_(LookupDaughters(host_ptr));
   return DevicePtr<CudaManager::CudaDaughter_t>(Lookup(daughters_));
 } 
-DevicePtr<int*> CudaManager::LookupSensitivity(int *const host_ptr){
-  return DevicePtr<int*>(Lookup(host_ptr));
-}
+	 //DevicePtr<int*> CudaManager::LookupSensitivity(int *const host_ptr){
+	 //  return DevicePtr<int*>(Lookup(host_ptr));
+	 //}
 void CudaManager::PrintGeometry() const
 {
   CudaManagerPrintGeometry(world_gpu());
