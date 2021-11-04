@@ -114,7 +114,7 @@ endif()
 # Configure backend for export to VecGeom's Config.h and setting up VecCore
 string(TOUPPER "${BACKEND}" _BACKEND_UP)
 set(VECGEOM_${_BACKEND_UP} True)
-message(STATUS "Configuring with ${BACKEND} vector backend")
+message(STATUS "Configuring with ${BACKEND} backend")
 
 if("${BACKEND}" MATCHES "Vc")
   set(VecCore_COMPONENTS ${VecCore_COMPONENTS} ${BACKEND})
@@ -179,7 +179,7 @@ endif()
 
 option(USE_NAVINDEX "Use navigation index table and states" OFF)
 if(NOT USE_NAVINDEX AND VECGEOM_ENABLE_CUDA)
-  message(STATUS "CUDA=ON implies USE_NAVINDEX=ON")
+  message(STATUS "Forcing USE_NAVINDEX=ON, required by VECGEOM_CUDA=ON")
   set(USE_NAVINDEX ON)
 endif()
 if(USE_NAVINDEX)
