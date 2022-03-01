@@ -153,10 +153,9 @@ if(VECGEOM_ROOT)
     list(APPEND TEST_EXECUTABLES_ROOT core/EmbreeManagerTest.cpp)
   endif()
 
-  add_executable(TestNavigationStatePool
-    core/TestNavigationStatePool.cpp
-    $<$<BOOL:VECGEOM_ENABLE_CUDA>:core/TestNavigationStatePool.cu>)
+  add_executable(TestNavigationStatePool core/TestNavigationStatePool.cpp)
   if(VECGEOM_ENABLE_CUDA)
+    target_sources(TestNavigationStatePool PRIVATE core/TestNavigationStatePool.cu)
     cuda_rdc_target_link_libraries(TestNavigationStatePool PRIVATE vecgeomcuda)
   else()
     target_link_libraries(TestNavigationStatePool PRIVATE vecgeom)
