@@ -25,7 +25,7 @@ target_include_directories(vgdml PUBLIC
 )
 target_link_libraries(vgdml PUBLIC XercesC::XercesC vecgeom)
 if(TARGET vecgeomcuda)
-  target_link_libraries(vgdml PRIVATE vecgeomcuda)
+  cuda_rdc_target_link_libraries(vgdml PRIVATE vecgeomcuda)
 endif()
 
 if(GDMLDEBUG)

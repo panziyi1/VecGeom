@@ -42,12 +42,12 @@ set(TEST_EXECUTABLES_BENCHMARK
 build_executables("${TEST_EXECUTABLES_BENCHMARK}")
 
 if(VECGEOM_ENABLE_CUDA)
-  target_link_libraries(NavigationBenchmark PUBLIC vecgeomcuda)
+  cuda_rdc_target_link_libraries(NavigationBenchmark PUBLIC vecgeomcuda)
 endif()
 
 if(GDML)
   build_executables(${PROJECT_SOURCE_DIR}/test/benchmark/TestNavIndex.cpp)
-  target_link_libraries(TestNavIndex PUBLIC vgdml)
+  cuda_target_link_libraries(TestNavIndex PUBLIC vgdml)
 endif()
 
 #define which ones should be run under ctest

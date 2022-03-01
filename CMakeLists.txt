@@ -1,5 +1,5 @@
 # - Setup the project
-cmake_minimum_required(VERSION 3.12...3.22)
+cmake_minimum_required(VERSION 3.18...3.22)
 
 include(cmake/modules/RecordCmdLine.cmake)
 include(ExternalProject)
@@ -13,6 +13,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake/modules)
 include(MacroUtilities)
 include(CMakeDependentOption)
 include(IntelCompileFeatures)
+include(CudaRdcUtils)
 
 # - Though we check for some absolute paths, ensure there are no others
 set(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION ON)
@@ -144,6 +145,7 @@ cmake_dependent_option(VECGEOM_CUDA_VOLUME_SPECIALIZATION "Use specialized volum
 
 if(VECGEOM_ENABLE_CUDA)
   enable_language(CUDA)
+  find_package(CUDAToolkit REQUIRED QUIET)
   set(VecCore_COMPONENTS ${VecCore_COMPONENTS} "CUDA")
 endif()
 
@@ -725,17 +727,17 @@ endif()
 
 # build the CUDA version of the library
 if(VECGEOM_ENABLE_CUDA)
-  add_library(vecgeomcuda STATIC ${VECGEOM_CUDA_SRCS})
-  target_include_directories(vecgeomcuda
+  cuda_rdc_add_library(vecgeomcuda SHARED ${VECGEOM_CUDA_SRCS})
+  cuda_rdc_target_include_directories(vecgeomcuda
     PUBLIC
       $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}> 
       $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
       $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-  target_link_libraries(vecgeomcuda PUBLIC VecCore::VecCore vecgeom)
+  cuda_rdc_target_link_libraries(vecgeomcuda PUBLIC VecCore::VecCore vecgeom CUDA::cudart)
 
   if(VECGEOM_BENCHMARK AND VECGEOM_ROOT)
     # Benchmark stuff needs TVersionCheck
-    target_link_libraries(vecgeomcuda PUBLIC ROOT::Core)
+    cuda_rdc_target_link_libraries(vecgeomcuda PUBLIC ROOT::Core)
   endif()
 
   # - Suppress stack size warnings from a couple of functions
@@ -775,7 +777,7 @@ install(FILES ${PROJECT_BINARY_DIR}/VecGeom/base/Config.h
 install(TARGETS vecgeom EXPORT VecGeomTargets DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 
 if(VECGEOM_ENABLE_CUDA)
-  install(TARGETS vecgeomcuda EXPORT VecGeomTargets DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+  cuda_rdc_install(TARGETS vecgeomcuda EXPORT VecGeomTargets DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 endif()
 
 # CMake support files
