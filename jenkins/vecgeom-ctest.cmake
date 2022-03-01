@@ -132,6 +132,10 @@ else()
   endif()
 endif()
 
+message(STATUS "CTEST_CHECKOUT_COMMAND  : x${CTEST_CHECKOUT_COMMAND}x")
+message(STATUS "CTEST_GIT_UPDATE_COMMAND: x${CTEST_GIT_UPDATE_COMMAND}x")
+message(STATUS "CTEST_GIT_UPDATE_CUSTOM : x${CTEST_GIT_UPDATE_CUSTOM}x")
+
 ################################################################################
 ## Output language
 set($ENV{LC_MESSAGES}  "en_EN")

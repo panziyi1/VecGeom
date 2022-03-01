@@ -107,6 +107,7 @@ def buildAndTest() {
     fi
     source /cvmfs/sft.cern.ch/lcg/views/${EXTERNALS}/x86_64-centos7-${COMPILER}-opt/setup.sh
     env | sort | sed 's/:/:?     /g' | tr '?' '\n'
+    git log -n5 --oneline
     ctest -VV -S vecgeom/jenkins/vecgeom-ctest.cmake,$MODE
   """
 }
