@@ -590,7 +590,7 @@ function(cuda_rdc_target_link_libraries target)
           get_target_property(_current_link_libraries ${target} LINK_LIBRARIES)
           set_property(TARGET ${target} PROPERTY LINK_LIBRARIES ${_current_link_libraries} ${_finallibs} ${_current_link_libraries} )
         else()
-          target_link_libraries(${target} ${_finallibs})
+          target_link_libraries(${target} PRIVATE ${_finallibs})
         endif()
       elseif(${_final_count} GREATER 1)
         # turn into CUDA executable.
