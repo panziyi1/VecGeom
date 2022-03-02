@@ -375,33 +375,6 @@ message(STATUS "Compiling for ${_arch_up} SIMD architecture")
 # - Configure CUDA
 if(VECGEOM_ENABLE_CUDA)
   set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
-
-  # Pre CMake 3.18, we have to manually manage architecture flags, and can only
-  # really support Nvidia compiler. Don't handle any other case
-  if(CMAKE_VERSION VERSION_LESS "3.18" AND CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
-    # Take default using FindCUDA, likely a cleaner way with try_compile
-    find_package(CUDA REQUIRED)
-    cuda_select_nvcc_arch_flags(_DEFAULT_CUDA_ARCH_FLAGS Auto)
-    string(REGEX MATCH "[0-9][0-9]" _DEFAULT_CUDA_ARCH ${_DEFAULT_CUDA_ARCH_FLAGS})
-    
-    # Duplicate as far as possible CMake >= 3.18 behaviour
-    # NB: does *not* support -real or -virtual extensions
-    set(CMAKE_CUDA_ARCHITECTURES ${_DEFAULT_CUDA_ARCH} CACHE STRING "List of CUDA Architectures")
-    string(REPLACE " " ";" CMAKE_CUDA_ARCHITECTURES "${CMAKE_CUDA_ARCHITECTURES}")
-    list(FILTER CMAKE_CUDA_ARCHITECTURES EXCLUDE REGEX "^ *$")
-
-    # Only apply flags in "NOT non-empty false" case
-    if(CMAKE_CUDA_ARCHITECTURES)
-      foreach(_arch ${CMAKE_CUDA_ARCHITECTURES})
-        if(_arch MATCHES "(real|virtual)$")
-          message(FATAL_ERROR "real/virtual keyword specifier in CMAKE_CUDA_ARCHITECTURES (argument '${_arch}') requires CMake 3.18 or newer")
-        endif()
-        # Should be equivalent to old VecGeom behaviour of "-arch=sm_${CUDA_ARCH}", but allowing multiple arches
-        string(APPEND CMAKE_CUDA_FLAGS " --generate-code=code=[sm_${_arch},compute_${_arch}],arch=compute_${_arch}")
-      endforeach()
-    endif()
-  endif()
-
   string(APPEND CMAKE_CUDA_FLAGS_DEBUG " -G")
   string(APPEND CMAKE_CUDA_FLAGS_RELWITHDEBINFO " -line-info")
 
@@ -741,13 +714,7 @@ if(VECGEOM_ENABLE_CUDA)
   endif()
 
   # - Suppress stack size warnings from a couple of functions
-  # NB: currently identified as needed at device link step, but this only works on 
-  # CMake 3.18 and newer (target_link_options 3.13, DEVICE_LINK from 3.18)
-  # TODO: find workaround for earlier versions
-  # TODO: Check at CUDA compilation step
-  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18.0)
-    target_link_options(vecgeomcuda INTERFACE "$<DEVICE_LINK:SHELL: -Xnvlink --suppress-stack-size-warning>")
-  endif()
+  target_link_options(vecgeomcuda INTERFACE "$<DEVICE_LINK:SHELL: -Xnvlink --suppress-stack-size-warning>")
 endif()
 
 if(VECGEOM_ROOT)
