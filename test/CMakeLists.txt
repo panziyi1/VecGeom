@@ -99,7 +99,9 @@ set(TEST_EXECUTABLES_CORE
   core/TestEarlyReturns.cpp
   core/CreateTessels.cpp
   core/CreateExtruded.cpp
-  core/TestGeoManager.cpp)
+  core/TestGeoManager.cpp
+  surfaces/testEM3.cpp
+  )
 
 if(VECGEOM_USE_INDEXEDNAVSTATES)
   list(APPEND TEST_EXECUTABLES_CORE core/TestNavigationState.cpp)
