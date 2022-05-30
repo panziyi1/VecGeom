@@ -137,6 +137,7 @@ struct PlacedSurface {
     : fSurface(unplaced), fOutline(outline), fTrans(trans), fState(index) {}
 
   /// Transform point and direction to tjhe local frame
+  template <typename Real_t>
   void Transform(Vector3D<Real_t> const &point, Vector3D<Real_t> const &dir,
                  Vector3D<Real_t> &localpoint, Vector3D<Real_t> &localdir,
                  SurfData<Real_t>const &storage)
@@ -166,28 +167,49 @@ struct PlacedSurface {
     Transform(point, dir, localpoint, localdir);
     return fOutline.Inside(point, storage);
   }
-
-  PlacedSurface MakeGlobalSurface(int global_trans, NavIndex_t navindex)
-  {
-    return PlacedSurface(fSurface, fOutline, global_trans, navindex);
-  }
   
 };
 
 ///< A side represents all common placed surfaces
 struct Side {
-  int              fNsurf;      ///< Number of placed surfaces on this side
-  PlacedSurface   *fSurfaces;   ///< [fNsurf] Array of placed surfaces on this side
+  int  fNsurf {0};            ///< Number of placed surfaces on this side
+  int *fSurfaces {nullptr};   ///< [fNsurf] Array of placed surfaces on this side
+
+  // Add existing placed surface to this side
+  int AddSurface(int isurf)
+  {
+    // Re-allocate policy to keep memory footprint low
+    // Sides have to be relocated for GPU in contiguous memory
+    int *surfaces = new int[fNsurf + 1];
+    for (auto i = 0; i < fNsurf; ++i)
+      surfaces[i] = fSurfaces[i];
+    surfaces[fNsurf++] = isurf;
+    delete [] fSurfaces;
+    fSurfaces = surfaces;
+    return fNsurf - 1;
+  }
+
+  size_t size() const { return sizeof(Side) + fNsurf * sizeof(int); }
+
+  void CopyTo(char *buffer)
+  {
+    // to be implemented
+  }
+
 };
 
-struct Portal {
-  SurfaceType      fType; ///< Type of surface
+struct CommonSurface {
+  SurfaceType      fType {kPlanar}; ///< Type of surface
   // The portal property can be embedded in the general surface type
   
-  int              fLeftSide;  ///< Left-side portal side id (behind normal)
-  int              fRightSide; ///< Right-side portal side id (alongside normal)
-  
-  vecgeom::Transformation3D fTrans;     ///< Do we need a ref frame in which the surface equation is defined?
+  Side             fLeftSide;  ///< Left-side portal side id (behind normal)
+  Side             fRightSide; ///< Right-side portal side id (alongside normal)
+
+  CommonSurface(SurfaceType type, int global_surf) : fType(type)
+  {
+    // Add by default the first surface to the left side
+    fLeftSide.AddSurface(global_surf);
+  };  
 };
 
 class BVH;
@@ -197,7 +219,7 @@ class BVH;
 // A detector or setup will be composed of one or two levels of Scene
 struct Scene 
 {
-  Portal          *fPortals {nullptr};    // Doors to other scenes
+  CommonSurface  *fSurfaces {nullptr};    // Doors to other scenes
   BVH             *fNavigator {nullptr};
 };
 // How we decompose scene in hierarchical Scenes

@@ -2,6 +2,7 @@
 #define VECGEOM_SURFACE_BREPHELPER_H_
 
 #include <cassert>
+#include <functional>
 #include <VecGeom/surfaces/Model.h>
 
 #include "VecGeom/volumes/LogicalVolume.h"
@@ -41,6 +42,7 @@ private:
   std::vector<Transformation> fGlobalTrans;  ///< global transformations for surfaces in the scene
   std::vector<PlacedSurface> fLocalSurfaces; ///< local surfaces
   std::vector<PlacedSurface> fGlobalSurfaces; ///< global surfaces
+  std::vector<CommonSurface> fCommonSurfaces; ///< common surfaces
   std::vector<VolumeShell>   fShells;        ///< vector of local volume surfaces
 
   BrepHelper() : fSurfData(new SurfData_t()) {}
@@ -65,6 +67,7 @@ public:
     fGlobalTrans.clear(); std::vector<Transformation>().swap(fGlobalTrans);
     fLocalSurfaces.clear(); std::vector<PlacedSurface>().swap(fLocalSurfaces);
     fGlobalSurfaces.clear(); std::vector<PlacedSurface>().swap(fGlobalSurfaces);
+    fCommonSurfaces.clear(); std::vector<CommonSurface>().swap(fCommonSurfaces);
     for (size_t i = 0; i < fShells.size(); ++i) {
       fShells[i].fSurfaces.clear(); std::vector<int>().swap(fShells[i].fSurfaces);
     }
@@ -79,6 +82,35 @@ public:
   ~BrepHelper()
   {
     delete fSurfData;
+  }
+
+  bool ApproxEqual(Real_t t1, Real_t t2)
+  {
+    return std::abs(t1 - t2) <= vecgeom::kTolerance;
+  }
+
+  void PrintCommonSurface(int id)
+  {
+    auto const &surf = fCommonSurfaces[id];
+    printf("== common surface %d:\n", id);
+    printf("   side1: %d surfaces\n", surf.fLeftSide.fNsurf);
+    for (int i = 0; i < surf.fLeftSide.fNsurf; ++i) {
+      int idglob = surf.fLeftSide.fSurfaces[i];
+      auto const &placed = fGlobalSurfaces[idglob];
+      printf("    surf %d: trans: ", idglob);
+      fGlobalTrans[placed.fTrans].Print();
+      vecgeom::NavStateIndex state(placed.fState);
+      state.Print();
+    }
+    printf("   side2: %d surfaces\n", surf.fRightSide.fNsurf);
+    for (int i = 0; i < surf.fRightSide.fNsurf; ++i) {
+      int idglob = surf.fRightSide.fSurfaces[i];
+      auto const &placed = fGlobalSurfaces[idglob];
+      printf("    surf %d: trans: ", idglob);
+      fGlobalTrans[placed.fTrans].Print();
+      vecgeom::NavStateIndex state(placed.fState);
+      state.Print();
+    }
   }
 
   void SetNvolumes(int nvolumes)
@@ -109,22 +141,20 @@ public:
     return true;
   }
 
-  bool CreateGlobalSurfacesFlatTop()
+  bool CreateCommonSurfacesFlatTop()
   {
     // Iterate the geometry tree and flatten surfaces at top level
     int nphysical = 0;
-    int nglobalsurf = 0;
     vecgeom::NavStateIndex state;
     
-    // recursive geometry visitor lambda creating the global surfaces for the current placed volume
+    // recursive geometry visitor lambda creating the common surfaces for the current placed volume
     typedef std::function<void(vecgeom::VPlacedVolume const *)> func_t;
-    func_t createGlobalSurfaces = [&](vecgeom::VPlacedVolume const *pvol) {
+    func_t createCommonSurfaces = [&](vecgeom::VPlacedVolume const *pvol) {
       state.Push(pvol);
       const auto vol   = pvol->GetLogicalVolume();
       auto daughters   = vol->GetDaughters();
       int nd           = daughters.size();
       nphysical++;
-      //state.Print();
       Transformation trans;
       state.TopMatrix(trans);
       VolumeShell const &shell = fShells[vol->id()];
@@ -132,24 +162,28 @@ public:
         PlacedSurface const &lsurf = fLocalSurfaces[lsurf_id];
         Transformation global(trans);
         global.MultiplyFromRight(fLocalTrans[lsurf.fTrans]);
-        state.Print();
-        global.Print();
-        std::cout << "\n";
-        int global_trans_id = CreateGlobalTransformation(global);
-        CreateGlobalSurface(lsurf.fSurface, lsurf.fOutline, global_trans_id, state.GetNavIndex());
-        nglobalsurf++;
+        int trans_id = fGlobalTrans.size();
+        fGlobalTrans.push_back(global);
+        // Create the global surface
+        int id_glob = fGlobalSurfaces.size();
+        fGlobalSurfaces.push_back({lsurf.fSurface, lsurf.fOutline, trans_id, state.GetNavIndex()});
+        int isurf = CreateCommonSurface(id_glob);
       }
 
       // Now do the daughters
       for (int id = 0; id < nd; ++id) {
-        createGlobalSurfaces(daughters[id]);
+        createCommonSurfaces(daughters[id]);
       }
       state.Pop();
     };
 
-    createGlobalSurfaces(vecgeom::GeoManager::Instance().GetWorld());
+    createCommonSurfaces(vecgeom::GeoManager::Instance().GetWorld());
 
-    std::cout << "Visited " << nphysical << " physical volumes, created " << nglobalsurf << " global surfaces\n";
+    for (size_t isurf = 0; isurf < fCommonSurfaces.size(); ++isurf) {
+      PrintCommonSurface(isurf);
+    }
+
+    std::cout << "Visited " << nphysical << " physical volumes, created " << fCommonSurfaces.size() << " common surfaces\n";
     return true;
   }
 
@@ -160,7 +194,7 @@ private:
       std::cout << "BrepHelper::AddSurfaceToShell: need to call SetNvolumes first\n";
       return -1;
     }
-    assert(logical_id < fShells.size() && "surface shell id exceeding number of volumes");
+    assert(logical_id < (int)fShells.size() && "surface shell id exceeding number of volumes");
     int id = fShells[logical_id].fSurfaces.size();
     fShells[logical_id].fSurfaces.push_back(isurf);
     return id;
@@ -200,13 +234,6 @@ private:
     return id;
   }
 
-  int CreateGlobalTransformation(Transformation const &trans)
-  {
-    int id = fGlobalTrans.size();
-    fGlobalTrans.push_back(trans);
-    return id;
-  }
-
   int CreateLocalSurface(UnplacedSurface const &unplaced, Outline const &outline, int trans)
   {
     int id = fLocalSurfaces.size();
@@ -214,10 +241,102 @@ private:
     return id;
   }
 
-  int CreateGlobalSurface(UnplacedSurface const &unplaced, Outline const &outline, int trans, NavIndex_t navindex)
+  int CreateCommonSurface(int idglob)
   {
-    int id = fGlobalSurfaces.size();
-    fGlobalSurfaces.push_back({unplaced, outline, trans, navindex});
+    bool flip;
+
+    auto approxEqual = [&](int idglob1, int idglob2)
+    {
+      flip = false;
+      PlacedSurface const &s1 = fGlobalSurfaces[idglob1];
+      PlacedSurface const &s2 = fGlobalSurfaces[idglob2];
+      // Surfaces may be in future "compatible" even if they are not the same, for now enforce equality
+      if (s1.fSurface.type != s2.fSurface.type)
+        return false;
+
+      // Check if the 2 surfaces are parallel
+      Transformation const &t1 = fGlobalTrans[s1.fTrans];
+      Transformation const &t2 = fGlobalTrans[s2.fTrans];
+      // Calculate normalized connection vector between the two transformations
+      auto tdiff = t1.Translation() - t2.Translation();
+      tdiff.Normalize();
+      decltype(tdiff) ldir;
+      t1.TransformDirection(tdiff, ldir);
+      switch (s1.fSurface.type) {
+        case kPlanar:
+          // For planes to match, the connecting vector must be along the planes
+          if (std::abs(ldir[2]) > vecgeom::kTolerance)
+            return false;
+          break;
+        case kCylindrical:
+          if (std::abs( fCylSphData[s1.fSurface.id].radius - fCylSphData[s1.fSurface.id].radius) > vecgeom::kTolerance)
+            return false;
+          // For connected cylinders, the connecting vector must be along the Z axis
+          if (!ApproxEqual(ldir[0], 0) || !ApproxEqual(ldir[1], 0))
+            return false;
+          break;
+        case kConical:
+        case kSpherical:
+        case kTorus:
+        case kGenSecondOrder:
+        default:
+          printf("CreateCommonSurface: case not implemented\n");
+          return false;
+      };
+
+      // Now check if the rotations are matching
+      // Check if translations are equal (but this is just a sub-case)
+      //for (int i = 0; i < 3; ++i)
+      //  if (!ApproxEqual(t1.Translation(i), t2.Translation(i)))
+      //    return false;
+
+      // Check rotation. Two rotations are considered equal if we can reach one from
+      // the other by composing with a flip operation:
+      //   R2 = R1 * F    =>    R1.Inverse * R2 = F
+      //   R1 = R2 * F    =>    R2.Inverse * R1 = F
+      // so: R1.Inverse * R2 = R2.Inverse * R1
+      // which has a trivial solution (F = I) for R1 = R2 and a non-trivial one.
+      bool equal = true;
+      for (int i = 0; i < 9; ++i) {
+        if (!ApproxEqual(t1.Rotation(i), t2.Rotation(i))) {
+          equal = false;
+          break;
+        }
+      }
+      if (equal) return true;
+      // We need to check the flipped solution
+      Transformation flip1, flip2;
+      t1.Inverse(flip1);
+      t2.Inverse(flip2);
+      flip1.MultiplyFromRight(t2);
+      flip2.MultiplyFromRight(t1);
+      
+      for (int i = 0; i < 9; ++i)
+        if (!ApproxEqual(flip1.Rotation(i), flip2.Rotation(i)))
+          return false;
+      
+      flip = true;
+      return true;
+    };
+    
+    // this may be slow
+    auto it = std::find_if(std::begin(fCommonSurfaces), std::end(fCommonSurfaces), [&](const CommonSurface &t)
+                          {return approxEqual(t.fLeftSide.fSurfaces[0], idglob);});
+    int id = -1;
+    int numside = 0;
+    if (it != std::end(fCommonSurfaces)) {
+      id = int(it - std::begin(fCommonSurfaces));
+      // Add the global surface to the appropriate side
+      if (flip)
+        numside = (*it).fRightSide.AddSurface(idglob);
+      else
+        numside = (*it).fLeftSide.AddSurface(idglob);
+
+    } else {
+      // Construct a new common surface from the current placed global surface
+      id = fCommonSurfaces.size();
+      fCommonSurfaces.push_back({fGlobalSurfaces[idglob].fSurface.type, idglob});
+    }
     return id;
   }
 
@@ -228,25 +347,25 @@ private:
     // surface at -dx:
     isurf = CreateLocalSurface( CreateUnplacedSurface(kPlanar),
                                 CreateOutline(kWindow, {box.z(), box.y()}),
-                                CreateLocalTransformation({-box.x(), 0, 0, 0, 90, 0})
+                                CreateLocalTransformation({-box.x(), 0, 0, 90, -90, 0})
                               );
     AddSurfaceToShell(logical_id, isurf);
     // surface at +dx:
     isurf = CreateLocalSurface( CreateUnplacedSurface(kPlanar),
                                 CreateOutline(kWindow, {box.z(), box.y()}),
-                                CreateLocalTransformation({box.x(), 0, 0, 0, -90, 0})
+                                CreateLocalTransformation({box.x(), 0, 0, 90, 90, 0})
                               );
     AddSurfaceToShell(logical_id, isurf);
     // surface at -dy:
     isurf = CreateLocalSurface( CreateUnplacedSurface(kPlanar),
                                 CreateOutline(kWindow, {box.x(), box.z()}),
-                                CreateLocalTransformation({0, -box.y(), 0, 90, -90, 0})
+                                CreateLocalTransformation({0, -box.y(), 0, 0, 90, 0})
                               );
     AddSurfaceToShell(logical_id, isurf);
     // surface at +dy:
     isurf = CreateLocalSurface( CreateUnplacedSurface(kPlanar),
                                 CreateOutline(kWindow, {box.x(), box.z()}),
-                                CreateLocalTransformation({0, box.y(), 0, 90, 90, 0})
+                                CreateLocalTransformation({0, box.y(), 0, 0, -90, 0})
                               );
     AddSurfaceToShell(logical_id, isurf);
     // surface at -dz:

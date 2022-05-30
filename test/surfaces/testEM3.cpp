@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string> 
 
 #include "test/benchmark/ArgParser.h"
 #include "VecGeom/volumes/LogicalVolume.h"
@@ -23,7 +24,7 @@ int main(int argc, char *argv[])
 
   if (!BrepHelper::Instance().CreateLocalSurfaces())
     return 1;
-  if (!BrepHelper::Instance().CreateGlobalSurfacesFlatTop())
+  if (!BrepHelper::Instance().CreateCommonSurfacesFlatTop())
     return 2;
 
   // Test clearing surface data
@@ -73,9 +74,11 @@ void CreateVecGeomWorld(int NbOfLayers, int NbOfAbsorbers)
   // Create a new LogicalVolume per layer, we need unique IDs for scoring.
   double xCenter = -0.5 * CalorThickness + 0.5 * LayerThickness;
   for (int i = 0; i < NbOfLayers; i++) {
+    std::string name("Layer_");
+    name += std::to_string(i);
     auto layerLogic = new vecgeom::LogicalVolume("Layer", layerSolid);
     vecgeom::Transformation3D placement(xCenter, 0, 0);
-    calorLogic->PlaceDaughter(layerLogic, &placement);
+    calorLogic->PlaceDaughter(name.c_str(), layerLogic, &placement);
 
     layerLogic->PlaceDaughter(gapLogic, &gapPlacement);
     layerLogic->PlaceDaughter(absorberLogic, &absorberPlacement);
