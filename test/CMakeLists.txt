@@ -100,11 +100,14 @@ set(TEST_EXECUTABLES_CORE
   core/CreateTessels.cpp
   core/CreateExtruded.cpp
   core/TestGeoManager.cpp
-  surfaces/testEM3.cpp
   )
 
 if(VECGEOM_USE_INDEXEDNAVSTATES)
   list(APPEND TEST_EXECUTABLES_CORE core/TestNavigationState.cpp)
+endif()
+
+if (VECGEOM_USE_NAVINDEX)
+  list(APPEND TEST_EXECUTABLES_CORE surfaces/testEM3.cpp)
 endif()
 
 if(NOT VECGEOM_ENABLE_CUDA)
