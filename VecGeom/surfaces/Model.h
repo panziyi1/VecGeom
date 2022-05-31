@@ -172,8 +172,8 @@ struct PlacedSurface {
 
 ///< A side represents all common placed surfaces
 struct Side {
-  int  fNsurf {0};            ///< Number of placed surfaces on this side
-  int *fSurfaces {nullptr};   ///< [fNsurf] Array of placed surfaces on this side
+  int  fNsurf {0};                ///< Number of placed surfaces on this side
+  int *fSurfaces {nullptr};       ///< [fNsurf] Array of placed surfaces on this side
 
   // Add existing placed surface to this side
   int AddSurface(int isurf)
@@ -200,6 +200,7 @@ struct Side {
 
 struct CommonSurface {
   SurfaceType      fType {kPlanar}; ///< Type of surface
+  NavIndex_t fDefaultState {0};   ///< The default state for this surface (deepest mother)
   // The portal property can be embedded in the general surface type
   
   Side             fLeftSide;  ///< Left-side portal side id (behind normal)

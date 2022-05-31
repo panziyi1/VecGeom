@@ -89,10 +89,66 @@ public:
     return std::abs(t1 - t2) <= vecgeom::kTolerance;
   }
 
+  void ComputeDefaultStates(int shared_id)
+  {
+    using vecgeom::NavStateIndex;
+    // Computes the default states for each side of a common surface
+    Side &left  = fCommonSurfaces[shared_id].fLeftSide;
+    Side &right = fCommonSurfaces[shared_id].fRightSide;
+    assert(left.fNsurf > 0 || right.fNsurf > 0);
+
+    NavIndex_t default_ind;
+
+    // A lambda that finds the deepest common ancestor between 2 states
+    auto getCommonState = [&](NavIndex_t const &s1, NavIndex_t const &s2)
+    {
+      NavIndex_t a1(s1), a2(s2);
+      // Bring both states at the same level
+      while (NavStateIndex::GetLevelImpl(a1) > NavStateIndex::GetLevelImpl(a2))
+        a1 = NavStateIndex::PopImpl(a1);
+      while (NavStateIndex::GetLevelImpl(a2) > NavStateIndex::GetLevelImpl(a1))
+        a2 = NavStateIndex::PopImpl(a2);
+
+      // Pop until we reach the same state
+      while (a1 != a2) {
+        a1 = NavStateIndex::PopImpl(a1);
+        a2 = NavStateIndex::PopImpl(a2);
+      }
+      return a1;
+    };
+
+    int minlevel = 10000; // this is a big-enough number as level
+    for (int isurf = 0; isurf < left.fNsurf; ++isurf) {
+      auto navind = fGlobalSurfaces[left.fSurfaces[isurf]].fState;
+      minlevel = std::min(minlevel, (int)NavStateIndex::GetLevelImpl(navind));
+    }
+    for (int isurf = 0; isurf < right.fNsurf; ++isurf) {
+      auto navind = fGlobalSurfaces[right.fSurfaces[isurf]].fState;
+      minlevel = std::min(minlevel, (int)NavStateIndex::GetLevelImpl(navind));
+    }
+
+    // initialize the default state
+    if (left.fNsurf > 0)
+      default_ind = fGlobalSurfaces[left.fSurfaces[0]].fState;
+    else if (right.fNsurf > 0)
+      default_ind = fGlobalSurfaces[right.fSurfaces[0]].fState;
+
+    for (int isurf = 0; isurf < left.fNsurf; ++isurf)
+      default_ind = getCommonState(default_ind, fGlobalSurfaces[left.fSurfaces[isurf]].fState);
+    for (int isurf = 0; isurf < right.fNsurf; ++isurf)
+      default_ind = getCommonState(default_ind, fGlobalSurfaces[right.fSurfaces[isurf]].fState);
+    
+    if (NavStateIndex::GetLevelImpl(default_ind) == minlevel)
+      default_ind = NavStateIndex::PopImpl(default_ind);
+    fCommonSurfaces[shared_id].fDefaultState = default_ind;
+  }
+
   void PrintCommonSurface(int id)
   {
     auto const &surf = fCommonSurfaces[id];
-    printf("== common surface %d:\n", id);
+    printf("== common surface %d: default state ", id);
+    vecgeom::NavStateIndex default_state(surf.fDefaultState);
+    default_state.Print();
     printf("   side1: %d surfaces\n", surf.fLeftSide.fNsurf);
     for (int i = 0; i < surf.fLeftSide.fNsurf; ++i) {
       int idglob = surf.fLeftSide.fSurfaces[i];
@@ -180,6 +236,7 @@ public:
     createCommonSurfaces(vecgeom::GeoManager::Instance().GetWorld());
 
     for (size_t isurf = 0; isurf < fCommonSurfaces.size(); ++isurf) {
+      ComputeDefaultStates(isurf);
       PrintCommonSurface(isurf);
     }
 
