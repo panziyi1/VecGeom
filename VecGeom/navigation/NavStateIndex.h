@@ -184,7 +184,7 @@ public:
   VECGEOM_FORCE_INLINE
   static unsigned short GetNdaughtersImpl(NavIndex_t nav_ind)
   {
-    constexpr unsigned int kOffsetNd = 2 * sizeof(NavIndex_t) + 2;
+    constexpr unsigned int kOffsetNd = 3 * sizeof(NavIndex_t) + 2;
     auto content_nd                  = (unsigned short *)((unsigned char *)(NavIndAddr(nav_ind)) + kOffsetNd);
     return *content_nd;
   }
@@ -193,7 +193,7 @@ public:
   VECCORE_ATT_HOST_DEVICE
   static unsigned char GetLevelImpl(NavIndex_t nav_ind)
   {
-    constexpr unsigned int kOffsetLevel = 2 * sizeof(NavIndex_t);
+    constexpr unsigned int kOffsetLevel = 3 * sizeof(NavIndex_t);
     auto content_level                  = (unsigned char *)(NavIndAddr(nav_ind)) + kOffsetLevel;
     return *content_level;
   }
@@ -211,26 +211,30 @@ public:
 
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
+  static NavIndex_t GetIdImpl(NavIndex_t nav_ind) { return (nav_ind > 0) ? NavInd(nav_ind + 1) : 0; }
+
+  VECGEOM_FORCE_INLINE
+  VECCORE_ATT_HOST_DEVICE
   static NavIndex_t PopImpl(NavIndex_t nav_ind) { return (nav_ind > 0) ? NavInd(nav_ind) : 0; }
 
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
   static NavIndex_t PushImpl(NavIndex_t nav_ind, VPlacedVolume const *v)
   {
-    return (nav_ind > 0) ? NavInd(nav_ind + 3 + v->GetChildId()) : 1;
+    return (nav_ind > 0) ? NavInd(nav_ind + 4 + v->GetChildId()) : 1;
   }
 
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
   static VPlacedVolume const *TopImpl(NavIndex_t nav_ind)
   {
-    return (nav_ind > 0) ? ToPlacedVolume(NavInd(nav_ind + 1)) : nullptr;
+    return (nav_ind > 0) ? ToPlacedVolume(NavInd(nav_ind + 2)) : nullptr;
   }
 
   VECCORE_ATT_HOST_DEVICE
   static void TopMatrixImpl(NavIndex_t nav_ind, Transformation3D &trans)
   {
-    constexpr unsigned int kOffsetHasm = 2 * sizeof(NavIndex_t) + 1;
+    constexpr unsigned int kOffsetHasm = 3 * sizeof(NavIndex_t) + 1;
 
     unsigned char hasm;
     while (true) {
@@ -248,7 +252,7 @@ public:
     bool has_trans           = (hasm & 0x02) > 0;
     bool has_rot             = (hasm & 0x01) > 0;
     auto nd                  = GetNdaughtersImpl(nav_ind);
-    const Precision *address = (Precision *)(NavIndAddr(nav_ind + 3 + nd + ((nd + 1) & 1)));
+    const Precision *address = (Precision *)(NavIndAddr(nav_ind + 4 + nd + ((nd + 1) & 1)));
     Transformation3D t;
     t.Set(address, address + 3, has_trans, has_rot);
     t.MultiplyFromRight(trans);
@@ -276,6 +280,10 @@ public:
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
   unsigned short GetNdaughters() const { return GetNdaughtersImpl(fNavInd); }
+
+  VECGEOM_FORCE_INLINE
+  VECCORE_ATT_HOST_DEVICE
+  NavIndex_t GetId() const { return GetIdImpl(fNavInd); }
 
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
@@ -325,7 +333,7 @@ public:
   VPlacedVolume const *At(int level) const
   {
     auto parent = GetNavIndexImpl(fNavInd, level);
-    return (parent > 0) ? ToPlacedVolume(NavInd(parent + 1)) : nullptr;
+    return (parent > 0) ? ToPlacedVolume(NavInd(parent + 2)) : nullptr;
   }
 
   /**
@@ -336,7 +344,7 @@ public:
   size_t ValueAt(int level) const
   {
     auto parent = GetNavIndexImpl(fNavInd, level);
-    return (parent > 0) ? (size_t)NavInd(parent + 1) : 0;
+    return (parent > 0) ? (size_t)NavInd(parent + 2) : 0;
   }
 
   VECCORE_ATT_HOST_DEVICE
