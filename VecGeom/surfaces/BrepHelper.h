@@ -388,18 +388,23 @@ private:
       Transformation const &t2 = fGlobalTrans[s2.fTrans];
       // Calculate normalized connection vector between the two transformations
       auto tdiff = t1.Translation() - t2.Translation();
-      tdiff.Normalize();
+      bool same_tr = ApproxEqual(tdiff[0], 0) && ApproxEqual(tdiff[1], 0) && ApproxEqual(tdiff[2], 0);
       decltype(tdiff) ldir;
-      t1.TransformDirection(tdiff, ldir);
       switch (s1.fSurface.type) {
         case kPlanar:
+          if (same_tr) break;
           // For planes to match, the connecting vector must be along the planes
+          tdiff.Normalize();
+          t1.TransformDirection(tdiff, ldir);
           if (std::abs(ldir[2]) > vecgeom::kTolerance)
             return false;
           break;
         case kCylindrical:
           if (std::abs( fCylSphData[s1.fSurface.id].radius - fCylSphData[s1.fSurface.id].radius) > vecgeom::kTolerance)
             return false;
+          if (same_tr) break;
+          tdiff.Normalize();
+          t1.TransformDirection(tdiff, ldir);
           // For connected cylinders, the connecting vector must be along the Z axis
           if (!ApproxEqual(ldir[0], 0) || !ApproxEqual(ldir[1], 0))
             return false;
