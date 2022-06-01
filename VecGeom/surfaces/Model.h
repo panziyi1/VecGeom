@@ -9,8 +9,8 @@ namespace vgbrep {
 ///< Supported surface types
 enum SurfaceType {kPlanar, kCylindrical, kConical, kSpherical, kTorus, kGenSecondOrder};
 
-///< Supported outline types
-enum OutlineType {kRangeZ, kRangeCyl, kRangeSph, kWindow, kTriangle};
+///< Supported frame types
+enum FrameType {kRangeZ, kRangeCyl, kRangeSph, kWindow, kTriangle};
 
 ///< 
 /* 
@@ -68,17 +68,17 @@ struct UnplacedSurface {
   }
 };
 
-/* An outline delimiting the real surface on an infinite half-space */
-struct Outline {
-  OutlineType        type;         ///< outline type
-  int                id;           ///< outline data id
+/* An frame delimiting the real surface on an infinite half-space */
+struct Frame {
+  FrameType        type;         ///< frame type
+  int                id;           ///< frame data id
 
-  Outline(OutlineType mtype, int mid) : type(mtype), id(mid) {}
+  Frame(FrameType mtype, int mid) : type(mtype), id(mid) {}
     
   template <typename Real_t>
   bool Inside(Vector3D<Real_t> const &local, SurfData<Real_t> const &storage)
   {
-    auto data = storage.GetOutlineData(*this);
+    auto data = storage.GetFrameData(*this);
     Real_t rsq {0};
     switch (type) {
       case kRangeZ:
@@ -129,12 +129,12 @@ struct Outline {
 
 struct PlacedSurface {
   UnplacedSurface  fSurface;   ///< Surface idntifier
-  Outline          fOutline;   ///< Outline
+  Frame          fFrame;   ///< Frame
   int              fTrans {-1};     ///< Transformation of the surface in the compacted sub-hierarchy top volume frame
   NavIndex_t       fState {0};     ///< sub-path navigation state id in the parent scene
 
-  PlacedSurface(UnplacedSurface const &unplaced, Outline const &outline, int trans, NavIndex_t index = 0)
-    : fSurface(unplaced), fOutline(outline), fTrans(trans), fState(index) {}
+  PlacedSurface(UnplacedSurface const &unplaced, Frame const &frame, int trans, NavIndex_t index = 0)
+    : fSurface(unplaced), fFrame(frame), fTrans(trans), fState(index) {}
 
   /// Transform point and direction to tjhe local frame
   template <typename Real_t>
@@ -158,14 +158,14 @@ struct PlacedSurface {
     return fSurface.Intersect<Real_t>(localpoint, localdir, storage);
   }
  
-  ///< Check if the propagated point on surface is within the outline
+  ///< Check if the propagated point on surface is within the frame
   template <typename Real_t>
-  bool InsideOutline(Vector3D<Real_t> const &point, Vector3D<Real_t> const &dir,
+  bool InsideFrame(Vector3D<Real_t> const &point, Vector3D<Real_t> const &dir,
                      SurfData<Real_t> const &storage)
   {
     Vector3D<Real_t> localpoint, localdir;
     Transform(point, dir, localpoint, localdir);
-    return fOutline.Inside(point, storage);
+    return fFrame.Inside(point, storage);
   }
   
 };
@@ -206,6 +206,8 @@ struct CommonSurface {
   Side             fLeftSide;  ///< Left-side portal side id (behind normal)
   Side             fRightSide; ///< Right-side portal side id (alongside normal)
 
+  CommonSurface() {};
+  
   CommonSurface(SurfaceType type, int global_surf) : fType(type)
   {
     // Add by default the first surface to the left side

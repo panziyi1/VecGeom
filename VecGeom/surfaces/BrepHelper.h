@@ -34,8 +34,8 @@ private:
   SurfData_t *fSurfData{nullptr};            ///< Surface data
   SurfData_t *fSurfDataGPU{nullptr};         ///< Surface data on device
 
-  std::vector<RangeMask<Real_t>> fRanges;    ///< List of outline ranges
-  std::vector<Outline>     fOutlines;        ///< vector of masks
+  std::vector<RangeMask<Real_t>> fRanges;    ///< List of frame ranges
+  std::vector<Frame>     fFrames;        ///< vector of masks
   std::vector<CylData_t>   fCylSphData;      ///< data for cyl surfaces
   std::vector<ConeData_t>  fConeData;        ///< data for conical surfaces
   std::vector<Transformation> fLocalTrans;   ///< local transformations
@@ -44,6 +44,7 @@ private:
   std::vector<PlacedSurface> fGlobalSurfaces; ///< global surfaces
   std::vector<CommonSurface> fCommonSurfaces; ///< common surfaces
   std::vector<VolumeShell>   fShells;        ///< vector of local volume surfaces
+  std::vector<std::vector<int>> fCandidates; ///< candidate lists for each state
 
   BrepHelper() : fSurfData(new SurfData_t()) {}
 
@@ -60,7 +61,7 @@ public:
   {
     // Dispose of surface data and shrink the container
     fRanges.clear(); std::vector<RangeMask<Real_t>>().swap(fRanges);
-    fOutlines.clear(); std::vector<Outline>().swap(fOutlines);
+    fFrames.clear(); std::vector<Frame>().swap(fFrames);
     fCylSphData.clear(); std::vector<CylData_t>().swap(fCylSphData);
     fConeData.clear(); std::vector<ConeData_t>().swap(fConeData);
     fLocalTrans.clear(); std::vector<Transformation>().swap(fLocalTrans);
@@ -146,7 +147,7 @@ public:
   void PrintCommonSurface(int id)
   {
     auto const &surf = fCommonSurfaces[id];
-    printf("== common surface %d: default state ", id);
+    printf("== common surface %d: default state: ", id);
     vecgeom::NavStateIndex default_state(surf.fDefaultState);
     default_state.Print();
     printf("   side1: %d surfaces\n", surf.fLeftSide.fNsurf);
@@ -155,6 +156,7 @@ public:
       auto const &placed = fGlobalSurfaces[idglob];
       printf("    surf %d: trans: ", idglob);
       fGlobalTrans[placed.fTrans].Print();
+      printf(", ");
       vecgeom::NavStateIndex state(placed.fState);
       state.Print();
     }
@@ -222,8 +224,8 @@ public:
         fGlobalTrans.push_back(global);
         // Create the global surface
         int id_glob = fGlobalSurfaces.size();
-        fGlobalSurfaces.push_back({lsurf.fSurface, lsurf.fOutline, trans_id, state.GetNavIndex()});
-        int isurf = CreateCommonSurface(id_glob);
+        fGlobalSurfaces.push_back({lsurf.fSurface, lsurf.fFrame, trans_id, state.GetNavIndex()});
+        CreateCommonSurface(id_glob);
       }
 
       // Now do the daughters
@@ -233,15 +235,85 @@ public:
       state.Pop();
     };
 
+    // add a dummy common surface since index 0 is not allowed for correctly handling sides
+    fCommonSurfaces.push_back({});
+
     createCommonSurfaces(vecgeom::GeoManager::Instance().GetWorld());
 
-    for (size_t isurf = 0; isurf < fCommonSurfaces.size(); ++isurf) {
+    for (size_t isurf = 1; isurf < fCommonSurfaces.size(); ++isurf) {
       ComputeDefaultStates(isurf);
       PrintCommonSurface(isurf);
     }
 
-    std::cout << "Visited " << nphysical << " physical volumes, created " << fCommonSurfaces.size() << " common surfaces\n";
+    std::cout << "Visited " << nphysical << " physical volumes, created " << fCommonSurfaces.size() - 1 << " common surfaces\n";
+
+    CreateCandidateLists();
     return true;
+  }
+
+  ///< This method creates helper lists of candidate surfaces for each navigation state
+  void CreateCandidateLists()
+  {
+    int numNodes = vecgeom::GeoManager::Instance().GetTotalNodeCount() + 1; // count also outside state
+    fCandidates.reserve(numNodes);
+
+    // Lambda adding the surface id as candidate to all states from a side
+    auto addSurfToSideStates = [&](int isurf, int iside)
+    {
+      Side const &side = (iside > 0) ? fCommonSurfaces[isurf].fLeftSide
+                                     : fCommonSurfaces[isurf].fRightSide;
+      for (int i = 0; i < side.fNsurf; ++i) {
+        int idglob = side.fSurfaces[i];
+        auto const &placed = fGlobalSurfaces[idglob];
+        vecgeom::NavStateIndex state(placed.fState);
+        int state_id = state.GetId();
+        fCandidates[state_id].push_back(isurf * iside);
+      }
+    };
+
+    // prepare all lists
+    for (int i = 0; i < numNodes; ++i) fCandidates.push_back({});
+  
+    // loop over all common surfaces and add their index in the appropriate list
+    for (size_t isurf = 1; isurf < fCommonSurfaces.size(); ++isurf) {
+      auto const &surf = fCommonSurfaces[isurf];
+      // Add to default surface state
+      vecgeom::NavStateIndex state(surf.fDefaultState);
+      fCandidates[state.GetId()].push_back(-isurf);
+      // Add to side states
+      addSurfToSideStates(isurf, 1);
+      addSurfToSideStates(isurf, -1);
+    }
+
+    vecgeom::NavStateIndex state;
+
+    // recursive geometry visitor lambda printing the candidates lists
+    // We have no direct access from a state (contiguous) id to the actual state index
+    typedef std::function<void(vecgeom::VPlacedVolume const *)> func_t;
+    func_t printCandidates = [&](vecgeom::VPlacedVolume const *pvol) {
+      state.Push(pvol);
+      const auto vol   = pvol->GetLogicalVolume();
+      auto daughters   = vol->GetDaughters();
+      int nd           = daughters.size();
+      state.Print();
+      printf(" %lu candidates: ", fCandidates[state.GetId()].size());
+      for (auto isurf : fCandidates[state.GetId()]) printf("%d ", isurf);
+      printf("\n");
+
+      // do daughters
+      for (int id = 0; id < nd; ++id) {
+        printCandidates(daughters[id]);
+      }
+      state.Pop();
+    };
+
+    printf("\nCandidate surfaces per state:");
+    state.Print();
+    printf(" %lu candidates: ", fCandidates[state.GetId()].size());
+    for (auto isurf : fCandidates[state.GetId()]) printf("%d ", isurf);
+    printf("\n");
+
+    printCandidates(vecgeom::GeoManager::Instance().GetWorld());
   }
 
 private:
@@ -277,11 +349,11 @@ private:
     return UnplacedSurface(type, -1);
   }
 
-  Outline CreateOutline(OutlineType type, RangeMask<Real_t> mask)
+  Frame CreateFrame(FrameType type, RangeMask<Real_t> mask)
   {
     int id = fRanges.size();
     fRanges.push_back(mask);
-    return Outline(type, id);
+    return Frame(type, id);
   }
 
   int CreateLocalTransformation(Transformation const &trans)
@@ -291,10 +363,10 @@ private:
     return id;
   }
 
-  int CreateLocalSurface(UnplacedSurface const &unplaced, Outline const &outline, int trans)
+  int CreateLocalSurface(UnplacedSurface const &unplaced, Frame const &frame, int trans)
   {
     int id = fLocalSurfaces.size();
-    fLocalSurfaces.push_back({unplaced, outline, trans});
+    fLocalSurfaces.push_back({unplaced, frame, trans});
     return id;
   }
 
@@ -378,16 +450,15 @@ private:
     
     // this may be slow
     auto it = std::find_if(std::begin(fCommonSurfaces), std::end(fCommonSurfaces), [&](const CommonSurface &t)
-                          {return approxEqual(t.fLeftSide.fSurfaces[0], idglob);});
+                          {return (t.fLeftSide.fNsurf > 0) ? approxEqual(t.fLeftSide.fSurfaces[0], idglob) : false;});
     int id = -1;
-    int numside = 0;
     if (it != std::end(fCommonSurfaces)) {
       id = int(it - std::begin(fCommonSurfaces));
       // Add the global surface to the appropriate side
       if (flip)
-        numside = (*it).fRightSide.AddSurface(idglob);
+        (*it).fRightSide.AddSurface(idglob);
       else
-        numside = (*it).fLeftSide.AddSurface(idglob);
+        (*it).fLeftSide.AddSurface(idglob);
 
     } else {
       // Construct a new common surface from the current placed global surface
@@ -403,37 +474,37 @@ private:
     int isurf;
     // surface at -dx:
     isurf = CreateLocalSurface( CreateUnplacedSurface(kPlanar),
-                                CreateOutline(kWindow, {box.z(), box.y()}),
+                                CreateFrame(kWindow, {box.z(), box.y()}),
                                 CreateLocalTransformation({-box.x(), 0, 0, 90, -90, 0})
                               );
     AddSurfaceToShell(logical_id, isurf);
     // surface at +dx:
     isurf = CreateLocalSurface( CreateUnplacedSurface(kPlanar),
-                                CreateOutline(kWindow, {box.z(), box.y()}),
+                                CreateFrame(kWindow, {box.z(), box.y()}),
                                 CreateLocalTransformation({box.x(), 0, 0, 90, 90, 0})
                               );
     AddSurfaceToShell(logical_id, isurf);
     // surface at -dy:
     isurf = CreateLocalSurface( CreateUnplacedSurface(kPlanar),
-                                CreateOutline(kWindow, {box.x(), box.z()}),
+                                CreateFrame(kWindow, {box.x(), box.z()}),
                                 CreateLocalTransformation({0, -box.y(), 0, 0, 90, 0})
                               );
     AddSurfaceToShell(logical_id, isurf);
     // surface at +dy:
     isurf = CreateLocalSurface( CreateUnplacedSurface(kPlanar),
-                                CreateOutline(kWindow, {box.x(), box.z()}),
+                                CreateFrame(kWindow, {box.x(), box.z()}),
                                 CreateLocalTransformation({0, box.y(), 0, 0, -90, 0})
                               );
     AddSurfaceToShell(logical_id, isurf);
     // surface at -dz:
     isurf = CreateLocalSurface( CreateUnplacedSurface(kPlanar),
-                                CreateOutline(kWindow, {box.x(), box.y()}),
+                                CreateFrame(kWindow, {box.x(), box.y()}),
                                 CreateLocalTransformation({0, 0, -box.z(), 0, 180, 0})
                               );
     AddSurfaceToShell(logical_id, isurf);
     // surface at +dz:
     isurf = CreateLocalSurface( CreateUnplacedSurface(kPlanar),
-                                CreateOutline(kWindow, {box.x(), box.y()}),
+                                CreateFrame(kWindow, {box.x(), box.y()}),
                                 CreateLocalTransformation({0, 0, box.z(), 0, 0, 0})
                               );
     AddSurfaceToShell(logical_id, isurf);
