@@ -55,8 +55,8 @@ struct SurfData {
   using RangeMask_t = RangeMask<Real_t>;
 
   /// Transformations. A portal transformation is a tuple global + local
-  Transformation         *fLocalTrans {nullptr};       ///< Local surface transformations in frame of parent solid
-  Transformation         *fTouchableTrans {nullptr};   ///< Touchable global transformations
+  //Transformation         *fLocalTrans {nullptr};       ///< Local surface transformations in frame of parent solid
+  Transformation         *fGlobalTrans {nullptr};   ///< Touchable global transformations
 
   /// Cylindrical surface data (radius)
   CylData_t              *fCylSphData {nullptr};       ///< Cyl and sphere data
@@ -67,13 +67,13 @@ struct SurfData {
   
   
   /// Transformation getters
-  Transformation const &LocalT(int id) const { return fLocalTrans[id]; }
-  Transformation const &TouchableT(int id) const { return fTouchableTrans[id]; }
-  void                  GlobalT(CombiTrans const &ct, Transformation &global)
-  {
-    global = TouchableT(ct.fTouchableT);
-    global.MultiplyFromRight(LocalT(ct.fLocalT));
-  }
+  //Transformation const &LocalT(int id) const { return fLocalTrans[id]; }
+  //Transformation const &TouchableT(int id) const { return fTouchableTrans[id]; }
+  //void                  GlobalT(CombiTrans const &ct, Transformation &global)
+  //{
+  //  global = TouchableT(ct.fTouchableT);
+  //  global.MultiplyFromRight(LocalT(ct.fLocalT));
+  //}
 
   /// Surface data accessors
   CylData_t const        &GetCylData(int id) const { return fCylSphData[id]; }

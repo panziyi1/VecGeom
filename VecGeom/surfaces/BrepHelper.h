@@ -12,6 +12,27 @@
 
 namespace vgbrep {
 
+template <typename Real_t>
+constexpr Real_t Tolerance() { return 0; }
+
+template <>
+constexpr double Tolerance() { return 1.e-9; }
+
+template <>
+constexpr float Tolerance() { return 1.e-4; }
+
+template <typename Real_t>
+bool ApproxEqual(Real_t t1, Real_t t2)
+{
+  return std::abs(t1 - t2) <= Tolerance<Real_t>();
+}
+
+template <typename Float_t>
+bool ApproxEqual(vecgeom::Vector3D<Float_t> v1, vecgeom::Vector3D<Float_t> v2)
+{
+  return ApproxEqual(v1[0], v2[0]) && ApproxEqual(v1[1], v2[1]) && ApproxEqual(v1[2], v2[2]);
+}
+
 // Placeholder (on host) for all surfaces belonging to a volume. An array of those will be indexed
 // by the logical volume id. Also an intermediate helper for building portals.
 // Note: the local surfaces defined by solids will have local references that will be changed by
@@ -29,6 +50,7 @@ class BrepHelper {
   using ConeData_t     = ConeData<Real_t>;
   using SphData_t      = SphData<Real_t>;
   using Transformation = vecgeom::Transformation3D;
+  using Vector         = vecgeom::Vector3D<Real_t>;
  
 private:
   SurfData_t *fSurfData{nullptr};            ///< Surface data
@@ -83,11 +105,6 @@ public:
   ~BrepHelper()
   {
     delete fSurfData;
-  }
-
-  bool ApproxEqual(Real_t t1, Real_t t2)
-  {
-    return std::abs(t1 - t2) <= vecgeom::kTolerance;
   }
 
   void ComputeDefaultStates(int shared_id)
@@ -387,9 +404,10 @@ private:
       Transformation const &t1 = fGlobalTrans[s1.fTrans];
       Transformation const &t2 = fGlobalTrans[s2.fTrans];
       // Calculate normalized connection vector between the two transformations
-      auto tdiff = t1.Translation() - t2.Translation();
-      bool same_tr = ApproxEqual(tdiff[0], 0) && ApproxEqual(tdiff[1], 0) && ApproxEqual(tdiff[2], 0);
-      decltype(tdiff) ldir;
+      // Use double precision explicitly
+      vecgeom::Vector3D<double> tdiff = t1.Translation() - t2.Translation();
+      bool same_tr = ApproxEqual(tdiff, {0, 0, 0});
+      vecgeom::Vector3D<double> ldir;
       switch (s1.fSurface.type) {
         case kPlanar:
           if (same_tr) break;
@@ -406,7 +424,7 @@ private:
           tdiff.Normalize();
           t1.TransformDirection(tdiff, ldir);
           // For connected cylinders, the connecting vector must be along the Z axis
-          if (!ApproxEqual(ldir[0], 0) || !ApproxEqual(ldir[1], 0))
+          if (!ApproxEqual(ldir, {0, 0, ldir[2]}))
             return false;
           break;
         case kConical:
@@ -418,38 +436,17 @@ private:
           return false;
       };
 
-      // Now check if the rotations are matching
-      // Check if translations are equal (but this is just a sub-case)
-      //for (int i = 0; i < 3; ++i)
-      //  if (!ApproxEqual(t1.Translation(i), t2.Translation(i)))
-      //    return false;
-
-      // Check rotation. Two rotations are considered equal if we can reach one from
-      // the other by composing with a flip operation:
-      //   R2 = R1 * F    =>    R1.Inverse * R2 = F
-      //   R1 = R2 * F    =>    R2.Inverse * R1 = F
-      // so: R1.Inverse * R2 = R2.Inverse * R1
-      // which has a trivial solution (F = I) for R1 = R2 and a non-trivial one.
-      bool equal = true;
-      for (int i = 0; i < 9; ++i) {
-        if (!ApproxEqual(t1.Rotation(i), t2.Rotation(i))) {
-          equal = false;
-          break;
-        }
-      }
-      if (equal) return true;
-      // We need to check the flipped solution
-      Transformation flip1, flip2;
-      t1.Inverse(flip1);
-      t2.Inverse(flip2);
-      flip1.MultiplyFromRight(t2);
-      flip2.MultiplyFromRight(t1);
+      // Now check if the rotations are matching. The z axis transformed
+      // with the two rotations should end up in aligned vectors. This is
+      // true for planes (Z is the normal) but also for tubes/cones where
+      // Z is the axis of symmetry
+      vecgeom::Vector3D<double> zaxis(0, 0, 1);
+      auto z1 = t1.InverseTransformDirection(zaxis);
+      auto z2 = t2.InverseTransformDirection(zaxis);
+      if (!ApproxEqual(z1.Cross(z2), {0, 0, 0}))
+        return false;
       
-      for (int i = 0; i < 9; ++i)
-        if (!ApproxEqual(flip1.Rotation(i), flip2.Rotation(i)))
-          return false;
-      
-      flip = true;
+      flip = z1.Dot(z2) < 0;
       return true;
     };
     
@@ -513,6 +510,23 @@ private:
                                 CreateLocalTransformation({0, 0, box.z(), 0, 0, 0})
                               );
     AddSurfaceToShell(logical_id, isurf);
+  }
+
+  ///< The method updates the SurfData storage
+  void UpdateSurfData()
+  {
+    // Create and copy surface data
+    fSurfData->fCylSphData = new CylData_t[fCylSphData.size()];
+    for (size_t i = 0; i < fCylSphData.size(); ++i)
+      fSurfData->fCylSphData[i] = fCylSphData[i];
+
+    fSurfData->fConeData = new ConeData_t[fConeData.size()];
+    for (size_t i = 0; i < fConeData.size(); ++i)
+      fSurfData->fConeData[i] = fConeData[i];
+
+    fSurfData->fConeData = new ConeData_t[fConeData.size()];
+    for (size_t i = 0; i < fConeData.size(); ++i)
+      fSurfData->fConeData[i] = fConeData[i];
   }
   
 };
