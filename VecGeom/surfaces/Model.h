@@ -140,8 +140,12 @@ struct PlacedSurface {
   bool operator<(PlacedSurface const &other)
   {
     using vecgeom::NavStateIndex;
-    if (NavStateIndex::GetLevelImpl(fState) > NavStateIndex::GetLevelImpl(other.fState))
+    auto level1 = NavStateIndex::GetLevelImpl(fState);
+    auto level2 = NavStateIndex::GetLevelImpl(other.fState);
+    if (level1 > level2)
       return true;
+    else if (level1 < level2)
+      return false;
     if (fState < other.fState)
       return true;
     return false;
