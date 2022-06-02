@@ -27,8 +27,8 @@ bool ApproxEqual(Real_t t1, Real_t t2)
   return std::abs(t1 - t2) <= Tolerance<Real_t>();
 }
 
-template <typename Float_t>
-bool ApproxEqual(vecgeom::Vector3D<Float_t> v1, vecgeom::Vector3D<Float_t> v2)
+template <typename Real_t>
+bool ApproxEqual(vecgeom::Vector3D<Real_t> const &v1, vecgeom::Vector3D<Real_t> const &v2)
 {
   return ApproxEqual(v1[0], v2[0]) && ApproxEqual(v1[1], v2[1]) && ApproxEqual(v1[2], v2[2]);
 }
@@ -105,6 +105,33 @@ public:
   ~BrepHelper()
   {
     delete fSurfData;
+  }
+
+  void SortSides(int shared_id)
+  {
+    // lambda to remove a surface from a side
+    auto removeSurface = [&](Side &side, int ind)
+    {
+      for (int i = ind + 1; i < side.fNsurf; ++i)
+        side.fSurfaces[i-1] = side.fSurfaces[i];
+      if (ind < side.fNsurf) side.fNsurf--;
+    };
+
+    // lambda to detect surfaces on a side that have identical frame
+    auto sortAndRemoveCommonFrames = [&](Side &side)
+    {
+      if (!side.fNsurf) return;
+      std::sort(side.fSurfaces, side.fSurfaces + side.fNsurf,
+                [&](int i, int j) {return fGlobalSurfaces[i] < fGlobalSurfaces[j];});
+      for (int i = 0; i < side.fNsurf - 1; ++i) {
+        for (int j = side.fNsurf - 1; j > i; --j) {
+          if (EqualFrames(side, i, j)) removeSurface(side, j);
+        }
+      }
+    };
+
+    sortAndRemoveCommonFrames(fCommonSurfaces[shared_id].fLeftSide);
+    sortAndRemoveCommonFrames(fCommonSurfaces[shared_id].fRightSide);
   }
 
   void ComputeDefaultStates(int shared_id)
@@ -259,6 +286,7 @@ public:
 
     for (size_t isurf = 1; isurf < fCommonSurfaces.size(); ++isurf) {
       ComputeDefaultStates(isurf);
+      SortSides(isurf);
       PrintCommonSurface(isurf);
     }
 
@@ -510,6 +538,60 @@ private:
                                 CreateLocalTransformation({0, 0, box.z(), 0, 0, 0})
                               );
     AddSurfaceToShell(logical_id, isurf);
+  }
+
+  ///< This function evaluates if the frames of two placed surfaces on the same side
+  ///< of a common surface are matching
+  bool EqualFrames(Side const &side, int i1, int i2)
+  {
+    PlacedSurface const &s1 = fGlobalSurfaces[side.fSurfaces[i1]];
+    PlacedSurface const &s2 = fGlobalSurfaces[side.fSurfaces[i2]];
+    if (s1.fFrame.type != s2.fFrame.type)
+      return false;
+    // Get displacement vector between the 2 frame centers and check if it has null length
+    Transformation const &t1 = fGlobalTrans[s1.fTrans];
+    Transformation const &t2 = fGlobalTrans[s2.fTrans];
+    vecgeom::Vector3D<double> tdiff = t1.Translation() - t2.Translation();
+    if (!ApproxEqual(tdiff, {0, 0, 0}))
+      return false;
+    
+    auto frameData1 = fRanges[s1.fFrame.id];
+    auto frameData2 = fRanges[s2.fFrame.id];
+    vecgeom::Vector3D<double> v1(frameData1.range[0], frameData1.range[1], 0);
+    vecgeom::Vector3D<double> v1_transposed(frameData1.range[1], frameData1.range[0], 0);
+    vecgeom::Vector3D<double> v2(frameData2.range[0], frameData2.range[1], 0);
+    
+    // Different treatment of different frame types
+    switch (s1.fFrame.type) {
+      case kRangeZ:
+      case kRangeCyl:
+      case kRangeSph:
+        if (ApproxEqual(v1, v2))
+          return true;
+        return false;
+      case kWindow:
+        // Here we can have matching also if the window is rotated
+        if (!ApproxEqual(v1, v2) && !ApproxEqual(v1_transposed, v2))
+          return false;
+        {
+          // The vectors connecting the local window center to the closest edge
+          // must be aligned in the transformed frames
+          vecgeom::Vector3D<double> vshort;
+          if (v1[0] > v1[1]) vshort.Set(0, v1[1], 0);
+          else               vshort.Set(v1[0], 0, 0);       
+          auto v1glob = t1.InverseTransform(vshort);
+          if (v2[0] > v2[1]) vshort.Set(0, v2[1], 0);
+          else               vshort.Set(v2[0], 0, 0);       
+          auto v2glob = t2.InverseTransform(vshort);
+          if (ApproxEqual(v1glob.Cross(v2glob), {0, 0, 0}))
+            return true;
+        } 
+        break;
+      case kTriangle:
+        // to be implemented
+        break;
+    };
+    return false; 
   }
 
   ///< The method updates the SurfData storage

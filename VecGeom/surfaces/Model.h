@@ -128,15 +128,26 @@ struct Frame {
 // volumes, and a given local surface can be referenced by multiple portals (less memory)
 
 struct PlacedSurface {
-  UnplacedSurface  fSurface;   ///< Surface idntifier
-  Frame          fFrame;   ///< Frame
-  int              fTrans {-1};     ///< Transformation of the surface in the compacted sub-hierarchy top volume frame
-  NavIndex_t       fState {0};     ///< sub-path navigation state id in the parent scene
+  UnplacedSurface  fSurface;     ///< Surface idntifier
+  Frame            fFrame;       ///< Frame
+  int              fTrans {-1};  ///< Transformation of the surface in the compacted sub-hierarchy top volume frame
+  NavIndex_t       fState {0};   ///< sub-path navigation state id in the parent scene
 
   PlacedSurface(UnplacedSurface const &unplaced, Frame const &frame, int trans, NavIndex_t index = 0)
     : fSurface(unplaced), fFrame(frame), fTrans(trans), fState(index) {}
 
-  /// Transform point and direction to tjhe local frame
+  /// Sorting by decreasing state depth and increasing state index 
+  bool operator<(PlacedSurface const &other)
+  {
+    using vecgeom::NavStateIndex;
+    if (NavStateIndex::GetLevelImpl(fState) > NavStateIndex::GetLevelImpl(other.fState))
+      return true;
+    if (fState < other.fState)
+      return true;
+    return false;
+  }
+
+  /// Transform point and direction to the local frame
   template <typename Real_t>
   void Transform(Vector3D<Real_t> const &point, Vector3D<Real_t> const &dir,
                  Vector3D<Real_t> &localpoint, Vector3D<Real_t> &localdir,
