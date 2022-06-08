@@ -1,8 +1,7 @@
 #ifndef VECGEOM_SURFACE_EQUATIONS_H_
 #define VECGEOM_SURFACE_EQUATIONS_H_
 
-#include <VecGeom/base/Transformation3D.h>
-#include <VecGeom/surfaces/SurfData.h>
+#include <VecGeom/base/Vector3D.h>
 
 namespace vgbrep {
 
@@ -26,19 +25,19 @@ struct QuadraticRoots {
 
 template <typename Real_t>
 void CylinderEq(Vector3D<Real_t> const &point, Vector3D<Real_t> const &dir,
-                CylData<Real_t> const *cyl_data, QuadraticCoef<Real_t> const &coef)
+                Real_t radius, QuadraticCoef<Real_t> const &coef)
 {
 }
 
 template <typename Real_t>
 void ConeEq(Vector3D<Real_t> const &point, Vector3D<Real_t> const &dir,
-            ConeData<Real_t> const *cyl_data, QuadraticCoef<Real_t> const &coef)
+            Real_t radius, Real_t slope, QuadraticCoef<Real_t> const &coef)
 {  
 }
 
 template <typename Real_t>
 void SphereEq(Vector3D<Real_t> const &point, Vector3D<Real_t> const &dir,
-              SphData<Real_t> const *cyl_data, QuadraticCoef<Real_t> const &coef)
+              Real_t radius, QuadraticCoef<Real_t> const &coef)
 {  
 }
 

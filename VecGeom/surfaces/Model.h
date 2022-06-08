@@ -1,7 +1,6 @@
 #ifndef VECGEOM_SURFACE_MODEL_H_
 #define VECGEOM_SURFACE_MODEL_H_
 
-#include <VecGeom/surfaces/SurfData.h>
 #include <VecGeom/surfaces/Equations.h>
 #include <VecGeom/navigation/NavStateIndex.h>
 
@@ -11,6 +10,12 @@ enum SurfaceType {kPlanar, kCylindrical, kConical, kSpherical, kTorus, kGenSecon
 
 ///< Supported frame types
 enum FrameType {kRangeZ, kRangeCyl, kRangeSph, kWindow, kTriangle};
+
+template <typename Real_t>
+using Vector3D = vecgeom::Vector3D<Real_t>;
+
+template <typename Real_t>
+struct SurfData;
 
 ///< 
 /* 
@@ -24,9 +29,10 @@ enum FrameType {kRangeZ, kRangeCyl, kRangeSph, kWindow, kTriangle};
    those to the local frame
  */
 struct UnplacedSurface {
-  SurfaceType        type;         ///< surface type
-  int                id;           ///< surface id
+  SurfaceType        type {kPlanar}; ///< surface type
+  int                id {-1};        ///< surface id
 
+  UnplacedSurface() = default;
   UnplacedSurface(SurfaceType stype, int sid) { type = stype; id = sid; }
   
   /// Find positive distance to next intersection from local point
@@ -70,9 +76,10 @@ struct UnplacedSurface {
 
 /* An frame delimiting the real surface on an infinite half-space */
 struct Frame {
-  FrameType        type;         ///< frame type
-  int                id;           ///< frame data id
+  FrameType type {kWindow};  ///< frame type
+  int       id {-1};         ///< frame data id
 
+  Frame() = default;
   Frame(FrameType mtype, int mid) : type(mtype), id(mid) {}
     
   template <typename Real_t>
@@ -127,17 +134,19 @@ struct Frame {
 // The advantage of this approach is that it gives full flexibility for chosing the flattened
 // volumes, and a given local surface can be referenced by multiple portals (less memory)
 
-struct PlacedSurface {
-  UnplacedSurface  fSurface;     ///< Surface idntifier
+/* A placed surface on a scene having a frame and a navigation state associated to a touchable */
+struct FramedSurface {
+  UnplacedSurface  fSurface;     ///< Surface identifier
   Frame            fFrame;       ///< Frame
   int              fTrans {-1};  ///< Transformation of the surface in the compacted sub-hierarchy top volume frame
   NavIndex_t       fState {0};   ///< sub-path navigation state id in the parent scene
 
-  PlacedSurface(UnplacedSurface const &unplaced, Frame const &frame, int trans, NavIndex_t index = 0)
+  FramedSurface() = default;
+  FramedSurface(UnplacedSurface const &unplaced, Frame const &frame, int trans, NavIndex_t index = 0)
     : fSurface(unplaced), fFrame(frame), fTrans(trans), fState(index) {}
 
   /// Sorting by decreasing state depth and increasing state index 
-  bool operator<(PlacedSurface const &other)
+  bool operator<(FramedSurface const &other)
   {
     using vecgeom::NavStateIndex;
     auto level1 = NavStateIndex::GetLevelImpl(fState);
@@ -185,10 +194,20 @@ struct PlacedSurface {
   
 };
 
+///< A list of candidate surfaces
+struct Candidates {
+  int  fNcand {0};                ///< Number of candidate surfaces
+  int *fCandidates {nullptr};     ///< [fNcand] Array of candidates
+
+  Candidates() = default;
+};
+
 ///< A side represents all common placed surfaces
 struct Side {
   int  fNsurf {0};                ///< Number of placed surfaces on this side
   int *fSurfaces {nullptr};       ///< [fNsurf] Array of placed surfaces on this side
+
+  Side() = default;
 
   // Add existing placed surface to this side
   int AddSurface(int isurf)
@@ -214,14 +233,16 @@ struct Side {
 };
 
 struct CommonSurface {
-  SurfaceType      fType {kPlanar}; ///< Type of surface
+  SurfaceType fType {kPlanar}; ///< Type of surface
+  int              fTrans {-1};  ///< Transformation of the first left frame
+
   NavIndex_t fDefaultState {0};   ///< The default state for this surface (deepest mother)
   // The portal property can be embedded in the general surface type
   
   Side             fLeftSide;  ///< Left-side portal side id (behind normal)
   Side             fRightSide; ///< Right-side portal side id (alongside normal)
 
-  CommonSurface() {};
+  CommonSurface() = default;
   
   CommonSurface(SurfaceType type, int global_surf) : fType(type)
   {
@@ -250,7 +271,100 @@ struct CompositeMask { /// ???   They must share the Surface Id !! (JA 2022/02/0
   char            *fBooleanMaskString;  // "18 17 + 32 - 99 97 U *" // "Tube17mask Box333mask -" 
   // 
 };
-    
+
+template <typename Real_t>
+struct RangeMask {
+  Real_t range[2];
+};
+
+template <typename Real_t, typename Real_s = Real_t>
+struct CylData {
+  Real_t           radius{0};     ///< Cylinder radius
+
+  CylData() = default;
+  CylData(Real_s rad) : radius(rad) {}
+};
+
+
+template <typename Real_t, typename Real_s = Real_t>
+using SphData = CylData<Real_t, Real_s>;
+
+template <typename Real_t, typename Real_s = Real_t>
+struct ConeData {
+  Real_t           radius{0};       ///< Cone radus at Z = 0
+  Real_t           slope{0};     ///< Cone slope  --> for cyl extension this would be 0
+
+  ConeData() = default;
+  ConeData(Real_s rad, Real_s slope) : radius(rad), slope(slope) {}
+};
+
+// We need replicable surfaces, for memory reasons. All surfaces generated by a solid are positioned
+// using identical local transformations, while the solid itself will use a different global transformation
+// depending on the placement. So it makes sense to use tuples of global + local transformation. LocalSurface
+// will use the local component, while portals will use the full tuple.
+struct CombiTrans {
+  int fLocalT{-1};      ///< index of the local surface transformation
+  int fTouchableT{-1};  ///< index of touchable (containing the surface) transformation
+};
+
+/*
+ * The main surface storage utility, providing access by index to:
+ *    * global and local transformations applied to surfaces
+ *    * surface data per surface type
+ *    * mask data per mask type
+ *    * imprint data (list of masks)
+ */
+template <typename Real_t>
+struct SurfData {
+
+  using Transformation = vecgeom::Transformation3D;
+  using CylData_t = CylData<Real_t>;
+  using ConeData_t = ConeData<Real_t>;
+  using SphData_t = SphData<Real_t>;
+  using RangeMask_t = RangeMask<Real_t>;
+
+  int fNglobalTrans {0};
+  int fNglobalSurf {0};
+  int fNcommonSurf {0};
+  int fNcylsph {0};
+  int fNcone {0};
+  int fNrange {0};
+
+  /// Transformations. A portal transformation is a tuple global + local
+  Transformation *fGlobalTrans {nullptr};   ///< Touchable global transformations
+
+  /// Cylindrical surface data (radius)
+  CylData_t      *fCylSphData {nullptr};       ///< Cyl and sphere data
+  ConeData_t     *fConeData {nullptr};         ///< Cone data
+
+  /// Mask data
+  RangeMask_t    *fRangeData {nullptr};
+
+  FramedSurface  *fGlobalSurfaces {nullptr}; ///< global surfaces
+  CommonSurface  *fCommonSurfaces {nullptr}; ///< common surfaces
+  Candidates     *fCandidates;               ///< candidate surfaces per navigation state
+  int            *fSides {nullptr};          ///< side surface indices
+  int            *fCandList {nullptr};       ///< global list of candidate indices
+
+  
+  SurfData() = default;  
+  /// Transformation getters
+  //Transformation const &LocalT(int id) const { return fLocalTrans[id]; }
+  //Transformation const &TouchableT(int id) const { return fTouchableTrans[id]; }
+  //void                  GlobalT(CombiTrans const &ct, Transformation &global)
+  //{
+  //  global = TouchableT(ct.fTouchableT);
+  //  global.MultiplyFromRight(LocalT(ct.fLocalT));
+  //}
+
+  /// Surface data accessors
+  CylData_t const        &GetCylData(int id) const { return fCylSphData[id]; }
+  SphData_t const        &GetSphData(int id) const { return fCylSphData[id]; }
+  ConeData_t const       &GetConeData(int id) const { return fConeData[id]; }
+  RangeMask_t const      &GetRangeMask(int id) const { return fRangeData[id]; }
+
+};
+
 } // namespace vgbrep
 
 #endif

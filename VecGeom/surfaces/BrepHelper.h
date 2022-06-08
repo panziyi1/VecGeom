@@ -28,9 +28,19 @@ bool ApproxEqual(Real_t t1, Real_t t2)
 }
 
 template <typename Real_t>
-bool ApproxEqual(vecgeom::Vector3D<Real_t> const &v1, vecgeom::Vector3D<Real_t> const &v2)
+bool ApproxEqualVector(vecgeom::Vector3D<Real_t> const &v1, vecgeom::Vector3D<Real_t> const &v2)
 {
   return ApproxEqual(v1[0], v2[0]) && ApproxEqual(v1[1], v2[1]) && ApproxEqual(v1[2], v2[2]);
+}
+
+bool ApproxEqualTransformation(vecgeom::Transformation3D const &t1, vecgeom::Transformation3D const &t2)
+{
+  if (!ApproxEqualVector(t1.Translation(), t2.Translation()))
+    return false;
+  for (int i = 0; i < 9; ++i)
+    if (!ApproxEqual(t1.Rotation(i), t2.Rotation(i)))
+      return false;
+  return true;
 }
 
 // Placeholder (on host) for all surfaces belonging to a volume. An array of those will be indexed
@@ -49,6 +59,7 @@ class BrepHelper {
   using CylData_t      = CylData<Real_t>;
   using ConeData_t     = ConeData<Real_t>;
   using SphData_t      = SphData<Real_t>;
+  using RangeMask_t    = RangeMask<Real_t>;
   using Transformation = vecgeom::Transformation3D;
   using Vector         = vecgeom::Vector3D<Real_t>;
  
@@ -62,8 +73,8 @@ private:
   std::vector<ConeData_t>  fConeData;        ///< data for conical surfaces
   std::vector<Transformation> fLocalTrans;   ///< local transformations
   std::vector<Transformation> fGlobalTrans;  ///< global transformations for surfaces in the scene
-  std::vector<PlacedSurface> fLocalSurfaces; ///< local surfaces
-  std::vector<PlacedSurface> fGlobalSurfaces; ///< global surfaces
+  std::vector<FramedSurface> fLocalSurfaces; ///< local surfaces
+  std::vector<FramedSurface> fGlobalSurfaces; ///< global surfaces
   std::vector<CommonSurface> fCommonSurfaces; ///< common surfaces
   std::vector<VolumeShell>   fShells;        ///< vector of local volume surfaces
   std::vector<std::vector<int>> fCandidates; ///< candidate lists for each state
@@ -88,8 +99,8 @@ public:
     fConeData.clear(); std::vector<ConeData_t>().swap(fConeData);
     fLocalTrans.clear(); std::vector<Transformation>().swap(fLocalTrans);
     fGlobalTrans.clear(); std::vector<Transformation>().swap(fGlobalTrans);
-    fLocalSurfaces.clear(); std::vector<PlacedSurface>().swap(fLocalSurfaces);
-    fGlobalSurfaces.clear(); std::vector<PlacedSurface>().swap(fGlobalSurfaces);
+    fLocalSurfaces.clear(); std::vector<FramedSurface>().swap(fLocalSurfaces);
+    fGlobalSurfaces.clear(); std::vector<FramedSurface>().swap(fGlobalSurfaces);
     fCommonSurfaces.clear(); std::vector<CommonSurface>().swap(fCommonSurfaces);
     for (size_t i = 0; i < fShells.size(); ++i) {
       fShells[i].fSurfaces.clear(); std::vector<int>().swap(fShells[i].fSurfaces);
@@ -194,7 +205,9 @@ public:
     printf("== common surface %d: default state: ", id);
     vecgeom::NavStateIndex default_state(surf.fDefaultState);
     default_state.Print();
-    printf("   side1: %d surfaces\n", surf.fLeftSide.fNsurf);
+    printf(" transformation %d: ", surf.fTrans);
+    fGlobalTrans[surf.fTrans].Print();
+    printf("\n   side1: %d surfaces\n", surf.fLeftSide.fNsurf);
     for (int i = 0; i < surf.fLeftSide.fNsurf; ++i) {
       int idglob = surf.fLeftSide.fSurfaces[i];
       auto const &placed = fGlobalSurfaces[idglob];
@@ -210,6 +223,35 @@ public:
       auto const &placed = fGlobalSurfaces[idglob];
       printf("    surf %d: trans: ", idglob);
       fGlobalTrans[placed.fTrans].Print();
+      vecgeom::NavStateIndex state(placed.fState);
+      state.Print();
+    }
+  }
+
+  void PrintCommonSurface2(int id)
+  {
+    auto const &surf = fSurfData->fCommonSurfaces[id];
+    printf("== common surface %d: default state: ", id);
+    vecgeom::NavStateIndex default_state(surf.fDefaultState);
+    default_state.Print();
+    printf(" transformation %d: ", surf.fTrans);
+    fSurfData->fGlobalTrans[surf.fTrans].Print();
+    printf("\n   side1: %d surfaces\n", surf.fLeftSide.fNsurf);
+    for (int i = 0; i < surf.fLeftSide.fNsurf; ++i) {
+      int idglob = surf.fLeftSide.fSurfaces[i];
+      auto const &placed = fSurfData->fGlobalSurfaces[idglob];
+      printf("    surf %d: trans: ", idglob);
+      fSurfData->fGlobalTrans[placed.fTrans].Print();
+      printf(", ");
+      vecgeom::NavStateIndex state(placed.fState);
+      state.Print();
+    }
+    printf("   side2: %d surfaces\n", surf.fRightSide.fNsurf);
+    for (int i = 0; i < surf.fRightSide.fNsurf; ++i) {
+      int idglob = surf.fRightSide.fSurfaces[i];
+      auto const &placed = fSurfData->fGlobalSurfaces[idglob];
+      printf("    surf %d: trans: ", idglob);
+      fSurfData->fGlobalTrans[placed.fTrans].Print();
       vecgeom::NavStateIndex state(placed.fState);
       state.Print();
     }
@@ -261,7 +303,7 @@ public:
       state.TopMatrix(trans);
       VolumeShell const &shell = fShells[vol->id()];
       for (int lsurf_id : shell.fSurfaces) {
-        PlacedSurface const &lsurf = fLocalSurfaces[lsurf_id];
+        FramedSurface const &lsurf = fLocalSurfaces[lsurf_id];
         Transformation global(trans);
         global.MultiplyFromRight(fLocalTrans[lsurf.fTrans]);
         int trans_id = fGlobalTrans.size();
@@ -279,21 +321,77 @@ public:
       state.Pop();
     };
 
+    // add identity first in the list of global transformations
+    Transformation identity;
+    fGlobalTrans.push_back(identity);
     // add a dummy common surface since index 0 is not allowed for correctly handling sides
     fCommonSurfaces.push_back({});
 
     createCommonSurfaces(vecgeom::GeoManager::Instance().GetWorld());
 
     for (size_t isurf = 1; isurf < fCommonSurfaces.size(); ++isurf) {
+      // Compute the default states in case no frame on the surface is hit
       ComputeDefaultStates(isurf);
+      // Sort placed surfaces on sides by geometry depth (bigger depth comes first)
       SortSides(isurf);
-      PrintCommonSurface(isurf);
+      // Convert transformations of placed surfaces in the local frame of the common surface
+      ConvertTransformations(isurf);
     }
 
-    std::cout << "Visited " << nphysical << " physical volumes, created " << fCommonSurfaces.size() - 1 << " common surfaces\n";
-
+    // Create the full surface candidate list for each navigation state
     CreateCandidateLists();
+    
+    // Now update the surface data structure used for navigation
+    UpdateSurfData();
+    for (size_t isurf = 1; isurf < fCommonSurfaces.size(); ++isurf) {
+      PrintCommonSurface2(isurf);
+    }
+      
+    PrintCandidateLists();
+    std::cout << "Visited " << nphysical << " physical volumes, created " << fCommonSurfaces.size() - 1 << " common surfaces\n";
+  
     return true;
+  }
+
+  ///< This method uses the transformation T1 of the first placed surface on the left side (which always exists)
+  ///< as transformation for the common surface, then recalculates the transformations of all placed
+  ///< surfaces as T' = T1.Inverse() * T. If identity this will get the index 0.
+  void ConvertTransformations(int idsurf)
+  {
+    auto &surf = fCommonSurfaces[idsurf];
+    // Adopt the transformation of the first surface on left for the common surface
+    surf.fTrans = fGlobalSurfaces[surf.fLeftSide.fSurfaces[0]].fTrans;
+    // Set transformation of first surface on left to identity
+    fGlobalSurfaces[surf.fLeftSide.fSurfaces[0]].fTrans = 0;
+
+    Transformation tsurfinv;
+    fGlobalTrans[surf.fTrans].Inverse(tsurfinv);
+
+    // Skip first surface on left side
+    for (int i = 1; i < surf.fLeftSide.fNsurf; ++i) {
+      int idglob = surf.fLeftSide.fSurfaces[i];
+      auto &surf = fGlobalSurfaces[idglob];
+      Transformation tnew(tsurfinv);
+      tnew.MultiplyFromRight(fGlobalTrans[surf.fTrans]);
+      if (ApproxEqualTransformation(tnew, fGlobalTrans[0])) {
+        surf.fTrans = 0;
+      } else {
+        fGlobalTrans[surf.fTrans] = tnew;
+      }
+    }
+
+    // Convert right-side surfaces
+    for (int i = 0; i < surf.fRightSide.fNsurf; ++i) {
+      int idglob = surf.fRightSide.fSurfaces[i];
+      auto &surf = fGlobalSurfaces[idglob];
+      Transformation tnew(tsurfinv);
+      tnew.MultiplyFromRight(fGlobalTrans[surf.fTrans]);
+      if (ApproxEqualTransformation(tnew, fGlobalTrans[0])) {
+        surf.fTrans = 0;
+      } else {
+        fGlobalTrans[surf.fTrans] = tnew;
+      }
+    }    
   }
 
   ///< This method creates helper lists of candidate surfaces for each navigation state
@@ -329,7 +427,10 @@ public:
       addSurfToSideStates(isurf, 1);
       addSurfToSideStates(isurf, -1);
     }
+  }
 
+  void PrintCandidateLists()
+  {
     vecgeom::NavStateIndex state;
 
     // recursive geometry visitor lambda printing the candidates lists
@@ -341,8 +442,9 @@ public:
       auto daughters   = vol->GetDaughters();
       int nd           = daughters.size();
       state.Print();
-      printf(" %lu candidates: ", fCandidates[state.GetId()].size());
-      for (auto isurf : fCandidates[state.GetId()]) printf("%d ", isurf);
+      auto const &cand = fSurfData->fCandidates[state.GetId()];
+      printf(" %d candidates: ", cand.fNcand);
+      for (int i = 0; i < cand.fNcand; ++i) printf("%d ", cand.fCandidates[i]);
       printf("\n");
 
       // do daughters
@@ -354,8 +456,9 @@ public:
 
     printf("\nCandidate surfaces per state:");
     state.Print();
-    printf(" %lu candidates: ", fCandidates[state.GetId()].size());
-    for (auto isurf : fCandidates[state.GetId()]) printf("%d ", isurf);
+    auto const &cand = fSurfData->fCandidates[state.GetId()];
+    printf(" %d candidates: ", cand.fNcand);
+    for (int i = 0; i < cand.fNcand; ++i) printf("%d ", cand.fCandidates[i]);
     printf("\n");
 
     printCandidates(vecgeom::GeoManager::Instance().GetWorld());
@@ -422,8 +525,8 @@ private:
     auto approxEqual = [&](int idglob1, int idglob2)
     {
       flip = false;
-      PlacedSurface const &s1 = fGlobalSurfaces[idglob1];
-      PlacedSurface const &s2 = fGlobalSurfaces[idglob2];
+      FramedSurface const &s1 = fGlobalSurfaces[idglob1];
+      FramedSurface const &s2 = fGlobalSurfaces[idglob2];
       // Surfaces may be in future "compatible" even if they are not the same, for now enforce equality
       if (s1.fSurface.type != s2.fSurface.type)
         return false;
@@ -434,7 +537,7 @@ private:
       // Calculate normalized connection vector between the two transformations
       // Use double precision explicitly
       vecgeom::Vector3D<double> tdiff = t1.Translation() - t2.Translation();
-      bool same_tr = ApproxEqual(tdiff, {0, 0, 0});
+      bool same_tr = ApproxEqualVector(tdiff, {0, 0, 0});
       vecgeom::Vector3D<double> ldir;
       switch (s1.fSurface.type) {
         case kPlanar:
@@ -452,7 +555,7 @@ private:
           tdiff.Normalize();
           t1.TransformDirection(tdiff, ldir);
           // For connected cylinders, the connecting vector must be along the Z axis
-          if (!ApproxEqual(ldir, {0, 0, ldir[2]}))
+          if (!ApproxEqualVector(ldir, {0, 0, ldir[2]}))
             return false;
           break;
         case kConical:
@@ -471,7 +574,7 @@ private:
       vecgeom::Vector3D<double> zaxis(0, 0, 1);
       auto z1 = t1.InverseTransformDirection(zaxis);
       auto z2 = t2.InverseTransformDirection(zaxis);
-      if (!ApproxEqual(z1.Cross(z2), {0, 0, 0}))
+      if (!ApproxEqualVector(z1.Cross(z2), {0, 0, 0}))
         return false;
       
       flip = z1.Dot(z2) < 0;
@@ -544,15 +647,15 @@ private:
   ///< of a common surface are matching
   bool EqualFrames(Side const &side, int i1, int i2)
   {
-    PlacedSurface const &s1 = fGlobalSurfaces[side.fSurfaces[i1]];
-    PlacedSurface const &s2 = fGlobalSurfaces[side.fSurfaces[i2]];
+    FramedSurface const &s1 = fGlobalSurfaces[side.fSurfaces[i1]];
+    FramedSurface const &s2 = fGlobalSurfaces[side.fSurfaces[i2]];
     if (s1.fFrame.type != s2.fFrame.type)
       return false;
     // Get displacement vector between the 2 frame centers and check if it has null length
     Transformation const &t1 = fGlobalTrans[s1.fTrans];
     Transformation const &t2 = fGlobalTrans[s2.fTrans];
     vecgeom::Vector3D<double> tdiff = t1.Translation() - t2.Translation();
-    if (!ApproxEqual(tdiff, {0, 0, 0}))
+    if (!ApproxEqualVector(tdiff, {0, 0, 0}))
       return false;
     
     auto frameData1 = fRanges[s1.fFrame.id];
@@ -566,12 +669,12 @@ private:
       case kRangeZ:
       case kRangeCyl:
       case kRangeSph:
-        if (ApproxEqual(v1, v2))
+        if (ApproxEqualVector(v1, v2))
           return true;
         return false;
       case kWindow:
         // Here we can have matching also if the window is rotated
-        if (!ApproxEqual(v1, v2) && !ApproxEqual(v1_transposed, v2))
+        if (!ApproxEqualVector(v1, v2) && !ApproxEqualVector(v1_transposed, v2))
           return false;
         {
           // The vectors connecting the local window center to the closest edge
@@ -583,7 +686,7 @@ private:
           if (v2[0] > v2[1]) vshort.Set(0, v2[1], 0);
           else               vshort.Set(v2[0], 0, 0);       
           auto v2glob = t2.InverseTransform(vshort);
-          if (ApproxEqual(v1glob.Cross(v2glob), {0, 0, 0}))
+          if (ApproxEqualVector(v1glob.Cross(v2glob), {0, 0, 0}))
             return true;
         } 
         break;
@@ -599,16 +702,74 @@ private:
   {
     // Create and copy surface data
     fSurfData->fCylSphData = new CylData_t[fCylSphData.size()];
+    fSurfData->fNcylsph = fCylSphData.size();
     for (size_t i = 0; i < fCylSphData.size(); ++i)
       fSurfData->fCylSphData[i] = fCylSphData[i];
 
+    fSurfData->fNcone = fConeData.size();
     fSurfData->fConeData = new ConeData_t[fConeData.size()];
     for (size_t i = 0; i < fConeData.size(); ++i)
       fSurfData->fConeData[i] = fConeData[i];
 
-    fSurfData->fConeData = new ConeData_t[fConeData.size()];
-    for (size_t i = 0; i < fConeData.size(); ++i)
-      fSurfData->fConeData[i] = fConeData[i];
+    fSurfData->fNrange = fRanges.size();
+    fSurfData->fRangeData = new RangeMask_t[fRanges.size()];
+    for (size_t i = 0; i < fRanges.size(); ++i)
+      fSurfData->fRangeData[i] = fRanges[i];
+    
+    // Create transformations
+    fSurfData->fGlobalTrans = new Transformation[fGlobalTrans.size()];
+    for (size_t i = 0; i < fGlobalTrans.size(); ++i)
+      fSurfData->fGlobalTrans[i] = fGlobalTrans[i];
+    
+    // Create placed surfaces
+    fSurfData->fNglobalSurf = fGlobalSurfaces.size();
+    fSurfData->fGlobalSurfaces = new FramedSurface[fGlobalSurfaces.size()];
+    for (size_t i = 0; i < fGlobalSurfaces.size(); ++i)
+      fSurfData->fGlobalSurfaces[i] = fGlobalSurfaces[i];
+    
+    // Create common surfaces
+    size_t size_sides = 0;
+    for (auto const &surf : fCommonSurfaces)
+      size_sides += surf.fLeftSide.fNsurf + surf.fRightSide.fNsurf;
+    
+    fSurfData->fSides = new int[size_sides];
+    int *current_side = fSurfData->fSides;
+    fSurfData->fNcommonSurf = fCommonSurfaces.size();
+    fSurfData->fCommonSurfaces = new CommonSurface[fCommonSurfaces.size()];
+    for (size_t i = 0; i < fCommonSurfaces.size(); ++i) {
+      // Raw copy of surface (wrong pointers in sides)
+      fSurfData->fCommonSurfaces[i] = fCommonSurfaces[i];
+      // Copy left sides content in buffer
+      for (auto isurf = 0; isurf < fCommonSurfaces[i].fLeftSide.fNsurf; ++isurf)
+        current_side[isurf] = fCommonSurfaces[i].fLeftSide.fSurfaces[isurf];
+      // Make left sides arrays point to the buffer
+      fSurfData->fCommonSurfaces[i].fLeftSide.fSurfaces = current_side;
+      current_side += fCommonSurfaces[i].fLeftSide.fNsurf;
+
+      // Copy right sides content in buffer
+      for (auto isurf = 0; isurf < fCommonSurfaces[i].fRightSide.fNsurf; ++isurf)
+        current_side[isurf] = fCommonSurfaces[i].fRightSide.fSurfaces[isurf];
+      // Make right sides arrays point to the buffer
+      fSurfData->fCommonSurfaces[i].fRightSide.fSurfaces = current_side;
+      current_side += fCommonSurfaces[i].fRightSide.fNsurf;
+    }
+
+    // Create candidates lists
+    size_t size_candidates = 0;
+    for (auto const &list : fCandidates)
+      size_candidates += list.size();
+    
+    fSurfData->fCandList = new int[size_candidates];
+    int *current_candidates = fSurfData->fCandList;
+    fSurfData->fCandidates = new Candidates[fCandidates.size()];
+    for (size_t i = 0; i < fCandidates.size(); ++i) {
+      fSurfData->fCandidates[i].fNcand = fCandidates[i].size();
+      for (size_t icand = 0; icand < fCandidates[i].size(); icand++)
+        current_candidates[icand] = (fCandidates[i])[icand];
+      fSurfData->fCandidates[i].fCandidates = current_candidates;
+      current_candidates += fCandidates[i].size();
+    }
+
   }
   
 };
