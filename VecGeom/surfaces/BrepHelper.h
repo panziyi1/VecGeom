@@ -60,24 +60,26 @@ class BrepHelper {
   using ConeData_t     = ConeData<Real_t>;
   using SphData_t      = SphData<Real_t>;
   using RangeMask_t    = RangeMask<Real_t>;
+  using Extent_t       = Extent<Real_t>;
   using Transformation = vecgeom::Transformation3D;
   using Vector         = vecgeom::Vector3D<Real_t>;
  
 private:
-  SurfData_t *fSurfData{nullptr};            ///< Surface data
-  SurfData_t *fSurfDataGPU{nullptr};         ///< Surface data on device
+  SurfData_t *fSurfData{nullptr};                ///< Surface data
+  SurfData_t *fSurfDataGPU{nullptr};             ///< Surface data on device
 
-  std::vector<RangeMask<Real_t>> fRanges;    ///< List of frame ranges
-  std::vector<Frame>     fFrames;        ///< vector of masks
-  std::vector<CylData_t>   fCylSphData;      ///< data for cyl surfaces
-  std::vector<ConeData_t>  fConeData;        ///< data for conical surfaces
-  std::vector<Transformation> fLocalTrans;   ///< local transformations
-  std::vector<Transformation> fGlobalTrans;  ///< global transformations for surfaces in the scene
-  std::vector<FramedSurface> fLocalSurfaces; ///< local surfaces
-  std::vector<FramedSurface> fGlobalSurfaces; ///< global surfaces
-  std::vector<CommonSurface> fCommonSurfaces; ///< common surfaces
-  std::vector<VolumeShell>   fShells;        ///< vector of local volume surfaces
-  std::vector<std::vector<int>> fCandidates; ///< candidate lists for each state
+  std::vector<Extent_t>         fExtents;        ///< List of extents
+  std::vector<RangeMask_t>      fRanges;         ///< List of ranges
+  std::vector<Frame>            fFrames;         ///< vector of masks
+  std::vector<CylData_t>        fCylSphData;     ///< data for cyl surfaces
+  std::vector<ConeData_t>       fConeData;       ///< data for conical surfaces
+  std::vector<Transformation>   fLocalTrans;     ///< local transformations
+  std::vector<Transformation>   fGlobalTrans;    ///< global transformations for surfaces in the scene
+  std::vector<FramedSurface>    fLocalSurfaces;  ///< local surfaces
+  std::vector<FramedSurface>    fGlobalSurfaces; ///< global surfaces
+  std::vector<CommonSurface>    fCommonSurfaces; ///< common surfaces
+  std::vector<VolumeShell>      fShells;         ///< vector of local volume surfaces
+  std::vector<std::vector<int>> fCandidates;     ///< candidate lists for each state
 
   BrepHelper() : fSurfData(new SurfData_t()) {}
 
@@ -94,6 +96,7 @@ public:
   {
     // Dispose of surface data and shrink the container
     fRanges.clear(); std::vector<RangeMask<Real_t>>().swap(fRanges);
+    fExtents.clear(); std::vector<Extent_t>().swap(fExtents);
     fFrames.clear(); std::vector<Frame>().swap(fFrames);
     fCylSphData.clear(); std::vector<CylData_t>().swap(fCylSphData);
     fConeData.clear(); std::vector<ConeData_t>().swap(fConeData);
@@ -118,7 +121,7 @@ public:
     delete fSurfData;
   }
 
-  void SortSides(int shared_id)
+  void SortSides(int common_id)
   {
     // lambda to remove a surface from a side
     auto removeSurface = [&](Side &side, int ind)
@@ -141,16 +144,16 @@ public:
       }
     };
 
-    sortAndRemoveCommonFrames(fCommonSurfaces[shared_id].fLeftSide);
-    sortAndRemoveCommonFrames(fCommonSurfaces[shared_id].fRightSide);
+    sortAndRemoveCommonFrames(fCommonSurfaces[common_id].fLeftSide);
+    sortAndRemoveCommonFrames(fCommonSurfaces[common_id].fRightSide);
   }
 
-  void ComputeDefaultStates(int shared_id)
+  void ComputeDefaultStates(int common_id)
   {
     using vecgeom::NavStateIndex;
     // Computes the default states for each side of a common surface
-    Side &left  = fCommonSurfaces[shared_id].fLeftSide;
-    Side &right = fCommonSurfaces[shared_id].fRightSide;
+    Side &left  = fCommonSurfaces[common_id].fLeftSide;
+    Side &right = fCommonSurfaces[common_id].fRightSide;
     assert(left.fNsurf > 0 || right.fNsurf > 0);
 
     NavIndex_t default_ind;
@@ -196,47 +199,86 @@ public:
     
     if (NavStateIndex::GetLevelImpl(default_ind) == minlevel)
       default_ind = NavStateIndex::PopImpl(default_ind);
-    fCommonSurfaces[shared_id].fDefaultState = default_ind;
+    fCommonSurfaces[common_id].fDefaultState = default_ind;
   }
 
-  void PrintCommonSurface(int id)
+  void ComputeExtents()
   {
-    auto const &surf = fCommonSurfaces[id];
-    printf("== common surface %d: default state: ", id);
-    vecgeom::NavStateIndex default_state(surf.fDefaultState);
-    default_state.Print();
-    printf(" transformation %d: ", surf.fTrans);
-    fGlobalTrans[surf.fTrans].Print();
-    printf("\n   side1: %d surfaces\n", surf.fLeftSide.fNsurf);
-    for (int i = 0; i < surf.fLeftSide.fNsurf; ++i) {
-      int idglob = surf.fLeftSide.fSurfaces[i];
-      auto const &placed = fGlobalSurfaces[idglob];
-      printf("    surf %d: trans: ", idglob);
-      fGlobalTrans[placed.fTrans].Print();
-      printf(", ");
-      vecgeom::NavStateIndex state(placed.fState);
-      state.Print();
+    // This computes extents for all sides of common surfaces
+    auto updateExtent = [](Extent_t &e, Vector const &pt)
+    {
+      e.rangeU[0] = std::min(e.rangeU[0], pt[0]);
+      e.rangeU[1] = std::max(e.rangeU[1], pt[0]);
+      e.rangeV[0] = std::min(e.rangeV[0], pt[1]);
+      e.rangeV[1] = std::max(e.rangeV[1], pt[1]); 
+    };
+    
+    auto computeSingleSideExtent = [&](SurfaceType type, Side &side, Extent_t &ext)
+    {
+      constexpr Real_t kBig = 1.e30;
+      ext.rangeU.Set(kBig, -kBig);
+      ext.rangeV.Set(kBig, -kBig);
+
+      for (int i = 0; i < side.fNsurf; ++i) {
+        // convert surface frame to local coordinates
+        Extent_t extLocal;
+        auto framed_surf = fSurfData->fGlobalSurfaces[side.fSurfaces[i]];
+        Vector local;
+        framed_surf.fFrame.GetExtent(extLocal, *fSurfData);
+        switch (type) {
+          case kPlanar:
+            local = fSurfData->fGlobalTrans[framed_surf.fTrans].InverseTransform(Vector{extLocal.rangeU[0], extLocal.rangeV[0], 0});
+            updateExtent(ext, local);
+            local = fSurfData->fGlobalTrans[framed_surf.fTrans].InverseTransform(Vector{extLocal.rangeU[0], extLocal.rangeV[1], 0});
+            updateExtent(ext, local);
+            local = fSurfData->fGlobalTrans[framed_surf.fTrans].InverseTransform(Vector{extLocal.rangeU[1], extLocal.rangeV[1], 0});
+            updateExtent(ext, local);
+            local = fSurfData->fGlobalTrans[framed_surf.fTrans].InverseTransform(Vector{extLocal.rangeU[1], extLocal.rangeV[0], 0});
+            updateExtent(ext, local);   
+            break;
+          case kCylindrical:
+          case kConical:
+          case kSpherical:
+          case kTorus:
+          case kGenSecondOrder:
+           break;
+        };
+      }
+    };
+
+    for (int common_id = 1; common_id < fSurfData->fNcommonSurf; ++common_id) {
+      Extent_t common_extent;
+      if (fSurfData->fCommonSurfaces[common_id].fLeftSide.fNsurf) {
+        computeSingleSideExtent(fSurfData->fCommonSurfaces[common_id].fType, fSurfData->fCommonSurfaces[common_id].fLeftSide, common_extent);
+        int iextent = fExtents.size();
+        fExtents.push_back(common_extent);
+        fSurfData->fCommonSurfaces[common_id].fLeftSide.fExtent = iextent;
+      }
+      if (fSurfData->fCommonSurfaces[common_id].fRightSide.fNsurf) {
+        computeSingleSideExtent(fSurfData->fCommonSurfaces[common_id].fType, fSurfData->fCommonSurfaces[common_id].fRightSide, common_extent);
+        int iextent = fExtents.size();
+        fExtents.push_back(common_extent);
+        fSurfData->fCommonSurfaces[common_id].fRightSide.fExtent = iextent;
+      }        
     }
-    printf("   side2: %d surfaces\n", surf.fRightSide.fNsurf);
-    for (int i = 0; i < surf.fRightSide.fNsurf; ++i) {
-      int idglob = surf.fRightSide.fSurfaces[i];
-      auto const &placed = fGlobalSurfaces[idglob];
-      printf("    surf %d: trans: ", idglob);
-      fGlobalTrans[placed.fTrans].Print();
-      vecgeom::NavStateIndex state(placed.fState);
-      state.Print();
-    }
+    // Create extents in the surface data structure
+    fSurfData->fNextents = fExtents.size();
+    fSurfData->fExtents = new Extent_t[fExtents.size()];
+    for (size_t i = 0; i <  fExtents.size(); ++i)
+      fSurfData->fExtents[i] = fExtents[i];
   }
 
-  void PrintCommonSurface2(int id)
+  void PrintCommonSurface(int common_id)
   {
-    auto const &surf = fSurfData->fCommonSurfaces[id];
-    printf("== common surface %d: default state: ", id);
+    auto const &surf = fSurfData->fCommonSurfaces[common_id];
+    printf("== common surface %d: default state: ", common_id);
     vecgeom::NavStateIndex default_state(surf.fDefaultState);
     default_state.Print();
     printf(" transformation %d: ", surf.fTrans);
     fSurfData->fGlobalTrans[surf.fTrans].Print();
-    printf("\n   side1: %d surfaces\n", surf.fLeftSide.fNsurf);
+    Extent_t const &extL = fSurfData->fExtents[surf.fLeftSide.fExtent];
+    printf("\n   left: %d surfaces, extent %d: {{%g, %g}, {%g, %g}}\n",
+           surf.fLeftSide.fNsurf, surf.fLeftSide.fExtent, extL.rangeU[0], extL.rangeU[1], extL.rangeV[0], extL.rangeV[1]);
     for (int i = 0; i < surf.fLeftSide.fNsurf; ++i) {
       int idglob = surf.fLeftSide.fSurfaces[i];
       auto const &placed = fSurfData->fGlobalSurfaces[idglob];
@@ -246,7 +288,13 @@ public:
       vecgeom::NavStateIndex state(placed.fState);
       state.Print();
     }
-    printf("   side2: %d surfaces\n", surf.fRightSide.fNsurf);
+    Extent_t const &extR = fSurfData->fExtents[surf.fRightSide.fExtent];
+    if (surf.fRightSide.fNsurf > 0)
+      printf("   right: %d surfaces, extent %d: {{%g, %g}, {%g, %g}}\n",
+             surf.fRightSide.fNsurf, surf.fRightSide.fExtent, extR.rangeU[0], extR.rangeU[1], extR.rangeV[0], extR.rangeV[1]);
+    else
+      printf("   right: 0 surfaces\n");
+ 
     for (int i = 0; i < surf.fRightSide.fNsurf; ++i) {
       int idglob = surf.fRightSide.fSurfaces[i];
       auto const &placed = fSurfData->fGlobalSurfaces[idglob];
@@ -343,8 +391,12 @@ public:
     
     // Now update the surface data structure used for navigation
     UpdateSurfData();
+  
+    // Compute extents for all sides of common surfaces
+    ComputeExtents();
+
     for (size_t isurf = 1; isurf < fCommonSurfaces.size(); ++isurf) {
-      PrintCommonSurface2(isurf);
+      PrintCommonSurface(isurf);
     }
       
     PrintCandidateLists();
@@ -497,7 +549,7 @@ private:
     return UnplacedSurface(type, -1);
   }
 
-  Frame CreateFrame(FrameType type, RangeMask<Real_t> mask)
+  Frame CreateFrame(FrameType type, RangeMask<Real_t> const &mask)
   {
     int id = fRanges.size();
     fRanges.push_back(mask);
@@ -769,7 +821,6 @@ private:
       fSurfData->fCandidates[i].fCandidates = current_candidates;
       current_candidates += fCandidates[i].size();
     }
-
   }
   
 };
