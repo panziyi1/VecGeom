@@ -92,7 +92,13 @@ public:
    */
   VECCORE_ATT_HOST_DEVICE
   Transformation3D(const Precision tx, const Precision ty, const Precision tz, const Precision phi,
-                   const Precision theta, const Precision psi);
+                   const Precision theta, const Precision psi)
+      : fIdentity(false), fHasRotation(true), fHasTranslation(true)
+  {
+    SetTranslation(tx, ty, tz);
+    SetRotation(phi, theta, psi);
+    SetProperties();
+  }
 
   /**
    * @brief RScale followed by rotation followed by translation.
@@ -105,8 +111,13 @@ public:
    */
   VECCORE_ATT_HOST_DEVICE
   Transformation3D(const Precision tx, const Precision ty, const Precision tz, const Precision phi,
-                   const Precision theta, const Precision psi, Precision sx, Precision sy, Precision sz);
-
+                   const Precision theta, const Precision psi, Precision sx, Precision sy, Precision sz)
+      : fIdentity(false), fHasRotation(true), fHasTranslation(true)
+  {
+    SetTranslation(tx, ty, tz);
+    SetRotation(phi, theta, psi);
+    SetProperties();
+  }
 
   /**
    * Constructor to manually set each entry. Used when converting from different
@@ -115,7 +126,13 @@ public:
   VECCORE_ATT_HOST_DEVICE
   Transformation3D(const Precision tx, const Precision ty, const Precision tz, const Precision r0, const Precision r1,
                    const Precision r2, const Precision r3, const Precision r4, const Precision r5, const Precision r6,
-                   const Precision r7, const Precision r8);
+                   const Precision r7, const Precision r8)
+      : fIdentity(false), fHasRotation(true), fHasTranslation(true)
+  {
+    SetTranslation(tx, ty, tz);
+    SetRotation(r0, r1, r2, r3, r4, r5, r6, r7, r8);
+    SetProperties();
+  }
 
   /**
    * Constructor to manually set each entry. Used when converting from different
@@ -124,7 +141,14 @@ public:
   VECCORE_ATT_HOST_DEVICE
   Transformation3D(const Precision tx, const Precision ty, const Precision tz, const Precision r0, const Precision r1,
                    const Precision r2, const Precision r3, const Precision r4, const Precision r5, const Precision r6,
-                   const Precision r7, const Precision r8, Precision sx, Precision sy, Precision sz);
+                   const Precision r7, const Precision r8, Precision sx, Precision sy, Precision sz)
+      : fIdentity(false), fHasRotation(true), fHasTranslation(true)
+  {
+    SetTranslation(tx, ty, tz);
+    SetRotation(r0, r1, r2, r3, r4, r5, r6, r7, r8);
+    ApplyScale(sx, sy, sz);
+    SetProperties();
+  }
 
   /**
    * Constructor copying the translation and rotation from memory
@@ -143,7 +167,15 @@ public:
                     if false a vector (0,0,u) will be rotated into the original axis
    */
   VECCORE_ATT_HOST_DEVICE
-  Transformation3D(const Vector3D<Precision> &axis, bool inverse = true);
+  Transformation3D(const Vector3D<Precision> &axis, bool inverse = true)
+  {
+    SetTranslation(0, 0, 0);
+    if (inverse)
+      SetRotation(axis.Phi() * kRadToDeg - 90, -axis.Theta() * kRadToDeg, 0);
+    else
+      SetRotation(0, axis.Theta() * kRadToDeg, 90 - axis.Phi() * kRadToDeg);
+    SetProperties();
+  }
 
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
@@ -264,32 +296,91 @@ public:
   bool HasTranslation() const { return fHasTranslation; }
 
   VECCORE_ATT_HOST_DEVICE
-  void Print() const;
+  void Print() const
+  {
+    printf("Transformation3D {{%.2f, %.2f, %.2f}, ", fTranslation[0], fTranslation[1], fTranslation[2]);
+    printf("{%.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f}}", fRotation[0], fRotation[1], fRotation[2],
+           fRotation[3], fRotation[4], fRotation[5], fRotation[6], fRotation[7], fRotation[8]);
+  }
 
   // print to a stream
-  void Print(std::ostream &) const;
+  void Print(std::ostream & s) const
+  {
+    s << "Transformation3D {{" << fTranslation[0] << "," << fTranslation[1] << "," << fTranslation[2] << "}";
+    s << "{" << fRotation[0] << "," << fRotation[1] << "," << fRotation[2] << "," << fRotation[3] << "," << fRotation[4]
+      << "," << fRotation[5] << "," << fRotation[6] << "," << fRotation[7] << "," << fRotation[8] << "}}\n";
+  }
 
   // Mutators
 
   VECCORE_ATT_HOST_DEVICE
-  void SetTranslation(const Precision tx, const Precision ty, const Precision tz);
+  void SetTranslation(const Precision tx, const Precision ty, const Precision tz)
+  {
+    fTranslation[0] = tx;
+    fTranslation[1] = ty;
+    fTranslation[2] = tz;
+  }
 
   VECCORE_ATT_HOST_DEVICE
-  void SetTranslation(Vector3D<Precision> const &vec);
+  void SetTranslation(Vector3D<Precision> const &vec)
+  {
+    SetTranslation(vec[0], vec[1], vec[2]);
+  }
 
   VECCORE_ATT_HOST_DEVICE
-  void SetProperties();
+  void SetProperties()
+  {
+    fHasTranslation =
+        (fabs(fTranslation[0]) > kTolerance || fabs(fTranslation[1]) > kTolerance || fabs(fTranslation[2]) > kTolerance)
+            ? true
+            : false;
+    fHasRotation = (GenerateRotationCode() == rotation::kIdentity) ? false : true;
+    fIdentity    = !fHasTranslation && !fHasRotation;
+  }
 
   VECCORE_ATT_HOST_DEVICE
-  void SetRotation(const Precision phi, const Precision theta, const Precision psi);
+  void SetRotation(const Precision phi, const Precision theta, const Precision psi)
+  {
+    const Precision sinphi = sin(kDegToRad * phi);
+    const Precision cosphi = cos(kDegToRad * phi);
+    const Precision sinthe = sin(kDegToRad * theta);
+    const Precision costhe = cos(kDegToRad * theta);
+    const Precision sinpsi = sin(kDegToRad * psi);
+    const Precision cospsi = cos(kDegToRad * psi);
+
+    fRotation[0] = cospsi * cosphi - costhe * sinphi * sinpsi;
+    fRotation[1] = -sinpsi * cosphi - costhe * sinphi * cospsi;
+    fRotation[2] = sinthe * sinphi;
+    fRotation[3] = cospsi * sinphi + costhe * cosphi * sinpsi;
+    fRotation[4] = -sinpsi * sinphi + costhe * cosphi * cospsi;
+    fRotation[5] = -sinthe * cosphi;
+    fRotation[6] = sinpsi * sinthe;
+    fRotation[7] = cospsi * sinthe;
+    fRotation[8] = costhe;
+  }
 
   VECCORE_ATT_HOST_DEVICE
-  void SetRotation(Vector3D<Precision> const &vec);
+  void SetRotation(Vector3D<Precision> const &vec)
+  {
+    SetRotation(vec[0], vec[1], vec[2]);
+  }
 
   VECCORE_ATT_HOST_DEVICE
   void SetRotation(const Precision rot0, const Precision rot1, const Precision rot2, const Precision rot3,
                    const Precision rot4, const Precision rot5, const Precision rot6, const Precision rot7,
-                   const Precision rot8);
+                   const Precision rot8)
+  {
+
+    fRotation[0] = rot0;
+    fRotation[1] = rot1;
+    fRotation[2] = rot2;
+    fRotation[3] = rot3;
+    fRotation[4] = rot4;
+    fRotation[5] = rot5;
+    fRotation[6] = rot6;
+    fRotation[7] = rot7;
+    fRotation[8] = rot8;
+  }
 
   /**
    * Set transformation and rotation.
@@ -344,10 +435,30 @@ public:
   // Generation of template parameter codes
 
   VECCORE_ATT_HOST_DEVICE
-  RotationCode GenerateRotationCode() const;
+  RotationCode GenerateRotationCode() const
+  {
+    int code = 0;
+    for (int i = 0; i < 9; ++i) {
+      // Assign each bit
+      code |= (1 << i) * (fabs(fRotation[i]) > kTolerance);
+    }
+    if (code == rotation::kDiagonal && (fRotation[0] == 1. && fRotation[4] == 1. && fRotation[8] == 1.)) {
+      code = rotation::kIdentity;
+    }
+    return code;
+  }
 
+  /**
+   * Very simple translation code. Kept as an integer in case other cases are to
+   * be implemented in the future.
+   * /return The transformation's translation code, which is 0 for transformations
+   *         without translation and 1 otherwise.
+   */
   VECCORE_ATT_HOST_DEVICE
-  TranslationCode GenerateTranslationCode() const;
+  TranslationCode GenerateTranslationCode() const
+  {
+    return (fHasTranslation) ? translation::kGeneric : translation::kIdentity;
+  }
 
 private:
   // Templated rotation and translation methods which inline and compile to
@@ -546,8 +657,9 @@ public:
 
 public:
   static const Transformation3D kIdentity;
-
 }; // End class Transformation3D
+
+inline const Transformation3D Transformation3D::kIdentity = Transformation3D();
 
 VECCORE_ATT_HOST_DEVICE
 Transformation3D::Transformation3D(Transformation3D const &other)
