@@ -215,6 +215,18 @@ public:
 
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
+  static bool IsDescendentImpl(NavIndex_t child_ind, NavIndex_t parent_ind)
+  {
+    NavIndex_t ind = child_ind;
+    while (ind > parent_ind) {
+      ind = NavInd(ind);
+      if (ind == parent_ind) return true;
+    }
+    return false;
+  }
+
+  VECGEOM_FORCE_INLINE
+  VECCORE_ATT_HOST_DEVICE
   static NavIndex_t PopImpl(NavIndex_t nav_ind) { return (nav_ind > 0) ? NavInd(nav_ind) : 0; }
 
   VECGEOM_FORCE_INLINE
@@ -277,6 +289,10 @@ public:
   VECCORE_ATT_HOST_DEVICE
   void SetLastExited() { fLastExited = fNavInd; }
 
+  VECGEOM_FORCE_INLINE
+  VECCORE_ATT_HOST_DEVICE
+  void SetNavIndex(NavIndex_t navind) { fNavInd = navind; }
+
   VECCORE_ATT_HOST_DEVICE
   VECGEOM_FORCE_INLINE
   unsigned short GetNdaughters() const { return GetNdaughtersImpl(fNavInd); }
@@ -284,6 +300,10 @@ public:
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
   NavIndex_t GetId() const { return GetIdImpl(fNavInd); }
+
+  VECGEOM_FORCE_INLINE
+  VECCORE_ATT_HOST_DEVICE
+  bool IsDescendent(NavIndex_t parent) const { return IsDescendentImpl(fNavInd, parent); }
 
   VECGEOM_FORCE_INLINE
   VECCORE_ATT_HOST_DEVICE
