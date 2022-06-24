@@ -86,6 +86,7 @@ private:
   std::vector<CommonSurface> fCommonSurfaces; ///< common surfaces
   std::vector<VolumeShell> fShells;           ///< vector of local volume surfaces
   std::vector<std::vector<int>> fCandidates;  ///< candidate lists for each state
+  std::vector<std::vector<int>> fFrameInd;    ///< frame index per candidate
 
   BrepHelper() : fSurfData(new SurfData_t()) {}
 
@@ -473,22 +474,26 @@ public:
   {
     int numNodes = vecgeom::GeoManager::Instance().GetTotalNodeCount() + 1; // count also outside state
     fCandidates.reserve(numNodes);
+    fFrameInd.reserve(numNodes);
 
     // Lambda adding the surface id as candidate to all states from a side
     auto addSurfToSideStates = [&](int isurf, int iside) {
       Side const &side = (iside > 0) ? fCommonSurfaces[isurf].fLeftSide : fCommonSurfaces[isurf].fRightSide;
       for (int i = 0; i < side.fNsurf; ++i) {
         int idglob         = side.fSurfaces[i];
-        auto const &placed = fFramedSurf[idglob];
-        vecgeom::NavStateIndex state(placed.fState);
+        auto const &framedsurf = fFramedSurf[idglob];
+        vecgeom::NavStateIndex state(framedsurf.fState);
         int state_id = state.GetId();
         fCandidates[state_id].push_back(isurf * iside);
+        fFrameInd[state_id].push_back(i);
       }
     };
 
     // prepare all lists
-    for (int i = 0; i < numNodes; ++i)
+    for (int i = 0; i < numNodes; ++i) {
       fCandidates.push_back({});
+      fFrameInd.push_back({});
+    }
 
     // loop over all common surfaces and add their index in the appropriate list
     for (size_t isurf = 1; isurf < fCommonSurfaces.size(); ++isurf) {
@@ -496,6 +501,7 @@ public:
       // Add to default surface state
       vecgeom::NavStateIndex state(surf.fDefaultState);
       fCandidates[state.GetId()].push_back(-isurf);
+      fFrameInd[state.GetId()].push_back(-1); // means this state is the default for isurf
       // Add to side states
       addSurfToSideStates(isurf, 1);
       addSurfToSideStates(isurf, -1);
@@ -518,7 +524,7 @@ public:
       auto const &cand = fSurfData->fCandidates[state.GetId()];
       printf(" %d candidates: ", cand.fNcand);
       for (int i = 0; i < cand.fNcand; ++i)
-        printf("%d ", cand.fCandidates[i]);
+        printf("%d (ind %d) ", cand.fCandidates[i], cand.fFrameInd[i]);
       printf("\n");
 
       // do daughters
@@ -533,7 +539,7 @@ public:
     auto const &cand = fSurfData->fCandidates[state.GetId()];
     printf(" %d candidates: ", cand.fNcand);
     for (int i = 0; i < cand.fNcand; ++i)
-      printf("%d ", cand.fCandidates[i]);
+      printf("%d (ind %d) ", cand.fCandidates[i], cand.fFrameInd[i]);
     printf("\n");
 
     printCandidates(vecgeom::GeoManager::Instance().GetWorld());
@@ -817,14 +823,19 @@ private:
     for (auto const &list : fCandidates)
       size_candidates += list.size();
 
-    fSurfData->fCandList    = new int[size_candidates];
+    fSurfData->fCandList    = new int[2 * size_candidates];
     int *current_candidates = fSurfData->fCandList;
     fSurfData->fCandidates  = new Candidates[fCandidates.size()];
     for (size_t i = 0; i < fCandidates.size(); ++i) {
-      fSurfData->fCandidates[i].fNcand = fCandidates[i].size();
-      for (size_t icand = 0; icand < fCandidates[i].size(); icand++)
+      auto ncand = fCandidates[i].size();
+      fSurfData->fCandidates[i].fNcand = ncand;
+      for (size_t icand = 0; icand < ncand; icand++) {
         current_candidates[icand] = (fCandidates[i])[icand];
+        current_candidates[ncand + icand] = (fFrameInd[i])[icand];
+      }
       fSurfData->fCandidates[i].fCandidates = current_candidates;
+      current_candidates += fCandidates[i].size();
+      fSurfData->fCandidates[i].fFrameInd   = current_candidates;
       current_candidates += fCandidates[i].size();
     }
   }

@@ -104,7 +104,7 @@ struct UnplacedSurface {
 
   /// Find positive distance to next intersection from local point
   template <typename Real_t>
-  Real_t Intersect(Vector3D<Real_t> const &point, Vector3D<Real_t> const &dir, SurfData<Real_t> const &storage) const
+  Real_t Intersect(Vector3D<Real_t> const &point, Vector3D<Real_t> const &dir, SurfData<Real_t> const &surfdata) const
   {
     QuadraticCoef<Real_t> coef;
     QuadraticRoots<Real_t> roots;
@@ -117,15 +117,15 @@ struct UnplacedSurface {
       return dist;
     case kCylindrical:
       // Intersect with the cylindrical surface having Z as axis of symmetry
-      CylinderEq<Real_t>(point, dir, storage.GetCylData(id).radius, coef);
+      CylinderEq<Real_t>(point, dir, surfdata.GetCylData(id).radius, coef);
       break;
     case kConical:
       // Intersect with the conical surface having Z as axis of symmetry
-      ConeEq<Real_t>(point, dir, storage.GetConeData(id).radius, storage.GetConeData(id).slope, coef);
+      ConeEq<Real_t>(point, dir, surfdata.GetConeData(id).radius, surfdata.GetConeData(id).slope, coef);
       break;
     case kSpherical:
       // Intersect with the sphere having the center in the origin
-      SphereEq<Real_t>(point, dir, storage.GetSphData(id).radius, coef);
+      SphereEq<Real_t>(point, dir, surfdata.GetSphData(id).radius, coef);
       break;
     case kTorus:
     case kGenSecondOrder:
@@ -149,9 +149,9 @@ struct Frame {
 
   ///< Get the extent in 2 coordinates for this frame
   template <typename Real_t>
-  void GetExtent(Extent<Real_t> &ext, SurfData<Real_t> const &storage)
+  void GetExtent(Extent<Real_t> &ext, SurfData<Real_t> const &surfdata)
   {
-    auto data = storage.GetRangeMask(id);
+    auto data = surfdata.GetRangeMask(id);
     switch (type) {
     case kRangeZ:
     case kRangeCyl:
@@ -165,9 +165,9 @@ struct Frame {
   }
 
   template <typename Real_t>
-  bool Inside(Vector3D<Real_t> const &local, SurfData<Real_t> const &storage) const
+  bool Inside(Vector3D<Real_t> const &local, SurfData<Real_t> const &surfdata) const
   {
-    auto data = storage.GetRangeMask(id);
+    auto data = surfdata.GetRangeMask(id);
     Real_t rsq{0};
     switch (type) {
     case kRangeZ:
@@ -185,7 +185,31 @@ struct Frame {
       return (std::abs(local[0]) < vecgeom::MakePlusTolerant<true>(data[0]) &&
               std::abs(local[1]) < vecgeom::MakePlusTolerant<true>(data[1]));
     case kTriangle:
-      std::cout << "Triangle masks not handled yet\n";
+      std::cout << "Mask type not handled yet\n";
+    };
+    return false;
+  }
+
+  /// An "overload" working statically for (non-centered) extents
+  template <typename Real_t>
+  static bool Inside(Vector3D<Real_t> const &local, Extent<Real_t> const &extent, SurfaceType type)
+  {
+    RangeMask<Real_t> const &u = extent.rangeU;
+    RangeMask<Real_t> const &v = extent.rangeV;
+    switch (type) {
+    case kRangeZ:
+      return (local[2] > vecgeom::MakeMinusTolerant<true>(u[0]) &&
+              local[2] < vecgeom::MakePlusTolerant<true>(u[1]));
+    case kRangeCyl:
+    case kRangeSph:
+    case kTorus:
+    case kGenSecondOrder:
+     break;
+    case kWindow:
+      return (local[0] > vecgeom::MakeMinusTolerant<true>(u[0]) &&
+              local[0] < vecgeom::MakePlusTolerant<true>(u[1]) &&
+              local[1] > vecgeom::MakeMinusTolerant<true>(v[0]) &&
+              local[1] < vecgeom::MakePlusTolerant<true>(v[1]));
     };
     return false;
   }
@@ -246,9 +270,9 @@ struct FramedSurface {
   /// Transform point and direction to the local frame
   template <typename Real_t>
   void Transform(Vector3D<Real_t> const &point, Vector3D<Real_t> const &dir, Vector3D<Real_t> &localpoint,
-                 Vector3D<Real_t> &localdir, SurfData<Real_t> const &storage)
+                 Vector3D<Real_t> &localdir, SurfData<Real_t> const &surfdata)
   {
-    auto &localRef = storage.LocalT(fTrans);
+    auto &localRef = surfdata.LocalT(fTrans);
     localpoint     = localRef.Transform(point);
     localdir       = localRef.TransformDirection(dir);
   }
@@ -256,20 +280,20 @@ struct FramedSurface {
   ///< This finds the distance to intersecting the half-space, without checking the mask
   // Tte point and direction are in the reference frame of the scene
   template <typename Real_t>
-  Real_t Intersect(Vector3D<Real_t> const &point, Vector3D<Real_t> const &dir, SurfData<Real_t> const &storage)
+  Real_t Intersect(Vector3D<Real_t> const &point, Vector3D<Real_t> const &dir, SurfData<Real_t> const &surfdata)
   {
     Vector3D<Real_t> localpoint, localdir;
     Transform(point, dir, localpoint, localdir);
-    return fSurface.Intersect<Real_t>(localpoint, localdir, storage);
+    return fSurface.Intersect<Real_t>(localpoint, localdir, surfdata);
   }
 
   ///< Check if the propagated point on surface is within the frame
   template <typename Real_t>
-  bool InsideFrame(Vector3D<Real_t> const &point, Vector3D<Real_t> const &dir, SurfData<Real_t> const &storage)
+  bool InsideFrame(Vector3D<Real_t> const &point, Vector3D<Real_t> const &dir, SurfData<Real_t> const &surfdata)
   {
     Vector3D<Real_t> localpoint, localdir;
     Transform(point, dir, localpoint, localdir);
-    return fFrame.Inside(point, storage);
+    return fFrame.Inside(point, surfdata);
   }
 };
 
@@ -277,6 +301,7 @@ struct FramedSurface {
 struct Candidates {
   int fNcand{0};             ///< Number of candidate surfaces
   int *fCandidates{nullptr}; ///< [fNcand] Array of candidates
+  int *fFrameInd{nullptr};   ///< [fNcand] Framed surface indices for each candidate
 
   int operator[](int i) const { return fCandidates[i]; }
   int operator[](int i) { return fCandidates[i]; }
@@ -304,6 +329,13 @@ struct Side {
     delete[] fSurfaces;
     fSurfaces = surfaces;
     return fNsurf - 1;
+  }
+
+  template <typename Real_t>
+  inline
+  FramedSurface const &GetSurface(int index, SurfData<Real_t> const &surfdata) const
+  {
+    return surfdata.fFramedSurf[fSurfaces[index]];
   }
 
   size_t size() const { return sizeof(Side) + fNsurf * sizeof(int); }
@@ -397,6 +429,7 @@ struct SurfData {
   SphData_t const &GetSphData(int id) const { return fCylSphData[id]; }
   ConeData_t const &GetConeData(int id) const { return fConeData[id]; }
   RangeMask_t const &GetRangeMask(int id) const { return fRangeData[id]; }
+  Extent_t const &GetExtent(int id) const { return fExtents[id]; }
 
   // Accessors by common surface id
   UnplacedSurface const GetUnplaced(int isurf) const

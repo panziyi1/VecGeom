@@ -149,11 +149,18 @@ bool ValidateNavigation(int npoints, int nbLayers, vgbrep::SurfData<vecgeom::Pre
 {
   // prepare tracks to be used for benchmarking
   constexpr double tolerance = 10 * vecgeom::kTolerance;
+  const double CalorSizeYZ       = 40;
+  const double GapThickness      = 2.3;
+  const double AbsorberThickness = 5.7;
+
+  const double LayerThickness = GapThickness + AbsorberThickness;
+  const double CalorThickness = nbLayers * LayerThickness;
+
   int num_errors             = 0;
   SOA3D<Precision> points(npoints);
   SOA3D<Precision> dirs(npoints);
 
-  Vector3D<Precision> samplingVolume(nbLayers * 8, 20, 20);
+  Vector3D<Precision> samplingVolume(0.5 * CalorThickness + 10, 0.5 * CalorSizeYZ + 10, 0.5 * CalorSizeYZ + 10);
   vecgeom::volumeUtilities::FillRandomPoints(samplingVolume, points);
   vecgeom::volumeUtilities::FillRandomDirections(dirs);
 
@@ -190,12 +197,39 @@ bool ValidateNavigation(int npoints, int nbLayers, vgbrep::SurfData<vecgeom::Pre
 
 void TestPerformance(int npoints, int nbLayers, vgbrep::SurfData<vecgeom::Precision> const &surfdata)
 {
+  const double CalorSizeYZ       = 40;
+  const double GapThickness      = 2.3;
+  const double AbsorberThickness = 5.7;
+
+  const double LayerThickness = GapThickness + AbsorberThickness;
+  const double CalorThickness = nbLayers * LayerThickness;
+
   SOA3D<Precision> points(npoints);
   SOA3D<Precision> dirs(npoints);
 
-  Vector3D<Precision> samplingVolume(nbLayers * 8, 20, 20);
+//  Vector3D<Precision> samplingVolume(0.2, 0.2, 0.2);
+  Vector3D<Precision> samplingVolume(0.5 * CalorThickness - 10, 0.5 * CalorSizeYZ - 10, 0.5 * CalorSizeYZ - 10);
   vecgeom::volumeUtilities::FillRandomPoints(samplingVolume, points);
   vecgeom::volumeUtilities::FillRandomDirections(dirs);
+
+  Precision xfirst = -0.5 * CalorThickness + 0.5 * LayerThickness;
+  Precision xlast = xfirst + (nbLayers - 1) * LayerThickness;
+  Precision xmiddle = xfirst + 0.5 * (nbLayers - 1) * LayerThickness;
+
+  Vector3D<Precision> pointInFirstLayer(xfirst, 0, 0);
+  Vector3D<Precision> pointInLastLayer(xlast, 0, 0);
+  Vector3D<Precision> pointInMiddleLayer(xmiddle, 0, 0);
+  Vector3D<Precision> pointBottomFirstLayer(xfirst, -0.6 * CalorSizeYZ, 0);
+  Vector3D<Precision> pointBottomLastLayer(xlast, -0.6 * CalorSizeYZ, 0);
+  Vector3D<Precision> pointBottomMiddleLayer(xmiddle, -0.6 * CalorSizeYZ, 0);
+
+  Vector3D<Precision> dirXplus(1, 0, 0); 
+  Vector3D<Precision> dirXminus(-1, 0, 0); 
+  Vector3D<Precision> dirYplus(0, 1, 0); 
+  Vector3D<Precision> dirYminus(0, -1, 0); 
+
+  //Vector3D<Precision> const &pt  = pointBottomLastLayer;
+  //Vector3D<Precision> const &dir = dirYplus;
 
   // now setup all the navigation states
   int ndeep = GeoManager::Instance().getMaxDepth();
@@ -207,6 +241,7 @@ void TestPerformance(int npoints, int nbLayers, vgbrep::SurfData<vecgeom::Precis
   // Locate all input points, without timing this operation
   for (int i = 0; i < npoints; ++i) {
     Vector3D<Precision> const &pos = points[i];
+    //Vector3D<Precision> pos(points[i] + pt);
     GlobalLocator::LocateGlobalPoint(GeoManager::Instance().GetWorld(), pos, *origStates[i], true);
   }
 
@@ -214,19 +249,23 @@ void TestPerformance(int npoints, int nbLayers, vgbrep::SurfData<vecgeom::Precis
   Stopwatch timer;
   timer.Start();
   for (int i = 0; i < npoints; ++i) {
+    //Vector3D<Precision> pos(points[i] + pt);
     Vector3D<Precision> const &pos = points[i];
     Vector3D<Precision> const &dir = dirs[i];
     nav->FindNextBoundaryAndStep(pos, dir, *origStates[i], out_state, vecgeom::kInfLength, distance);
+    //out_state.Print();
   }
   Precision time_prim = timer.Stop();
 
-  int exit_surf = 0;
   Stopwatch timer1;
   timer1.Start();
   for (int i = 0; i < npoints; ++i) {
+    //Vector3D<Precision> pos(points[i] + pt);
     Vector3D<Precision> const &pos = points[i];
     Vector3D<Precision> const &dir = dirs[i];
+    int exit_surf = 0;
     distance = vgbrep::protonav::ComputeStepAndHit(pos, dir, *origStates[i], out_state, surfdata, exit_surf);
+    //out_state.Print();
   }
   Precision time_surf = timer1.Stop();
 

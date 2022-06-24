@@ -16,6 +16,7 @@ Real_t ComputeStepAndHit(vecgeom::Vector3D<Real_t> const &point, vecgeom::Vector
 {
   // Get the list of candidate surfaces for in_state
   out_state            = in_state;
+  int current_level    = in_state.GetLevel();
   auto skip_surf       = exit_surf;
   exit_surf            = 0;
   Real_t distance      = vecgeom::InfinityLength<Real_t>();
@@ -47,20 +48,31 @@ Real_t ComputeStepAndHit(vecgeom::Vector3D<Real_t> const &point, vecgeom::Vector
 
     if (exiting) {
       // This is an exiting surface for in_state
-      for (auto ind = 0; ind < exit_side.fNsurf; ++ind) {
-        auto const &framedsurf = surfdata.fFramedSurf[exit_side.fSurfaces[ind]];
-        // we need to check the current framed surface if its state is either the same or
-        // is an ancestor of the in_state
-        bool same_state = framedsurf.fState == in_navind;
-        bool is_sibling = same_state || vecgeom::NavStateIndex::IsDescendentImpl(framedsurf.fState, in_navind);
-        if (is_sibling) {
+      // First check the frame of the current state on this surface
+      int frameind = cand.fFrameInd[icand]; // index of framed surface on the side
+      auto const &framedsurf = exit_side.GetSurface(frameind, surfdata);
+      assert(framedsurf.fState == in_navind);
+      // This frame must be crossed
+      Vector3D<Real_t> local_frame = onsurf;
+      if (framedsurf.fTrans) local_frame = surfdata.fGlobalTrans[framedsurf.fTrans].Transform(onsurf);
+      bool inframe = framedsurf.fFrame.Inside(local_frame, surfdata);
+      if (!inframe) continue;
+
+      // frames of daughters of the current state on the same surface must NOT be crossed
+      // Daughters may be found only at indices lesser than frameind
+      for (auto ind = 0; ind < frameind; ++ind) {
+        auto const &framedsurf = exit_side.GetSurface(ind, surfdata);
+        // Only search navigation levels higher than the current one
+        if (vecgeom::NavStateIndex::GetLevelImpl(framedsurf.fState) >= current_level)
+          break;
+        bool is_descendent = vecgeom::NavStateIndex::IsDescendentImpl(framedsurf.fState, in_navind);
+        if (is_descendent) {
           // convert to local frame
           Vector3D<Real_t> local_frame = onsurf;
           if (framedsurf.fTrans) local_frame = surfdata.fGlobalTrans[framedsurf.fTrans].Transform(onsurf);
           bool inframe = framedsurf.fFrame.Inside(local_frame, surfdata);
-          // When exiting the frame with same state, the exit point must be in frame
           // When exiting a daughter volume frame, the exit point must NOT be in the daughter frame
-          if (inframe != same_state) {
+          if (inframe) {
             can_hit = false;
             break; // next candidate
           }
@@ -77,12 +89,15 @@ Real_t ComputeStepAndHit(vecgeom::Vector3D<Real_t> const &point, vecgeom::Vector
     }
 
     // Now check if something is being entered
+    // first check the extent of the entry side using onsurf
+    if (!Frame::Inside(onsurf, surfdata.GetExtent(entry_side.fExtent), surf.fType))
+      continue;
 
     // the onsurf local point can be used as input for a side search optimization structure.
     // for now just loop candidates in order. Since candidates are sorted by depth, the first
     // frame entry is the good one.
     for (auto ind = 0; ind < entry_side.fNsurf; ++ind) {
-      auto const &framedsurf = surfdata.fFramedSurf[entry_side.fSurfaces[ind]];
+      auto const &framedsurf = entry_side.GetSurface(ind, surfdata);
       // convert to local frame
       Vector3D<Real_t> local_frame = onsurf;
       if (framedsurf.fTrans) local_frame = surfdata.fGlobalTrans[framedsurf.fTrans].Transform(onsurf);
