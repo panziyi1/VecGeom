@@ -161,8 +161,26 @@ public:
       }
     };
 
+    // lambda to find if the surfaces on one side have a common parent
+    auto findParentFramedSurf = [&](Side &side) {
+      if (!side.fNsurf) return;
+      // if there is a parent, it can only be at the last position after sorting
+      int parent_ind = side.fNsurf - 1;
+      auto parent_navind = fFramedSurf[side.fSurfaces[parent_ind]].fState;
+      for (int i = 0; i < parent_ind; ++i) {
+        auto navind = fFramedSurf[side.fSurfaces[i]].fState;
+        if (!vecgeom::NavStateIndex::IsDescendentImpl(navind, parent_navind)) {
+          parent_ind = -1;
+          break;
+        }
+      }
+      side.fParentSurf = parent_ind;
+    };
+
     sortAndRemoveCommonFrames(fCommonSurfaces[common_id].fLeftSide);
     sortAndRemoveCommonFrames(fCommonSurfaces[common_id].fRightSide);
+    findParentFramedSurf(fCommonSurfaces[common_id].fLeftSide);
+    findParentFramedSurf(fCommonSurfaces[common_id].fRightSide);
   }
 
   void ComputeDefaultStates(int common_id)
@@ -296,7 +314,8 @@ public:
     printf(" transformation %d: ", surf.fTrans);
     fSurfData->fGlobalTrans[surf.fTrans].Print();
     Extent_t const &extL = fSurfData->fExtents[surf.fLeftSide.fExtent];
-    printf("\n   left: %d surfaces, extent %d: {{%g, %g}, {%g, %g}}\n", surf.fLeftSide.fNsurf, surf.fLeftSide.fExtent,
+    printf("\n   left: %d surfaces, parent=%d, extent %d: {{%g, %g}, {%g, %g}}\n", surf.fLeftSide.fNsurf,
+           surf.fLeftSide.fParentSurf, surf.fLeftSide.fExtent,
            extL.rangeU[0], extL.rangeU[1], extL.rangeV[0], extL.rangeV[1]);
     for (int i = 0; i < surf.fLeftSide.fNsurf; ++i) {
       int idglob         = surf.fLeftSide.fSurfaces[i];
@@ -309,8 +328,9 @@ public:
     }
     Extent_t const &extR = fSurfData->fExtents[surf.fRightSide.fExtent];
     if (surf.fRightSide.fNsurf > 0)
-      printf("   right: %d surfaces, extent %d: {{%g, %g}, {%g, %g}}\n", surf.fRightSide.fNsurf,
-             surf.fRightSide.fExtent, extR.rangeU[0], extR.rangeU[1], extR.rangeV[0], extR.rangeV[1]);
+      printf("   right: %d surfaces, parent=%d, extent %d: {{%g, %g}, {%g, %g}}\n", surf.fRightSide.fNsurf,
+             surf.fRightSide.fParentSurf, surf.fRightSide.fExtent,
+             extR.rangeU[0], extR.rangeU[1], extR.rangeV[0], extR.rangeV[1]);
     else
       printf("   right: 0 surfaces\n");
 
@@ -816,6 +836,9 @@ private:
       // Make right sides arrays point to the buffer
       fSurfData->fCommonSurfaces[i].fRightSide.fSurfaces = current_side;
       current_side += fCommonSurfaces[i].fRightSide.fNsurf;
+      // Copy parent surface indices
+      fSurfData->fCommonSurfaces[i].fLeftSide.fParentSurf = fCommonSurfaces[i].fLeftSide.fParentSurf;
+      fSurfData->fCommonSurfaces[i].fRightSide.fParentSurf = fCommonSurfaces[i].fRightSide.fParentSurf;
     }
 
     // Create candidates lists

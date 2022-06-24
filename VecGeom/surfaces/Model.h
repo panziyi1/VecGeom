@@ -278,7 +278,7 @@ struct FramedSurface {
   }
 
   ///< This finds the distance to intersecting the half-space, without checking the mask
-  // Tte point and direction are in the reference frame of the scene
+  // The point and direction are in the reference frame of the scene
   template <typename Real_t>
   Real_t Intersect(Vector3D<Real_t> const &point, Vector3D<Real_t> const &dir, SurfData<Real_t> const &surfdata)
   {
@@ -312,6 +312,7 @@ struct Candidates {
 ///< A side represents all common placed surfaces
 struct Side {
   int fExtent{-1};         ///< indices of side ranges on two coordinates, depending on surface type
+  int fParentSurf {-1};    ///< if there is a parent volume of all volumes contributing to this side
   int fNsurf{0};           ///< Number of placed surfaces on this side
   int *fSurfaces{nullptr}; ///< [fNsurf] Array of placed surfaces on this side
 

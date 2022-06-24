@@ -208,7 +208,7 @@ void TestPerformance(int npoints, int nbLayers, vgbrep::SurfData<vecgeom::Precis
   SOA3D<Precision> dirs(npoints);
 
 //  Vector3D<Precision> samplingVolume(0.2, 0.2, 0.2);
-  Vector3D<Precision> samplingVolume(0.5 * CalorThickness - 10, 0.5 * CalorSizeYZ - 10, 0.5 * CalorSizeYZ - 10);
+  Vector3D<Precision> samplingVolume(0.5 * CalorThickness, 0.5 * CalorSizeYZ, 0.5 * CalorSizeYZ);
   vecgeom::volumeUtilities::FillRandomPoints(samplingVolume, points);
   vecgeom::volumeUtilities::FillRandomDirections(dirs);
 
@@ -227,6 +227,8 @@ void TestPerformance(int npoints, int nbLayers, vgbrep::SurfData<vecgeom::Precis
   Vector3D<Precision> dirXminus(-1, 0, 0); 
   Vector3D<Precision> dirYplus(0, 1, 0); 
   Vector3D<Precision> dirYminus(0, -1, 0); 
+  Vector3D<Precision> dirXY(1, 0, 0);
+  dirXY.Normalize(); 
 
   //Vector3D<Precision> const &pt  = pointBottomLastLayer;
   //Vector3D<Precision> const &dir = dirYplus;
@@ -255,6 +257,7 @@ void TestPerformance(int npoints, int nbLayers, vgbrep::SurfData<vecgeom::Precis
     nav->FindNextBoundaryAndStep(pos, dir, *origStates[i], out_state, vecgeom::kInfLength, distance);
     //out_state.Print();
   }
+  //printf("\n");
   Precision time_prim = timer.Stop();
 
   Stopwatch timer1;
