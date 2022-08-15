@@ -64,12 +64,14 @@ struct VolumeShell {
 // Host helper for filling the SurfData store
 template <typename Real_t>
 class BrepHelper {
-  using SurfData_t  = SurfData<Real_t>;
-  using CylData_t   = CylData<Real_t>;
-  using ConeData_t  = ConeData<Real_t>;
-  using SphData_t   = SphData<Real_t>;
-  using RangeMask_t = RangeMask<Real_t>;
-  using Extent_t    = Extent<Real_t>;
+  using SurfData_t   = SurfData<Real_t>;
+  using CylData_t    = CylData<Real_t>;
+  using ConeData_t   = ConeData<Real_t>;
+  using SphData_t    = SphData<Real_t>;
+  using Extent_t     = Extent<Real_t>;
+  using WindowMask_t = WindowMask<Real_t>;
+  using RingMask_t   = RingMask<Real_t>;
+  using ZPhiMask_t   = ZPhiMask<Real_t>;
   //  using Vector         = vecgeom::Vector3D<Real_t>;
 
 private:
@@ -78,7 +80,9 @@ private:
   SurfData_t *fSurfDataGPU{nullptr}; ///< Surface data on device
 
   std::vector<Extent_t> fExtents;             ///< List of extents
-  std::vector<RangeMask_t> fRanges;           ///< List of ranges
+  std::vector<WindowMask_t> fWindowMasks;       ///< Masks...
+  std::vector<RingMask_t> fRingMasks;
+  std::vector<ZPhiMask_t> fZPhiMasks;
   std::vector<Frame> fFrames;                 ///< vector of masks
   std::vector<CylData_t> fCylSphData;         ///< data for cyl surfaces
   std::vector<ConeData_t> fConeData;          ///< data for conical surfaces
@@ -106,10 +110,14 @@ public:
   void ClearData()
   {
     // Dispose of surface data and shrink the container
-    fRanges.clear();
-    std::vector<RangeMask<Real_t>>().swap(fRanges);
     fExtents.clear();
     std::vector<Extent_t>().swap(fExtents);
+    fWindowMasks.clear();
+    std::vector<WindowMask_t>().swap(fWindowMasks);
+    fRingMasks.clear();
+    std::vector<RingMask_t>().swap(fRingMasks);
+    fZPhiMasks.clear();
+    std::vector<ZPhiMask_t>().swap(fZPhiMasks);
     fFrames.clear();
     std::vector<Frame>().swap(fFrames);
     fCylSphData.clear();
@@ -254,21 +262,28 @@ public:
       // convert surface frame to local coordinates
       auto framed_surf = fSurfData->fFramedSurf[side.fSurfaces[i]];
       FrameType frame_type = framed_surf.fFrame.type;
-      Extent_t extLocal;
-      framed_surf.fFrame.GetExtent(extLocal, *fSurfData);
+      //Extent_t extLocal;
+      //framed_surf.fFrame.GetExtent(extLocal, *fSurfData);
       Vector3D<Real_t> local;
       Real_t xmax, ymax, ymin, xmin;
       // Calculating the limits
       switch (frame_type) {
       case kWindow:
+      {
+        WindowMask_t extLocal;
+        framed_surf.fFrame.GetMask(extLocal, *fSurfData);
         xmin = extLocal.rangeU[0];
         xmax = extLocal.rangeU[1];
         ymin = extLocal.rangeV[0];
         ymax = extLocal.rangeV[1];
         break;
-      case kRangeCyl:
+      }
+      case kRing:
         {
+          RingMask_t extLocal;
+          framed_surf.fFrame.GetMask(extLocal, *fSurfData);
           Vector3D<Real_t> R{extLocal.rangeV[0], extLocal.rangeV[1], 0};
+
           auto Rmag = R.Mag();
           Vector3D<Real_t> axis{0, 1, 0};
 
@@ -313,8 +328,8 @@ public:
     for (int i = 0; i < side.fNsurf; ++i) {
       // convert surface frame to local coordinates
       auto framed_surf = fSurfData->fFramedSurf[side.fSurfaces[i]];
-      Extent_t extLocal;
-      framed_surf.fFrame.GetExtent(extLocal, *fSurfData);
+      ZPhiMask_t extLocal;
+      framed_surf.fFrame.GetMask(extLocal, *fSurfData);
       Vector3D<Real_t> local, vecext;
 
       // The z-axis is shared and all surfaces are on the same side, so
@@ -373,7 +388,7 @@ public:
       }
     };
 
-    // Compute extents for all sides an all surfaces
+    // Compute extents for all sides on all surfaces
     for (int common_id = 1; common_id < fSurfData->fNcommonSurf; ++common_id) {
       Extent_t common_extent;
       if (fSurfData->fCommonSurfaces[common_id].fLeftSide.fNsurf) {
@@ -699,10 +714,27 @@ private:
     return UnplacedSurface(type, -1);
   }
 
-  Frame CreateFrame(FrameType type, Extent<Real_t> const &extent)
+  // There could be a more elegant solution, with a function that takes a
+  // pointer to mask parameters and uses switch structure to select appropriate
+  // constructor and mask, but this is OK for now.
+  Frame CreateFrame(FrameType type, WindowMask<Real_t> const &mask)
   {
-    int id = fExtents.size();
-    fExtents.push_back(extent);
+    int id = fWindowMasks.size();
+    fWindowMasks.push_back(mask);
+    return Frame(type, id);
+  }
+
+  Frame CreateFrame(FrameType type, RingMask<Real_t> const &mask)
+  {
+    int id = fRingMasks.size();
+    fRingMasks.push_back(mask);
+    return Frame(type, id);
+  }
+
+  Frame CreateFrame(FrameType type, ZPhiMask<Real_t> const &mask)
+  {
+    int id = fZPhiMasks.size();
+    fZPhiMasks.push_back(mask);
     return Frame(type, id);
   }
 
@@ -804,27 +836,27 @@ private:
   {
     int isurf;
     // surface at -dx:
-    isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar), CreateFrame(kWindow, {box.y(), box.z()}),
+    isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar), CreateFrame(kWindow, WindowMask<Real_t>{box.y(), box.z()}),
                                CreateLocalTransformation({-box.x(), 0, 0, -90, 90, 0}));
     AddSurfaceToShell(logical_id, isurf);
     // surface at +dx:
-    isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar), CreateFrame(kWindow, {box.y(), box.z()}),
+    isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar), CreateFrame(kWindow, WindowMask<Real_t>{box.y(), box.z()}),
                                CreateLocalTransformation({box.x(), 0, 0, 90, 90, 0}));
     AddSurfaceToShell(logical_id, isurf);
     // surface at -dy:
-    isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar), CreateFrame(kWindow, {box.x(), box.z()}),
+    isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar), CreateFrame(kWindow, WindowMask<Real_t>{box.x(), box.z()}),
                                CreateLocalTransformation({0, -box.y(), 0, 0, 90, 0}));
     AddSurfaceToShell(logical_id, isurf);
     // surface at +dy:
-    isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar), CreateFrame(kWindow, {box.x(), box.z()}),
+    isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar), CreateFrame(kWindow, WindowMask<Real_t>{box.x(), box.z()}),
                                CreateLocalTransformation({0, box.y(), 0, 0, -90, 0}));
     AddSurfaceToShell(logical_id, isurf);
     // surface at -dz:
-    isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar), CreateFrame(kWindow, {box.x(), box.y()}),
+    isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar), CreateFrame(kWindow, WindowMask<Real_t>{box.x(), box.y()}),
                                CreateLocalTransformation({0, 0, -box.z(), 0, 180, 0}));
     AddSurfaceToShell(logical_id, isurf);
     // surface at +dz:
-    isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar), CreateFrame(kWindow, {box.x(), box.y()}),
+    isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar), CreateFrame(kWindow, WindowMask<Real_t>{box.x(), box.y()}),
                                CreateLocalTransformation({0, 0, box.z(), 0, 0, 0}));
     AddSurfaceToShell(logical_id, isurf);
   }
@@ -851,13 +883,13 @@ private:
 
     // surface at +dz
     isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar),
-                               CreateFrame(kRangeCyl, {tube.rmin(), -1,
+                               CreateFrame(kRing, RingMask<Real_t>{tube.rmin(), -1,
                                                        tube.rmax()*std::cos(dphi), tube.rmax()*std::sin(dphi)}),
                                CreateLocalTransformation({0, 0, tube.z(), sphid, 0, 0}));
     AddSurfaceToShell(logical_id, isurf);
     // surface at -dz
     isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar),
-                               CreateFrame(kRangeCyl, {tube.rmin(), -1,
+                               CreateFrame(kRing, RingMask<Real_t>{tube.rmin(), -1,
                                                        tube.rmax()*std::cos(dphi), tube.rmax()*std::sin(dphi)}),
                                CreateLocalTransformation({0, 0, -tube.z(), 0, 180, -sphid-dphid}));
     AddSurfaceToShell(logical_id, isurf);
@@ -865,24 +897,24 @@ private:
     if (tube.rmin()>vecgeom::kTolerance) {
       Real_t* rmin_ptr = new Real_t(tube.rmin());
       isurf = CreateLocalSurface(CreateUnplacedSurface(kCylindrical, rmin_ptr),
-                                 CreateFrame(kRangeCylPhi, {-tube.z(), tube.z(), std::cos(dphi), std::sin(dphi)}),
+                                 CreateFrame(kZPhi, ZPhiMask<Real_t>{-tube.z(), tube.z(), std::cos(dphi), std::sin(dphi)}),
                                  CreateLocalTransformation({0,0,0, sphid,0,0}));
       AddSurfaceToShell(logical_id, isurf);
     }
     // outer cylinder
     Real_t* rmax_ptr = new Real_t(tube.rmax());
     isurf = CreateLocalSurface(CreateUnplacedSurface(kCylindrical, rmax_ptr),
-                               CreateFrame(kRangeCylPhi, {-tube.z(), tube.z(), std::cos(dphi), std::sin(dphi)}),
+                               CreateFrame(kZPhi, ZPhiMask<Real_t>{-tube.z(), tube.z(), std::cos(dphi), std::sin(dphi)}),
                                CreateLocalTransformation({0,0,0, sphid,0,0}));
     AddSurfaceToShell(logical_id, isurf);
 
     if (ApproxEqual(dphi, vecgeom::kTwoPi)) return;
     //plane cap at Sphi
-    isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar), CreateFrame(kWindow, {Rdiff, tube.z()}),
+    isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar), CreateFrame(kWindow, WindowMask<Real_t>{Rdiff, tube.z()}),
                                CreateLocalTransformation({Rmean*std::cos(sphi), Rmean*std::sin(sphi), 0, sphid, 90, 0}));
     AddSurfaceToShell(logical_id, isurf);
     //plane cap at Sphi+Dphi
-    isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar), CreateFrame(kWindow, {Rdiff, tube.z()}),
+    isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar), CreateFrame(kWindow, WindowMask<Real_t>{Rdiff, tube.z()}),
                                CreateLocalTransformation({Rmean*std::cos(ephi), Rmean*std::sin(ephi), 0, ephid, -90, 0}));
     AddSurfaceToShell(logical_id, isurf);
   }
@@ -902,15 +934,15 @@ private:
     Vector3D tdiff = t1.Translation() - t2.Translation();
     if (!ApproxEqualVector(tdiff, {0, 0, 0})) return false;
 
-    auto frameData1 = fExtents[s1.fFrame.id];
-    auto frameData2 = fExtents[s2.fFrame.id];
-
     // Different treatment of different frame types
     switch (s1.fFrame.type) {
     case kRangeZ:
       break;
-    case kRangeCyl:
+    case kRing:
       {
+        auto frameData1 = fRingMasks[s1.fFrame.id];
+        auto frameData2 = fRingMasks[s2.fFrame.id];
+
         // Inner radius must be the same
         if (!ApproxEqual(frameData1.rangeU[0], frameData2.rangeU[0])) return false;
         // Unit-vectors used for checking sphi
@@ -924,8 +956,11 @@ private:
             return true;
         break;
       }
-    case kRangeCylPhi:
+    case kZPhi:
       {
+        auto frameData1 = fZPhiMasks[s1.fFrame.id];
+        auto frameData2 = fZPhiMasks[s2.fFrame.id];
+
         // They are on the same side, so there is no flipping,
         // and z extents must be equal
         if (!ApproxEqual(frameData1.rangeU[0], frameData2.rangeU[0]) ||
@@ -945,6 +980,9 @@ private:
       break;
     case kWindow:
       {
+        auto frameData1 = fWindowMasks[s1.fFrame.id];
+        auto frameData2 = fWindowMasks[s2.fFrame.id];
+
         // Vertices
         Vector3D v11 = t1.InverseTransformDirection(Vector3D{frameData1.rangeU[0], frameData1.rangeV[0], 0}); // 1 down left
         Vector3D v12 = t1.InverseTransformDirection(Vector3D{frameData1.rangeU[1], frameData1.rangeV[1], 0}); // 1 up right
@@ -977,12 +1015,6 @@ private:
     fSurfData->fConeData = new ConeData_t[fConeData.size()];
     for (size_t i = 0; i < fConeData.size(); ++i)
       fSurfData->fConeData[i] = fConeData[i];
-    
-    // Create ranges
-    fSurfData->fNrange    = fRanges.size();
-    fSurfData->fRangeData = new RangeMask_t[fRanges.size()];
-    for (size_t i = 0; i < fRanges.size(); ++i)
-      fSurfData->fRangeData[i] = fRanges[i];
 
     // Create transformations
     fSurfData->fGlobalTrans = new Transformation[fGlobalTrans.size()];
@@ -1005,6 +1037,22 @@ private:
     fSurfData->fExtents = new Extent<Real_t>[fExtents.size()];
     for (size_t i = 0; i < fExtents.size(); ++i)
       fSurfData->fExtents[i] = fExtents[i];
+
+    // Create Masks
+    fSurfData->fNwindows = fWindowMasks.size();
+    fSurfData->fWindowMasks = new WindowMask<Real_t>[fWindowMasks.size()];
+    for (size_t i = 0; i < fWindowMasks.size(); ++i)
+      fSurfData->fWindowMasks[i] = fWindowMasks[i];
+
+    fSurfData->fNrings = fRingMasks.size();
+    fSurfData->fRingMasks = new RingMask<Real_t>[fRingMasks.size()];
+    for (size_t i = 0; i < fRingMasks.size(); ++i)
+      fSurfData->fRingMasks[i] = fRingMasks[i];
+    
+    fSurfData->fNzphis = fZPhiMasks.size();
+    fSurfData->fZPhiMasks = new ZPhiMask<Real_t>[fZPhiMasks.size()];
+    for (size_t i = 0; i < fZPhiMasks.size(); ++i)
+      fSurfData->fZPhiMasks[i] = fZPhiMasks[i];
 
 
     fSurfData->fSides          = new int[size_sides];
