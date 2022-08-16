@@ -53,7 +53,7 @@ Real_t ComputeStepAndHit(vecgeom::Vector3D<Real_t> const &point, vecgeom::Vector
                          vecgeom::NavStateIndex const &in_state, vecgeom::NavStateIndex &out_state,
                          SurfData<Real_t> const &surfdata, int &exit_surf)
 {
-#define SM_USE_NORMALS
+//#define SM_USE_NORMALS
   // Get the list of candidate surfaces for in_state
   out_state            = in_state;
   int current_level    = in_state.GetLevel();
