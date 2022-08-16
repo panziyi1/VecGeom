@@ -3,9 +3,48 @@
 
 #include <VecGeom/surfaces/Model.h>
 #include <VecGeom/navigation/NavStateIndex.h>
+#include <VecGeom/base/Algorithms.h>
 
 namespace vgbrep {
 namespace protonav {
+
+///< Sorts N candidate surfaces in increasing order of the distance from point/direction, starting from
+///< a given index. Writes into a sorted array of candidate indices, and into a sorted array of distances.
+///< Returns the last sorted index.
+template <typename Real_t>
+int SortDistances(vecgeom::Vector3D<Real_t> const &point, vecgeom::Vector3D<Real_t> const &direction,
+                  int ncand, int *candidates, int startind, int maxslots, int skip_surf, bool is_entering,
+                  SurfData<Real_t> const &surfdata, int *survivors, int *sorted_ind, Real_t *distances)
+{
+  int nsorted = 0;
+  for (auto icand = startind; icand < ncand; ++icand) {
+    int isurf    = std::abs(candidates[icand]);
+    if (std::abs(isurf) == std::abs(skip_surf)) continue;
+    auto const &surf = surfdata.fCommonSurfaces[isurf];
+    // Convert point and direction to surface frame
+    auto const &trans         = surfdata.fGlobalTrans[surf.fTrans];
+    Vector3D<Real_t> local    = trans.Transform(point);
+    Vector3D<Real_t> localdir = trans.TransformDirection(direction);
+    // Compute distance to surface
+    auto dist = surfdata.GetUnplaced(isurf).Intersect(local, localdir, surfdata);
+    if (dist < vecgeom::kTolerance)
+      continue;
+    // Check the normal
+    Vector3D<Real_t> normal;
+    Vector3D<Real_t> onsurf_tmp = local + dist * localdir;
+    surf.GetNormal(onsurf_tmp, normal, surfdata);
+    if ((normal.Dot(direction) > 0) ^ is_entering)
+      continue;
+    // Valid candidate, add it to array to be sorted
+    distances[nsorted]   = dist;
+    survivors[nsorted++] = icand;
+  }
+  // Do the sorting by increasing distances
+  bool success = vecgeom::algo::quickSort<Real_t, 32>(distances, nsorted, sorted_ind);
+
+
+  return 0;  
+}
 
 ///< Returns the distance to the next surface starting from a global point located in in_state, optionally
 ///< skipping the surface exit_surf. Computes the new state after crossing.
@@ -14,14 +53,7 @@ Real_t ComputeStepAndHit(vecgeom::Vector3D<Real_t> const &point, vecgeom::Vector
                          vecgeom::NavStateIndex const &in_state, vecgeom::NavStateIndex &out_state,
                          SurfData<Real_t> const &surfdata, int &exit_surf)
 {
-  auto insideFrame = [&](Vector3D<Real_t> const &point, FramedSurface const &framedsurf)
-  {
-    Vector3D<Real_t> local(point);
-    if (framedsurf.fTrans)
-      local = surfdata.fGlobalTrans[framedsurf.fTrans].Transform(point);
-    return framedsurf.fFrame.Inside(local, surfdata);     
-  };
-
+#define SM_USE_NORMALS
   // Get the list of candidate surfaces for in_state
   out_state            = in_state;
   int current_level    = in_state.GetLevel();
@@ -33,8 +65,8 @@ Real_t ComputeStepAndHit(vecgeom::Vector3D<Real_t> const &point, vecgeom::Vector
   Vector3D<Real_t> onsurf;
   NavIndex_t in_navind = in_state.GetNavIndex();
   auto const &cand     = surfdata.fCandidates[in_state.GetId()];
-  int numroots         = -1;              // < number of real, positive distances
-  Real_t* roots        = new Real_t[2];   // < distances to intersection
+  int numroots         = 0;               // < number of real, positive distances
+  Real_t roots[2];   // < distances to intersection
   // simple loop on all candidates. This should be in future optimized to give the reduced list that may be crossed
   for (auto icand = 0; icand < cand.fNcand; ++icand) {
     bool can_hit = true;
@@ -62,13 +94,22 @@ Real_t ComputeStepAndHit(vecgeom::Vector3D<Real_t> const &point, vecgeom::Vector
       // Check if the current state is exited on this surface. This is true if
       // the in_state does not match the default state for the surface.
       bool exiting = surf.fDefaultState != in_navind;
+      
+#ifdef SM_USE_NORMALS
+      Vector3D<Real_t> normal;
+      bool left_side = exiting ^ (cand[icand] < 0);
+
+      surf.GetNormal(onsurf_tmp, normal, surfdata, left_side);
+      if ((normal.Dot(direction) > 0) ^ exiting)
+        continue;
+#endif
 
       if (exiting) {
         // This is an exiting surface for in_state
         // First check the frame of the current state on this surface
         int frameind = cand.fFrameInd[icand]; // index of framed surface on the side
         auto const &framedsurf = exit_side.GetSurface(frameind, surfdata);
-        bool inframe = insideFrame(onsurf_tmp, framedsurf);
+        bool inframe = framedsurf.InsideFrame(onsurf_tmp, surfdata);
         if (!inframe) continue;
 
         // frames of daughters of the current state on the same surface must NOT be crossed
@@ -79,7 +120,7 @@ Real_t ComputeStepAndHit(vecgeom::Vector3D<Real_t> const &point, vecgeom::Vector
           if (vecgeom::NavStateIndex::GetLevelImpl(framedsurf.fState) >= current_level)
             break;
           if (vecgeom::NavStateIndex::IsDescendentImpl(framedsurf.fState, in_navind)) {
-            if (insideFrame(onsurf_tmp, framedsurf)) {
+            if (framedsurf.InsideFrame(onsurf_tmp, surfdata)) {
               can_hit = false;
               break; // next candidate
             }
@@ -103,7 +144,7 @@ Real_t ComputeStepAndHit(vecgeom::Vector3D<Real_t> const &point, vecgeom::Vector
       // we have a virtual hit so we skip
       if (entry_side.fParentSurf >= 0) {
         auto const &framedsurf = entry_side.GetSurface(entry_side.fParentSurf, surfdata);
-        if (insideFrame(onsurf_tmp, framedsurf)) {
+        if (framedsurf.InsideFrame(onsurf_tmp, surfdata)) {
           // This surface is certainly hit because the parent frame is hit
           relocated  = false;
           onsurf     = onsurf_tmp;
@@ -128,7 +169,7 @@ Real_t ComputeStepAndHit(vecgeom::Vector3D<Real_t> const &point, vecgeom::Vector
       // frame entry is the good one.
       for (auto ind = 0; ind < entry_side.fNsurf; ++ind) {
         auto const &framedsurf = entry_side.GetSurface(ind, surfdata);
-        bool inframe = insideFrame(onsurf_tmp, framedsurf);
+        bool inframe = framedsurf.InsideFrame(onsurf_tmp, surfdata);
         if (inframe) {
           // the first hit frame is the good one. This worth as a relocation after crossing.
           relocated  = true;
@@ -154,7 +195,7 @@ Real_t ComputeStepAndHit(vecgeom::Vector3D<Real_t> const &point, vecgeom::Vector
                   surf.fDefaultState == in_navind) ? entry_side.fNsurf - 1 :  entry_side.fNsurf;
     for (auto ind = 0; ind < indmax; ++ind) {
       auto const &framedsurf = entry_side.GetSurface(ind, surfdata);
-      bool inframe = insideFrame(onsurf, framedsurf);
+      bool inframe = framedsurf.InsideFrame(onsurf, surfdata);
       if (inframe) {
         // the first hit frame is the good one.
         out_state.SetLastExited();

@@ -66,7 +66,28 @@ int main(int argc, char *argv[]){
   OPTION_INT(absorbers, 2);
   OPTION_DOUBLE(rmin, 0);
   OPTION_DOUBLE(sphi, 0);
-  OPTION_DOUBLE(dphi, vecgeom::kTwoPi);
+  OPTION_DOUBLE(dphi, 360);
+  
+  // protection for sphi and dphi, copied from TubeStruct (why not enabled there?)
+  sphi *= vecgeom::kDegToRad;
+  dphi *= vecgeom::kDegToRad;
+  if (dphi < 0) {
+    std::cout << "Cannot have negative dphi" << std::endl;
+    return 1;
+  }
+    
+  if (dphi >= vecgeom::kTwoPi - 0.5 * vecgeom::kAngTolerance) {
+    dphi = vecgeom::kTwoPi;
+    sphi = 0;
+  }
+  
+  if (sphi < 0) {
+    sphi = vecgeom::kTwoPi - std::fmod(std::fabs(sphi), vecgeom::kTwoPi);
+  } else {
+    sphi = std::fmod(sphi, vecgeom::kTwoPi);
+  }
+
+  printf("sphi=%g dphi=%g\n", sphi * vecgeom::kRadToDeg, dphi * vecgeom::kRadToDeg);
 
   //
   // Benchmarking options:

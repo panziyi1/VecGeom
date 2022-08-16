@@ -240,6 +240,39 @@ struct UnplacedSurface {
 
     QuadraticSolver(coef, roots, numroots);
   }
+
+  /// Get normal direction to the surface in a point on surface
+  template <typename Real_t>
+  void GetNormal(Vector3D<Real_t> const &point, Vector3D<Real_t> &normal, SurfData<Real_t> const &surfdata) const
+  {
+    switch (type) {
+    case kPlanar:
+      // Just return (0, 0, 1);
+      normal.Set(0, 0, 1);
+      return;
+    case kCylindrical:
+      // Return normal direction outwards. Flipping the normal for inner tube surfaces is done at FramedSurface level
+      normal.Set(point[0], point[1], 0);
+      normal.Normalize();
+      return;
+    case kConical:
+      // Return normal direction outwards.
+      normal.Set(point[0], point[1], -std::sqrt(point[0]*point[0] + point[1]*point[1]) * surfdata.GetConeData(id).slope);
+      normal.Normalize();
+      return;
+    case kSpherical:
+      // Return normal direction outwards.
+      normal.Set(point[0], point[1], point[2]);
+      normal.Normalize();
+      return;
+    case kTorus:
+    case kGenSecondOrder:
+      normal.Set(0, 0, 1);
+      std::cout << "kTorus, kGenSecondOrder unhandled\n";
+    };
+    return;
+  }
+
 };
 
 /* An frame delimiting the real surface on an infinite half-space */
@@ -257,7 +290,7 @@ struct Frame {
   void GetMask(Mask_t &mask, SurfData<Real_t> const &surfdata) {}
 
   template <typename Real_t>
-  void GetMask(WindowMask<Real_t> &mask, SurfData<Real_t> const &surfdata)
+  void GetMask(WindowMask<Real_t> &mask, SurfData<Real_t> const &surfdata) const
   {
     surfdata.fWindowMasks[id].GetMask(mask);
   }
@@ -344,16 +377,17 @@ struct FramedSurface {
   UnplacedSurface fSurface; ///< Surface identifier
   Frame fFrame;             ///< Frame
   int fTrans{-1};           ///< Transformation of the surface in the compacted sub-hierarchy top volume frame
+  int fFlip{1};             ///< Flip for the normal (+1 or -1)
   NavIndex_t fState{0};     ///< sub-path navigation state id in the parent scene
 
   FramedSurface() = default;
-  FramedSurface(UnplacedSurface const &unplaced, Frame const &frame, int trans, NavIndex_t index = 0)
-      : fSurface(unplaced), fFrame(frame), fTrans(trans), fState(index)
+  FramedSurface(UnplacedSurface const &unplaced, Frame const &frame, int trans, int flip = 1, NavIndex_t index = 0)
+      : fSurface(unplaced), fFrame(frame), fTrans(trans), fFlip(flip), fState(index)
   {
   }
 
   /// Sorting by decreasing state depth and increasing state index
-  bool operator<(FramedSurface const &other)
+  bool operator<(FramedSurface const &other) const
   {
     using vecgeom::NavStateIndex;
     auto level1 = NavStateIndex::GetLevelImpl(fState);
@@ -369,7 +403,7 @@ struct FramedSurface {
   /// Transform point and direction to the local frame
   template <typename Real_t>
   void Transform(Vector3D<Real_t> const &point, Vector3D<Real_t> const &dir, Vector3D<Real_t> &localpoint,
-                 Vector3D<Real_t> &localdir, SurfData<Real_t> const &surfdata)
+                 Vector3D<Real_t> &localdir, SurfData<Real_t> const &surfdata) const
   {
     auto &localRef = surfdata.LocalT(fTrans);
     localpoint     = localRef.Transform(point);
@@ -378,22 +412,25 @@ struct FramedSurface {
 
   ///< This finds the distance to intersecting the half-space, without checking the mask
   // The point and direction are in the reference frame of the scene
+/*
   template <typename Real_t>
   void Intersect(Vector3D<Real_t> const &point, Vector3D<Real_t> const &dir,
-                   SurfData<Real_t> const &surfdata, Real_t *roots, int &numroots)
+                   SurfData<Real_t> const &surfdata, Real_t *roots, int &numroots) const
   {
     Vector3D<Real_t> localpoint, localdir;
     Transform(point, dir, localpoint, localdir);
     fSurface.Intersect<Real_t>(localpoint, localdir, surfdata, roots, numroots);
   }
-
+*/
   ///< Check if the propagated point on surface is within the frame
   template <typename Real_t>
-  bool InsideFrame(Vector3D<Real_t> const &point, Vector3D<Real_t> const &dir, SurfData<Real_t> const &surfdata)
+  bool InsideFrame(Vector3D<Real_t> const &point, SurfData<Real_t> const &surfdata) const
   {
-    Vector3D<Real_t> localpoint, localdir;
-    Transform(point, dir, localpoint, localdir);
-    return fFrame.Inside(point, surfdata);
+    Vector3D<Real_t> localpoint(point);
+    // For single-frame surfaces, fTrans is zero, so it may be worth testing this.
+    if (fTrans)
+      localpoint = surfdata.fGlobalTrans[fTrans].Transform(point);
+    return fFrame.Inside(localpoint, surfdata);
   }
 };
 
@@ -461,6 +498,23 @@ struct CommonSurface {
     // Add by default the first surface to the left side
     fLeftSide.AddSurface(global_surf);
   };
+
+  ///< Get the normal to the surface from a point on surface
+  template <typename Real_t>
+  void GetNormal(Vector3D<Real_t> const &point, Vector3D<Real_t> &normal, SurfData<Real_t> const &surfdata, bool left_side = true) const
+  {
+    Vector3D<Real_t> localnorm;
+    // point to local frame
+    auto const &trans = surfdata.fGlobalTrans[fTrans];
+    auto localpoint = trans.Transform(point);
+    auto const &framedsurf = fLeftSide.GetSurface(0, surfdata);
+    framedsurf.fSurface.GetNormal(localpoint, localnorm, surfdata);
+    trans.InverseTransformDirection(localnorm, normal);
+    normal *= Real_t(framedsurf.fFlip);
+    if (!left_side)
+      normal *= Real_t(-1);
+  }
+
 };
 
 class BVH;
@@ -519,14 +573,6 @@ struct SurfData {
   int *fCandList{nullptr};                 ///< global list of candidate indices
 
   SurfData() = default;
-  /// Transformation getters
-  // Transformation const &LocalT(int id) const { return fLocalTrans[id]; }
-  // Transformation const &TouchableT(int id) const { return fTouchableTrans[id]; }
-  // void                  GlobalT(CombiTrans const &ct, Transformation &global)
-  //{
-  //  global = TouchableT(ct.fTouchableT);
-  //  global.MultiplyFromRight(LocalT(ct.fLocalT));
-  //}
 
   /// Surface data accessors by component id
   CylData_t const &GetCylData(int id) const { return fCylSphData[id]; }

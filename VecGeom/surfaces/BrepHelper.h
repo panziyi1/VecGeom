@@ -547,7 +547,7 @@ public:
         fGlobalTrans.push_back(global);
         // Create the global surface
         int id_glob = fFramedSurf.size();
-        fFramedSurf.push_back({lsurf.fSurface, lsurf.fFrame, trans_id, state.GetNavIndex()});
+        fFramedSurf.push_back({lsurf.fSurface, lsurf.fFrame, trans_id, lsurf.fFlip, state.GetNavIndex()});
         CreateCommonSurface(id_glob);
       }
 
@@ -780,10 +780,10 @@ private:
     return id;
   }
 
-  int CreateLocalSurface(UnplacedSurface const &unplaced, Frame const &frame, int trans)
+  int CreateLocalSurface(UnplacedSurface const &unplaced, Frame const &frame, int trans, int flip = 1)
   {
     int id = fLocalSurfaces.size();
-    fLocalSurfaces.push_back({unplaced, frame, trans});
+    fLocalSurfaces.push_back({unplaced, frame, trans, flip});
     return id;
   }
 
@@ -933,7 +933,7 @@ private:
       Real_t* rmin_ptr = new Real_t(tube.rmin());
       isurf = CreateLocalSurface(CreateUnplacedSurface(kCylindrical, rmin_ptr),
                                  CreateFrame(kZPhi, ZPhiMask_t{-tube.z(), tube.z(), std::cos(dphi), std::sin(dphi)}),
-                                 CreateLocalTransformation({0,0,0, sphid,0,0}));
+                                 CreateLocalTransformation({0,0,0, sphid,0,0}), -1);
       AddSurfaceToShell(logical_id, isurf);
     }
     // outer cylinder

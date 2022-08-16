@@ -215,7 +215,7 @@ void TestPerformance(int npoints, int nbLayers, vgbrep::SurfData<vecgeom::Precis
   SOA3D<Precision> dirs(npoints);
 
 //  Vector3D<Precision> samplingVolume(0.2, 0.2, 0.2);
-  Vector3D<Precision> samplingVolume(0.5 * CalorThickness, 0.5 * CalorSizeYZ, 0.5 * CalorSizeYZ);
+  Vector3D<Precision> samplingVolume(0.5 * CalorThickness + 30, 0.5 * CalorSizeYZ + 30, 0.5 * CalorSizeYZ + 30);
   vecgeom::volumeUtilities::FillRandomPoints(samplingVolume, points);
   vecgeom::volumeUtilities::FillRandomDirections(dirs);
 
