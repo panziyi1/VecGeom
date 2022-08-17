@@ -126,7 +126,10 @@ int main(int argc, char *argv[])
     ValidateNavigation(nvalidate, 10, BrepHelper::Instance().GetSurfData(), worldRadius, worldZ, scale);
     break;
   case 1:
-    ShootOneParticle(worldRadius, worldZ, 0, 0, -6, 1, 1, 0, BrepHelper::Instance().GetSurfData());
+    ShootOneParticle(worldRadius, worldZ,
+                     5, 5, 0,
+                     0, 0, 1,
+                     BrepHelper::Instance().GetSurfData());
     break;
   case 2:
     ValidateNavigation(nvalidate, 10, BrepHelper::Instance().GetSurfData(), worldRadius, worldZ, scale);

@@ -276,10 +276,7 @@ public:
       case kRing: {
         RingMask_t extLocal;
         framed_surf.fFrame.GetMask(extLocal, *fSurfData);
-        Vector3D<Real_t> R{extLocal.rangeV[0], extLocal.rangeV[1], 0};
-
-        auto Rmag = R.Mag();
-        Vector3D<Real_t> axis{0, 1, 0};
+        auto Rmag = extLocal.rangeR[1];
 
         // This breaks, but I won't fix it for now, because we need to write it
         // again when the new data structure for kRing is implemented anyway.
@@ -910,17 +907,17 @@ private:
     auto sphid = vecgeom::kRadToDeg * sphi;
     auto dphid = vecgeom::kRadToDeg * dphi;
     auto ephid = vecgeom::kRadToDeg * ephi;
-
+    
     // surface at +dz
     isurf = CreateLocalSurface(
         CreateUnplacedSurface(kPlanar),
-        CreateFrame(kRing, RingMask_t{tube.rmin(), -1, tube.rmax() * std::cos(dphi), tube.rmax() * std::sin(dphi)}),
-        CreateLocalTransformation({0, 0, tube.z(), sphid, 0, 0}));
+        CreateFrame(kRing, RingMask_t{tube.rmin(), tube.rmax(), ApproxEqual(dphi, vecgeom::kTwoPi), sphi, ephi}),
+        CreateLocalTransformation({0, 0, tube.z(), 0, 0, 0}));
     AddSurfaceToShell(logical_id, isurf);
     // surface at -dz
     isurf = CreateLocalSurface(
         CreateUnplacedSurface(kPlanar),
-        CreateFrame(kRing, RingMask_t{tube.rmin(), -1, tube.rmax() * std::cos(dphi), tube.rmax() * std::sin(dphi)}),
+        CreateFrame(kRing, RingMask_t{tube.rmin(), tube.rmax(), ApproxEqual(dphi, vecgeom::kTwoPi), sphi, ephi}),
         CreateLocalTransformation({0, 0, -tube.z(), 0, 180, -sphid - dphid}));
     AddSurfaceToShell(logical_id, isurf);
     // inner cylinder
@@ -971,19 +968,22 @@ private:
     case kRangeZ:
       break;
     case kRing: {
-      auto frameData1 = fRingMasks[s1.fFrame.id];
-      auto frameData2 = fRingMasks[s2.fFrame.id];
+      auto mask1 = fRingMasks[s1.fFrame.id];
+      auto mask2 = fRingMasks[s2.fFrame.id];
 
       // Inner radius must be the same
-      if (!ApproxEqual(frameData1.rangeU[0], frameData2.rangeU[0])) return false;
+      if (!ApproxEqual(mask1.rangeR[0], mask2.rangeR[0]) ||
+          !ApproxEqual(mask1.rangeR[1], mask2.rangeR[1]) ||
+          mask1.isFullCirc != mask2.isFullCirc) return false;
+      if (mask1.isFullCirc) return true;
       // Unit-vectors used for checking sphi
-      auto rmin1 = t1.InverseTransformDirection(Vector3D{1, 0, 0});
-      auto rmin2 = t2.InverseTransformDirection(Vector3D{1, 0, 0});
+      auto phimin1 = t1.InverseTransformDirection(Vector3D{mask1.vecSPhi[0], mask1.vecSPhi[1], 0});
+      auto phimin2 = t2.InverseTransformDirection(Vector3D{mask2.vecSPhi[0], mask2.vecSPhi[1], 0});
       // Rmax vectors used for checking dphi and outer radius
-      auto rmax1 = t1.InverseTransformDirection(Vector3D{frameData1.rangeV[0], frameData1.rangeV[1], 0});
-      auto rmax2 = t2.InverseTransformDirection(Vector3D{frameData2.rangeV[0], frameData2.rangeV[1], 0});
+      auto phimax1 = t1.InverseTransformDirection(Vector3D{mask1.vecEPhi[0], mask1.vecEPhi[1], 0});
+      auto phimax2 = t2.InverseTransformDirection(Vector3D{mask2.vecEPhi[0], mask2.vecEPhi[1], 0});
 
-      if (ApproxEqualVector(rmin1, rmin2) && ApproxEqualVector(rmax1, rmax2)) return true;
+      if (ApproxEqualVector(phimin1, phimin2) && ApproxEqualVector(phimax1, phimax2)) return true;
       break;
     }
     case kZPhi: {

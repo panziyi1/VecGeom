@@ -61,6 +61,18 @@ struct Range {
   }
 };
 
+// Alias for using range as an angle vector.
+template<typename Real_t>
+using AngleVector = Range<Real_t>;
+
+// Pseudo-cross-product for angle vectors. Returns the magnitude
+// of a resulting vector along z-axis.
+template<typename Real_t>
+Real_t crossProd2D(AngleVector<Real_t> vec1, AngleVector<Real_t> vec2)
+{
+  return vec1[0] * vec2[1] - vec1[1] * vec2[0];
+};
+
 //
 //  Masks for different types of frames
 //
@@ -100,45 +112,51 @@ struct RingMask {
   //// The frame is rotated such that the starting phi angle is always along the
   //// x-axis in the local reference frame.
 
-  Range<Real_t> rangeU;
-  Range<Real_t> rangeV;
+  Range<Real_t> rangeR;
+  bool isFullCirc;
+  AngleVector<Real_t> vecSPhi;
+  AngleVector<Real_t> vecEPhi;
 
   RingMask() = default;
-  RingMask(Real_t u1, Real_t u2, Real_t v1, Real_t v2) : rangeU(u1, u2), rangeV(v1, v2){};
-  RingMask(Real_t u, Real_t v) : rangeU(-u, u), rangeV(-v, v){};
+  RingMask(Real_t rmin, Real_t rmax, bool isFullCircle, Real_t sphi = Real_t{0}, Real_t ephi = Real_t{0}) :
+  rangeR(rmin, rmax), isFullCirc(isFullCircle) {
+    if (isFullCirc) return;
+    vecSPhi.Set(vecgeom::Cos(sphi), vecgeom::Sin(sphi));
+    vecEPhi.Set(vecgeom::Cos(ephi), vecgeom::Sin(ephi));
+  };
 
   void GetMask(RingMask<Real_t> &mask)
   {
-    mask.rangeU.Set(rangeU[0], rangeU[1]);
-    mask.rangeV.Set(rangeV[0], rangeV[1]);
+    mask.rangeR.Set(rangeR[0], rangeR[1]);
+    mask.isFullCirc = isFullCirc;
+    if (isFullCirc) return;
+    mask.vecSPhi.Set(vecSPhi[0], vecSPhi[1]);
+    mask.vecEPhi.Set(vecEPhi[0], vecEPhi[1]);
   }
 
   bool Inside(Vector3D<Real_t> const &local) const
   {
     Real_t rsq = local[0] * local[0] + local[1] * local[1];
 
-    Vector3D<Real_t> vvec{rangeV[0], rangeV[1], 0};
-
     // The point must be inside the ring:
-    if ((rsq < rangeU[0] * rangeU[0] + 2 * vecgeom::kToleranceSquared * rangeU[0]) ||
-        (rsq > vvec.Mag2() - 2 * vecgeom::kToleranceSquared * vvec.Mag()))
+    if ((rsq < rangeR[0] * rangeR[0] + 2 * vecgeom::kToleranceSquared * rangeR[0]) ||
+        (rsq > rangeR[1] * rangeR[1] - 2 * vecgeom::kToleranceSquared * rangeR[1]))
       return false;
 
     // If it's a full circle:
-    if (std::abs(rangeV[1]) < vecgeom::kTolerance) return true;
+    if (isFullCirc) return true;
 
-    Vector3D<Real_t> xaxis{1, 0, 0};
     // TODO: Update tolerances.
     //  In barycentric coordinate system, where the base vectors are xaxis and vvec,
     //  the point lies in the convex part of the plane if both of its coordinates are
     //  greater than zero.
-    auto divisor = 1 / rangeV[1];
-    auto d1      = (local[0] * rangeV[1] - local[1] * rangeV[0]) * divisor;
-    auto d2      = local[1] * divisor;
+    auto divisor = 1 / (vecSPhi[0]*vecEPhi[1]-vecSPhi[1]*vecEPhi[0]);
+    auto d1      = (local[0] * vecEPhi[1] - local[1] * vecEPhi[0]) * divisor;
+    auto d2      = (local[1] * vecSPhi[0] - local[0] * vecSPhi[1]) * divisor;
     // If limiting vectors are close, we want convex solutions, and concave otherwise.
-    auto convexity = (xaxis.Cross(vvec).z() > 0);
+    bool convexity = (crossProd2D(vecSPhi, vecEPhi) > 0);
 
-    return (d1 > 0 && d2 > 0) == convexity;
+    return (d1 > -vecgeom::kTolerance && d2 > -vecgeom::kTolerance) == convexity;
   }
 };
 
