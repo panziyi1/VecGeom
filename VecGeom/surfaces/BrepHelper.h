@@ -277,25 +277,42 @@ public:
         // TODO: Currently sets bounding box with Rmax, rmin needs to be checked also.
         RingMask_t extLocal;
         framed_surf.fFrame.GetMask(extLocal, *fSurfData);
-        auto Rmax = extLocal.rangeR[1];
+        auto Rmax  = extLocal.rangeR[1];
+        auto Rmean = (extLocal.rangeR[0] + Rmax) * 0.5;
 
-        Vector3D<Real_t> axis{1, 0, 0};
+        // Rmean is to ensure that the axis is within the limits of the ring for the Inside function to work.
+        Vector3D<Real_t> axis{Rmean, 0, 0};
+        // If axis is within our range, its limit is Rmax:
         if (extLocal.Inside(axis)) xmax = Rmax;
-        else xmax = vecgeom::Max(Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecSPhi[0], extLocal.vecSPhi[1], 0}),
-                                 Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecEPhi[0], extLocal.vecEPhi[1], 0}));
-        axis.Set(0, 1, 0);
-        if (extLocal.Inside(axis)) ymax = Rmax;
-        else ymax = vecgeom::Max(Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecSPhi[0], extLocal.vecSPhi[1], 0}),
-                                 Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecEPhi[0], extLocal.vecEPhi[1], 0}));
-        axis.Set(-1, 0, 0);
-        if (extLocal.Inside(axis)) xmin = -Rmax;
-        else xmin = -vecgeom::Max(Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecSPhi[0], extLocal.vecSPhi[1], 0}),
-                                  Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecEPhi[0], extLocal.vecEPhi[1], 0}));
-        axis.Set(0, -1, 0);
-        if (extLocal.Inside(axis)) ymin = -Rmax;
-        else ymin = -vecgeom::Max(Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecSPhi[0], extLocal.vecSPhi[1], 0}),
-                                  Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecEPhi[0], extLocal.vecEPhi[1], 0}));
+        // Otherwise, its the maximal projection of Rmax onto it:
+        else
+          xmax = vecgeom::Max(Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecSPhi[0], extLocal.vecSPhi[1], 0}),
+                              Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecEPhi[0], extLocal.vecEPhi[1], 0})) /
+                 Rmean;
+        axis.Set(0, Rmean, 0);
+        if (extLocal.Inside(axis))
+          ymax = Rmax;
+        else
+          ymax = vecgeom::Max(Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecSPhi[0], extLocal.vecSPhi[1], 0}),
+                              Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecEPhi[0], extLocal.vecEPhi[1], 0})) /
+                 Rmean;
+        axis.Set(-Rmean, 0, 0);
+        if (extLocal.Inside(axis))
+          xmin = -Rmax;
+        else
+          xmin = -vecgeom::Max(Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecSPhi[0], extLocal.vecSPhi[1], 0}),
+                               Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecEPhi[0], extLocal.vecEPhi[1], 0})) /
+                 Rmean;
+        axis.Set(0, -Rmean, 0);
+        if (extLocal.Inside(axis))
+          ymin = -Rmax;
+        else
+          ymin = -vecgeom::Max(Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecSPhi[0], extLocal.vecSPhi[1], 0}),
+                               Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecEPhi[0], extLocal.vecEPhi[1], 0})) /
+                 Rmean;
 
+        // Further cutting unacceptable bounds. I should make this work with rmin to further cut the extent,
+        // but am currently weary of working on this, so will do it tomorrow. -DC
         xmax = vecgeom::Max(xmax, Real_t{0});
         ymax = vecgeom::Max(ymax, Real_t{0});
         xmin = vecgeom::Min(xmin, Real_t{0});
@@ -330,7 +347,7 @@ public:
     constexpr Real_t kBig = 1.e30;
     ZPhiMask_t sideext{kBig, -kBig, false};
     side.fExtent.type = kZPhi;
-    
+
     bool first = true;
     for (int i = 0; i < side.fNsurf; ++i) {
       // convert surface frame to local coordinates
@@ -347,10 +364,9 @@ public:
       sideext.rangeZ[1] = std::max(sideext.rangeZ[1], local[2]);
 
       // If we already had a mask that is full circle
-      if (sideext.isFullCirc)
-        continue;
+      if (sideext.isFullCirc) continue;
 
-      // If current frame is wider than extent:
+      // If current frame is wider than extent, its vectors will lie outside of it.
       local = fSurfData->fGlobalTrans[framed_surf.fTrans].InverseTransform(
           Vector3D<Real_t>{extLocal.vecSPhi[0], extLocal.vecSPhi[1], 0});
       if (!sideext.Inside(local)) sideext.vecSPhi.Set(extLocal.vecSPhi[0], extLocal.vecSPhi[1]);
@@ -358,7 +374,7 @@ public:
           Vector3D<Real_t>{extLocal.vecEPhi[0], extLocal.vecEPhi[1], 0});
       if (!sideext.Inside(local)) sideext.vecEPhi.Set(extLocal.vecEPhi[0], extLocal.vecEPhi[1]);
 
-      if (first){
+      if (first) {
         sideext.vecSPhi.Set(extLocal.vecSPhi[0], extLocal.vecSPhi[1]);
         sideext.vecEPhi.Set(extLocal.vecEPhi[0], extLocal.vecEPhi[1]);
         first = !first;
@@ -425,8 +441,8 @@ public:
     case kCylindrical: {
       ZPhiMask_t const &extL = fSurfData->fZPhiMasks[surf.fLeftSide.fExtent.id];
       printf("\n   left: %d surfaces, parent=%d, extent %d: {{%g, %g}, {%g, %g}, {%g, %g}}\n", surf.fRightSide.fNsurf,
-               surf.fRightSide.fParentSurf, surf.fRightSide.fExtent.id, extL.rangeZ[0], extL.rangeZ[1],
-               extL.vecSPhi[0], extL.vecSPhi[1], extL.vecEPhi[0], extL.vecEPhi[1]);
+             surf.fRightSide.fParentSurf, surf.fRightSide.fExtent.id, extL.rangeZ[0], extL.rangeZ[1], extL.vecSPhi[0],
+             extL.vecSPhi[1], extL.vecEPhi[0], extL.vecEPhi[1]);
       break;
     }
     case kConical:
@@ -456,8 +472,8 @@ public:
       case kCylindrical: {
         ZPhiMask_t const &extR = fSurfData->fZPhiMasks[surf.fRightSide.fExtent.id];
         printf("\n   left: %d surfaces, parent=%d, extent %d: {{%g, %g}, {%g, %g}, {%g, %g}}\n", surf.fRightSide.fNsurf,
-               surf.fRightSide.fParentSurf, surf.fRightSide.fExtent.id, extR.rangeZ[0], extR.rangeZ[1],
-               extR.vecSPhi[0], extR.vecSPhi[1], extR.vecEPhi[0], extR.vecEPhi[1]);
+               surf.fRightSide.fParentSurf, surf.fRightSide.fExtent.id, extR.rangeZ[0], extR.rangeZ[1], extR.vecSPhi[0],
+               extR.vecSPhi[1], extR.vecEPhi[0], extR.vecEPhi[1]);
         break;
       }
       case kConical:
@@ -902,25 +918,23 @@ private:
 
     assert(Rdiff > 0);
 
-    bool fullCirc =  ApproxEqual(dphi, vecgeom::kTwoPi);
+    bool fullCirc = ApproxEqual(dphi, vecgeom::kTwoPi);
 
     int isurf;
 
     // We need angles in degrees for transformations
     auto sphid = vecgeom::kRadToDeg * sphi;
     auto ephid = vecgeom::kRadToDeg * ephi;
-    
+
     // surface at +dz
-    isurf = CreateLocalSurface(
-        CreateUnplacedSurface(kPlanar),
-        CreateFrame(kRing, RingMask_t{tube.rmin(), tube.rmax(), fullCirc, sphi, ephi}),
-        CreateLocalTransformation({0, 0, tube.z(), 0, 0, 0}));
+    isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar),
+                               CreateFrame(kRing, RingMask_t{tube.rmin(), tube.rmax(), fullCirc, sphi, ephi}),
+                               CreateLocalTransformation({0, 0, tube.z(), 0, 0, 0}));
     AddSurfaceToShell(logical_id, isurf);
     // surface at -dz
-    isurf = CreateLocalSurface(
-        CreateUnplacedSurface(kPlanar),
-        CreateFrame(kRing, RingMask_t{tube.rmin(), tube.rmax(), fullCirc, sphi, ephi}),
-        CreateLocalTransformation({0, 0, -tube.z(), 0, 180, -sphid - ephid}));
+    isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar),
+                               CreateFrame(kRing, RingMask_t{tube.rmin(), tube.rmax(), fullCirc, sphi, ephi}),
+                               CreateLocalTransformation({0, 0, -tube.z(), 0, 180, -sphid - ephid}));
     AddSurfaceToShell(logical_id, isurf);
     // inner cylinder
     if (tube.rmin() > vecgeom::kTolerance) {
@@ -973,18 +987,18 @@ private:
       auto mask1 = fRingMasks[s1.fFrame.id];
       auto mask2 = fRingMasks[s2.fFrame.id];
 
-      // Inner radius must be the same
-      if (!ApproxEqual(mask1.rangeR[0], mask2.rangeR[0]) ||
-          !ApproxEqual(mask1.rangeR[1], mask2.rangeR[1]) ||
-          mask1.isFullCirc != mask2.isFullCirc) return false;
+      // Inner and outer radii must be the same
+      if (!ApproxEqual(mask1.rangeR[0], mask2.rangeR[0]) || !ApproxEqual(mask1.rangeR[1], mask2.rangeR[1]) ||
+          mask1.isFullCirc != mask2.isFullCirc)
+        return false;
       if (mask1.isFullCirc) return true;
       // Unit-vectors used for checking sphi
       auto phimin1 = t1.InverseTransformDirection(Vector3D{mask1.vecSPhi[0], mask1.vecSPhi[1], 0});
       auto phimin2 = t2.InverseTransformDirection(Vector3D{mask2.vecSPhi[0], mask2.vecSPhi[1], 0});
-      // Rmax vectors used for checking dphi and outer radius
+      // Rmax vectors used for checking ephi
       auto phimax1 = t1.InverseTransformDirection(Vector3D{mask1.vecEPhi[0], mask1.vecEPhi[1], 0});
       auto phimax2 = t2.InverseTransformDirection(Vector3D{mask2.vecEPhi[0], mask2.vecEPhi[1], 0});
-
+      // Phi limits must coincide.
       if (ApproxEqualVector(phimin1, phimin2) && ApproxEqualVector(phimax1, phimax2)) return true;
       break;
     }
@@ -994,17 +1008,16 @@ private:
 
       // They are on the same side, so there is no flipping,
       // and z extents must be equal
-      if (!ApproxEqual(mask1.rangeZ[0], mask2.rangeZ[0]) ||
-          !ApproxEqual(mask1.rangeZ[1], mask2.rangeZ[1]))
+      if (!ApproxEqual(mask1.rangeZ[0], mask2.rangeZ[0]) || !ApproxEqual(mask1.rangeZ[1], mask2.rangeZ[1]))
         return false;
       if (mask1.isFullCirc) return true;
       // Unit-vectors used for checking sphi
       auto phimin1 = t1.InverseTransformDirection(Vector3D{mask1.vecSPhi[0], mask1.vecSPhi[1], 0});
       auto phimin2 = t2.InverseTransformDirection(Vector3D{mask2.vecSPhi[0], mask2.vecSPhi[1], 0});
-      // Rmax vectors used for checking dphi and outer radius
+      // Rmax vectors used for checking ephi
       auto phimax1 = t1.InverseTransformDirection(Vector3D{mask1.vecEPhi[0], mask1.vecEPhi[1], 0});
       auto phimax2 = t2.InverseTransformDirection(Vector3D{mask2.vecEPhi[0], mask2.vecEPhi[1], 0});
-
+      // Phi limits must coincide.
       if (ApproxEqualVector(phimin1, phimin2) && ApproxEqualVector(phimax1, phimax2)) return true;
       break;
     }

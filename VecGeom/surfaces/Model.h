@@ -62,12 +62,12 @@ struct Range {
 };
 
 // Alias for using range as an angle vector.
-template<typename Real_t>
+template <typename Real_t>
 using AngleVector = Range<Real_t>;
 
 // Pseudo-cross-product for angle vectors. Returns the magnitude
 // of a resulting vector along z-axis.
-template<typename Real_t>
+template <typename Real_t>
 Real_t crossProd2D(AngleVector<Real_t> vec1, AngleVector<Real_t> vec2)
 {
   return vec1[0] * vec2[1] - vec1[1] * vec2[0];
@@ -107,10 +107,9 @@ struct WindowMask {
 template <typename Real_t>
 struct RingMask {
   //   Ring format:
-  //// rangeU[0] -> rmin
-  //// rangeV    -> Cartesian coordinates of a vector at (Rmax*cos(dphi), Rmax*sin(dphi), 0)
-  //// The frame is rotated such that the starting phi angle is always along the
-  //// x-axis in the local reference frame.
+  //// rangeR             -> [Rmin, Rmax]
+  //// isFullCirc         -> Does the phi cut exist here?
+  //// vecSPhi, vecEPhi   -> Cartesian coordinates of vectors that delimit phi-cut
 
   Range<Real_t> rangeR;
   bool isFullCirc;
@@ -118,8 +117,10 @@ struct RingMask {
   AngleVector<Real_t> vecEPhi;
 
   RingMask() = default;
-  RingMask(Real_t rmin, Real_t rmax, bool isFullCircle, Real_t sphi = Real_t{0}, Real_t ephi = Real_t{0}) :
-  rangeR(rmin, rmax), isFullCirc(isFullCircle) {
+  RingMask(Real_t rmin, Real_t rmax, bool isFullCircle, Real_t sphi = Real_t{0}, Real_t ephi = Real_t{0})
+      : rangeR(rmin, rmax), isFullCirc(isFullCircle)
+  {
+    // If there is no Phi cut, we needn't wotty about phi vectors.
     if (isFullCirc) return;
     vecSPhi.Set(vecgeom::Cos(sphi), vecgeom::Sin(sphi));
     vecEPhi.Set(vecgeom::Cos(ephi), vecgeom::Sin(ephi));
@@ -146,11 +147,10 @@ struct RingMask {
     // If it's a full circle:
     if (isFullCirc) return true;
 
-    // TODO: Update tolerances.
     //  In barycentric coordinate system, where the base vectors are xaxis and vvec,
     //  the point lies in the convex part of the plane if both of its coordinates are
     //  greater than zero.
-    auto divisor = 1 / (vecSPhi[0]*vecEPhi[1]-vecSPhi[1]*vecEPhi[0]);
+    auto divisor = 1 / (vecSPhi[0] * vecEPhi[1] - vecSPhi[1] * vecEPhi[0]);
     auto d1      = (local[0] * vecEPhi[1] - local[1] * vecEPhi[0]) * divisor;
     auto d2      = (local[1] * vecSPhi[0] - local[0] * vecSPhi[1]) * divisor;
     // If limiting vectors are close, we want convex solutions, and concave otherwise.
@@ -165,19 +165,20 @@ struct RingMask {
 template <typename Real_t>
 struct ZPhiMask {
   //// ZPhi format:
-  //// rangeU -> extent along z axis
-  //// rangeV -> Cartesian coordinates of a vector at (cos(dphi), sin(dphi), 0)
-  //// The frame is rotated such that the starting phi angle is always along the
-  //// x-axis in the local reference frame. Here, condition for radius is checked
-  //// in intersection with surfaces, so we don't care about that.
+  //// rangeZ             -> extent along z axis
+  //// isFullCirc         -> Does the phi cut exist here?
+  //// vecSPhi, vecEPhi   -> Cartesian coordinates of vectors that delimit phi-cut
+
   Range<Real_t> rangeZ;
   bool isFullCirc;
   AngleVector<Real_t> vecSPhi;
   AngleVector<Real_t> vecEPhi;
 
   ZPhiMask() = default;
-  ZPhiMask(Real_t zmin, Real_t zmax, bool isFullCircle, Real_t sphi = Real_t{0}, Real_t ephi = Real_t{0}) :
-  rangeZ(zmin, zmax), isFullCirc(isFullCircle) {
+  ZPhiMask(Real_t zmin, Real_t zmax, bool isFullCircle, Real_t sphi = Real_t{0}, Real_t ephi = Real_t{0})
+      : rangeZ(zmin, zmax), isFullCirc(isFullCircle)
+  {
+    // If there is no Phi cut, we needn't wotty about phi vectors.
     if (isFullCirc) return;
     vecSPhi.Set(vecgeom::Cos(sphi), vecgeom::Sin(sphi));
     vecEPhi.Set(vecgeom::Cos(ephi), vecgeom::Sin(ephi));
@@ -194,17 +195,16 @@ struct ZPhiMask {
 
   bool Inside(Vector3D<Real_t> const &local) const
   {
-    // The point must be inside the ring:
+    // The point must be inside z-span:
     if (local[2] < rangeZ[0] - vecgeom::kTolerance || local[2] > rangeZ[1] + vecgeom::kTolerance) return false;
 
     // If it's a full circle:
     if (isFullCirc) return true;
 
-    // TODO: Update tolerances.
     //  In barycentric coordinate system, where the base vectors are xaxis and vvec,
     //  the point lies in the convex part of the plane if both of its coordinates are
     //  greater than zero.
-    auto divisor = 1 / (vecSPhi[0]*vecEPhi[1]-vecSPhi[1]*vecEPhi[0]);
+    auto divisor = 1 / (vecSPhi[0] * vecEPhi[1] - vecSPhi[1] * vecEPhi[0]);
     auto d1      = (local[0] * vecEPhi[1] - local[1] * vecEPhi[0]) * divisor;
     auto d2      = (local[1] * vecSPhi[0] - local[0] * vecSPhi[1]) * divisor;
     // If limiting vectors are close, we want convex solutions, and concave otherwise.
@@ -212,26 +212,6 @@ struct ZPhiMask {
 
     // TODO: Check these tolerances.
     return (d1 > -vecgeom::kTolerance && d2 > -vecgeom::kTolerance) == convexity;
-
-    /*
-    // Check z axis
-    if (local[2] < rangeU[0] - vecgeom::kTolerance || local[2] > rangeU[1] + vecgeom::kTolerance) return false;
-    // If it's a full circle, there is no y component
-    if (std::abs(rangeV[1]) < vecgeom::kTolerance) return true;
-    Vector3D<Real_t> vvec{rangeV[0], rangeV[1], 0};
-
-    Vector3D<Real_t> xaxis{1, 0, 0};
-    // TODO: Update tolerances.
-    //  In barycentric coordinate system, where the base vectors are xaxis and vvec,
-    //  the point lies in the convex part of the plane if both of its coordinates are
-    //  greater than zero.
-    auto divisor = 1 / rangeV[1];
-    auto d1      = (local[0] * rangeV[1] - local[1] * rangeV[0]) * divisor;
-    auto d2      = local[1] * divisor;
-    // If limiting vectors are close, we want convex solutions, and concave otherwise.
-    auto convexity = (xaxis.Cross(vvec).z() > 0);
-
-    return (d1 > 0 && d2 > 0) == convexity;*/
   }
 };
 
