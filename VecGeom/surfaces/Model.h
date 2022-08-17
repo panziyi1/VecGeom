@@ -156,6 +156,7 @@ struct RingMask {
     // If limiting vectors are close, we want convex solutions, and concave otherwise.
     bool convexity = (crossProd2D(vecSPhi, vecEPhi) > 0);
 
+    // TODO: Check these tolerances.
     return (d1 > -vecgeom::kTolerance && d2 > -vecgeom::kTolerance) == convexity;
   }
 };
@@ -169,21 +170,50 @@ struct ZPhiMask {
   //// The frame is rotated such that the starting phi angle is always along the
   //// x-axis in the local reference frame. Here, condition for radius is checked
   //// in intersection with surfaces, so we don't care about that.
-  Range<Real_t> rangeU;
-  Range<Real_t> rangeV;
+  Range<Real_t> rangeZ;
+  bool isFullCirc;
+  AngleVector<Real_t> vecSPhi;
+  AngleVector<Real_t> vecEPhi;
 
   ZPhiMask() = default;
-  ZPhiMask(Real_t u1, Real_t u2, Real_t v1, Real_t v2) : rangeU(u1, u2), rangeV(v1, v2){};
-  ZPhiMask(Real_t u, Real_t v) : rangeU(-u, u), rangeV(-v, v){};
+  ZPhiMask(Real_t zmin, Real_t zmax, bool isFullCircle, Real_t sphi = Real_t{0}, Real_t ephi = Real_t{0}) :
+  rangeZ(zmin, zmax), isFullCirc(isFullCircle) {
+    if (isFullCirc) return;
+    vecSPhi.Set(vecgeom::Cos(sphi), vecgeom::Sin(sphi));
+    vecEPhi.Set(vecgeom::Cos(ephi), vecgeom::Sin(ephi));
+  };
 
   void GetMask(ZPhiMask<Real_t> &mask)
   {
-    mask.rangeU.Set(rangeU[0], rangeU[1]);
-    mask.rangeV.Set(rangeV[0], rangeV[1]);
+    mask.rangeZ.Set(rangeZ[0], rangeZ[1]);
+    mask.isFullCirc = isFullCirc;
+    if (isFullCirc) return;
+    mask.vecSPhi.Set(vecSPhi[0], vecSPhi[1]);
+    mask.vecEPhi.Set(vecEPhi[0], vecEPhi[1]);
   }
 
   bool Inside(Vector3D<Real_t> const &local) const
   {
+    // The point must be inside the ring:
+    if (local[2] < rangeZ[0] - vecgeom::kTolerance || local[2] > rangeZ[1] + vecgeom::kTolerance) return false;
+
+    // If it's a full circle:
+    if (isFullCirc) return true;
+
+    // TODO: Update tolerances.
+    //  In barycentric coordinate system, where the base vectors are xaxis and vvec,
+    //  the point lies in the convex part of the plane if both of its coordinates are
+    //  greater than zero.
+    auto divisor = 1 / (vecSPhi[0]*vecEPhi[1]-vecSPhi[1]*vecEPhi[0]);
+    auto d1      = (local[0] * vecEPhi[1] - local[1] * vecEPhi[0]) * divisor;
+    auto d2      = (local[1] * vecSPhi[0] - local[0] * vecSPhi[1]) * divisor;
+    // If limiting vectors are close, we want convex solutions, and concave otherwise.
+    bool convexity = (crossProd2D(vecSPhi, vecEPhi) > 0);
+
+    // TODO: Check these tolerances.
+    return (d1 > -vecgeom::kTolerance && d2 > -vecgeom::kTolerance) == convexity;
+
+    /*
     // Check z axis
     if (local[2] < rangeU[0] - vecgeom::kTolerance || local[2] > rangeU[1] + vecgeom::kTolerance) return false;
     // If it's a full circle, there is no y component
@@ -201,7 +231,7 @@ struct ZPhiMask {
     // If limiting vectors are close, we want convex solutions, and concave otherwise.
     auto convexity = (xaxis.Cross(vvec).z() > 0);
 
-    return (d1 > 0 && d2 > 0) == convexity;
+    return (d1 > 0 && d2 > 0) == convexity;*/
   }
 };
 
