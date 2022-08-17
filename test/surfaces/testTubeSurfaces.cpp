@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
     break;
   case 2:
     std::cout << "Creating nested tube..." << std::endl;
-    CreateTwoNestedTubes(worldRadius, worldZ, 1, worldRadius / 2, worldZ / 2, 0, vecgeom::kTwoPi, 1, worldRadius / 3,
+    CreateTwoNestedTubes(worldRadius, worldZ, 1, worldRadius / 2, worldZ / 2, 0, vecgeom::kPi, 1, worldRadius / 3,
                          worldZ / 3, sphi, dphi);
     break;
   case 3:

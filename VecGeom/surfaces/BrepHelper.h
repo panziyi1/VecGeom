@@ -274,24 +274,32 @@ public:
         break;
       }
       case kRing: {
+        // TODO: Currently sets bounding box with Rmax, rmin needs to be checked also.
         RingMask_t extLocal;
         framed_surf.fFrame.GetMask(extLocal, *fSurfData);
-        auto Rmag = extLocal.rangeR[1];
+        auto Rmax = extLocal.rangeR[1];
 
-        // This breaks, but I won't fix it for now, because we need to write it
-        // again when the new data structure for kRing is implemented anyway.
-        /*xmax = Rmag;
-        ymax = (R.Cross(axis).z() < vecgeom::kTolerance) ? Rmag : R.Dot(axis);
+        Vector3D<Real_t> axis{1, 0, 0};
+        if (extLocal.Inside(axis)) xmax = Rmax;
+        else xmax = vecgeom::Max(Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecSPhi[0], extLocal.vecSPhi[1], 0}),
+                                 Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecEPhi[0], extLocal.vecEPhi[1], 0}));
+        axis.Set(0, 1, 0);
+        if (extLocal.Inside(axis)) ymax = Rmax;
+        else ymax = vecgeom::Max(Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecSPhi[0], extLocal.vecSPhi[1], 0}),
+                                 Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecEPhi[0], extLocal.vecEPhi[1], 0}));
         axis.Set(-1, 0, 0);
-        xmin = (R.Cross(axis).z() < vecgeom::kTolerance) ? -Rmag : -R.Dot(axis);
-        if (xmin > -vecgeom::kTolerance) xmin = 0;
+        if (extLocal.Inside(axis)) xmin = -Rmax;
+        else xmin = -vecgeom::Max(Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecSPhi[0], extLocal.vecSPhi[1], 0}),
+                                  Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecEPhi[0], extLocal.vecEPhi[1], 0}));
         axis.Set(0, -1, 0);
-        ymin = (R.Cross(axis).z() < vecgeom::kTolerance) ? -Rmag : -R.Dot(axis);
-        if (ymin > -vecgeom::kTolerance) ymin = 0;*/
-        xmax = Rmag;
-        ymax = Rmag;
-        xmin = -Rmag;
-        ymin = -Rmag;
+        if (extLocal.Inside(axis)) ymin = -Rmax;
+        else ymin = -vecgeom::Max(Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecSPhi[0], extLocal.vecSPhi[1], 0}),
+                                  Rmax * axis.Dot(Vector3D<Real_t>{extLocal.vecEPhi[0], extLocal.vecEPhi[1], 0}));
+
+        xmax = vecgeom::Max(xmax, Real_t{0});
+        ymax = vecgeom::Max(ymax, Real_t{0});
+        xmin = vecgeom::Min(xmin, Real_t{0});
+        ymin = vecgeom::Min(ymin, Real_t{0});
         break;
       }
       default:
@@ -320,46 +328,42 @@ public:
   {
     // Setting initial extent mask
     constexpr Real_t kBig = 1.e30;
-    ZPhiMask_t sideext{-kBig, kBig, true};
+    ZPhiMask_t sideext{kBig, -kBig, false};
     side.fExtent.type = kZPhi;
-    /*
+    
+    bool first = true;
     for (int i = 0; i < side.fNsurf; ++i) {
       // convert surface frame to local coordinates
       auto framed_surf = fSurfData->fFramedSurf[side.fSurfaces[i]];
       ZPhiMask_t extLocal;
       framed_surf.fFrame.GetMask(extLocal, *fSurfData);
-      Vector3D<Real_t> local, vecext;
+      Vector3D<Real_t> local;
 
       // The z-axis is shared and all surfaces are on the same side, so
       // there is no flipping.
-      local = fSurfData->fGlobalTrans[framed_surf.fTrans].InverseTransform(Vector3D<Real_t>{0, 0, extLocal.rangeU[0]});
-      sideext.rangeU[0] = std::min(sideext.rangeU[0], local[2]);
-      local = fSurfData->fGlobalTrans[framed_surf.fTrans].InverseTransform(Vector3D<Real_t>{0, 0, extLocal.rangeU[1]});
-      sideext.rangeU[1] = std::max(sideext.rangeU[1], local[2]);
+      local = fSurfData->fGlobalTrans[framed_surf.fTrans].InverseTransform(Vector3D<Real_t>{0, 0, extLocal.rangeZ[0]});
+      sideext.rangeZ[0] = std::min(sideext.rangeZ[0], local[2]);
+      local = fSurfData->fGlobalTrans[framed_surf.fTrans].InverseTransform(Vector3D<Real_t>{0, 0, extLocal.rangeZ[1]});
+      sideext.rangeZ[1] = std::max(sideext.rangeZ[1], local[2]);
 
       // If we already had a mask that is full circle
-      if (sideext.rangeV[0] > vecgeom::kTolerance && ApproxEqual(sideext.rangeV[0], std::abs(sideext.rangeV[0])) &&
-          sideext.rangeV[1] < vecgeom::kTolerance)
+      if (sideext.isFullCirc)
         continue;
 
+      // If current frame is wider than extent:
       local = fSurfData->fGlobalTrans[framed_surf.fTrans].InverseTransform(
-          Vector3D<Real_t>{extLocal.rangeV[0], extLocal.rangeV[1], 0});
-      // If current mask is a full circle
-      if (ApproxEqualVector(local, {1, 0, 0})) {
-        sideext.rangeV[0] = 1;
-        sideext.rangeV[1] = 0;
-        continue;
-      }*/
+          Vector3D<Real_t>{extLocal.vecSPhi[0], extLocal.vecSPhi[1], 0});
+      if (!sideext.Inside(local)) sideext.vecSPhi.Set(extLocal.vecSPhi[0], extLocal.vecSPhi[1]);
+      local = fSurfData->fGlobalTrans[framed_surf.fTrans].InverseTransform(
+          Vector3D<Real_t>{extLocal.vecEPhi[0], extLocal.vecEPhi[1], 0});
+      if (!sideext.Inside(local)) sideext.vecEPhi.Set(extLocal.vecEPhi[0], extLocal.vecEPhi[1]);
 
-      // TODO: This part also should break, but I will repair it when the new
-      //       data structure is implemented. -DC
-      // We update our extent to include the greatest possible angle:
-      /*vecext = Vector3D<Real_t>{sideext.rangeV[0], sideext.rangeV[1], 0};
-      if (local.Cross(vecext).z() < vecgeom::kTolerance * vecext.Mag()) {
-        sideext.rangeV[0] = local[0];
-        sideext.rangeV[1] = local[1];
+      if (first){
+        sideext.vecSPhi.Set(extLocal.vecSPhi[0], extLocal.vecSPhi[1]);
+        sideext.vecEPhi.Set(extLocal.vecEPhi[0], extLocal.vecEPhi[1]);
+        first = !first;
       }
-    }*/
+    } // for
 
     // Add new extent mask to the vector
     int id = fZPhiMasks.size();
