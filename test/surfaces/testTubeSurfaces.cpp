@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
     break;
   case 1:
     std::cout << "Creating simple tube..." << std::endl;
-    CreateSimpleTube(worldRadius, worldZ, 2, worldRadius * 0.7, worldZ * 0.5, sphi, dphi);
+    CreateSimpleTube(worldRadius, worldZ, rmin, worldRadius * 0.7, worldZ * 0.5, sphi, dphi);
     break;
   case 2:
     std::cout << "Creating nested tube..." << std::endl;
@@ -105,11 +105,11 @@ int main(int argc, char *argv[])
     break;
   case 3:
     std::cout << "Creating identical tubes..." << std::endl;
-    CreateIdenticalTubes(worldRadius, worldZ, worldRadius / 3, worldRadius / 2, worldZ / 2, 1, 3);
+    CreateIdenticalTubes(worldRadius, worldZ, rmin, worldRadius / 2, worldZ / 2, 1, 3);
     break;
   case 4:
     std::cout << "Creating concatenated tubes..." << std::endl;
-    CreateConcatenatedTubes(worldRadius, worldZ, 4, 10, 10, 0, vecgeom::kHalfPi);
+    CreateConcatenatedTubes(worldRadius, worldZ, rmin, 10, 10, sphi, dphi);
     break;
   default:
     std::cout << "Generation option " << generate << " does not exist." << std::endl;
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
     ValidateNavigation(nvalidate, 10, BrepHelper::Instance().GetSurfData(), worldRadius, worldZ, scale);
     break;
   case 1:
-    ShootOneParticle(worldRadius, worldZ, 7, -3, -5, 0, 1, 0, BrepHelper::Instance().GetSurfData());
+    ShootOneParticle(worldRadius, worldZ, 0, 0, -6, 1, 1, 0, BrepHelper::Instance().GetSurfData());
     break;
   case 2:
     ValidateNavigation(nvalidate, 10, BrepHelper::Instance().GetSurfData(), worldRadius, worldZ, scale);
@@ -335,6 +335,7 @@ bool ValidateNavigation(int npoints, int nbLayers, vgbrep::SurfData<vecgeom::Pre
     auto distance = vgbrep::protonav::ComputeStepAndHit(pos, dir, *origStates[i], out_state, surfdata, exit_surf);
     if (out_state.GetNavIndex() != outputStates[i]->GetNavIndex() || std::abs(distance - refSteps[i]) > tolerance) {
       num_errors++;
+      if (num_errors % 10 != 0) continue;
       std::cout << "ERROR " << i << std::endl << "POS:" << pos << std::endl << "DIR:" << dir << std::endl;
       if (out_state.GetNavIndex() != outputStates[i]->GetNavIndex())
         std::cout << "NAVINDEX MISMATCH: " << out_state.GetNavIndex() << " (new)" << std::endl

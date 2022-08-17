@@ -127,9 +127,18 @@ struct RingMask {
     // If it's a full circle:
     if (std::abs(rangeV[1]) < vecgeom::kTolerance) return true;
 
-    // Otherwise, it must be between x axis (start) and Rmax (end)
-    return (local.Cross(Vector3D<Real_t>{1, 0, 0}).z() < vecgeom::kTolerance &&
-            local.Cross(vvec).z() > -vecgeom::kTolerance * vvec.Mag());
+    Vector3D<Real_t> xaxis{1, 0, 0};
+    // TODO: Update tolerances.
+    //  In barycentric coordinate system, where the base vectors are xaxis and vvec,
+    //  the point lies in the convex part of the plane if both of its coordinates are
+    //  greater than zero.
+    auto divisor = 1 / rangeV[1];
+    auto d1      = (local[0] * rangeV[1] - local[1] * rangeV[0]) * divisor;
+    auto d2      = local[1] * divisor;
+    // If limiting vectors are close, we want convex solutions, and concave otherwise.
+    auto convexity = (xaxis.Cross(vvec).z() > 0);
+
+    return (d1 > 0 && d2 > 0) == convexity;
   }
 };
 
@@ -162,9 +171,19 @@ struct ZPhiMask {
     // If it's a full circle, there is no y component
     if (std::abs(rangeV[1]) < vecgeom::kTolerance) return true;
     Vector3D<Real_t> vvec{rangeV[0], rangeV[1], 0};
-    // TODO: Update tolerances here
-    return (local.Cross(Vector3D<Real_t>{1, 0, 0}).z() < vecgeom::kTolerance &&
-            local.Cross(vvec).z() > -vecgeom::kTolerance * vvec.Mag());
+
+    Vector3D<Real_t> xaxis{1, 0, 0};
+    // TODO: Update tolerances.
+    //  In barycentric coordinate system, where the base vectors are xaxis and vvec,
+    //  the point lies in the convex part of the plane if both of its coordinates are
+    //  greater than zero.
+    auto divisor = 1 / rangeV[1];
+    auto d1      = (local[0] * rangeV[1] - local[1] * rangeV[0]) * divisor;
+    auto d2      = local[1] * divisor;
+    // If limiting vectors are close, we want convex solutions, and concave otherwise.
+    auto convexity = (xaxis.Cross(vvec).z() > 0);
+
+    return (d1 > 0 && d2 > 0) == convexity;
   }
 };
 
@@ -290,11 +309,6 @@ struct Frame {
   Frame(FrameType mtype, int mid) : type(mtype), id(mid) {}
 
   // Mask getters for various mask types
-
-  template <typename Real_t, typename Mask_t>
-  void GetMask(Mask_t &mask, SurfData<Real_t> const &surfdata)
-  {
-  }
 
   template <typename Real_t>
   void GetMask(WindowMask<Real_t> &mask, SurfData<Real_t> const &surfdata) const

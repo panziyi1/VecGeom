@@ -281,19 +281,20 @@ public:
         auto Rmag = R.Mag();
         Vector3D<Real_t> axis{0, 1, 0};
 
-        // If the axis is within the extent, its limit is radius.
-        // Otherwise, its limit is the projection of radius onto it.
-        // If the projection is negative, it means that our surface
-        // lies completely on the other side of perpendicular axis.
-        // x axis is always within extent in local frame.
-        xmax = Rmag;
+        // This breaks, but I won't fix it for now, because we need to write it
+        // again when the new data structure for kRing is implemented anyway.
+        /*xmax = Rmag;
         ymax = (R.Cross(axis).z() < vecgeom::kTolerance) ? Rmag : R.Dot(axis);
         axis.Set(-1, 0, 0);
-        xmin = (R.Cross(axis).z() < vecgeom::kTolerance) ? -Rmag : R.Dot(axis);
-        if (xmin < vecgeom::kTolerance) xmin = 0;
+        xmin = (R.Cross(axis).z() < vecgeom::kTolerance) ? -Rmag : -R.Dot(axis);
+        if (xmin > -vecgeom::kTolerance) xmin = 0;
         axis.Set(0, -1, 0);
-        ymin = (R.Cross(axis).z() < vecgeom::kTolerance) ? -Rmag : R.Dot(axis);
-        if (ymin < vecgeom::kTolerance) ymin = 0;
+        ymin = (R.Cross(axis).z() < vecgeom::kTolerance) ? -Rmag : -R.Dot(axis);
+        if (ymin > -vecgeom::kTolerance) ymin = 0;*/
+        xmax = Rmag;
+        ymax = Rmag;
+        xmin = -Rmag;
+        ymin = -Rmag;
         break;
       }
       default:
@@ -322,7 +323,8 @@ public:
   {
     // Setting initial extent mask
     constexpr Real_t kBig = 1.e30;
-    ZPhiMask_t sideext{kBig, -kBig, vecgeom::kHalfTolerance, 0};
+    ZPhiMask_t sideext{-kBig, kBig, 1, 0};
+    side.fExtent.type = kZPhi;
 
     for (int i = 0; i < side.fNsurf; ++i) {
       // convert surface frame to local coordinates
@@ -352,12 +354,17 @@ public:
         continue;
       }
 
+      // TODO: This part also should break, but I will repair it when the new
+      //       data structure is implemented. -DC
       // We update our extent to include the greatest possible angle:
-      vecext = Vector3D<Real_t>{sideext.rangeV[0], sideext.rangeV[1], 0};
+      /*vecext = Vector3D<Real_t>{sideext.rangeV[0], sideext.rangeV[1], 0};
       if (local.Cross(vecext).z() < vecgeom::kTolerance * vecext.Mag()) {
         sideext.rangeV[0] = local[0];
         sideext.rangeV[1] = local[1];
-      }
+      }*/
+      // Quick fix, always assume full circle:
+      sideext.rangeV[0] = 1;
+      sideext.rangeV[1] = 0;
     }
 
     // Add new extent mask to the vector
@@ -404,7 +411,7 @@ public:
   void PrintCommonSurface(int common_id)
   {
     auto const &surf = fSurfData->fCommonSurfaces[common_id];
-    printf("== common surface %d: default state: ", common_id);
+    printf("== common surface %d: type: %d, default state: ", common_id, surf.fType);
     vecgeom::NavStateIndex default_state(surf.fDefaultState);
     default_state.Print();
     printf(" transformation %d: ", surf.fTrans);
@@ -893,7 +900,7 @@ private:
     assert(dphi > vecgeom::kTolerance);
 
     auto Rmean = (tube.rmin() + tube.rmax()) / 2;
-    auto Rdiff = std::abs((tube.rmax() - tube.rmin()) / 2);
+    auto Rdiff = (tube.rmax() - tube.rmin()) / 2;
 
     assert(Rdiff > 0);
 
@@ -920,15 +927,15 @@ private:
     if (tube.rmin() > vecgeom::kTolerance) {
       Real_t *rmin_ptr = new Real_t(tube.rmin());
       isurf            = CreateLocalSurface(CreateUnplacedSurface(kCylindrical, rmin_ptr),
-                                 CreateFrame(kZPhi, ZPhiMask_t{-tube.z(), tube.z(), std::cos(dphi), std::sin(dphi)}),
-                                 CreateLocalTransformation({0, 0, 0, sphid, 0, 0}), -1);
+                                            CreateFrame(kZPhi, ZPhiMask_t{-tube.z(), tube.z(), std::cos(dphi), std::sin(dphi)}),
+                                            CreateLocalTransformation({0, 0, 0, sphid, 0, 0}), -1);
       AddSurfaceToShell(logical_id, isurf);
     }
     // outer cylinder
     Real_t *rmax_ptr = new Real_t(tube.rmax());
     isurf            = CreateLocalSurface(CreateUnplacedSurface(kCylindrical, rmax_ptr),
-                               CreateFrame(kZPhi, ZPhiMask_t{-tube.z(), tube.z(), std::cos(dphi), std::sin(dphi)}),
-                               CreateLocalTransformation({0, 0, 0, sphid, 0, 0}));
+                                          CreateFrame(kZPhi, ZPhiMask_t{-tube.z(), tube.z(), std::cos(dphi), std::sin(dphi)}),
+                                          CreateLocalTransformation({0, 0, 0, sphid, 0, 0}));
     AddSurfaceToShell(logical_id, isurf);
 
     if (ApproxEqual(dphi, vecgeom::kTwoPi)) return;
