@@ -275,40 +275,45 @@ public:
       }
       case kRing: {
         // There is probably a more clever way to do this.
-        Real_t x1, x2, x3, x4, y1, y2, y3, y4;
-        
         RingMask_t extLocal;
         framed_surf.fFrame.GetMask(extLocal, *fSurfData);
-        auto Rmax  = extLocal.rangeR[1];
-        auto Rmin  = extLocal.rangeR[0];
+
+        auto Rmax = extLocal.rangeR[1];
+        // The axis vector has to be between Rmin and Rmax and cannot be unit vector anymore
         auto Rmean = (extLocal.rangeR[0] + Rmax) * 0.5;
-
-        Vector3D<Real_t> vecSPhi{extLocal.vecSPhi[0], extLocal.vecSPhi[1], 0};
-        Vector3D<Real_t> vecEPhi{extLocal.vecEPhi[0], extLocal.vecEPhi[1], 0};
         Vector3D<Real_t> axis{Rmean, 0, 0};
-        x1 = Rmax * axis.Dot(vecSPhi);
-        x2 = Rmax * axis.Dot(vecEPhi);
-        x3 = Rmin * axis.Dot(vecSPhi);
-        x4 = Rmin * axis.Dot(vecEPhi);
-        axis.Set(0, Rmean, 0);
-        y1 = Rmax * axis.Dot(vecSPhi);
-        y2 = Rmax * axis.Dot(vecEPhi);
-        y3 = Rmin * axis.Dot(vecSPhi);
-        y4 = Rmin * axis.Dot(vecEPhi);
-        
-        xmax = vecgeom::Max(vecgeom::Max(x1, x2), vecgeom::Max(x3, x4));
-        ymax = vecgeom::Max(vecgeom::Max(y1, y2), vecgeom::Max(y3, y4));
-        xmin = vecgeom::Min(vecgeom::Min(x1, x2), vecgeom::Min(x3, x4));
-        ymin = vecgeom::Min(vecgeom::Min(y1, y2), vecgeom::Min(y3, y4));
+        if (!extLocal.isFullCirc) {
+          // Projections of points that delimit vertices of the phi-cut ring
+          Real_t x1, x2, x3, x4, y1, y2, y3, y4;
 
+          auto Rmin = extLocal.rangeR[0];
+          Vector3D<Real_t> vecSPhi{extLocal.vecSPhi[0], extLocal.vecSPhi[1], 0};
+          Vector3D<Real_t> vecEPhi{extLocal.vecEPhi[0], extLocal.vecEPhi[1], 0};
+
+          x1 = Rmax * axis.Dot(vecSPhi); //< (sphi, Rmax)_x
+          x2 = Rmax * axis.Dot(vecEPhi); //< (ephi, Rmax)_x
+          x3 = Rmin * axis.Dot(vecSPhi); //< (sphi, Rmin)_x
+          x4 = Rmin * axis.Dot(vecEPhi); //< (ephi, Rmin)_x
+          axis.Set(0, Rmean, 0);
+          y1 = Rmax * axis.Dot(vecSPhi); //< (sphi, Rmax)_x
+          y2 = Rmax * axis.Dot(vecEPhi); //< (ephi, Rmax)_x
+          y3 = Rmin * axis.Dot(vecSPhi); //< (sphi, Rmin)_x
+          y4 = Rmin * axis.Dot(vecEPhi); //< (ephi, Rmin)_x
+
+          xmax = vecgeom::Max(vecgeom::Max(x1, x2), vecgeom::Max(x3, x4));
+          ymax = vecgeom::Max(vecgeom::Max(y1, y2), vecgeom::Max(y3, y4));
+          xmin = vecgeom::Min(vecgeom::Min(x1, x2), vecgeom::Min(x3, x4));
+          ymin = vecgeom::Min(vecgeom::Min(y1, y2), vecgeom::Min(y3, y4));
+        }
+        // If the axes lie within the circle
         axis.Set(Rmean, 0, 0);
         if (ext.Inside(axis)) xmax = Rmax;
         axis.Set(0, Rmean, 0);
         if (ext.Inside(axis)) ymax = Rmax;
         axis.Set(-Rmean, 0, 0);
-        if (ext.Inside(axis)) xmin = Rmin;
+        if (ext.Inside(axis)) xmin = -Rmax;
         axis.Set(0, -Rmean, 0);
-        if (ext.Inside(axis)) ymin = Rmin;
+        if (ext.Inside(axis)) ymin = -Rmax;
       }
       default:
         break;
@@ -338,7 +343,7 @@ public:
     constexpr Real_t kBig = 1.e30;
     ZPhiMask_t sideext{kBig, -kBig, false};
     side.fExtent.type = kZPhi;
-    
+
     bool first = true;
     for (int i = 0; i < side.fNsurf; ++i) {
       // convert surface frame to local coordinates
@@ -355,8 +360,7 @@ public:
       sideext.rangeZ[1] = std::max(sideext.rangeZ[1], local[2]);
 
       // If we already had a mask that is full circle
-      if (sideext.isFullCirc)
-        continue;
+      if (sideext.isFullCirc) continue;
 
       // If current frame is wider than extent:
       local = fSurfData->fGlobalTrans[framed_surf.fTrans].InverseTransform(
@@ -366,7 +370,7 @@ public:
           Vector3D<Real_t>{extLocal.vecEPhi[0], extLocal.vecEPhi[1], 0});
       if (!sideext.Inside(local)) sideext.vecEPhi.Set(extLocal.vecEPhi[0], extLocal.vecEPhi[1]);
 
-      if (first){
+      if (first) {
         sideext.vecSPhi.Set(extLocal.vecSPhi[0], extLocal.vecSPhi[1]);
         sideext.vecEPhi.Set(extLocal.vecEPhi[0], extLocal.vecEPhi[1]);
         first = !first;
@@ -433,8 +437,8 @@ public:
     case kCylindrical: {
       ZPhiMask_t const &extL = fSurfData->fZPhiMasks[surf.fLeftSide.fExtent.id];
       printf("\n   left: %d surfaces, parent=%d, extent %d: {{%g, %g}, {%g, %g}, {%g, %g}}\n", surf.fRightSide.fNsurf,
-               surf.fRightSide.fParentSurf, surf.fRightSide.fExtent.id, extL.rangeZ[0], extL.rangeZ[1],
-               extL.vecSPhi[0], extL.vecSPhi[1], extL.vecEPhi[0], extL.vecEPhi[1]);
+             surf.fRightSide.fParentSurf, surf.fRightSide.fExtent.id, extL.rangeZ[0], extL.rangeZ[1], extL.vecSPhi[0],
+             extL.vecSPhi[1], extL.vecEPhi[0], extL.vecEPhi[1]);
       break;
     }
     case kConical:
@@ -464,8 +468,8 @@ public:
       case kCylindrical: {
         ZPhiMask_t const &extR = fSurfData->fZPhiMasks[surf.fRightSide.fExtent.id];
         printf("\n   left: %d surfaces, parent=%d, extent %d: {{%g, %g}, {%g, %g}, {%g, %g}}\n", surf.fRightSide.fNsurf,
-               surf.fRightSide.fParentSurf, surf.fRightSide.fExtent.id, extR.rangeZ[0], extR.rangeZ[1],
-               extR.vecSPhi[0], extR.vecSPhi[1], extR.vecEPhi[0], extR.vecEPhi[1]);
+               surf.fRightSide.fParentSurf, surf.fRightSide.fExtent.id, extR.rangeZ[0], extR.rangeZ[1], extR.vecSPhi[0],
+               extR.vecSPhi[1], extR.vecEPhi[0], extR.vecEPhi[1]);
         break;
       }
       case kConical:
@@ -910,25 +914,23 @@ private:
 
     assert(Rdiff > 0);
 
-    bool fullCirc =  ApproxEqual(dphi, vecgeom::kTwoPi);
+    bool fullCirc = ApproxEqual(dphi, vecgeom::kTwoPi);
 
     int isurf;
 
     // We need angles in degrees for transformations
     auto sphid = vecgeom::kRadToDeg * sphi;
     auto ephid = vecgeom::kRadToDeg * ephi;
-    
+
     // surface at +dz
-    isurf = CreateLocalSurface(
-        CreateUnplacedSurface(kPlanar),
-        CreateFrame(kRing, RingMask_t{tube.rmin(), tube.rmax(), fullCirc, sphi, ephi}),
-        CreateLocalTransformation({0, 0, tube.z(), 0, 0, 0}));
+    isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar),
+                               CreateFrame(kRing, RingMask_t{tube.rmin(), tube.rmax(), fullCirc, sphi, ephi}),
+                               CreateLocalTransformation({0, 0, tube.z(), 0, 0, 0}));
     AddSurfaceToShell(logical_id, isurf);
     // surface at -dz
-    isurf = CreateLocalSurface(
-        CreateUnplacedSurface(kPlanar),
-        CreateFrame(kRing, RingMask_t{tube.rmin(), tube.rmax(), fullCirc, sphi, ephi}),
-        CreateLocalTransformation({0, 0, -tube.z(), 0, 180, -sphid - ephid}));
+    isurf = CreateLocalSurface(CreateUnplacedSurface(kPlanar),
+                               CreateFrame(kRing, RingMask_t{tube.rmin(), tube.rmax(), fullCirc, sphi, ephi}),
+                               CreateLocalTransformation({0, 0, -tube.z(), 0, 180, -sphid - ephid}));
     AddSurfaceToShell(logical_id, isurf);
     // inner cylinder
     if (tube.rmin() > vecgeom::kTolerance) {
@@ -982,9 +984,9 @@ private:
       auto mask2 = fRingMasks[s2.fFrame.id];
 
       // Inner radius must be the same
-      if (!ApproxEqual(mask1.rangeR[0], mask2.rangeR[0]) ||
-          !ApproxEqual(mask1.rangeR[1], mask2.rangeR[1]) ||
-          mask1.isFullCirc != mask2.isFullCirc) return false;
+      if (!ApproxEqual(mask1.rangeR[0], mask2.rangeR[0]) || !ApproxEqual(mask1.rangeR[1], mask2.rangeR[1]) ||
+          mask1.isFullCirc != mask2.isFullCirc)
+        return false;
       if (mask1.isFullCirc) return true;
       // Unit-vectors used for checking sphi
       auto phimin1 = t1.InverseTransformDirection(Vector3D{mask1.vecSPhi[0], mask1.vecSPhi[1], 0});
@@ -1002,8 +1004,7 @@ private:
 
       // They are on the same side, so there is no flipping,
       // and z extents must be equal
-      if (!ApproxEqual(mask1.rangeZ[0], mask2.rangeZ[0]) ||
-          !ApproxEqual(mask1.rangeZ[1], mask2.rangeZ[1]))
+      if (!ApproxEqual(mask1.rangeZ[0], mask2.rangeZ[0]) || !ApproxEqual(mask1.rangeZ[1], mask2.rangeZ[1]))
         return false;
       if (mask1.isFullCirc) return true;
       // Unit-vectors used for checking sphi
