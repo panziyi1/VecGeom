@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
   OPTION_INT(test, 0);
   OPTION_INT(verbose, 0);
   // Determines the scale of generating volume relative to world:
-  OPTION_DOUBLE(scale, 0.5);
+  OPTION_DOUBLE(scale, 0.2);
 
   //
   // World and validation options
@@ -36,11 +36,11 @@ int main(int argc, char *argv[])
   //
   // Volumes options
   //
-  OPTION_DOUBLE(dx1, 4);
-  OPTION_DOUBLE(dx2, 2);
-  OPTION_DOUBLE(dy1, 6);
-  OPTION_DOUBLE(dy2, 3);
-  OPTION_DOUBLE(dz, 3);
+  OPTION_DOUBLE(dx1, 20);
+  OPTION_DOUBLE(dx2, 18);
+  OPTION_DOUBLE(dy1, 20);
+  OPTION_DOUBLE(dy2, 18);
+  OPTION_DOUBLE(dz, 40);
   OPTION_INT(layers, 50);
 
   //

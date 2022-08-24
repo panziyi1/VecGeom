@@ -1012,7 +1012,7 @@ private:
     AddSurfaceToShell(logical_id, isurf);
 
     // Sides parallel to x axis
-    if (dx > vecgeom::kTolerance) {
+    if (vecgeom::Abs(dx) > vecgeom::kTolerance) {
       // At -dy
       isurf = CreateLocalSurface(
           CreateUnplacedSurface(kPlanar),
@@ -1037,7 +1037,7 @@ private:
       AddSurfaceToShell(logical_id, isurf);
     }
     // Sides parallel to y axis
-    if (dy > vecgeom::kTolerance) {
+    if (vecgeom::Abs(dy) > vecgeom::kTolerance) {
       // At -dx
       isurf = CreateLocalSurface(
           CreateUnplacedSurface(kPlanar),
