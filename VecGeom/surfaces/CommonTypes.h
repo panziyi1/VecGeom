@@ -33,6 +33,8 @@ struct Vec2D {
     return Vec2D<Real_t>(components[0] - other.components[0], components[1] - other.components[1]);
   }
 
+  Vec2D<Real_t> operator-() const { return Vec2D<Real_t>(-components[0], -components[1]); }
+
   /// @brief Vector setter
   /// @tparam Real_s Type to set from
   /// @param x1 First component
@@ -61,7 +63,7 @@ struct Vec2D {
   template <typename Real_s>
   Real_t Dot(Vec2D<Real_s> other) const
   {
-    return components[0] * Real_t(other[1]) + components[1] * Real_t(other[1]);
+    return components[0] * Real_t(other[0]) + components[1] * Real_t(other[1]);
   };
 };
 

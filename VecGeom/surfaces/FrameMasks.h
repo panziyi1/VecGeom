@@ -45,7 +45,7 @@ struct WindowMask {
   /// @details Computes first the maximum signed distance to each edge on a single axis. This
   ///  is negative for points in the range, so we zero it for such cases. Then we use the sum of
   ///  squares on the two axis to get the squared final value.
-  /// @param local 
+  /// @param local
   /// @return Safety distance to the rectangle mask.
   Real_t Safety(Vector3D<Real_t> const &local) const
   {
@@ -132,15 +132,11 @@ struct RingMask {
     Real_t rho  = local.Perp();
     Real_t safR = std::max(rangeR[0] - rho, rho - rangeR[1]);
     safR        = std::max(0, safR);
-    if (isFullCirc)
-      return safR;
+    if (isFullCirc) return safR;
     AngleVector<Real_t> localAngle{local[0], local[1]};
     Real_t safSPhi = std::max(0, localAngle.CrossZ(vecSPhi));
     Real_t safEPhi = std::max(0, -localAngle.CrossZ(vecEPhi));
-    
-
   }
-
 };
 
 /**
@@ -223,10 +219,16 @@ struct TriangleMask {
   // TODO: Check if the points themselves are useful
   Point2D<Real_t> p1, p2, p3; ///< 2D coordinates of the triangle vertices.
   Point2D<Real_t> bp2, bp3;   ///< 2D coordinates of vertices 2 and 3 relative to vertex 1.
+  Vec2D<Real_t> edges[3];     ///< Edges of the triangle.
 
   TriangleMask() = default;
   TriangleMask(Real_t x1, Real_t y1, Real_t x2, Real_t y2, Real_t x3, Real_t y3)
-      : p1(x1, y1), p2(x2, y2), p3(x3, y3), bp2(x2 - x1, y2 - y1), bp3(x3 - x1, y3 - y1){};
+      : p1(x1, y1), p2(x2, y2), p3(x3, y3), bp2(x2 - x1, y2 - y1), bp3(x3 - x1, y3 - y1)
+  {
+    edges[0] = Vec2D<Real_t>(x2 - x1, y2 - y1);
+    edges[1] = Vec2D<Real_t>(x3 - x2, y3 - y2);
+    edges[2] = Vec2D<Real_t>(x1 - x3, y1 - y3);
+  };
 
   void GetMask(TriangleMask<Real_t> &mask)
   {
@@ -257,6 +259,28 @@ struct TriangleMask {
 
     // TODO: Tolerances.
     return (d1 > 0 && d2 > 0 && d1 + d2 < 1);
+  }
+
+  Real_t Safety(Vector3D<Real_t> const &local) const
+  {
+    Vec2D<Real_t> local2D{local[0], local[1]};
+    Point2D<Real_t> vertex[3]     = {p1, p2, p3};
+    Point2D<Real_t> nextvertex[3] = {p2, p3, p1};
+    Real_t cross, dot, dot1, dot2;
+    Real_t distance2 = 0;
+    for (int i = 0; i < 3; ++i) {
+      cross = (local2D - vertex[i]).CrossZ(edges[i]);
+      cross = vecgeom::Max(cross, Real_t{0});
+
+      dot1 = (local2D - vertex[i]).Dot(edges[i]);
+      dot2 = (local2D - nextvertex[i]).Dot(-edges[i]);
+      dot  = vecgeom::Min(vecgeom::Min((local2D - vertex[i]).Dot(edges[i]), (local2D - nextvertex[i]).Dot(-edges[i])),
+                          Real_t{0}) *
+            (cross > Real_t{0});
+
+      distance2 = vecgeom::Max(distance2, (cross * cross + dot * dot) / edges[i].Dot(edges[i]));
+    }
+    return distance2;
   }
 };
 
