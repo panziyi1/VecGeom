@@ -129,6 +129,66 @@ struct UnplacedSurface {
     return false;
   }
 
+  /// @brief Computes the isotropic safe distance to unplaced surfaces
+  /// @tparam Real_t Precision type for parameters
+  /// @param point Point in local surface coordinates
+  /// @param surfdata Surface data storage
+  /// @param distance Computed isotropic safety
+  /// @return Success of the calculation
+  template <typename Real_t>
+  bool Safety(Vector3D<Real_t> const &point, SurfData<Real_t> const &surfdata, Real_t &distance) const
+  {
+    Real_t rho;
+    switch (type) {
+    case kPlanar:
+      distance = std::abs(point[2]);
+      return true;
+    case kCylindrical:
+      Real_t cylR = surfdata.GetCylData(id).Radius();
+      rho         = point.Perp();
+      distance    = std::abs(rho - cylR);
+      return true;
+    case kConical:
+      Real_t coneR = std::abs(surfdata.GetConeData(id).Radius() + point[2] * surfdata.GetConeData(id).Slope());
+      rho          = point.Perp();
+      distance     = std::abs(rho - coneR);
+      return true;
+    case kSpherical:
+      Real_t sphR = surfdata.GetSphData(id).Radius();
+      rho         = point.Mag();
+      distance    = std::abs(rho - sphR);
+      return true;
+    case kTorus:
+    case kGenSecondOrder:
+      std::cout << "kTorus, kGenSecondOrder unhandled\n";
+      return false;
+    };
+    return false;
+  }
+
+  /// @brief Get projection of local point on the unplaced surface
+  /// @tparam Real_t Precision type for parameters
+  /// @param point Point in local surface coordinates
+  /// @param surfdata Surface data storage
+  /// @param projection Projected point on the surface
+  template <typename Real_t>
+  void GetProjection(Vector3D<Real_t> const &point, SurfData<Real_t> const &surfdata, Vector3D<Real_t> &projection) const
+  {
+    switch (type) {
+    case kPlanar:
+      projection.Set(point[0], point[1], 0);
+      return;
+    case kCylindrical:
+    case kConical:
+    case kSpherical:
+
+    case kTorus:
+    case kGenSecondOrder:
+      std::cout << "kTorus, kGenSecondOrder unhandled\n";
+      return;
+    };  
+  }
+
   /// Get normal direction to the surface in a point on surface
   template <typename Real_t>
   void GetNormal(Vector3D<Real_t> const &point, Vector3D<Real_t> &normal, SurfData<Real_t> const &surfdata) const
